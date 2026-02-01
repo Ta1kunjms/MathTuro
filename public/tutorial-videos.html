@@ -1,0 +1,950 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/png" href="../Logo/MATHURO LOGO.png">
+    <title>Tutorial Videos - MathTuro LMS</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: {
+                            50: '#f0fdf4',
+                            100: '#dcfce7',
+                            200: '#bbf7d0',
+                            300: '#86efac',
+                            400: '#4ade80',
+                            500: '#22c55e',
+                            600: '#16a34a',
+                            700: '#15803d',
+                            800: '#166534',
+                            900: '#14532d',
+                        },
+                        brand: '#005801',
+                        'brand-dark': '#004601',
+                        'brand-light': '#006B01',
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', 'sans-serif'],
+                    },
+                },
+            },
+        }
+    </script>
+    <style>
+        body { font-family: 'Inter', system-ui, sans-serif; }
+        
+        .gradient-text {
+            background: linear-gradient(135deg, #005801 0%, #22c55e 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .glass-sidebar {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+        }
+        
+        .sidebar-link {
+            transition: all 0.2s ease;
+        }
+        
+        .sidebar-link:hover, .sidebar-link.active {
+            background: linear-gradient(135deg, #005801 0%, #006B01 100%);
+            color: white;
+        }
+        
+        .sidebar-link.active {
+            box-shadow: 0 4px 15px rgba(0, 88, 1, 0.3);
+        }
+        
+        .video-card {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .video-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 20px 40px -12px rgba(0, 88, 1, 0.15);
+        }
+        
+        .video-card:hover .play-overlay {
+            opacity: 1;
+        }
+        
+        .play-overlay {
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        
+        .category-tab {
+            transition: all 0.2s ease;
+        }
+        
+        .category-tab.active {
+            background: linear-gradient(135deg, #005801 0%, #006B01 100%);
+            color: white;
+            box-shadow: 0 4px 15px rgba(0, 88, 1, 0.3);
+        }
+        
+        .video-player-container {
+            background: linear-gradient(135deg, #1a1a2e 0%, #0f0f1a 100%);
+        }
+        
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; }
+        ::-webkit-scrollbar-thumb { background: #005801; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: #004601; }
+    </style>
+    <link rel="stylesheet" href="../shared/css/base.css">
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <!-- Mobile Menu Overlay -->
+    <div id="mobileOverlay" class="fixed inset-0 bg-black bg-opacity-50 z-40 hidden lg:hidden"></div>
+    
+    <!-- Sidebar -->
+    <aside id="sidebar" class="fixed left-0 top-0 h-full w-72 glass-sidebar border-r border-gray-200 z-50 transform -translate-x-full lg:translate-x-0 transition-transform duration-300 overflow-y-auto">
+        <!-- Logo -->
+        <div class="p-6 border-b border-gray-100">
+            <a href="../student/dashboard.html" class="flex items-center space-x-3">
+                <div class="w-12 h-12 bg-white rounded-xl flex items-center justify-center shadow-lg">
+                    <img src="../Logo/MATHURO LOGO.png" alt="MathTuro" class="w-10 h-10 object-contain">
+                </div>
+                <div>
+                    <span class="text-xl font-bold gradient-text">MathTuro</span>
+                    <p class="text-xs text-gray-500">Student Portal</p>
+                </div>
+            </a>
+        </div>
+        
+        <!-- User Info -->
+        <div class="p-6 border-b border-gray-100">
+            <div class="flex items-center space-x-3">
+                <div class="w-12 h-12 bg-brand/10 rounded-full flex items-center justify-center">
+                    <span id="userInitials" class="text-brand font-bold text-lg">--</span>
+                </div>
+                <div class="flex-1">
+                    <p id="sidebarUserName" class="font-semibold text-gray-800">Loading...</p>
+                    <p id="userRole" class="text-sm text-gray-500 capitalize"></p>
+                    <div class="flex items-center space-x-1">
+                        <span id="streakBadge" class="text-sm">🔥</span>
+                        <span id="streakCount" class="text-sm text-orange-500 font-medium">0 day streak</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Navigation -->
+        <nav class="p-4 space-y-2 overflow-y-auto" style="max-height: calc(100vh - 320px);">
+            <p class="text-xs text-gray-400 uppercase tracking-wider px-4 mb-2">Main Menu</p>
+            <a href="../student/dashboard.html" id="dashboardLink" class="sidebar-link flex items-center space-x-3 px-4 py-3 rounded-xl text-gray-700">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
+                </svg>
+                <span>Dashboard</span>
+            </a>
+            <a href="../student/modules.html" class="sidebar-link flex items-center space-x-3 px-4 py-3 rounded-xl text-gray-700">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
+                </svg>
+                <span>Browse Modules</span>
+            </a>
+            <a href="tutorial-videos.html" class="sidebar-link active flex items-center space-x-3 px-4 py-3 rounded-xl text-gray-700">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+                <span>Tutorial Videos</span>
+            </a>
+            <a href="../student/quizzes.html" class="sidebar-link flex items-center space-x-3 px-4 py-3 rounded-xl text-gray-700">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/>
+                </svg>
+                <span>Quizzes</span>
+            </a>
+            
+            <p class="text-xs text-gray-400 uppercase tracking-wider px-4 mb-2 mt-6">My Learning</p>
+            <a href="../student/dashboard.html#achievements" class="sidebar-link flex items-center space-x-3 px-4 py-3 rounded-xl text-gray-700">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"/>
+                </svg>
+                <span>Achievements</span>
+            </a>
+            <a href="../student/dashboard.html#leaderboard" class="sidebar-link flex items-center space-x-3 px-4 py-3 rounded-xl text-gray-700">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"/>
+                </svg>
+                <span>Leaderboard</span>
+            </a>
+            
+            <p class="text-xs text-gray-400 uppercase tracking-wider px-4 mb-2 mt-6">Video Categories</p>
+            <a href="#" onclick="filterByCategory('getting-started'); return false;" class="sidebar-link flex items-center space-x-3 px-4 py-3 rounded-xl text-gray-700">
+                <span class="w-2 h-2 bg-blue-500 rounded-full"></span>
+                <span>Getting Started</span>
+            </a>
+            <a href="#" onclick="filterByCategory('algebra'); return false;" class="sidebar-link flex items-center space-x-3 px-4 py-3 rounded-xl text-gray-700">
+                <span class="w-2 h-2 bg-green-500 rounded-full"></span>
+                <span>Algebra</span>
+            </a>
+            <a href="#" onclick="filterByCategory('geometry'); return false;" class="sidebar-link flex items-center space-x-3 px-4 py-3 rounded-xl text-gray-700">
+                <span class="w-2 h-2 bg-purple-500 rounded-full"></span>
+                <span>Geometry</span>
+            </a>
+            <a href="#" onclick="filterByCategory('calculus'); return false;" class="sidebar-link flex items-center space-x-3 px-4 py-3 rounded-xl text-gray-700">
+                <span class="w-2 h-2 bg-orange-500 rounded-full"></span>
+                <span>Calculus</span>
+            </a>
+            <a href="#" onclick="filterByCategory('statistics'); return false;" class="sidebar-link flex items-center space-x-3 px-4 py-3 rounded-xl text-gray-700">
+                <span class="w-2 h-2 bg-pink-500 rounded-full"></span>
+                <span>Statistics</span>
+            </a>
+            <a href="#" onclick="filterByCategory('tips'); return false;" class="sidebar-link flex items-center space-x-3 px-4 py-3 rounded-xl text-gray-700">
+                <span class="w-2 h-2 bg-yellow-500 rounded-full"></span>
+                <span>Study Tips</span>
+            </a>
+        </nav>
+        
+        <!-- Bottom Actions -->
+        <div class="absolute bottom-0 left-0 right-0 p-4 border-t border-gray-100 bg-white">
+            <button id="logoutButton" class="w-full flex items-center space-x-3 px-4 py-3 text-red-600 hover:bg-red-50 rounded-xl transition-colors">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
+                </svg>
+                <span>Logout</span>
+            </button>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="lg:ml-72 min-h-screen">
+        <!-- Top Header -->
+        <header class="bg-white border-b border-gray-200 sticky top-0 z-30">
+            <div class="flex items-center justify-between px-4 lg:px-8 py-4">
+                <!-- Mobile Menu Button -->
+                <button id="mobileMenuBtn" class="lg:hidden p-2 text-gray-600 hover:text-brand rounded-lg">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
+                    </svg>
+                </button>
+                
+                <!-- Page Title -->
+                <div class="flex-1 lg:flex-none">
+                    <h1 class="text-xl lg:text-2xl font-bold text-gray-800">Tutorial Videos</h1>
+                    <p class="text-sm text-gray-500 hidden sm:block">Learn with video guides and tutorials</p>
+                </div>
+                
+                <!-- Search -->
+                <div class="flex items-center space-x-3">
+                    <div class="hidden md:flex items-center space-x-2 bg-gray-100 rounded-xl px-4 py-2">
+                        <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                        </svg>
+                        <input type="text" id="searchInput" placeholder="Search videos..." class="bg-transparent border-none outline-none text-sm w-48">
+                    </div>
+                    
+                    <!-- Back button -->
+                    <a href="../student/dashboard.html" id="backBtn" class="flex items-center space-x-2 px-4 py-2 bg-gray-100 rounded-xl text-gray-600 hover:bg-gray-200 transition-colors">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+                        </svg>
+                        <span class="hidden sm:inline">Back</span>
+                    </a>
+                </div>
+            </div>
+        </header>
+
+        <!-- Video Content -->
+        <div class="p-4 lg:p-8">
+            <!-- Featured Video Player -->
+            <div id="videoPlayerSection" class="hidden mb-8">
+                <div class="bg-white rounded-2xl overflow-hidden border border-gray-100 shadow-sm">
+                    <div class="video-player-container aspect-video relative">
+                        <iframe id="videoPlayer" class="w-full h-full" frameborder="0" allowfullscreen allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"></iframe>
+                        <div id="videoPlaceholder" class="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-brand/10 to-green-500/10">
+                            <div class="text-center">
+                                <div class="w-20 h-20 bg-white rounded-full flex items-center justify-center shadow-lg mb-4 mx-auto">
+                                    <svg class="w-10 h-10 text-brand ml-2" fill="currentColor" viewBox="0 0 24 24">
+                                        <path d="M8 5v14l11-7z"/>
+                                    </svg>
+                                </div>
+                                <p class="text-gray-600 font-medium">Select a video to play</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="p-6">
+                        <h2 id="videoTitle" class="text-xl font-bold text-gray-800 mb-2">Video Title</h2>
+                        <p id="videoDescription" class="text-gray-600 mb-4">Video description will appear here.</p>
+                        <div class="flex items-center space-x-4 text-sm text-gray-500">
+                            <span id="videoDuration" class="flex items-center space-x-1">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                </svg>
+                                <span>5 min</span>
+                            </span>
+                            <span id="videoCategory" class="px-3 py-1 bg-brand/10 text-brand rounded-full">Category</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Category Tabs -->
+            <div class="flex flex-wrap gap-2 mb-6">
+                <button onclick="filterByCategory('all')" class="category-tab active px-4 py-2 rounded-xl text-sm font-medium bg-gray-100 text-gray-600 hover:bg-gray-200" data-category="all">
+                    All Videos
+                </button>
+                <button onclick="filterByCategory('getting-started')" class="category-tab px-4 py-2 rounded-xl text-sm font-medium bg-gray-100 text-gray-600 hover:bg-gray-200" data-category="getting-started">
+                    Getting Started
+                </button>
+                <button onclick="filterByCategory('algebra')" class="category-tab px-4 py-2 rounded-xl text-sm font-medium bg-gray-100 text-gray-600 hover:bg-gray-200" data-category="algebra">
+                    Algebra
+                </button>
+                <button onclick="filterByCategory('geometry')" class="category-tab px-4 py-2 rounded-xl text-sm font-medium bg-gray-100 text-gray-600 hover:bg-gray-200" data-category="geometry">
+                    Geometry
+                </button>
+                <button onclick="filterByCategory('calculus')" class="category-tab px-4 py-2 rounded-xl text-sm font-medium bg-gray-100 text-gray-600 hover:bg-gray-200" data-category="calculus">
+                    Calculus
+                </button>
+                <button onclick="filterByCategory('statistics')" class="category-tab px-4 py-2 rounded-xl text-sm font-medium bg-gray-100 text-gray-600 hover:bg-gray-200" data-category="statistics">
+                    Statistics
+                </button>
+                <button onclick="filterByCategory('tips')" class="category-tab px-4 py-2 rounded-xl text-sm font-medium bg-gray-100 text-gray-600 hover:bg-gray-200" data-category="tips">
+                    Study Tips
+                </button>
+            </div>
+
+            <!-- Videos Grid -->
+            <div id="videosGrid" class="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                <!-- Videos will be loaded here -->
+            </div>
+
+            <!-- Empty State -->
+            <div id="emptyState" class="hidden text-center py-16">
+                <div class="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <svg class="w-10 h-10 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                    </svg>
+                </div>
+                <h3 class="text-xl font-bold text-gray-800 mb-2">No videos found</h3>
+                <p class="text-gray-500 mb-4">Try adjusting your search or filter criteria</p>
+                <button onclick="filterByCategory('all')" class="px-6 py-2 bg-brand text-white rounded-xl hover:bg-brand-dark">View All Videos</button>
+            </div>
+
+            <!-- Add Video Section (Admin/Teacher Only) -->
+            <div id="addVideoSection" class="hidden mt-8 bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
+                <h3 class="text-lg font-bold text-gray-800 mb-4">Add New Tutorial Video</h3>
+                <form id="addVideoForm" class="grid md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Video Title</label>
+                        <input type="text" id="newVideoTitle" required class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand" placeholder="Enter video title">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Category</label>
+                        <select id="newVideoCategory" required class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand">
+                            <option value="">Select category</option>
+                            <option value="getting-started">Getting Started</option>
+                            <option value="algebra">Algebra</option>
+                            <option value="geometry">Geometry</option>
+                            <option value="calculus">Calculus</option>
+                            <option value="statistics">Statistics</option>
+                            <option value="tips">Study Tips</option>
+                        </select>
+                    </div>
+                    <div class="md:col-span-2">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">YouTube/Video URL</label>
+                        <input type="url" id="newVideoUrl" required class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand" placeholder="https://www.youtube.com/watch?v=...">
+                    </div>
+                    <div class="md:col-span-2">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Description</label>
+                        <textarea id="newVideoDescription" rows="3" class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand resize-none" placeholder="Brief description of the video"></textarea>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Duration</label>
+                        <input type="text" id="newVideoDuration" class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand" placeholder="e.g., 5:30">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Thumbnail URL (Optional)</label>
+                        <input type="url" id="newVideoThumbnail" class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand" placeholder="https://...">
+                    </div>
+                    <div class="md:col-span-2 flex items-center space-x-4">
+                        <label class="flex items-center space-x-2 cursor-pointer">
+                            <input type="checkbox" id="newVideoFeatured" class="w-4 h-4 text-brand rounded focus:ring-brand">
+                            <span class="text-sm text-gray-700">Featured Video</span>
+                        </label>
+                    </div>
+                    <div class="md:col-span-2">
+                        <button type="submit" class="w-full py-3 bg-brand text-white rounded-xl font-semibold hover:bg-brand-dark transition-colors">
+                            Add Video
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </main>
+
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div class="bg-white rounded-2xl p-8 text-center shadow-2xl">
+            <div class="relative w-16 h-16 mx-auto mb-4">
+                <div class="absolute inset-0 border-4 border-brand/20 rounded-full"></div>
+                <div class="absolute inset-0 border-4 border-brand border-t-transparent rounded-full animate-spin"></div>
+            </div>
+            <p class="text-gray-600 font-medium">Loading videos...</p>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="../shared/js/config.js"></script>
+    <script src="../shared/js/utils.js"></script>
+    <script src="../shared/js/supabase.js"></script>
+    <script src="../shared/js/auth.js"></script>
+    
+    <script>
+        // Global variables
+        let currentUser = null;
+        let allVideos = [];
+        let currentCategory = 'all';
+        let currentVideo = null;
+
+        // Sample videos (fallback if no database videos)
+        const sampleVideos = [
+            {
+                id: 1,
+                title: 'Getting Started with MathTuro',
+                description: 'Learn how to navigate the MathTuro learning platform, access modules, and track your progress.',
+                category: 'getting-started',
+                video_url: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
+                thumbnail_url: null,
+                duration: '5:30',
+                is_featured: true,
+                order: 1
+            },
+            {
+                id: 2,
+                title: 'How to Take Quizzes',
+                description: 'A complete guide on taking quizzes, submitting answers, and understanding your scores.',
+                category: 'getting-started',
+                video_url: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
+                thumbnail_url: null,
+                duration: '3:45',
+                is_featured: true,
+                order: 2
+            },
+            {
+                id: 3,
+                title: 'Introduction to Algebra',
+                description: 'Master the basics of algebraic expressions, equations, and problem-solving techniques.',
+                category: 'algebra',
+                video_url: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
+                thumbnail_url: null,
+                duration: '12:20',
+                is_featured: false,
+                order: 3
+            },
+            {
+                id: 4,
+                title: 'Solving Linear Equations',
+                description: 'Step-by-step guide to solving linear equations with one and two variables.',
+                category: 'algebra',
+                video_url: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
+                thumbnail_url: null,
+                duration: '8:15',
+                is_featured: false,
+                order: 4
+            },
+            {
+                id: 5,
+                title: 'Basic Geometry Concepts',
+                description: 'Learn about points, lines, angles, and basic geometric shapes.',
+                category: 'geometry',
+                video_url: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
+                thumbnail_url: null,
+                duration: '10:00',
+                is_featured: false,
+                order: 5
+            },
+            {
+                id: 6,
+                title: 'Area and Perimeter',
+                description: 'Calculate area and perimeter of common shapes including rectangles, triangles, and circles.',
+                category: 'geometry',
+                video_url: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
+                thumbnail_url: null,
+                duration: '7:30',
+                is_featured: false,
+                order: 6
+            },
+            {
+                id: 7,
+                title: 'Introduction to Limits',
+                description: 'Understanding the concept of limits in calculus with visual examples.',
+                category: 'calculus',
+                video_url: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
+                thumbnail_url: null,
+                duration: '15:45',
+                is_featured: false,
+                order: 7
+            },
+            {
+                id: 8,
+                title: 'Derivatives Explained',
+                description: 'Learn how to find derivatives and understand their real-world applications.',
+                category: 'calculus',
+                video_url: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
+                thumbnail_url: null,
+                duration: '18:20',
+                is_featured: false,
+                order: 8
+            },
+            {
+                id: 9,
+                title: 'Mean, Median, and Mode',
+                description: 'Understanding measures of central tendency in statistics.',
+                category: 'statistics',
+                video_url: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
+                thumbnail_url: null,
+                duration: '6:45',
+                is_featured: false,
+                order: 9
+            },
+            {
+                id: 10,
+                title: 'Effective Study Techniques',
+                description: 'Proven study strategies to improve your learning and retention.',
+                category: 'tips',
+                video_url: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
+                thumbnail_url: null,
+                duration: '9:00',
+                is_featured: true,
+                order: 10
+            },
+            {
+                id: 11,
+                title: 'Time Management for Students',
+                description: 'Learn to balance studies, activities, and rest for optimal performance.',
+                category: 'tips',
+                video_url: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
+                thumbnail_url: null,
+                duration: '7:15',
+                is_featured: false,
+                order: 11
+            },
+            {
+                id: 12,
+                title: 'Overcoming Math Anxiety',
+                description: 'Practical tips to build confidence and reduce stress when studying math.',
+                category: 'tips',
+                video_url: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
+                thumbnail_url: null,
+                duration: '8:30',
+                is_featured: false,
+                order: 12
+            }
+        ];
+
+        // DOM Elements
+        const loadingOverlay = document.getElementById('loadingOverlay');
+        const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+        const mobileOverlay = document.getElementById('mobileOverlay');
+        const sidebar = document.getElementById('sidebar');
+        const searchInput = document.getElementById('searchInput');
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', async function() {
+            try {
+                // Check authentication
+                currentUser = await checkAuthSession();
+                
+                if (!currentUser) {
+                    redirectToLogin();
+                    return;
+                }
+
+                // Update UI based on role
+                updateUserInfo(currentUser);
+                updateUIForRole(currentUser.role);
+
+                // Load videos
+                await loadVideos();
+
+                // Check for video ID in URL
+                const urlParams = new URLSearchParams(window.location.search);
+                const videoId = urlParams.get('video');
+                if (videoId) {
+                    const video = allVideos.find(v => v.id == videoId);
+                    if (video) playVideo(video);
+                }
+
+                // Setup event listeners
+                setupEventListeners();
+
+            } catch (error) {
+                console.error('Initialization error:', error);
+                showToast('Failed to load page. Please try again.', 'error');
+            } finally {
+                loadingOverlay.classList.add('hidden');
+            }
+        });
+
+        // Update user info in sidebar
+        function updateUserInfo(user) {
+            const initials = user.fullName.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2);
+            const userInitialsEl = document.getElementById('userInitials');
+            const sidebarUserNameEl = document.getElementById('sidebarUserName');
+            const userRoleEl = document.getElementById('userRole');
+            
+            if (userInitialsEl) userInitialsEl.textContent = initials;
+            if (sidebarUserNameEl) sidebarUserNameEl.textContent = user.fullName;
+            if (userRoleEl) userRoleEl.textContent = user.role;
+            
+            // Update dashboard link based on role
+            const dashboardLink = document.getElementById('dashboardLink');
+            const backBtn = document.getElementById('backBtn');
+            if (user.role === 'teacher') {
+                dashboardLink.href = '../teacher/dashboard.html';
+                backBtn.href = '../teacher/dashboard.html';
+            } else if (user.role === 'admin') {
+                dashboardLink.href = '../admin/dashboard.html';
+                backBtn.href = '../admin/dashboard.html';
+            }
+        }
+
+        // Show/hide admin features based on role
+        function updateUIForRole(role) {
+            if (role === 'teacher' || role === 'admin') {
+                document.getElementById('addVideoSection').classList.remove('hidden');
+            }
+        }
+
+        // Load videos from database
+        async function loadVideos() {
+            try {
+                const { data: dbVideos, error } = await getSupabase()
+                    .from('videos')
+                    .select('*')
+                    .eq('is_published', true)
+                    .order('created_at', { ascending: false });
+
+                if (error) throw error;
+
+                if (dbVideos && dbVideos.length > 0) {
+                    // Map database videos to expected format
+                    allVideos = dbVideos.map(v => ({
+                        id: v.id,
+                        title: v.title,
+                        description: v.description || '',
+                        category: v.category || 'general',
+                        video_url: v.video_url,
+                        thumbnail_url: v.thumbnail_url || getYouTubeThumbnail(v.video_url),
+                        views: v.view_count || 0,
+                        teacher: 'MathTuro',
+                        grade_level: v.grade_level || ''
+                    }));
+                } else {
+                    // Use sample videos as fallback
+                    allVideos = sampleVideos;
+                }
+
+                renderVideos();
+
+            } catch (error) {
+                console.log('Using sample videos', error);
+                allVideos = sampleVideos;
+                renderVideos();
+            }
+        }
+
+        // Get YouTube thumbnail
+        function getYouTubeThumbnail(url) {
+            if (!url) return 'https://via.placeholder.com/320x180?text=Video';
+            const match = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([a-zA-Z0-9_-]+)/);
+            if (match) return `https://img.youtube.com/vi/${match[1]}/mqdefault.jpg`;
+            return 'https://via.placeholder.com/320x180?text=Video';
+        }
+
+        // Render videos grid
+        function renderVideos() {
+            const grid = document.getElementById('videosGrid');
+            const emptyState = document.getElementById('emptyState');
+            
+            let filteredVideos = allVideos;
+
+            // Filter by category
+            if (currentCategory !== 'all') {
+                filteredVideos = filteredVideos.filter(v => v.category === currentCategory);
+            }
+
+            // Filter by search
+            const searchTerm = searchInput?.value.toLowerCase() || '';
+            if (searchTerm) {
+                filteredVideos = filteredVideos.filter(v => 
+                    v.title.toLowerCase().includes(searchTerm) ||
+                    v.description?.toLowerCase().includes(searchTerm) ||
+                    v.category.toLowerCase().includes(searchTerm)
+                );
+            }
+
+            if (filteredVideos.length === 0) {
+                grid.innerHTML = '';
+                emptyState.classList.remove('hidden');
+                return;
+            }
+
+            emptyState.classList.add('hidden');
+
+            grid.innerHTML = filteredVideos.map(video => {
+                const categoryColors = {
+                    'getting-started': 'bg-blue-500',
+                    'algebra': 'bg-green-500',
+                    'geometry': 'bg-purple-500',
+                    'calculus': 'bg-orange-500',
+                    'statistics': 'bg-pink-500',
+                    'tips': 'bg-yellow-500'
+                };
+                const categoryColor = categoryColors[video.category] || 'bg-brand';
+                
+                const gradients = {
+                    'getting-started': 'from-blue-500/10 to-blue-600/10',
+                    'algebra': 'from-green-500/10 to-green-600/10',
+                    'geometry': 'from-purple-500/10 to-purple-600/10',
+                    'calculus': 'from-orange-500/10 to-orange-600/10',
+                    'statistics': 'from-pink-500/10 to-pink-600/10',
+                    'tips': 'from-yellow-500/10 to-yellow-600/10'
+                };
+                const gradient = gradients[video.category] || 'from-brand/10 to-green-500/10';
+
+                return `
+                    <div class="video-card bg-white rounded-xl overflow-hidden border border-gray-100 cursor-pointer" onclick="playVideo(${JSON.stringify(video).replace(/"/g, '&quot;')})">
+                        <div class="aspect-video relative bg-gradient-to-br ${gradient}">
+                            ${video.thumbnail_url ? 
+                                `<img src="${video.thumbnail_url}" alt="${escapeHtml(video.title)}" class="w-full h-full object-cover">` :
+                                `<div class="absolute inset-0 flex items-center justify-center">
+                                    <svg class="w-12 h-12 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/>
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                    </svg>
+                                </div>`
+                            }
+                            <div class="play-overlay absolute inset-0 bg-black/40 flex items-center justify-center">
+                                <div class="w-14 h-14 bg-white rounded-full flex items-center justify-center shadow-lg">
+                                    <svg class="w-6 h-6 text-brand ml-1" fill="currentColor" viewBox="0 0 24 24">
+                                        <path d="M8 5v14l11-7z"/>
+                                    </svg>
+                                </div>
+                            </div>
+                            ${video.duration ? `<span class="absolute bottom-2 right-2 bg-black/70 text-white text-xs px-2 py-1 rounded">${video.duration}</span>` : ''}
+                            ${video.is_featured ? `<span class="absolute top-2 left-2 bg-yellow-500 text-white text-xs px-2 py-1 rounded-full">⭐ Featured</span>` : ''}
+                        </div>
+                        <div class="p-4">
+                            <div class="flex items-start justify-between mb-2">
+                                <h3 class="font-semibold text-gray-800 line-clamp-2 flex-1">${escapeHtml(video.title)}</h3>
+                            </div>
+                            <p class="text-sm text-gray-500 line-clamp-2 mb-3">${escapeHtml(video.description || '')}</p>
+                            <div class="flex items-center justify-between">
+                                <span class="inline-flex items-center space-x-1 px-2 py-1 rounded-full text-xs font-medium ${categoryColor} bg-opacity-10" style="background: ${categoryColor}20; color: ${categoryColor.replace('bg-', '')}">
+                                    <span class="w-1.5 h-1.5 ${categoryColor} rounded-full"></span>
+                                    <span class="text-gray-700 capitalize">${video.category.replace('-', ' ')}</span>
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // Play a video
+        function playVideo(video) {
+            currentVideo = video;
+            
+            const playerSection = document.getElementById('videoPlayerSection');
+            const player = document.getElementById('videoPlayer');
+            const placeholder = document.getElementById('videoPlaceholder');
+            
+            // Update video info
+            document.getElementById('videoTitle').textContent = video.title;
+            document.getElementById('videoDescription').textContent = video.description || 'No description available.';
+            document.getElementById('videoDuration').querySelector('span:last-child').textContent = video.duration || 'N/A';
+            document.getElementById('videoCategory').textContent = video.category.replace('-', ' ');
+
+            // Set video source
+            let videoUrl = video.video_url;
+            let videoId = null;
+            
+            // Extract YouTube video ID
+            if (videoUrl.includes('youtube.com/watch')) {
+                videoId = new URL(videoUrl).searchParams.get('v');
+            } else if (videoUrl.includes('youtu.be/')) {
+                videoId = videoUrl.split('youtu.be/')[1].split('?')[0].split('&')[0];
+            } else if (videoUrl.includes('youtube.com/embed/')) {
+                videoId = videoUrl.split('youtube.com/embed/')[1].split('?')[0].split('&')[0];
+            }
+            
+            // Convert to embed URL if we have a video ID
+            if (videoId) {
+                videoUrl = `https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0`;
+            }
+
+            player.src = videoUrl;
+            placeholder.classList.add('hidden');
+            playerSection.classList.remove('hidden');
+
+            // Scroll to player
+            playerSection.scrollIntoView({ behavior: 'smooth' });
+
+            // Track video view (optional)
+            trackVideoView(video.id);
+        }
+
+        // Track video view
+        async function trackVideoView(videoId) {
+            try {
+                await getSupabase()
+                    .from('video_views')
+                    .insert({
+                        video_id: videoId,
+                        student_id: currentUser.id,
+                        viewed_at: new Date().toISOString()
+                    });
+            } catch (error) {
+                // Silently fail - not critical
+            }
+        }
+
+        // Filter by category
+        function filterByCategory(category) {
+            currentCategory = category;
+            
+            // Update tab states
+            document.querySelectorAll('.category-tab').forEach(tab => {
+                if (tab.dataset.category === category) {
+                    tab.classList.add('active');
+                } else {
+                    tab.classList.remove('active');
+                }
+            });
+
+            renderVideos();
+        }
+
+        // Setup event listeners
+        function setupEventListeners() {
+            // Mobile menu toggle
+            mobileMenuBtn.addEventListener('click', () => {
+                sidebar.classList.toggle('-translate-x-full');
+                mobileOverlay.classList.toggle('hidden');
+            });
+
+            mobileOverlay.addEventListener('click', () => {
+                sidebar.classList.add('-translate-x-full');
+                mobileOverlay.classList.add('hidden');
+            });
+
+            // Search
+            if (searchInput) {
+                searchInput.addEventListener('input', debounce(() => {
+                    renderVideos();
+                }, 300));
+            }
+
+            // Logout
+            document.getElementById('logoutButton').addEventListener('click', async () => {
+                if (await logout()) {
+                    redirectToLogin();
+                }
+            });
+
+            // Add video form (admin/teacher)
+            const addVideoForm = document.getElementById('addVideoForm');
+            if (addVideoForm) {
+                addVideoForm.addEventListener('submit', handleAddVideo);
+            }
+        }
+
+        // Handle add video form submission
+        async function handleAddVideo(e) {
+            e.preventDefault();
+
+            const title = document.getElementById('newVideoTitle').value.trim();
+            const category = document.getElementById('newVideoCategory').value;
+            const videoUrl = document.getElementById('newVideoUrl').value.trim();
+            const description = document.getElementById('newVideoDescription').value.trim();
+            const duration = document.getElementById('newVideoDuration').value.trim();
+            const thumbnailUrl = document.getElementById('newVideoThumbnail').value.trim();
+            const isFeatured = document.getElementById('newVideoFeatured').checked;
+
+            if (!title || !category || !videoUrl) {
+                showToast('Please fill in all required fields', 'error');
+                return;
+            }
+
+            try {
+                const { data, error } = await getSupabase()
+                    .from('tutorial_videos')
+                    .insert({
+                        title,
+                        category,
+                        video_url: videoUrl,
+                        description,
+                        duration,
+                        thumbnail_url: thumbnailUrl || null,
+                        is_featured: isFeatured,
+                        is_active: true,
+                        created_by: currentUser.id,
+                        order: allVideos.length + 1
+                    })
+                    .select()
+                    .single();
+
+                if (error) throw error;
+
+                allVideos.push(data);
+                renderVideos();
+                
+                // Reset form
+                e.target.reset();
+                showToast('Video added successfully!', 'success');
+
+            } catch (error) {
+                console.error('Error adding video:', error);
+                showToast('Failed to add video. Please try again.', 'error');
+            }
+        }
+
+        // Debounce helper
+        function debounce(func, wait) {
+            let timeout;
+            return function executedFunction(...args) {
+                const later = () => {
+                    clearTimeout(timeout);
+                    func(...args);
+                };
+                clearTimeout(timeout);
+                timeout = setTimeout(later, wait);
+            };
+        }
+
+        // Escape HTML helper
+        function escapeHtml(text) {
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // Show toast notification
+        function showToast(message, type = 'info') {
+            const toast = document.createElement('div');
+            toast.className = `fixed bottom-4 right-4 px-6 py-3 rounded-xl shadow-lg z-50 ${
+                type === 'success' ? 'bg-green-500' : type === 'error' ? 'bg-red-500' : 'bg-brand'
+            } text-white font-medium`;
+            toast.textContent = message;
+            document.body.appendChild(toast);
+            setTimeout(() => toast.remove(), 3000);
+        }
+    </script>
+</body>
+</html>

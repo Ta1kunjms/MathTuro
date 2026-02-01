@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/png" href="../Logo/MATHURO LOGO.png">
+    <title>Admin Portal - MathTuro LMS</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+    <link rel="stylesheet" href="../shared/css/base.css">
+    <link rel="stylesheet" href="assets/css/admin.css">
+</head>
+<body class="bg-gray-900 min-h-screen flex items-center justify-center">
+    <!-- Skip Link for Accessibility -->
+    <a href="#main-content" class="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 bg-purple-600 text-white px-4 py-2 rounded-md z-50">
+        Skip to main content
+    </a>
+
+    <div id="main-content" class="container mx-auto px-4">
+        <div class="max-w-md w-full bg-gray-800 rounded-lg shadow-xl p-8 mx-auto border border-gray-700">
+            <!-- Back to Home -->
+            <div class="mb-4">
+                <a href="../public/index.html" class="text-purple-400 hover:text-purple-300 text-sm flex items-center">
+                    ← Back to Home
+                </a>
+            </div>
+
+            <!-- Logo and Title -->
+            <div class="text-center mb-6">
+                <div class="flex justify-center items-center gap-4 mb-4">
+                    <img src="../Logo/University Seal_Official.png" alt="MSU-GenSan" class="h-10 object-contain opacity-70">
+                    <img src="../Logo/COED Logo.jpg" alt="COED" class="h-10 object-contain opacity-70">
+                    <img src="../Logo/LEMMA logo.jpg" alt="LEMMA" class="h-10 object-contain opacity-70">
+                </div>
+                <div class="w-20 h-20 mx-auto mb-4 bg-gray-700 rounded-2xl flex items-center justify-center border border-purple-500/30">
+                    <img src="../Logo/MATHURO LOGO.png" alt="MathTuro" class="w-16 h-16 object-contain">
+                </div>
+                <h1 class="text-2xl font-bold text-white mb-2">Admin Portal</h1>
+                <p class="text-gray-400">MathTuro LMS - Restricted Access</p>
+            </div>
+
+            <!-- Mode Selection Tabs -->
+            <div class="flex mb-6 bg-gray-700 rounded-lg p-1">
+                <button type="button" id="loginTab" class="flex-1 py-2 px-4 rounded-md text-sm font-medium transition-all bg-purple-600 text-white" onclick="switchMode('login')">
+                    Sign In
+                </button>
+                <button type="button" id="registerTab" class="flex-1 py-2 px-4 rounded-md text-sm font-medium transition-all text-gray-400 hover:text-white" onclick="switchMode('register')">
+                    Request Access
+                </button>
+            </div>
+
+            <!-- Login Form -->
+            <form id="loginForm" class="space-y-5">
+                <div>
+                    <label for="loginEmail" class="block text-sm font-medium text-gray-300 mb-1">
+                        Admin Email
+                    </label>
+                    <input
+                        type="email"
+                        id="loginEmail"
+                        name="email"
+                        required
+                        class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                        placeholder="admin@example.com"
+                        autocomplete="email"
+                    >
+                </div>
+
+                <div>
+                    <label for="loginPassword" class="block text-sm font-medium text-gray-300 mb-1">
+                        Password
+                    </label>
+                    <input
+                        type="password"
+                        id="loginPassword"
+                        name="password"
+                        required
+                        class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                        placeholder="Enter your password"
+                        autocomplete="current-password"
+                    >
+                </div>
+
+                <div class="flex items-center justify-end">
+                    <a href="../public/reset-password.html" class="text-sm text-purple-400 hover:text-purple-300">
+                        Forgot password?
+                    </a>
+                </div>
+
+                <button
+                    type="submit"
+                    id="loginButton"
+                    class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 transition-colors"
+                >
+                    Sign In to Admin Panel
+                </button>
+            </form>
+
+            <!-- Register Form (Request Access) -->
+            <form id="registerForm" class="space-y-5 hidden">
+                <div class="p-3 bg-yellow-900/50 border border-yellow-700 rounded-md mb-4">
+                    <p class="text-sm text-yellow-300">
+                        ⚠️ Admin accounts require approval. Your request will be reviewed by a system administrator.
+                    </p>
+                </div>
+
+                <div>
+                    <label for="regFullName" class="block text-sm font-medium text-gray-300 mb-1">
+                        Full Name <span class="text-red-400">*</span>
+                    </label>
+                    <input
+                        type="text"
+                        id="regFullName"
+                        name="fullName"
+                        required
+                        class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                        placeholder="John Doe"
+                        autocomplete="name"
+                    >
+                </div>
+
+                <div>
+                    <label for="regEmail" class="block text-sm font-medium text-gray-300 mb-1">
+                        Email Address <span class="text-red-400">*</span>
+                    </label>
+                    <input
+                        type="email"
+                        id="regEmail"
+                        name="email"
+                        required
+                        class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                        placeholder="admin@example.com"
+                        autocomplete="email"
+                    >
+                </div>
+
+                <div>
+                    <label for="regPassword" class="block text-sm font-medium text-gray-300 mb-1">
+                        Password <span class="text-red-400">*</span>
+                    </label>
+                    <input
+                        type="password"
+                        id="regPassword"
+                        name="password"
+                        required
+                        minlength="6"
+                        class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                        placeholder="Create a strong password"
+                        autocomplete="new-password"
+                    >
+                    <p class="text-xs text-gray-500 mt-1">Must be at least 6 characters</p>
+                </div>
+
+                <div>
+                    <label for="regConfirmPassword" class="block text-sm font-medium text-gray-300 mb-1">
+                        Confirm Password <span class="text-red-400">*</span>
+                    </label>
+                    <input
+                        type="password"
+                        id="regConfirmPassword"
+                        name="confirmPassword"
+                        required
+                        minlength="6"
+                        class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                        placeholder="Confirm your password"
+                        autocomplete="new-password"
+                    >
+                </div>
+
+                <div class="flex items-start">
+                    <input
+                        type="checkbox"
+                        id="adminTerms"
+                        name="terms"
+                        required
+                        class="h-4 w-4 text-purple-600 focus:ring-purple-500 border-gray-600 rounded mt-0.5 bg-gray-700"
+                    >
+                    <label for="adminTerms" class="ml-2 block text-sm text-gray-400">
+                        I agree to the <a href="../public/terms.html" class="text-purple-400 hover:text-purple-300" target="_blank">Terms of Service</a> 
+                        and understand that admin access is subject to approval
+                    </label>
+                </div>
+
+                <button
+                    type="submit"
+                    id="registerButton"
+                    class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 transition-colors"
+                >
+                    Request Admin Access
+                </button>
+            </form>
+
+            <!-- Success Message -->
+            <div id="successMessage" class="hidden text-center py-8">
+                <div class="text-green-400 text-5xl mb-4">✓</div>
+                <h2 class="text-xl font-bold text-white mb-2">Request Submitted!</h2>
+                <p class="text-gray-400 mb-4">Your admin access request has been submitted for review.</p>
+                <p class="text-sm text-gray-500 mb-6">You will receive an email once your request is approved.</p>
+                <a href="../public/index.html" class="inline-block px-6 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 transition-colors">
+                    Back to Home
+                </a>
+            </div>
+
+            <!-- Error Message -->
+            <div id="errorMessage" class="hidden mt-4 p-3 bg-red-900/50 border border-red-700 rounded-md">
+                <p id="errorText" class="text-sm text-red-300"></p>
+            </div>
+
+            <!-- Loading Indicator -->
+            <div id="loadingIndicator" class="hidden text-center mt-6">
+                <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-purple-500"></div>
+                <p class="mt-2 text-gray-400">Processing...</p>
+            </div>
+
+            <!-- Footer -->
+            <div class="mt-8 text-center">
+                <p class="text-sm text-gray-500">
+                    For admin support, contact <a href="mailto:admin@example.com" class="text-purple-400 hover:text-purple-300">admin@example.com</a>
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="../shared/js/config.js"></script>
+    <script src="../shared/js/utils.js"></script>
+    <script src="../shared/js/supabase.js"></script>
+    <script src="../shared/js/auth.js"></script>
+    <script>
+        function switchMode(mode) {
+            const loginForm = document.getElementById('loginForm');
+            const registerForm = document.getElementById('registerForm');
+            const loginTab = document.getElementById('loginTab');
+            const registerTab = document.getElementById('registerTab');
+            const errorMessage = document.getElementById('errorMessage');
+            const successMessage = document.getElementById('successMessage');
+
+            errorMessage.classList.add('hidden');
+            successMessage.classList.add('hidden');
+
+            if (mode === 'login') {
+                loginForm.classList.remove('hidden');
+                registerForm.classList.add('hidden');
+                loginTab.className = 'flex-1 py-2 px-4 rounded-md text-sm font-medium transition-all bg-purple-600 text-white';
+                registerTab.className = 'flex-1 py-2 px-4 rounded-md text-sm font-medium transition-all text-gray-400 hover:text-white';
+            } else {
+                loginForm.classList.add('hidden');
+                registerForm.classList.remove('hidden');
+                registerTab.className = 'flex-1 py-2 px-4 rounded-md text-sm font-medium transition-all bg-purple-600 text-white';
+                loginTab.className = 'flex-1 py-2 px-4 rounded-md text-sm font-medium transition-all text-gray-400 hover:text-white';
+            }
+        }
+
+        function showError(message) {
+            const errorMessage = document.getElementById('errorMessage');
+            const errorText = document.getElementById('errorText');
+            errorText.textContent = message;
+            errorMessage.classList.remove('hidden');
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            // Login form handler
+            document.getElementById('loginForm').addEventListener('submit', async function(e) {
+                e.preventDefault();
+                
+                const email = document.getElementById('loginEmail').value;
+                const password = document.getElementById('loginPassword').value;
+                const loginButton = document.getElementById('loginButton');
+                const loadingIndicator = document.getElementById('loadingIndicator');
+                const errorMessage = document.getElementById('errorMessage');
+
+                loginButton.disabled = true;
+                loginButton.textContent = 'Signing in...';
+                loadingIndicator.classList.remove('hidden');
+                errorMessage.classList.add('hidden');
+
+                try {
+                    const user = await login(email, password);
+
+                    if (user) {
+                        if (user.role !== 'admin') {
+                            showError('Access denied. This portal is for administrators only.');
+                            await logout();
+                            return;
+                        }
+                        window.location.href = 'dashboard.html';
+                    } else {
+                        showError('Invalid email or password');
+                    }
+                } catch (error) {
+                    showError('Login failed: ' + error.message);
+                } finally {
+                    loginButton.disabled = false;
+                    loginButton.textContent = 'Sign In to Admin Panel';
+                    loadingIndicator.classList.add('hidden');
+                }
+            });
+
+            // Register form handler
+            document.getElementById('registerForm').addEventListener('submit', async function(e) {
+                e.preventDefault();
+                
+                const fullName = document.getElementById('regFullName').value.trim();
+                const email = document.getElementById('regEmail').value.trim();
+                const password = document.getElementById('regPassword').value;
+                const confirmPassword = document.getElementById('regConfirmPassword').value;
+                const termsAccepted = document.getElementById('adminTerms').checked;
+                const registerButton = document.getElementById('registerButton');
+                const loadingIndicator = document.getElementById('loadingIndicator');
+                const errorMessage = document.getElementById('errorMessage');
+
+                errorMessage.classList.add('hidden');
+
+                // Validation
+                if (!fullName || !email || !password) {
+                    showError('All fields are required');
+                    return;
+                }
+
+                if (password.length < 6) {
+                    showError('Password must be at least 6 characters');
+                    return;
+                }
+
+                if (password !== confirmPassword) {
+                    showError('Passwords do not match');
+                    return;
+                }
+
+                if (!termsAccepted) {
+                    showError('You must agree to the terms');
+                    return;
+                }
+
+                registerButton.disabled = true;
+                registerButton.textContent = 'Submitting request...';
+                loadingIndicator.classList.remove('hidden');
+
+                try {
+                    const { data: authData, error: authError } = await getSupabase().auth.signUp({
+                        email: email,
+                        password: password,
+                        options: {
+                            data: {
+                                full_name: fullName,
+                                role: 'admin'
+                            }
+                        }
+                    });
+
+                    if (authError) {
+                        if (authError.message.includes('already registered')) {
+                            showError('This email is already registered');
+                        } else {
+                            showError(authError.message);
+                        }
+                        return;
+                    }
+
+                    if (authData.user) {
+                        const { error: userError } = await getSupabase()
+                            .from('users')
+                            .insert({
+                                id: authData.user.id,
+                                email: email,
+                                full_name: fullName,
+                                role: 'admin',
+                                created_at: new Date().toISOString(),
+                                updated_at: new Date().toISOString()
+                            });
+
+                        if (userError) {
+                            console.error('Error creating user record:', userError);
+                        }
+                    }
+
+                    // Show success message
+                    document.getElementById('registerForm').classList.add('hidden');
+                    document.querySelector('.flex.mb-6.bg-gray-700').classList.add('hidden');
+                    document.getElementById('successMessage').classList.remove('hidden');
+
+                } catch (error) {
+                    showError('Registration failed: ' + error.message);
+                } finally {
+                    registerButton.disabled = false;
+                    registerButton.textContent = 'Request Admin Access';
+                    loadingIndicator.classList.add('hidden');
+                }
+            });
+        });
+    </script>
+</body>
+</html>

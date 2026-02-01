@@ -1,0 +1,1652 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/png" href="../Logo/MATHURO LOGO.png">
+    <title>Student Dashboard - MathTuro LMS</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: {
+                            50: '#f0fdf4',
+                            100: '#dcfce7',
+                            200: '#bbf7d0',
+                            300: '#86efac',
+                            400: '#4ade80',
+                            500: '#22c55e',
+                            600: '#16a34a',
+                            700: '#15803d',
+                            800: '#166534',
+                            900: '#14532d',
+                        },
+                        brand: '#005801',
+                        'brand-dark': '#004601',
+                        'brand-light': '#006B01',
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', 'sans-serif'],
+                    },
+                },
+            },
+        }
+    </script>
+    <style>
+        body { font-family: 'Inter', system-ui, sans-serif; }
+        
+        .gradient-text {
+            background: linear-gradient(135deg, #005801 0%, #22c55e 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .glass-sidebar {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+        }
+        
+        .stat-card {
+            transition: all 0.3s ease;
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 20px 40px -12px rgba(0, 88, 1, 0.15);
+        }
+        
+        .module-card {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .module-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 20px 40px -12px rgba(0, 88, 1, 0.15);
+        }
+        
+        .sidebar-link {
+            transition: all 0.2s ease;
+        }
+        
+        .sidebar-link:hover, .sidebar-link.active {
+            background: linear-gradient(135deg, #005801 0%, #006B01 100%);
+            color: white;
+        }
+        
+        .sidebar-link.active {
+            box-shadow: 0 4px 15px rgba(0, 88, 1, 0.3);
+        }
+        
+        .progress-ring {
+            transform: rotate(-90deg);
+        }
+        
+        .notification-badge {
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+        
+        .activity-item {
+            transition: all 0.2s ease;
+        }
+        
+        .activity-item:hover {
+            background-color: #f0fdf4;
+        }
+        
+        .streak-flame {
+            animation: flicker 1s ease-in-out infinite alternate;
+        }
+        
+        @keyframes flicker {
+            0% { transform: scale(1); }
+            100% { transform: scale(1.1); }
+        }
+        
+        .video-card {
+            transition: all 0.3s ease;
+        }
+        
+        .video-card:hover {
+            transform: scale(1.02);
+        }
+        
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; }
+        ::-webkit-scrollbar-thumb { background: #005801; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: #004601; }
+    </style>
+    <link rel="stylesheet" href="../shared/css/base.css">
+    <link rel="stylesheet" href="assets/css/student.css">
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <!-- Mobile Menu Overlay -->
+    <div id="mobileOverlay" class="fixed inset-0 bg-black bg-opacity-50 z-40 hidden lg:hidden"></div>
+    
+    <!-- Sidebar -->
+    <aside id="sidebar" class="fixed left-0 top-0 h-full w-72 glass-sidebar border-r border-gray-200 z-50 transform -translate-x-full lg:translate-x-0 transition-transform duration-300">
+        <!-- Logo -->
+        <div class="p-6 border-b border-gray-100">
+            <a href="dashboard.html" class="flex items-center space-x-3">
+                <div class="w-12 h-12 bg-white rounded-xl flex items-center justify-center shadow-lg">
+                    <img src="../Logo/MATHURO LOGO.png" alt="MathTuro" class="w-10 h-10 object-contain">
+                </div>
+                <div>
+                    <span class="text-xl font-bold gradient-text">MathTuro</span>
+                    <p class="text-xs text-gray-500">Student Portal</p>
+                </div>
+            </a>
+        </div>
+        
+        <!-- User Info -->
+        <div class="p-6 border-b border-gray-100">
+            <div class="flex items-center space-x-3">
+                <div class="w-12 h-12 bg-brand/10 rounded-full flex items-center justify-center">
+                    <span id="userInitials" class="text-brand font-bold text-lg">--</span>
+                </div>
+                <div class="flex-1">
+                    <p id="sidebarUserName" class="font-semibold text-gray-800">Loading...</p>
+                    <div class="flex items-center space-x-1">
+                        <span id="streakBadge" class="text-sm">🔥</span>
+                        <span id="streakCount" class="text-sm text-orange-500 font-medium">0 day streak</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Navigation -->
+        <nav class="p-4 space-y-2 overflow-y-auto" style="max-height: calc(100vh - 320px);">
+            <p class="text-xs text-gray-400 uppercase tracking-wider px-4 mb-2">Main Menu</p>
+            <a href="dashboard.html" class="sidebar-link active flex items-center space-x-3 px-4 py-3 rounded-xl text-gray-700">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
+                </svg>
+                <span>Dashboard</span>
+            </a>
+            <a href="modules.html" class="sidebar-link flex items-center space-x-3 px-4 py-3 rounded-xl text-gray-700">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
+                </svg>
+                <span>Browse Modules</span>
+            </a>
+            
+            <a href="../public/tutorial-videos.html" class="sidebar-link flex items-center space-x-3 px-4 py-3 rounded-xl text-gray-700">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+                <span>Tutorial Videos</span>
+            </a>
+            <a href="quizzes.html" class="sidebar-link flex items-center space-x-3 px-4 py-3 rounded-xl text-gray-700">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/>
+                </svg>
+                <span>Quizzes</span>
+            </a>
+            
+            <p class="text-xs text-gray-400 uppercase tracking-wider px-4 mb-2 mt-6">My Learning</p>
+            <a href="#" onclick="showMyProgress(); return false;" class="sidebar-link flex items-center space-x-3 px-4 py-3 rounded-xl text-gray-700">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                </svg>
+                <span>My Progress</span>
+            </a>
+            <a href="#" onclick="showAchievements(); return false;" class="sidebar-link flex items-center space-x-3 px-4 py-3 rounded-xl text-gray-700">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"/>
+                </svg>
+                <span>Achievements</span>
+                <span id="achievementCount" class="ml-auto px-2 py-0.5 bg-yellow-100 text-yellow-700 text-xs rounded-full">0</span>
+            </a>
+            <a href="#" onclick="showLeaderboard(); return false;" class="sidebar-link flex items-center space-x-3 px-4 py-3 rounded-xl text-gray-700">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"/>
+                </svg>
+                <span>Leaderboard</span>
+            </a>
+        </nav>
+        
+        <!-- Bottom Actions -->
+        <div class="absolute bottom-0 left-0 right-0 p-4 border-t border-gray-100 bg-white">
+            <button id="logoutButton" class="w-full flex items-center space-x-3 px-4 py-3 text-red-600 hover:bg-red-50 rounded-xl transition-colors">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
+                </svg>
+                <span>Logout</span>
+            </button>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="lg:ml-72 min-h-screen">
+        <!-- Top Header -->
+        <header class="bg-white border-b border-gray-200 sticky top-0 z-30">
+            <div class="flex items-center justify-between px-4 lg:px-8 py-4">
+                <!-- Mobile Menu Button -->
+                <button id="mobileMenuBtn" class="lg:hidden p-2 text-gray-600 hover:text-brand rounded-lg">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
+                    </svg>
+                </button>
+                
+                <!-- Page Title -->
+                <div class="flex-1 lg:flex-none">
+                    <h1 class="text-xl lg:text-2xl font-bold text-gray-800">Dashboard</h1>
+                    <p class="text-sm text-gray-500 hidden sm:block">Welcome back! Continue your learning journey.</p>
+                </div>
+                
+                <!-- Right Actions -->
+                <div class="flex items-center space-x-3">
+                    <!-- Quick Search -->
+                    <button onclick="showSearch()" class="hidden md:flex items-center space-x-2 px-4 py-2 bg-gray-100 rounded-xl text-gray-500 hover:bg-gray-200 transition-colors">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                        </svg>
+                        <span class="text-sm">Search...</span>
+                        <span class="text-xs bg-gray-200 px-1.5 py-0.5 rounded">⌘K</span>
+                    </button>
+                    
+                    <!-- Notifications -->
+                    <button id="notificationBtn" class="relative p-2 text-gray-600 hover:text-brand rounded-lg hover:bg-gray-100">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
+                        </svg>
+                        <span id="notificationBadge" class="notification-badge absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center hidden">0</span>
+                    </button>
+                    
+                    <!-- User Menu -->
+                    <div class="relative">
+                        <button id="userMenuBtn" class="flex items-center space-x-2 p-2 rounded-lg hover:bg-gray-100">
+                            <div class="w-8 h-8 bg-brand/10 rounded-full flex items-center justify-center">
+                                <span id="headerUserInitials" class="text-brand font-semibold text-sm">--</span>
+                            </div>
+                            <svg class="w-4 h-4 text-gray-500 hidden sm:block" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                            </svg>
+                        </button>
+                        
+                        <!-- Dropdown -->
+                        <div id="userDropdown" class="hidden absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-lg border border-gray-100 py-2 z-50">
+                            <div class="px-4 py-3 border-b border-gray-100">
+                                <p id="dropdownUserName" class="font-semibold text-gray-800">User</p>
+                                <p id="dropdownUserEmail" class="text-sm text-gray-500">email@example.com</p>
+                            </div>
+                            <a href="#" onclick="showProfile(); return false;" class="flex items-center space-x-3 px-4 py-2 text-gray-700 hover:bg-gray-50">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                                </svg>
+                                <span>Profile Settings</span>
+                            </a>
+                            <a href="#" onclick="showPreferences(); return false;" class="flex items-center space-x-3 px-4 py-2 text-gray-700 hover:bg-gray-50">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                </svg>
+                                <span>Preferences</span>
+                            </a>
+                            <div class="border-t border-gray-100 my-1"></div>
+                            <button onclick="handleLogout()" class="w-full flex items-center space-x-3 px-4 py-2 text-red-600 hover:bg-red-50">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
+                                </svg>
+                                <span>Logout</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Dashboard Content -->
+        <div class="p-4 lg:p-8">
+            <!-- Welcome Banner with Streak -->
+            <div class="bg-gradient-to-r from-brand to-brand-light rounded-2xl p-6 lg:p-8 text-white mb-8 relative overflow-hidden">
+                <div class="absolute right-0 top-0 w-64 h-64 bg-white/5 rounded-full -translate-y-1/2 translate-x-1/2"></div>
+                <div class="absolute left-1/2 bottom-0 w-32 h-32 bg-white/5 rounded-full translate-y-1/2"></div>
+                
+                <div class="relative flex flex-col lg:flex-row lg:items-center lg:justify-between">
+                    <div>
+                        <div class="flex items-center space-x-2 mb-2">
+                            <span id="greetingTime" class="text-white/80 text-sm">Good morning</span>
+                            <span class="text-white/60">•</span>
+                            <span id="currentDate" class="text-white/80 text-sm"></span>
+                        </div>
+                        <h2 class="text-2xl lg:text-3xl font-bold mb-2">Welcome back, <span id="welcomeName">Student</span>! 👋</h2>
+                        <p class="text-white/80 mb-4">Continue your learning journey and achieve your goals today.</p>
+                        
+                        <!-- Daily Goal Progress -->
+                        <div class="flex items-center space-x-4">
+                            <div class="flex items-center space-x-2 bg-white/20 px-4 py-2 rounded-xl">
+                                <span class="streak-flame text-xl">🔥</span>
+                                <div>
+                                    <p class="text-sm font-medium"><span id="dailyStreak">0</span> day streak</p>
+                                    <p class="text-xs text-white/70">Keep it going!</p>
+                                </div>
+                            </div>
+                            <div class="hidden sm:flex items-center space-x-2 bg-white/20 px-4 py-2 rounded-xl">
+                                <span class="text-xl">🎯</span>
+                                <div>
+                                    <p class="text-sm font-medium"><span id="dailyGoalProgress">0</span>/<span id="dailyGoalTarget">3</span> lessons</p>
+                                    <p class="text-xs text-white/70">Daily goal</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mt-6 lg:mt-0 flex flex-col sm:flex-row gap-3">
+                        <a href="modules.html" class="inline-flex items-center justify-center space-x-2 bg-white text-brand px-6 py-3 rounded-xl font-semibold hover:bg-gray-100 transition-colors">
+                            <span>Browse Modules</span>
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/>
+                            </svg>
+                        </a>
+                        <a href="../public/tutorial-videos.html" class="inline-flex items-center justify-center space-x-2 bg-white/20 text-white px-6 py-3 rounded-xl font-semibold hover:bg-white/30 transition-colors border border-white/30">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            </svg>
+                            <span>Watch Tutorials</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Stats Grid -->
+            <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6 mb-8">
+                <!-- Modules Completed -->
+                <div class="stat-card bg-white rounded-2xl p-5 lg:p-6 border border-gray-100 shadow-sm">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center">
+                            <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
+                            </svg>
+                        </div>
+                        <span class="text-xs text-green-600 bg-green-50 px-2 py-1 rounded-full hidden" id="modulesChange">+0</span>
+                    </div>
+                    <div class="text-3xl font-bold text-gray-800" id="modulesCompletedStat">0</div>
+                    <div class="text-sm text-gray-500">Modules Completed</div>
+                </div>
+
+                <!-- Lessons Completed -->
+                <div class="stat-card bg-white rounded-2xl p-5 lg:p-6 border border-gray-100 shadow-sm">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center">
+                            <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            </svg>
+                        </div>
+                    </div>
+                    <div class="text-3xl font-bold text-gray-800" id="lessonsCompletedStat">0</div>
+                    <div class="text-sm text-gray-500">Lessons Completed</div>
+                </div>
+
+                <!-- Quiz Average -->
+                <div class="stat-card bg-white rounded-2xl p-5 lg:p-6 border border-gray-100 shadow-sm">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center">
+                            <svg class="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                            </svg>
+                        </div>
+                    </div>
+                    <div class="text-3xl font-bold text-gray-800" id="averageScoreStat">0%</div>
+                    <div class="text-sm text-gray-500">Average Quiz Score</div>
+                </div>
+
+                <!-- Total XP -->
+                <div class="stat-card bg-white rounded-2xl p-5 lg:p-6 border border-gray-100 shadow-sm">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="w-12 h-12 bg-yellow-100 rounded-xl flex items-center justify-center">
+                            <svg class="w-6 h-6 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"/>
+                            </svg>
+                        </div>
+                    </div>
+                    <div class="text-3xl font-bold text-gray-800" id="totalXpStat">0</div>
+                    <div class="text-sm text-gray-500">Total XP Earned</div>
+                </div>
+            </div>
+
+            <!-- Main Content Grid -->
+            <div class="grid lg:grid-cols-3 gap-6 lg:gap-8">
+                <!-- Left Column - Modules & Progress -->
+                <div class="lg:col-span-2 space-y-6">
+                    <!-- Continue Learning -->
+                    <div class="bg-white rounded-2xl border border-gray-100 shadow-sm">
+                        <div class="p-6 border-b border-gray-100">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <h3 class="text-lg font-bold text-gray-800">Continue Learning</h3>
+                                    <p class="text-sm text-gray-500">Pick up where you left off</p>
+                                </div>
+                                <a href="modules.html" class="text-brand hover:text-brand-dark text-sm font-medium flex items-center space-x-1">
+                                    <span>View All</span>
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                                    </svg>
+                                </a>
+                            </div>
+                        </div>
+                        <div id="continueLearningSections" class="p-6 space-y-4">
+                            <!-- Content loaded dynamically -->
+                            <div class="text-center py-8 text-gray-500">
+                                <div class="w-12 h-12 mx-auto mb-4 rounded-full bg-gray-100 flex items-center justify-center">
+                                    <div class="w-6 h-6 border-2 border-gray-300 border-t-brand rounded-full animate-spin"></div>
+                                </div>
+                                <p>Loading your modules...</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Featured Tutorial Videos -->
+                    <div class="bg-white rounded-2xl border border-gray-100 shadow-sm">
+                        <div class="p-6 border-b border-gray-100">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <h3 class="text-lg font-bold text-gray-800">Featured Tutorials</h3>
+                                    <p class="text-sm text-gray-500">Learn with video guides</p>
+                                </div>
+                                <a href="../public/tutorial-videos.html" class="text-brand hover:text-brand-dark text-sm font-medium flex items-center space-x-1">
+                                    <span>View All</span>
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                                    </svg>
+                                </a>
+                            </div>
+                        </div>
+                        <div id="featuredVideos" class="p-6">
+                            <div class="grid sm:grid-cols-2 gap-4">
+                                <!-- Video cards will be loaded here -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Recent Submissions -->
+                    <div class="bg-white rounded-2xl border border-gray-100 shadow-sm">
+                        <div class="p-6 border-b border-gray-100">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <h3 class="text-lg font-bold text-gray-800">Recent Submissions</h3>
+                                    <p class="text-sm text-gray-500">Your quiz submission history</p>
+                                </div>
+                                <a href="quizzes.html" class="text-brand hover:text-brand-dark text-sm font-medium flex items-center space-x-1">
+                                    <span>View All</span>
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                                    </svg>
+                                </a>
+                            </div>
+                        </div>
+                        <div id="recentSubmissions" class="divide-y divide-gray-100">
+                            <!-- Content loaded dynamically -->
+                            <div class="p-6 text-center text-gray-500">
+                                <p>Loading submissions...</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right Column - Activity & Achievements -->
+                <div class="space-y-6">
+                    <!-- Overall Progress -->
+                    <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
+                        <h3 class="text-lg font-bold text-gray-800 mb-4">Overall Progress</h3>
+                        <div class="flex items-center justify-center mb-4">
+                            <div class="relative">
+                                <svg class="w-32 h-32 progress-ring" viewBox="0 0 120 120">
+                                    <circle cx="60" cy="60" r="54" fill="none" stroke="#e5e7eb" stroke-width="8"/>
+                                    <circle id="progressCircle" cx="60" cy="60" r="54" fill="none" stroke="url(#progressGradient)" stroke-width="8" stroke-linecap="round" stroke-dasharray="339.292" stroke-dashoffset="339.292"/>
+                                    <defs>
+                                        <linearGradient id="progressGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                                            <stop offset="0%" stop-color="#005801"/>
+                                            <stop offset="100%" stop-color="#22c55e"/>
+                                        </linearGradient>
+                                    </defs>
+                                </svg>
+                                <div class="absolute inset-0 flex items-center justify-center">
+                                    <span id="overallProgressPercent" class="text-2xl font-bold text-gray-800">0%</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="text-center text-sm text-gray-500 mb-4">
+                            <span id="completedModulesText">0 of 0</span> modules completed
+                        </div>
+                        <div class="space-y-2">
+                            <div class="flex justify-between text-sm">
+                                <span class="text-gray-600">Lessons</span>
+                                <span id="lessonProgressText" class="font-medium text-gray-800">0/0</span>
+                            </div>
+                            <div class="h-2 bg-gray-100 rounded-full overflow-hidden">
+                                <div id="lessonProgressBar" class="h-full bg-gradient-to-r from-brand to-green-500 rounded-full transition-all duration-500" style="width: 0%"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Weekly Activity -->
+                    <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
+                        <h3 class="text-lg font-bold text-gray-800 mb-4">This Week's Activity</h3>
+                        <div id="weeklyActivity" class="grid grid-cols-7 gap-1">
+                            <!-- Days will be populated -->
+                        </div>
+                        <div class="flex justify-between text-xs text-gray-400 mt-2">
+                            <span>Mon</span>
+                            <span>Tue</span>
+                            <span>Wed</span>
+                            <span>Thu</span>
+                            <span>Fri</span>
+                            <span>Sat</span>
+                            <span>Sun</span>
+                        </div>
+                    </div>
+
+                    <!-- Recent Activity -->
+                    <div class="bg-white rounded-2xl border border-gray-100 shadow-sm">
+                        <div class="p-6 border-b border-gray-100">
+                            <h3 class="text-lg font-bold text-gray-800">Recent Activity</h3>
+                        </div>
+                        <div id="recentActivity" class="divide-y divide-gray-100 max-h-80 overflow-y-auto">
+                            <!-- Content loaded dynamically -->
+                            <div class="p-6 text-center text-gray-500">
+                                <p>Loading activity...</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Achievements Preview -->
+                    <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
+                        <div class="flex items-center justify-between mb-4">
+                            <h3 class="text-lg font-bold text-gray-800">Achievements</h3>
+                            <a href="#" onclick="showAchievements(); return false;" class="text-brand hover:text-brand-dark text-sm font-medium">View All</a>
+                        </div>
+                        <div id="achievementsPreview" class="grid grid-cols-4 gap-3">
+                            <!-- Achievement badges loaded dynamically -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Notification Panel -->
+    <div id="notificationPanel" class="hidden fixed right-0 top-0 h-full w-80 bg-white shadow-2xl z-50 transform translate-x-full transition-transform duration-300">
+        <div class="p-6 border-b border-gray-100 flex items-center justify-between">
+            <h3 class="text-lg font-bold text-gray-800">Notifications</h3>
+            <button onclick="closeNotificationPanel()" class="p-2 text-gray-500 hover:text-gray-700 rounded-lg hover:bg-gray-100">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                </svg>
+            </button>
+        </div>
+        <div id="notificationsContent" class="p-4 space-y-4 overflow-y-auto" style="max-height: calc(100vh - 80px);">
+            <!-- Notifications loaded dynamically -->
+        </div>
+    </div>
+
+    <!-- Search Modal -->
+    <div id="searchModal" class="hidden fixed inset-0 bg-black/50 flex items-start justify-center pt-20 z-50">
+        <div class="bg-white rounded-2xl w-full max-w-xl mx-4 shadow-2xl overflow-hidden">
+            <div class="p-4 border-b border-gray-100">
+                <div class="flex items-center space-x-3">
+                    <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                    </svg>
+                    <input type="text" id="searchInput" placeholder="Search modules, lessons, videos..." class="flex-1 outline-none text-gray-800" autofocus>
+                    <button onclick="closeSearch()" class="p-1 text-gray-400 hover:text-gray-600">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+            <div id="searchResults" class="max-h-96 overflow-y-auto">
+                <div class="p-4 text-center text-gray-500">
+                    <p>Start typing to search...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div class="bg-white rounded-2xl p-8 text-center shadow-2xl">
+            <div class="relative w-16 h-16 mx-auto mb-4">
+                <div class="absolute inset-0 border-4 border-brand/20 rounded-full"></div>
+                <div class="absolute inset-0 border-4 border-brand border-t-transparent rounded-full animate-spin"></div>
+            </div>
+            <p class="text-gray-600 font-medium">Loading your dashboard...</p>
+        </div>
+    </div>
+
+    <!-- Modal Container -->
+    <div id="modalContainer" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+        <div id="modalContent" class="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl">
+            <!-- Modal content loaded dynamically -->
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="../shared/js/config.js"></script>
+    <script src="../shared/js/utils.js"></script>
+    <script src="../shared/js/supabase.js"></script>
+    <script src="../shared/js/auth.js"></script>
+    <script src="assets/js/student.js"></script>
+    <script src="../shared/js/modules.js"></script>
+    
+    <script>
+        // Global variables
+        let currentUser = null;
+        let dashboardData = {
+            modules: [],
+            lessons: [],
+            submissions: [],
+            progress: [],
+            streak: 0,
+            xp: 0,
+            achievements: []
+        };
+
+        // DOM Elements
+        const loadingOverlay = document.getElementById('loadingOverlay');
+        const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+        const mobileOverlay = document.getElementById('mobileOverlay');
+        const sidebar = document.getElementById('sidebar');
+        const userMenuBtn = document.getElementById('userMenuBtn');
+        const userDropdown = document.getElementById('userDropdown');
+        const notificationBtn = document.getElementById('notificationBtn');
+        const notificationPanel = document.getElementById('notificationPanel');
+
+        // Initialize Dashboard
+        document.addEventListener('DOMContentLoaded', async function() {
+            try {
+                // Check authentication
+                currentUser = await checkAuthSession();
+                
+                if (!currentUser || currentUser.role !== 'student') {
+                    redirectToLogin();
+                    return;
+                }
+
+                // Update greeting based on time
+                updateGreeting();
+                
+                // Update UI with user info
+                updateUserInfo(currentUser);
+                
+                // Load all dashboard data in parallel
+                await Promise.all([
+                    loadDashboardStats(),
+                    loadContinueLearning(),
+                    loadFeaturedVideos(),
+                    loadRecentSubmissions(),
+                    loadRecentActivity(),
+                    loadNotifications(),
+                    loadAchievements(),
+                    loadWeeklyActivity(),
+                    loadStreak()
+                ]);
+
+                // Setup event listeners
+                setupEventListeners();
+
+                // Setup keyboard shortcuts
+                setupKeyboardShortcuts();
+
+            } catch (error) {
+                console.error('Dashboard initialization error:', error);
+                showToast('Failed to load dashboard. Please try again.', 'error');
+            } finally {
+                loadingOverlay.classList.add('hidden');
+            }
+        });
+
+        // Update greeting based on time of day
+        function updateGreeting() {
+            const hour = new Date().getHours();
+            let greeting = 'Good morning';
+            if (hour >= 12 && hour < 17) greeting = 'Good afternoon';
+            else if (hour >= 17) greeting = 'Good evening';
+            
+            document.getElementById('greetingTime').textContent = greeting;
+            document.getElementById('currentDate').textContent = new Date().toLocaleDateString('en-US', {
+                weekday: 'long',
+                month: 'long',
+                day: 'numeric'
+            });
+        }
+
+        // Update user information across the UI
+        function updateUserInfo(user) {
+            const initials = getInitials(user.fullName);
+            const firstName = user.fullName.split(' ')[0];
+            
+            document.getElementById('sidebarUserName').textContent = user.fullName;
+            document.getElementById('userInitials').textContent = initials;
+            document.getElementById('headerUserInitials').textContent = initials;
+            document.getElementById('welcomeName').textContent = firstName;
+            document.getElementById('dropdownUserName').textContent = user.fullName;
+            document.getElementById('dropdownUserEmail').textContent = user.email;
+        }
+
+        function getInitials(name) {
+            return name.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2);
+        }
+
+        // Load streak data
+        async function loadStreak() {
+            try {
+                const { data: streakData } = await getSupabase()
+                    .from('student_streaks')
+                    .select('*')
+                    .eq('student_id', currentUser.id)
+                    .single();
+
+                const streak = streakData?.current_streak || 0;
+                dashboardData.streak = streak;
+                
+                document.getElementById('dailyStreak').textContent = streak;
+                document.getElementById('streakCount').textContent = `${streak} day streak`;
+                
+                // Update streak badge color based on streak length
+                const streakBadge = document.getElementById('streakBadge');
+                if (streak >= 7) streakBadge.textContent = '🔥';
+                else if (streak >= 3) streakBadge.textContent = '🔥';
+                else streakBadge.textContent = '🔥';
+
+            } catch (error) {
+                console.log('No streak data yet');
+            }
+        }
+
+        // Load dashboard statistics
+        async function loadDashboardStats() {
+            try {
+                // Get all modules
+                const { data: modules } = await getSupabase()
+                    .from('modules')
+                    .select('*, lessons(id)')
+                    .eq('status', 'published');
+
+                dashboardData.modules = modules || [];
+
+                // Get lesson progress
+                const { data: lessonProgress } = await getSupabase()
+                    .from('lesson_progress')
+                    .select('*, lessons(module_id)')
+                    .eq('user_id', currentUser.id)
+                    .eq('status', 'completed');
+
+                dashboardData.progress = lessonProgress || [];
+
+                // Get quiz submissions
+                const { data: submissions } = await getSupabase()
+                    .from('quiz_submissions')
+                    .select('student_score, total_items, status')
+                    .eq('user_id', currentUser.id);
+
+                dashboardData.submissions = submissions || [];
+
+                // Calculate stats
+                const completedLessons = lessonProgress ? lessonProgress.length : 0;
+                
+                // Get total lessons
+                let totalLessons = 0;
+                modules?.forEach(m => totalLessons += (m.lessons?.length || 0));
+
+                // Calculate completed modules
+                const moduleProgress = {};
+                if (lessonProgress) {
+                    lessonProgress.forEach(lp => {
+                        const moduleId = lp.lessons?.module_id;
+                        if (moduleId) {
+                            moduleProgress[moduleId] = (moduleProgress[moduleId] || 0) + 1;
+                        }
+                    });
+                }
+
+                let completedModules = 0;
+                for (const module of (modules || [])) {
+                    const moduleLessonsCount = module.lessons?.length || 0;
+                    if (moduleLessonsCount > 0 && moduleProgress[module.id] >= moduleLessonsCount) {
+                        completedModules++;
+                    }
+                }
+
+                // Calculate average score
+                let averageScore = 0;
+                if (submissions && submissions.length > 0) {
+                    const approvedSubmissions = submissions.filter(s => s.status === 'approved');
+                    if (approvedSubmissions.length > 0) {
+                        const totalPercent = approvedSubmissions.reduce((sum, s) => {
+                            const score = s.student_score || 0;
+                            const total = s.total_items || 1;
+                            return sum + (score / total * 100);
+                        }, 0);
+                        averageScore = Math.round(totalPercent / approvedSubmissions.length);
+                    }
+                }
+
+                // Calculate XP (10 XP per lesson, 50 XP per module, 20 XP per approved submission)
+                const xp = (completedLessons * 10) + (completedModules * 50) + 
+                           ((submissions?.filter(s => s.status === 'approved').length || 0) * 20);
+                dashboardData.xp = xp;
+
+                // Update UI
+                document.getElementById('modulesCompletedStat').textContent = completedModules;
+                document.getElementById('lessonsCompletedStat').textContent = completedLessons;
+                document.getElementById('averageScoreStat').textContent = averageScore + '%';
+                document.getElementById('totalXpStat').textContent = xp.toLocaleString();
+
+                // Update progress circle
+                const progressPercent = (modules?.length || 0) > 0 ? Math.round((completedModules / modules.length) * 100) : 0;
+                updateProgressCircle(progressPercent);
+                document.getElementById('overallProgressPercent').textContent = progressPercent + '%';
+                document.getElementById('completedModulesText').textContent = `${completedModules} of ${modules?.length || 0}`;
+
+                // Update lesson progress bar
+                const lessonPercent = totalLessons > 0 ? Math.round((completedLessons / totalLessons) * 100) : 0;
+                document.getElementById('lessonProgressText').textContent = `${completedLessons}/${totalLessons}`;
+                document.getElementById('lessonProgressBar').style.width = `${lessonPercent}%`;
+
+                // Daily goal
+                document.getElementById('dailyGoalProgress').textContent = Math.min(completedLessons, 3);
+
+            } catch (error) {
+                console.error('Error loading stats:', error);
+            }
+        }
+
+        function updateProgressCircle(percent) {
+            const circle = document.getElementById('progressCircle');
+            const circumference = 2 * Math.PI * 54;
+            const offset = circumference - (percent / 100) * circumference;
+            circle.style.strokeDashoffset = offset;
+        }
+
+        // Load continue learning section
+        async function loadContinueLearning() {
+            const container = document.getElementById('continueLearningSections');
+            
+            try {
+                const { data: modules } = await getSupabase()
+                    .from('modules')
+                    .select('*, lessons(id)')
+                    .eq('status', 'published')
+                    .order('created_at', { ascending: false });
+                
+                if (!modules || modules.length === 0) {
+                    container.innerHTML = `
+                        <div class="text-center py-8">
+                            <div class="w-16 h-16 mx-auto bg-gray-100 rounded-full flex items-center justify-center mb-4">
+                                <svg class="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
+                                </svg>
+                            </div>
+                            <h4 class="font-semibold text-gray-800 mb-1">No Modules Yet</h4>
+                            <p class="text-gray-500 text-sm">Check back later for new content</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                // Get progress for each module
+                const moduleCards = await Promise.all(modules.slice(0, 4).map(async (module) => {
+                    const lessonIds = module.lessons?.map(l => l.id) || [];
+
+                    const { data: progress } = await getSupabase()
+                        .from('lesson_progress')
+                        .select('lesson_id')
+                        .eq('user_id', currentUser.id)
+                        .eq('status', 'completed')
+                        .in('lesson_id', lessonIds.length > 0 ? lessonIds : [0]);
+
+                    const totalLessons = lessonIds.length;
+                    const completedLessons = progress?.length || 0;
+                    const progressPercent = totalLessons > 0 ? Math.round((completedLessons / totalLessons) * 100) : 0;
+                    const isCompleted = progressPercent === 100;
+
+                    return `
+                        <a href="module-view.html?id=${module.id}" class="module-card block bg-gray-50 rounded-xl p-4 border border-gray-100 hover:border-brand/30">
+                            <div class="flex items-start space-x-4">
+                                <div class="w-12 h-12 ${isCompleted ? 'bg-green-100' : 'bg-brand/10'} rounded-xl flex items-center justify-center flex-shrink-0">
+                                    ${isCompleted ? 
+                                        '<svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>' :
+                                        '<svg class="w-6 h-6 text-brand" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>'
+                                    }
+                                </div>
+                                <div class="flex-1 min-w-0">
+                                    <div class="flex items-center justify-between mb-1">
+                                        <h4 class="font-semibold text-gray-800 truncate">${escapeHtml(module.title)}</h4>
+                                        ${isCompleted ? '<span class="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full">Done</span>' : ''}
+                                    </div>
+                                    <p class="text-sm text-gray-500 mb-3">${totalLessons} lesson${totalLessons !== 1 ? 's' : ''}</p>
+                                    <div class="flex items-center justify-between text-sm mb-1">
+                                        <span class="text-gray-500">Progress</span>
+                                        <span class="font-medium ${isCompleted ? 'text-green-600' : 'text-brand'}">${progressPercent}%</span>
+                                    </div>
+                                    <div class="h-2 bg-gray-200 rounded-full overflow-hidden">
+                                        <div class="h-full ${isCompleted ? 'bg-green-500' : 'bg-brand'} rounded-full transition-all duration-500" style="width: ${progressPercent}%"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </a>
+                    `;
+                }));
+
+                container.innerHTML = moduleCards.join('');
+
+            } catch (error) {
+                console.error('Error loading modules:', error);
+                container.innerHTML = '<p class="text-center text-red-500 py-4">Failed to load modules</p>';
+            }
+        }
+
+        // Load featured tutorial videos
+        async function loadFeaturedVideos() {
+            const container = document.getElementById('featuredVideos');
+            
+            try {
+                // Try the videos table first (from teacher uploads)
+                const { data: videos } = await getSupabase()
+                    .from('videos')
+                    .select('*')
+                    .eq('is_published', true)
+                    .order('created_at', { ascending: false })
+                    .limit(4);
+
+                if (!videos || videos.length === 0) {
+                    // Show placeholder videos
+                    container.innerHTML = `
+                        <div class="grid sm:grid-cols-2 gap-4">
+                            <a href="../public/tutorial-videos.html" class="video-card group block bg-gray-50 rounded-xl overflow-hidden border border-gray-100">
+                                <div class="aspect-video bg-gradient-to-br from-brand/10 to-green-500/10 flex items-center justify-center">
+                                    <div class="w-12 h-12 bg-white rounded-full flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
+                                        <svg class="w-6 h-6 text-brand ml-1" fill="currentColor" viewBox="0 0 24 24">
+                                            <path d="M8 5v14l11-7z"/>
+                                        </svg>
+                                    </div>
+                                </div>
+                                <div class="p-4">
+                                    <h4 class="font-semibold text-gray-800 mb-1">Getting Started with MathTuro</h4>
+                                    <p class="text-sm text-gray-500">Learn the basics • 5 min</p>
+                                </div>
+                            </a>
+                            <a href="../public/tutorial-videos.html" class="video-card group block bg-gray-50 rounded-xl overflow-hidden border border-gray-100">
+                                <div class="aspect-video bg-gradient-to-br from-purple-500/10 to-pink-500/10 flex items-center justify-center">
+                                    <div class="w-12 h-12 bg-white rounded-full flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
+                                        <svg class="w-6 h-6 text-purple-600 ml-1" fill="currentColor" viewBox="0 0 24 24">
+                                            <path d="M8 5v14l11-7z"/>
+                                        </svg>
+                                    </div>
+                                </div>
+                                <div class="p-4">
+                                    <h4 class="font-semibold text-gray-800 mb-1">How to Take Quizzes</h4>
+                                    <p class="text-sm text-gray-500">Quiz tips • 3 min</p>
+                                </div>
+                            </a>
+                        </div>
+                    `;
+                    return;
+                }
+
+                container.innerHTML = `
+                    <div class="grid sm:grid-cols-2 gap-4">
+                        ${videos.map(video => `
+                            <a href="../public/tutorial-videos.html?video=${video.id}" class="video-card group block bg-gray-50 rounded-xl overflow-hidden border border-gray-100">
+                                <div class="aspect-video bg-gray-200 relative">
+                                    ${video.thumbnail_url ? 
+                                        `<img src="${video.thumbnail_url}" alt="${escapeHtml(video.title)}" class="w-full h-full object-cover">` :
+                                        `<div class="w-full h-full bg-gradient-to-br from-brand/10 to-green-500/10"></div>`
+                                    }
+                                    <div class="absolute inset-0 flex items-center justify-center">
+                                        <div class="w-12 h-12 bg-white/90 rounded-full flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
+                                            <svg class="w-6 h-6 text-brand ml-1" fill="currentColor" viewBox="0 0 24 24">
+                                                <path d="M8 5v14l11-7z"/>
+                                            </svg>
+                                        </div>
+                                    </div>
+                                    ${video.duration ? `<span class="absolute bottom-2 right-2 bg-black/70 text-white text-xs px-2 py-1 rounded">${video.duration}</span>` : ''}
+                                </div>
+                                <div class="p-4">
+                                    <h4 class="font-semibold text-gray-800 mb-1 line-clamp-1">${escapeHtml(video.title)}</h4>
+                                    <p class="text-sm text-gray-500 line-clamp-1">${escapeHtml(video.category || 'Tutorial')}</p>
+                                </div>
+                            </a>
+                        `).join('')}
+                    </div>
+                `;
+
+            } catch (error) {
+                console.error('Error loading videos:', error);
+            }
+        }
+
+        // Load recent submissions
+        async function loadRecentSubmissions() {
+            const container = document.getElementById('recentSubmissions');
+            
+            try {
+                const { data: submissions } = await getSupabase()
+                    .from('quiz_submissions')
+                    .select('*, lessons(title)')
+                    .eq('user_id', currentUser.id)
+                    .order('submitted_at', { ascending: false })
+                    .limit(5);
+
+                if (!submissions || submissions.length === 0) {
+                    container.innerHTML = `
+                        <div class="p-8 text-center">
+                            <div class="w-12 h-12 mx-auto bg-gray-100 rounded-full flex items-center justify-center mb-3">
+                                <svg class="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+                                </svg>
+                            </div>
+                            <p class="text-gray-500">No quiz submissions yet</p>
+                            <p class="text-sm text-gray-400">Complete quizzes to see your submissions here</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                container.innerHTML = submissions.map(sub => {
+                    const statusConfig = {
+                        pending: { bg: 'bg-yellow-100', text: 'text-yellow-700', icon: '⏳', label: 'Pending' },
+                        approved: { bg: 'bg-green-100', text: 'text-green-700', icon: '✓', label: 'Approved' },
+                        rejected: { bg: 'bg-red-100', text: 'text-red-700', icon: '✕', label: 'Rejected' }
+                    };
+                    const status = statusConfig[sub.status] || statusConfig.pending;
+                    const score = sub.student_score || 0;
+                    const total = sub.total_items || 1;
+                    const scorePercent = Math.round((score / total) * 100);
+
+                    return `
+                        <div class="activity-item p-4 flex items-center justify-between">
+                            <div class="flex items-center space-x-4">
+                                <div class="w-10 h-10 ${status.bg} rounded-full flex items-center justify-center">
+                                    <span class="text-lg">${status.icon}</span>
+                                </div>
+                                <div>
+                                    <p class="font-medium text-gray-800">${escapeHtml(sub.lessons?.title || 'Quiz')}</p>
+                                    <p class="text-sm text-gray-500">${score}/${total} (${scorePercent}%) • ${formatDate(sub.submitted_at)}</p>
+                                </div>
+                            </div>
+                            <span class="px-3 py-1 rounded-full text-xs font-medium ${status.bg} ${status.text}">${status.label}</span>
+                        </div>
+                    `;
+                }).join('');
+
+            } catch (error) {
+                console.error('Error loading submissions:', error);
+            }
+        }
+
+        // Load recent activity
+        async function loadRecentActivity() {
+            const container = document.getElementById('recentActivity');
+            
+            try {
+                const { data: progress } = await getSupabase()
+                    .from('lesson_progress')
+                    .select('*, lessons(title)')
+                    .eq('user_id', currentUser.id)
+                    .order('updated_at', { ascending: false })
+                    .limit(5);
+
+                if (!progress || progress.length === 0) {
+                    container.innerHTML = `
+                        <div class="p-6 text-center text-gray-500">
+                            <p>No recent activity</p>
+                            <p class="text-sm text-gray-400">Start learning to see your activity</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                container.innerHTML = progress.map(p => `
+                    <div class="activity-item p-4 flex items-center space-x-4">
+                        <div class="w-10 h-10 ${p.completed ? 'bg-green-100' : 'bg-blue-100'} rounded-full flex items-center justify-center">
+                            <span class="text-lg">${p.completed ? '✓' : '📖'}</span>
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <p class="font-medium text-gray-800 truncate">${escapeHtml(p.lessons?.title || 'Lesson')}</p>
+                            <p class="text-sm text-gray-500">${p.completed ? 'Completed' : 'In progress'} • ${formatDate(p.updated_at)}</p>
+                        </div>
+                    </div>
+                `).join('');
+
+            } catch (error) {
+                console.error('Error loading activity:', error);
+            }
+        }
+
+        // Load weekly activity heatmap
+        async function loadWeeklyActivity() {
+            const container = document.getElementById('weeklyActivity');
+            
+            try {
+                // Get this week's activity
+                const startOfWeek = new Date();
+                startOfWeek.setDate(startOfWeek.getDate() - startOfWeek.getDay() + 1);
+                startOfWeek.setHours(0, 0, 0, 0);
+
+                const { data: activity } = await getSupabase()
+                    .from('lesson_progress')
+                    .select('updated_at')
+                    .eq('user_id', currentUser.id)
+                    .gte('updated_at', startOfWeek.toISOString());
+
+                // Count activity by day
+                const dayCounts = [0, 0, 0, 0, 0, 0, 0];
+                activity?.forEach(a => {
+                    const day = new Date(a.updated_at).getDay();
+                    const adjustedDay = day === 0 ? 6 : day - 1; // Monday = 0
+                    dayCounts[adjustedDay]++;
+                });
+
+                // Generate heatmap
+                const today = new Date().getDay();
+                const adjustedToday = today === 0 ? 6 : today - 1;
+
+                container.innerHTML = dayCounts.map((count, i) => {
+                    let intensity = 'bg-gray-100';
+                    if (count >= 5) intensity = 'bg-green-500';
+                    else if (count >= 3) intensity = 'bg-green-400';
+                    else if (count >= 1) intensity = 'bg-green-300';
+
+                    const isToday = i === adjustedToday;
+
+                    return `<div class="h-8 rounded ${intensity} ${isToday ? 'ring-2 ring-brand ring-offset-1' : ''}" title="${count} activities"></div>`;
+                }).join('');
+
+            } catch (error) {
+                console.error('Error loading weekly activity:', error);
+            }
+        }
+
+        // Load achievements
+        async function loadAchievements() {
+            const container = document.getElementById('achievementsPreview');
+            
+            const allAchievements = [
+                { id: 'first_lesson', emoji: '🏆', name: 'First Steps', condition: () => dashboardData.progress.length >= 1 },
+                { id: 'quiz_master', emoji: '⭐', name: 'Quiz Star', condition: () => dashboardData.submissions.filter(s => s.status === 'approved').length >= 5 },
+                { id: 'perfect_score', emoji: '🎯', name: 'Perfect', condition: () => dashboardData.submissions.some(s => s.score === s.total_items) },
+                { id: 'module_master', emoji: '📚', name: 'Scholar', condition: () => dashboardData.modules.some(m => m.completed) },
+                { id: 'streak_3', emoji: '🔥', name: '3 Day Streak', condition: () => dashboardData.streak >= 3 },
+                { id: 'streak_7', emoji: '💪', name: 'Week Warrior', condition: () => dashboardData.streak >= 7 },
+                { id: 'xp_100', emoji: '💎', name: 'XP Hunter', condition: () => dashboardData.xp >= 100 },
+                { id: 'xp_500', emoji: '🌟', name: 'XP Master', condition: () => dashboardData.xp >= 500 }
+            ];
+
+            const earned = allAchievements.filter(a => a.condition());
+            document.getElementById('achievementCount').textContent = earned.length;
+            dashboardData.achievements = earned;
+
+            container.innerHTML = allAchievements.slice(0, 4).map(a => {
+                const isEarned = a.condition();
+                return `
+                    <div class="text-center ${!isEarned ? 'opacity-30 grayscale' : ''}" title="${a.name}">
+                        <div class="w-12 h-12 mx-auto ${isEarned ? 'bg-yellow-100' : 'bg-gray-100'} rounded-full flex items-center justify-center mb-1">
+                            <span class="text-xl">${a.emoji}</span>
+                        </div>
+                        <p class="text-xs text-gray-600 truncate">${a.name}</p>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // Load notifications
+        async function loadNotifications() {
+            try {
+                const { data: submissions } = await getSupabase()
+                    .from('quiz_submissions')
+                    .select('*, lessons(title)')
+                    .eq('user_id', currentUser.id)
+                    .in('status', ['approved', 'rejected'])
+                    .order('reviewed_at', { ascending: false })
+                    .limit(10);
+
+                const notificationsContent = document.getElementById('notificationsContent');
+                const badge = document.getElementById('notificationBadge');
+
+                // Count unread (last 24 hours)
+                const dayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
+                const unreadCount = submissions?.filter(s => new Date(s.reviewed_at) > dayAgo).length || 0;
+
+                if (unreadCount > 0) {
+                    badge.textContent = unreadCount > 9 ? '9+' : unreadCount;
+                    badge.classList.remove('hidden');
+                }
+
+                if (!submissions || submissions.length === 0) {
+                    notificationsContent.innerHTML = '<p class="text-center text-gray-500 py-8">No notifications</p>';
+                    return;
+                }
+
+                notificationsContent.innerHTML = submissions.map(sub => `
+                    <div class="p-4 bg-gray-50 rounded-xl">
+                        <div class="flex items-start space-x-3">
+                            <div class="w-10 h-10 ${sub.status === 'approved' ? 'bg-green-100' : 'bg-red-100'} rounded-full flex items-center justify-center flex-shrink-0">
+                                <span class="text-lg">${sub.status === 'approved' ? '✓' : '✕'}</span>
+                            </div>
+                            <div>
+                                <p class="font-medium text-gray-800">Quiz ${sub.status === 'approved' ? 'Approved' : 'Needs Review'}</p>
+                                <p class="text-sm text-gray-600">${escapeHtml(sub.lessons?.title || 'Quiz')}</p>
+                                ${sub.teacher_comment ? `<p class="text-sm text-gray-500 mt-1 italic">"${escapeHtml(sub.teacher_comment)}"</p>` : ''}
+                                <p class="text-xs text-gray-400 mt-1">${formatDate(sub.reviewed_at)}</p>
+                            </div>
+                        </div>
+                    </div>
+                `).join('');
+
+            } catch (error) {
+                console.error('Error loading notifications:', error);
+            }
+        }
+
+        // Helper function to format dates
+        function formatDate(dateString) {
+            if (!dateString) return '';
+            const date = new Date(dateString);
+            const now = new Date();
+            const diff = now - date;
+            
+            if (diff < 60000) return 'Just now';
+            if (diff < 3600000) return `${Math.floor(diff / 60000)}m ago`;
+            if (diff < 86400000) return `${Math.floor(diff / 3600000)}h ago`;
+            if (diff < 604800000) return `${Math.floor(diff / 86400000)}d ago`;
+            
+            return date.toLocaleDateString();
+        }
+
+        // Escape HTML helper
+        function escapeHtml(text) {
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // Setup event listeners
+        function setupEventListeners() {
+            // Mobile menu toggle
+            mobileMenuBtn.addEventListener('click', () => {
+                sidebar.classList.toggle('-translate-x-full');
+                mobileOverlay.classList.toggle('hidden');
+            });
+
+            mobileOverlay.addEventListener('click', () => {
+                sidebar.classList.add('-translate-x-full');
+                mobileOverlay.classList.add('hidden');
+            });
+
+            // User menu dropdown
+            userMenuBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                userDropdown.classList.toggle('hidden');
+            });
+
+            document.addEventListener('click', () => {
+                userDropdown.classList.add('hidden');
+            });
+
+            // Notification panel
+            notificationBtn.addEventListener('click', () => {
+                notificationPanel.classList.remove('hidden');
+                setTimeout(() => notificationPanel.classList.remove('translate-x-full'), 10);
+            });
+
+            // Logout
+            document.getElementById('logoutButton').addEventListener('click', handleLogout);
+
+            // Search modal close on click outside
+            document.getElementById('searchModal').addEventListener('click', (e) => {
+                if (e.target.id === 'searchModal') closeSearch();
+            });
+
+            // Modal close on click outside
+            document.getElementById('modalContainer').addEventListener('click', (e) => {
+                if (e.target.id === 'modalContainer') closeModal();
+            });
+        }
+
+        // Keyboard shortcuts
+        function setupKeyboardShortcuts() {
+            document.addEventListener('keydown', (e) => {
+                // Cmd/Ctrl + K for search
+                if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+                    e.preventDefault();
+                    showSearch();
+                }
+                // Escape to close modals
+                if (e.key === 'Escape') {
+                    closeSearch();
+                    closeModal();
+                    closeNotificationPanel();
+                }
+            });
+        }
+
+        // Search functions
+        function showSearch() {
+            document.getElementById('searchModal').classList.remove('hidden');
+            document.getElementById('searchInput').focus();
+        }
+
+        function closeSearch() {
+            document.getElementById('searchModal').classList.add('hidden');
+            document.getElementById('searchInput').value = '';
+        }
+
+        // Notification panel
+        function closeNotificationPanel() {
+            notificationPanel.classList.add('translate-x-full');
+            setTimeout(() => notificationPanel.classList.add('hidden'), 300);
+        }
+
+        // Handle logout
+        async function handleLogout() {
+            if (await logout()) {
+                redirectToLogin();
+            }
+        }
+
+        // Modal functions
+        function showMyProgress() {
+            const lessonsCompleted = dashboardData.progress.length;
+            const totalModules = dashboardData.modules.length;
+            
+            showModal('My Learning Progress', `
+                <div class="space-y-6">
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="bg-green-50 rounded-xl p-4 text-center">
+                            <p class="text-3xl font-bold text-green-600">${lessonsCompleted}</p>
+                            <p class="text-sm text-gray-600">Lessons Completed</p>
+                        </div>
+                        <div class="bg-blue-50 rounded-xl p-4 text-center">
+                            <p class="text-3xl font-bold text-blue-600">${dashboardData.xp}</p>
+                            <p class="text-sm text-gray-600">Total XP</p>
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <h4 class="font-semibold text-gray-800 mb-3">Module Progress</h4>
+                        <div class="space-y-3">
+                            ${dashboardData.modules.map(m => {
+                                const lessonIds = m.lessons?.map(l => l.id) || [];
+                                const completed = dashboardData.progress.filter(p => lessonIds.includes(p.lesson_id)).length;
+                                const percent = lessonIds.length > 0 ? Math.round((completed / lessonIds.length) * 100) : 0;
+                                return `
+                                    <div>
+                                        <div class="flex justify-between text-sm mb-1">
+                                            <span class="text-gray-700">${escapeHtml(m.title)}</span>
+                                            <span class="font-medium">${percent}%</span>
+                                        </div>
+                                        <div class="h-2 bg-gray-100 rounded-full overflow-hidden">
+                                            <div class="h-full bg-brand rounded-full" style="width: ${percent}%"></div>
+                                        </div>
+                                    </div>
+                                `;
+                            }).join('')}
+                        </div>
+                    </div>
+                </div>
+            `);
+        }
+
+        function showAchievements() {
+            const allAchievements = [
+                { id: 'first_lesson', emoji: '🏆', name: 'First Steps', desc: 'Complete your first lesson', condition: () => dashboardData.progress.length >= 1 },
+                { id: 'five_lessons', emoji: '📖', name: 'Bookworm', desc: 'Complete 5 lessons', condition: () => dashboardData.progress.length >= 5 },
+                { id: 'ten_lessons', emoji: '📚', name: 'Scholar', desc: 'Complete 10 lessons', condition: () => dashboardData.progress.length >= 10 },
+                { id: 'quiz_master', emoji: '⭐', name: 'Quiz Star', desc: 'Get 5 quizzes approved', condition: () => dashboardData.submissions.filter(s => s.status === 'approved').length >= 5 },
+                { id: 'perfect_score', emoji: '🎯', name: 'Perfectionist', desc: 'Get a perfect quiz score', condition: () => dashboardData.submissions.some(s => s.score === s.total_items) },
+                { id: 'streak_3', emoji: '🔥', name: '3 Day Streak', desc: 'Learn 3 days in a row', condition: () => dashboardData.streak >= 3 },
+                { id: 'streak_7', emoji: '💪', name: 'Week Warrior', desc: 'Learn 7 days in a row', condition: () => dashboardData.streak >= 7 },
+                { id: 'xp_100', emoji: '💎', name: 'XP Hunter', desc: 'Earn 100 XP', condition: () => dashboardData.xp >= 100 },
+                { id: 'xp_500', emoji: '🌟', name: 'XP Master', desc: 'Earn 500 XP', condition: () => dashboardData.xp >= 500 },
+                { id: 'xp_1000', emoji: '👑', name: 'XP Legend', desc: 'Earn 1000 XP', condition: () => dashboardData.xp >= 1000 }
+            ];
+
+            showModal('Achievements', `
+                <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
+                    ${allAchievements.map(a => {
+                        const earned = a.condition();
+                        return `
+                            <div class="text-center p-4 ${earned ? 'bg-yellow-50' : 'bg-gray-50 opacity-50'} rounded-xl">
+                                <div class="w-16 h-16 mx-auto ${earned ? 'bg-yellow-100' : 'bg-gray-100'} rounded-full flex items-center justify-center mb-3">
+                                    <span class="text-3xl">${a.emoji}</span>
+                                </div>
+                                <h4 class="font-semibold text-gray-800">${a.name}</h4>
+                                <p class="text-sm text-gray-500">${a.desc}</p>
+                                ${earned ? '<p class="text-xs text-green-600 mt-1">✓ Earned</p>' : ''}
+                            </div>
+                        `;
+                    }).join('')}
+                </div>
+            `);
+        }
+
+        function showLeaderboard() {
+            showModal('Leaderboard', `
+                <div class="text-center py-8">
+                    <div class="w-16 h-16 mx-auto bg-yellow-100 rounded-full flex items-center justify-center mb-4">
+                        <span class="text-3xl">🏆</span>
+                    </div>
+                    <h4 class="font-semibold text-gray-800 mb-2">Coming Soon!</h4>
+                    <p class="text-gray-500">The leaderboard feature is under development.</p>
+                    <p class="text-sm text-gray-400 mt-2">Compete with other students soon!</p>
+                </div>
+            `);
+        }
+
+        function showStudyTimer() {
+            showModal('Study Timer', `
+                <div class="text-center">
+                    <div class="w-48 h-48 mx-auto bg-brand/5 rounded-full flex items-center justify-center mb-6">
+                        <div id="timerDisplay" class="text-5xl font-bold text-brand">25:00</div>
+                    </div>
+                    <div class="flex justify-center space-x-4 mb-6">
+                        <button onclick="startTimer()" class="px-6 py-2 bg-brand text-white rounded-xl hover:bg-brand-dark">Start</button>
+                        <button onclick="pauseTimer()" class="px-6 py-2 border border-gray-200 rounded-xl hover:bg-gray-50">Pause</button>
+                        <button onclick="resetTimer()" class="px-6 py-2 border border-gray-200 rounded-xl hover:bg-gray-50">Reset</button>
+                    </div>
+                    <div class="flex justify-center space-x-2">
+                        <button onclick="setTimer(25)" class="px-4 py-1 text-sm bg-brand/10 text-brand rounded-lg">25 min</button>
+                        <button onclick="setTimer(15)" class="px-4 py-1 text-sm bg-gray-100 text-gray-600 rounded-lg">15 min</button>
+                        <button onclick="setTimer(5)" class="px-4 py-1 text-sm bg-gray-100 text-gray-600 rounded-lg">5 min</button>
+                    </div>
+                </div>
+            `);
+        }
+
+        // Timer functions
+        let timerInterval = null;
+        let timerSeconds = 25 * 60;
+
+        function startTimer() {
+            if (timerInterval) return;
+            timerInterval = setInterval(() => {
+                timerSeconds--;
+                updateTimerDisplay();
+                if (timerSeconds <= 0) {
+                    clearInterval(timerInterval);
+                    timerInterval = null;
+                    alert('Time is up! Take a break.');
+                }
+            }, 1000);
+        }
+
+        function pauseTimer() {
+            clearInterval(timerInterval);
+            timerInterval = null;
+        }
+
+        function resetTimer() {
+            pauseTimer();
+            timerSeconds = 25 * 60;
+            updateTimerDisplay();
+        }
+
+        function setTimer(minutes) {
+            pauseTimer();
+            timerSeconds = minutes * 60;
+            updateTimerDisplay();
+        }
+
+        function updateTimerDisplay() {
+            const display = document.getElementById('timerDisplay');
+            if (display) {
+                const mins = Math.floor(timerSeconds / 60);
+                const secs = timerSeconds % 60;
+                display.textContent = `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+            }
+        }
+
+        function showNotes() {
+            const savedNotes = localStorage.getItem('studentNotes') || '';
+            showModal('My Notes', `
+                <div>
+                    <textarea id="notesTextarea" class="w-full h-64 p-4 border border-gray-200 rounded-xl resize-none focus:outline-none focus:ring-2 focus:ring-brand" placeholder="Write your study notes here...">${escapeHtml(savedNotes)}</textarea>
+                    <button onclick="saveNotes()" class="mt-4 w-full py-3 bg-brand text-white rounded-xl hover:bg-brand-dark">Save Notes</button>
+                </div>
+            `);
+        }
+
+        function saveNotes() {
+            const notes = document.getElementById('notesTextarea').value;
+            localStorage.setItem('studentNotes', notes);
+            showToast('Notes saved!', 'success');
+        }
+
+        function showCalculator() {
+            showModal('Calculator', `
+                <div class="max-w-xs mx-auto">
+                    <input type="text" id="calcDisplay" class="w-full p-4 text-right text-2xl font-mono bg-gray-100 rounded-xl mb-4" readonly value="0">
+                    <div class="grid grid-cols-4 gap-2">
+                        <button onclick="calcClear()" class="col-span-2 p-4 bg-red-100 text-red-600 rounded-xl hover:bg-red-200 font-semibold">C</button>
+                        <button onclick="calcInput('/')" class="p-4 bg-brand/10 text-brand rounded-xl hover:bg-brand/20 font-semibold">÷</button>
+                        <button onclick="calcInput('*')" class="p-4 bg-brand/10 text-brand rounded-xl hover:bg-brand/20 font-semibold">×</button>
+                        <button onclick="calcInput('7')" class="p-4 bg-gray-100 rounded-xl hover:bg-gray-200 font-semibold">7</button>
+                        <button onclick="calcInput('8')" class="p-4 bg-gray-100 rounded-xl hover:bg-gray-200 font-semibold">8</button>
+                        <button onclick="calcInput('9')" class="p-4 bg-gray-100 rounded-xl hover:bg-gray-200 font-semibold">9</button>
+                        <button onclick="calcInput('-')" class="p-4 bg-brand/10 text-brand rounded-xl hover:bg-brand/20 font-semibold">−</button>
+                        <button onclick="calcInput('4')" class="p-4 bg-gray-100 rounded-xl hover:bg-gray-200 font-semibold">4</button>
+                        <button onclick="calcInput('5')" class="p-4 bg-gray-100 rounded-xl hover:bg-gray-200 font-semibold">5</button>
+                        <button onclick="calcInput('6')" class="p-4 bg-gray-100 rounded-xl hover:bg-gray-200 font-semibold">6</button>
+                        <button onclick="calcInput('+')" class="p-4 bg-brand/10 text-brand rounded-xl hover:bg-brand/20 font-semibold">+</button>
+                        <button onclick="calcInput('1')" class="p-4 bg-gray-100 rounded-xl hover:bg-gray-200 font-semibold">1</button>
+                        <button onclick="calcInput('2')" class="p-4 bg-gray-100 rounded-xl hover:bg-gray-200 font-semibold">2</button>
+                        <button onclick="calcInput('3')" class="p-4 bg-gray-100 rounded-xl hover:bg-gray-200 font-semibold">3</button>
+                        <button onclick="calcEquals()" class="row-span-2 p-4 bg-brand text-white rounded-xl hover:bg-brand-dark font-semibold">=</button>
+                        <button onclick="calcInput('0')" class="col-span-2 p-4 bg-gray-100 rounded-xl hover:bg-gray-200 font-semibold">0</button>
+                        <button onclick="calcInput('.')" class="p-4 bg-gray-100 rounded-xl hover:bg-gray-200 font-semibold">.</button>
+                    </div>
+                </div>
+            `);
+        }
+
+        let calcValue = '0';
+        function calcInput(val) {
+            if (calcValue === '0' && !isNaN(val)) calcValue = val;
+            else calcValue += val;
+            document.getElementById('calcDisplay').value = calcValue;
+        }
+        function calcClear() {
+            calcValue = '0';
+            document.getElementById('calcDisplay').value = calcValue;
+        }
+        function calcEquals() {
+            try {
+                calcValue = eval(calcValue).toString();
+                document.getElementById('calcDisplay').value = calcValue;
+            } catch { calcValue = 'Error'; }
+        }
+
+        function showProfile() {
+            showModal('Profile Settings', `
+                <form id="profileForm" class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Full Name</label>
+                        <input type="text" id="profileName" value="${currentUser.fullName}" class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Email</label>
+                        <input type="email" id="profileEmail" value="${currentUser.email}" disabled class="w-full px-4 py-3 border border-gray-200 rounded-xl bg-gray-50 text-gray-500">
+                    </div>
+                    <button type="submit" class="w-full py-3 bg-brand text-white rounded-xl font-semibold hover:bg-brand-dark">Save Changes</button>
+                </form>
+            `);
+        }
+
+        function showPreferences() {
+            showModal('Preferences', `
+                <div class="space-y-6">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="font-medium text-gray-800">Daily Goal</p>
+                            <p class="text-sm text-gray-500">Lessons per day</p>
+                        </div>
+                        <select class="px-4 py-2 border border-gray-200 rounded-xl">
+                            <option>3 lessons</option>
+                            <option>5 lessons</option>
+                            <option>10 lessons</option>
+                        </select>
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="font-medium text-gray-800">Notifications</p>
+                            <p class="text-sm text-gray-500">Email reminders</p>
+                        </div>
+                        <label class="relative inline-flex items-center cursor-pointer">
+                            <input type="checkbox" class="sr-only peer" checked>
+                            <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-brand"></div>
+                        </label>
+                    </div>
+                </div>
+            `);
+        }
+
+        function showModal(title, content) {
+            const modal = document.getElementById('modalContainer');
+            const modalContent = document.getElementById('modalContent');
+            
+            modalContent.innerHTML = `
+                <div class="p-6 border-b border-gray-100 flex items-center justify-between">
+                    <h3 class="text-xl font-bold text-gray-800">${title}</h3>
+                    <button onclick="closeModal()" class="p-2 text-gray-500 hover:text-gray-700 rounded-lg hover:bg-gray-100">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                        </svg>
+                    </button>
+                </div>
+                <div class="p-6">${content}</div>
+            `;
+            
+            modal.classList.remove('hidden');
+        }
+
+        function closeModal() {
+            document.getElementById('modalContainer').classList.add('hidden');
+        }
+
+        // Show toast notification
+        function showToast(message, type = 'info') {
+            const toast = document.createElement('div');
+            toast.className = `fixed bottom-4 right-4 px-6 py-3 rounded-xl shadow-lg z-50 ${
+                type === 'success' ? 'bg-green-500' : type === 'error' ? 'bg-red-500' : 'bg-brand'
+            } text-white font-medium`;
+            toast.textContent = message;
+            document.body.appendChild(toast);
+            setTimeout(() => toast.remove(), 3000);
+        }
+    </script>
+</body>
+</html>

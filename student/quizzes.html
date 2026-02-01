@@ -1,0 +1,762 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/png" href="../Logo/MATHURO LOGO.png">
+    <title>Quizzes - MathTuro LMS</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: {
+                            50: '#f0fdf4',
+                            100: '#dcfce7',
+                            200: '#bbf7d0',
+                            300: '#86efac',
+                            400: '#4ade80',
+                            500: '#22c55e',
+                            600: '#16a34a',
+                            700: '#15803d',
+                            800: '#166534',
+                            900: '#14532d',
+                        },
+                        brand: '#005801',
+                        'brand-dark': '#004601',
+                        'brand-light': '#006B01',
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', 'sans-serif'],
+                    },
+                },
+            },
+        }
+    </script>
+    <style>
+        body { font-family: 'Inter', system-ui, sans-serif; }
+        
+        .gradient-text {
+            background: linear-gradient(135deg, #005801 0%, #22c55e 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .glass-sidebar {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+        }
+        
+        .quiz-card {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .quiz-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 20px 40px -12px rgba(0, 88, 1, 0.15);
+        }
+        
+        .sidebar-link {
+            transition: all 0.2s ease;
+        }
+        
+        .sidebar-link:hover, .sidebar-link.active {
+            background: linear-gradient(135deg, #005801 0%, #006B01 100%);
+            color: white;
+        }
+        
+        .sidebar-link.active {
+            box-shadow: 0 4px 15px rgba(0, 88, 1, 0.3);
+        }
+        
+        .category-btn {
+            transition: all 0.2s ease;
+        }
+        
+        .category-btn.active {
+            background: linear-gradient(135deg, #005801 0%, #006B01 100%);
+            color: white;
+            box-shadow: 0 4px 15px rgba(0, 88, 1, 0.3);
+        }
+        
+        .tab-btn.active {
+            color: #005801;
+            border-color: #005801;
+        }
+        
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; }
+        ::-webkit-scrollbar-thumb { background: #005801; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: #004601; }
+    </style>
+    <link rel="stylesheet" href="../shared/css/base.css">
+    <link rel="stylesheet" href="assets/css/student.css">
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <!-- Mobile Menu Overlay -->
+    <div id="mobileOverlay" class="fixed inset-0 bg-black bg-opacity-50 z-40 hidden lg:hidden"></div>
+    
+    <!-- Sidebar -->
+    <aside id="sidebar" class="fixed left-0 top-0 h-full w-72 glass-sidebar border-r border-gray-200 z-50 transform -translate-x-full lg:translate-x-0 transition-transform duration-300 overflow-y-auto">
+        <!-- Logo -->
+        <div class="p-6 border-b border-gray-100">
+            <a href="dashboard.html" class="flex items-center space-x-3">
+                <div class="w-12 h-12 bg-white rounded-xl flex items-center justify-center shadow-lg">
+                    <img src="../Logo/MATHURO LOGO.png" alt="MathTuro" class="w-10 h-10 object-contain">
+                </div>
+                <div>
+                    <span class="text-xl font-bold gradient-text">MathTuro</span>
+                    <p class="text-xs text-gray-500">Student Portal</p>
+                </div>
+            </a>
+        </div>
+        
+        <!-- User Info -->
+        <div class="p-6 border-b border-gray-100">
+            <div class="flex items-center space-x-3">
+                <div class="w-12 h-12 bg-brand/10 rounded-full flex items-center justify-center">
+                    <span id="userInitials" class="text-brand font-bold text-lg">--</span>
+                </div>
+                <div class="flex-1">
+                    <p id="sidebarUserName" class="font-semibold text-gray-800">Loading...</p>
+                    <p id="userRole" class="text-sm text-gray-500">Student</p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Navigation -->
+        <nav class="p-4 space-y-2 overflow-y-auto" style="max-height: calc(100vh - 320px);">
+            <p class="text-xs text-gray-400 uppercase tracking-wider px-4 mb-2">Main Menu</p>
+            <a href="dashboard.html" class="sidebar-link flex items-center space-x-3 px-4 py-3 rounded-xl text-gray-700">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
+                </svg>
+                <span>Dashboard</span>
+            </a>
+            <a href="modules.html" class="sidebar-link flex items-center space-x-3 px-4 py-3 rounded-xl text-gray-700">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
+                </svg>
+                <span>Browse Modules</span>
+            </a>
+            <a href="../public/tutorial-videos.html" class="sidebar-link flex items-center space-x-3 px-4 py-3 rounded-xl text-gray-700">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+                <span>Tutorial Videos</span>
+            </a>
+            <a href="quizzes.html" class="sidebar-link active flex items-center space-x-3 px-4 py-3 rounded-xl text-gray-700">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/>
+                </svg>
+                <span>Quizzes</span>
+            </a>
+        </nav>
+        
+        <!-- Bottom Actions -->
+        <div class="absolute bottom-0 left-0 right-0 p-4 border-t border-gray-100 bg-white">
+            <button id="logoutButton" class="w-full flex items-center space-x-3 px-4 py-3 text-red-600 hover:bg-red-50 rounded-xl transition-colors">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
+                </svg>
+                <span>Logout</span>
+            </button>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="lg:ml-72 min-h-screen">
+        <!-- Top Header -->
+        <header class="bg-white border-b border-gray-200 sticky top-0 z-30">
+            <div class="flex items-center justify-between px-4 lg:px-8 py-4">
+                <!-- Mobile Menu Button -->
+                <button id="mobileMenuBtn" class="lg:hidden p-2 text-gray-600 hover:text-brand rounded-lg">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
+                    </svg>
+                </button>
+                
+                <!-- Page Title -->
+                <div class="flex-1 lg:flex-none">
+                    <h1 class="text-xl lg:text-2xl font-bold text-gray-800">Quizzes</h1>
+                    <p class="text-sm text-gray-500 hidden sm:block">Test your knowledge and track your progress</p>
+                </div>
+                
+                <!-- Right Actions -->
+                <div class="flex items-center space-x-3">
+                    <a href="dashboard.html" class="p-2 text-gray-600 hover:text-brand rounded-lg hover:bg-gray-100">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
+                        </svg>
+                    </a>
+                </div>
+            </div>
+        </header>
+
+        <!-- Hero Section -->
+        <div class="bg-gradient-to-r from-brand to-brand-light text-white py-8 lg:py-12">
+            <div class="max-w-7xl mx-auto px-4 lg:px-8">
+                <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between">
+                    <div>
+                        <h2 class="text-2xl lg:text-3xl font-bold mb-2">Quiz Center</h2>
+                        <p class="text-white/80">Complete quizzes to test your understanding and earn achievements</p>
+                    </div>
+                    <!-- Search Bar -->
+                    <div class="mt-4 lg:mt-0 lg:w-96">
+                        <div class="relative">
+                            <svg class="w-5 h-5 absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                            </svg>
+                            <input type="text" id="searchInput" placeholder="Search quizzes..." 
+                                class="w-full pl-12 pr-4 py-3 rounded-xl text-gray-900 focus:ring-2 focus:ring-brand/50 focus:outline-none">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Dashboard Content -->
+        <div class="p-4 lg:p-8">
+            <!-- Stats Row -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 lg:gap-6 mb-8">
+                <div class="bg-white rounded-2xl p-5 lg:p-6 shadow-sm border border-gray-100">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-sm text-gray-500">Available Quizzes</p>
+                            <p id="availableCount" class="text-2xl font-bold text-gray-900">0</p>
+                        </div>
+                        <div class="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center">
+                            <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-white rounded-2xl p-5 lg:p-6 shadow-sm border border-gray-100">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-sm text-gray-500">Completed</p>
+                            <p id="completedCount" class="text-2xl font-bold text-green-600">0</p>
+                        </div>
+                        <div class="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center">
+                            <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-white rounded-2xl p-5 lg:p-6 shadow-sm border border-gray-100">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-sm text-gray-500">Average Score</p>
+                            <p id="avgScore" class="text-2xl font-bold text-brand">--%</p>
+                        </div>
+                        <div class="w-12 h-12 bg-brand/10 rounded-xl flex items-center justify-center">
+                            <svg class="w-6 h-6 text-brand" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Category Filters -->
+            <div class="flex flex-wrap gap-2 mb-6">
+                <button onclick="filterCategory('')" class="category-btn active px-4 py-2 rounded-full text-sm font-medium bg-gray-100 text-gray-700 hover:bg-gray-200 transition-all" data-category="">
+                    All Quizzes
+                </button>
+                <button onclick="filterCategory('algebra')" class="category-btn px-4 py-2 rounded-full text-sm font-medium bg-gray-100 text-gray-700 hover:bg-gray-200 transition-all" data-category="algebra">
+                    Algebra
+                </button>
+                <button onclick="filterCategory('geometry')" class="category-btn px-4 py-2 rounded-full text-sm font-medium bg-gray-100 text-gray-700 hover:bg-gray-200 transition-all" data-category="geometry">
+                    Geometry
+                </button>
+                <button onclick="filterCategory('calculus')" class="category-btn px-4 py-2 rounded-full text-sm font-medium bg-gray-100 text-gray-700 hover:bg-gray-200 transition-all" data-category="calculus">
+                    Calculus
+                </button>
+                <button onclick="filterCategory('trigonometry')" class="category-btn px-4 py-2 rounded-full text-sm font-medium bg-gray-100 text-gray-700 hover:bg-gray-200 transition-all" data-category="trigonometry">
+                    Trigonometry
+                </button>
+                <button onclick="filterCategory('statistics')" class="category-btn px-4 py-2 rounded-full text-sm font-medium bg-gray-100 text-gray-700 hover:bg-gray-200 transition-all" data-category="statistics">
+                    Statistics
+                </button>
+            </div>
+
+            <!-- Tab Navigation -->
+            <div class="flex space-x-4 mb-6 border-b border-gray-200">
+                <button onclick="showTab('all')" id="tabAll" class="tab-btn px-4 py-3 font-medium text-brand border-b-2 border-brand">
+                    All Quizzes
+                </button>
+                <button onclick="showTab('pending')" id="tabPending" class="tab-btn px-4 py-3 font-medium text-gray-500 hover:text-gray-700 border-b-2 border-transparent">
+                    Not Taken
+                </button>
+                <button onclick="showTab('completed')" id="tabCompleted" class="tab-btn px-4 py-3 font-medium text-gray-500 hover:text-gray-700 border-b-2 border-transparent">
+                    Completed
+                </button>
+            </div>
+
+            <!-- Quizzes Grid -->
+            <div id="quizzesGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <!-- Quizzes loaded dynamically -->
+            </div>
+
+            <!-- Loading State -->
+            <div id="loadingState" class="text-center py-16">
+                <div class="inline-block animate-spin rounded-full h-12 w-12 border-4 border-brand border-t-transparent"></div>
+                <p class="mt-4 text-gray-600">Loading quizzes...</p>
+            </div>
+
+            <!-- Empty State -->
+            <div id="emptyState" class="hidden text-center py-16">
+                <div class="w-20 h-20 bg-brand/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <svg class="w-10 h-10 text-brand" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+                    </svg>
+                </div>
+                <h3 class="text-xl font-semibold text-gray-900 mb-2">No quizzes found</h3>
+                <p class="text-gray-500">Check back later for new quizzes</p>
+            </div>
+        </div>
+    </main>
+
+    <!-- Submit Score Modal -->
+    <div id="submitModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-2xl w-full max-w-md shadow-2xl">
+            <div class="flex items-center justify-between p-6 border-b border-gray-100">
+                <h2 class="text-xl font-bold text-gray-900">Submit Quiz Score</h2>
+                <button onclick="closeSubmitModal()" class="p-2 text-gray-500 hover:text-gray-700 rounded-lg hover:bg-gray-100">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                </button>
+            </div>
+            <form id="submitForm" class="p-6 space-y-5">
+                <input type="hidden" id="submitQuizId">
+                <input type="hidden" id="submitTotalItems">
+                
+                <div class="text-center mb-4">
+                    <h3 id="submitQuizTitle" class="font-semibold text-lg text-gray-900"></h3>
+                    <p class="text-sm text-gray-500">Enter your score after completing the quiz</p>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Your Score *</label>
+                    <div class="flex items-center space-x-2">
+                        <input type="number" id="studentScore" required min="0" 
+                            class="flex-1 px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-brand focus:border-transparent text-center text-2xl font-bold"
+                            placeholder="0">
+                        <span class="text-2xl text-gray-400">/</span>
+                        <span id="displayTotalItems" class="text-2xl font-bold text-gray-900">10</span>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Screenshot (Optional)</label>
+                    <input type="file" id="screenshotFile" accept="image/*" 
+                        class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-brand focus:border-transparent">
+                    <p class="text-xs text-gray-500 mt-1">Upload a screenshot of your quiz result</p>
+                </div>
+
+                <div class="flex space-x-3 pt-4">
+                    <button type="button" onclick="closeSubmitModal()" 
+                        class="flex-1 px-6 py-3 border border-gray-300 rounded-xl font-medium text-gray-700 hover:bg-gray-50 transition-colors">
+                        Cancel
+                    </button>
+                    <button type="submit" id="submitBtn" 
+                        class="flex-1 px-6 py-3 bg-brand text-white rounded-xl font-medium hover:bg-brand-dark transition-colors">
+                        Submit Score
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Toast -->
+    <div id="toast" class="hidden fixed bottom-4 right-4 px-6 py-3 rounded-xl shadow-lg z-50 flex items-center space-x-2"></div>
+
+    <!-- Scripts -->
+    <script src="../shared/js/config.js"></script>
+    <script src="../shared/js/utils.js"></script>
+    <script src="../shared/js/supabase.js"></script>
+    <script src="../shared/js/auth.js"></script>
+    
+    <script>
+        let currentUser = null;
+        let quizzes = [];
+        let submissions = {};
+        let currentCategory = '';
+        let currentTab = 'all';
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', async () => {
+            await checkAuth();
+            setupEventListeners();
+            await loadData();
+        });
+
+        async function checkAuth() {
+            try {
+                currentUser = await checkAuthSession();
+                if (!currentUser || currentUser.role !== 'student') {
+                    window.location.href = '../public/login.html';
+                    return;
+                }
+                updateUserInfo(currentUser);
+            } catch (error) {
+                console.error('Auth error:', error);
+                window.location.href = '../public/login.html';
+            }
+        }
+
+        function updateUserInfo(user) {
+            const initials = user.fullName ? user.fullName.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2) : '--';
+            document.getElementById('userInitials').textContent = initials;
+            document.getElementById('sidebarUserName').textContent = user.fullName || 'Student';
+        }
+
+        async function loadData() {
+            try {
+                // Load published quizzes
+                const { data: quizData, error: quizError } = await getSupabase()
+                    .from('quizzes')
+                    .select('*, teacher:users!quizzes_teacher_id_fkey(full_name), video:videos(title)')
+                    .eq('is_published', true)
+                    .order('created_at', { ascending: false });
+
+                if (quizError) throw quizError;
+                quizzes = quizData || [];
+
+                // Load user's submissions
+                const { data: subData } = await getSupabase()
+                    .from('quiz_submissions')
+                    .select('*')
+                    .eq('student_id', currentUser.id);
+                
+                submissions = {};
+                (subData || []).forEach(s => {
+                    submissions[s.quiz_id] = s;
+                });
+
+                document.getElementById('loadingState').classList.add('hidden');
+                updateStats();
+                renderQuizzes();
+            } catch (error) {
+                console.error('Error loading data:', error);
+                document.getElementById('loadingState').classList.add('hidden');
+                showToast('Failed to load quizzes', 'error');
+            }
+        }
+
+        function updateStats() {
+            const completed = Object.keys(submissions).length;
+            const scores = Object.values(submissions).map(s => (s.student_score / s.total_items) * 100);
+            const avgScore = scores.length > 0 ? Math.round(scores.reduce((a, b) => a + b, 0) / scores.length) : 0;
+
+            document.getElementById('availableCount').textContent = quizzes.length;
+            document.getElementById('completedCount').textContent = completed;
+            document.getElementById('avgScore').textContent = scores.length > 0 ? `${avgScore}%` : '--%';
+        }
+
+        function renderQuizzes() {
+            const grid = document.getElementById('quizzesGrid');
+            const emptyState = document.getElementById('emptyState');
+            const search = document.getElementById('searchInput').value.toLowerCase();
+            
+            let filtered = quizzes.filter(q => {
+                // Category filter
+                if (currentCategory && q.category !== currentCategory) return false;
+                
+                // Search filter
+                if (search && !q.title.toLowerCase().includes(search) && !q.description?.toLowerCase().includes(search)) return false;
+                
+                // Tab filter
+                const hasSubmission = submissions[q.id];
+                if (currentTab === 'pending' && hasSubmission) return false;
+                if (currentTab === 'completed' && !hasSubmission) return false;
+                
+                return true;
+            });
+
+            if (filtered.length === 0) {
+                grid.innerHTML = '';
+                emptyState.classList.remove('hidden');
+                return;
+            }
+
+            emptyState.classList.add('hidden');
+            grid.innerHTML = filtered.map(quiz => {
+                const submission = submissions[quiz.id];
+                const isPassed = submission && submission.student_score >= quiz.passing_score;
+                
+                return `
+                    <div class="quiz-card bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+                        <div class="p-5">
+                            <div class="flex items-start justify-between mb-3">
+                                <div class="w-12 h-12 bg-gradient-to-br from-brand to-brand-light rounded-xl flex items-center justify-center">
+                                    <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+                                    </svg>
+                                </div>
+                                ${submission ? `
+                                    <span class="px-3 py-1 rounded-full text-xs font-medium ${isPassed ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}">
+                                        ${isPassed ? 'Passed' : 'Failed'} - ${submission.student_score}/${submission.total_items}
+                                    </span>
+                                ` : `
+                                    <span class="px-3 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-600">
+                                        Not taken
+                                    </span>
+                                `}
+                            </div>
+                            
+                            <h3 class="font-semibold text-gray-900 mb-1 line-clamp-2">${escapeHtml(quiz.title)}</h3>
+                            <p class="text-sm text-gray-500 mb-3 line-clamp-2">${escapeHtml(quiz.description || 'No description')}</p>
+                            
+                            ${quiz.video ? `
+                                <div class="flex items-center text-xs text-brand mb-3 bg-brand/5 px-2 py-1 rounded-lg">
+                                    <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/>
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                    </svg>
+                                    <span class="truncate">Related: ${escapeHtml(quiz.video.title)}</span>
+                                </div>
+                            ` : ''}
+                            
+                            <div class="grid grid-cols-3 gap-2 text-xs text-gray-500 mb-4">
+                                <div class="bg-gray-50 rounded-lg p-2 text-center">
+                                    <div class="font-semibold text-gray-900">${quiz.total_items}</div>
+                                    <div>Items</div>
+                                </div>
+                                <div class="bg-gray-50 rounded-lg p-2 text-center">
+                                    <div class="font-semibold text-gray-900">${quiz.passing_score}</div>
+                                    <div>Passing</div>
+                                </div>
+                                <div class="bg-gray-50 rounded-lg p-2 text-center">
+                                    <div class="font-semibold text-gray-900">${quiz.time_limit_minutes || '∞'}</div>
+                                    <div>Minutes</div>
+                                </div>
+                            </div>
+
+                            <div class="flex items-center text-xs text-gray-400 mb-4">
+                                <span class="capitalize flex items-center">
+                                    <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/>
+                                    </svg>
+                                    ${quiz.category || 'General'}
+                                </span>
+                                <span class="ml-auto">${quiz.teacher?.full_name || 'MathTuro'}</span>
+                            </div>
+                            
+                            <div class="flex space-x-2">
+                                <a href="${quiz.quiz_url}" target="_blank" 
+                                    class="flex-1 px-4 py-2 text-center text-sm bg-brand text-white rounded-lg hover:bg-brand-dark transition-colors flex items-center justify-center space-x-1">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
+                                    </svg>
+                                    <span>Take Quiz</span>
+                                </a>
+                                <button onclick="openSubmitModal('${quiz.id}')" 
+                                    class="flex-1 px-4 py-2 text-sm ${submission ? 'bg-gray-100 text-gray-700 hover:bg-gray-200' : 'bg-green-100 text-green-700 hover:bg-green-200'} rounded-lg transition-colors flex items-center justify-center space-x-1">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="${submission ? 'M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z' : 'M5 13l4 4L19 7'}"/>
+                                    </svg>
+                                    <span>${submission ? 'Update' : 'Submit'}</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function setupEventListeners() {
+            // Search
+            document.getElementById('searchInput').addEventListener('input', renderQuizzes);
+            
+            // Form submit
+            document.getElementById('submitForm').addEventListener('submit', handleSubmit);
+            
+            // Mobile menu
+            document.getElementById('mobileMenuBtn').addEventListener('click', () => {
+                document.getElementById('sidebar').classList.toggle('-translate-x-full');
+                document.getElementById('mobileOverlay').classList.toggle('hidden');
+            });
+            
+            document.getElementById('mobileOverlay').addEventListener('click', () => {
+                document.getElementById('sidebar').classList.add('-translate-x-full');
+                document.getElementById('mobileOverlay').classList.add('hidden');
+            });
+            
+            // Logout
+            document.getElementById('logoutButton').addEventListener('click', async () => {
+                if (await logout()) {
+                    window.location.href = '../public/login.html';
+                }
+            });
+        }
+
+        function filterCategory(category) {
+            currentCategory = category;
+            updateCategoryButtons();
+            renderQuizzes();
+        }
+
+        function updateCategoryButtons() {
+            document.querySelectorAll('.category-btn').forEach(btn => {
+                btn.classList.remove('active');
+                if (btn.dataset.category === currentCategory) {
+                    btn.classList.add('active');
+                }
+            });
+        }
+
+        function showTab(tab) {
+            currentTab = tab;
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('text-brand', 'border-brand');
+                btn.classList.add('text-gray-500', 'border-transparent');
+            });
+            const activeTab = document.getElementById(`tab${tab.charAt(0).toUpperCase() + tab.slice(1)}`);
+            activeTab.classList.add('text-brand', 'border-brand');
+            activeTab.classList.remove('text-gray-500', 'border-transparent');
+            renderQuizzes();
+        }
+
+        function openSubmitModal(quizId) {
+            const quiz = quizzes.find(q => q.id === quizId);
+            if (!quiz) return;
+            
+            document.getElementById('submitQuizId').value = quizId;
+            document.getElementById('submitTotalItems').value = quiz.total_items;
+            document.getElementById('submitQuizTitle').textContent = quiz.title;
+            document.getElementById('displayTotalItems').textContent = quiz.total_items;
+            document.getElementById('studentScore').max = quiz.total_items;
+            
+            // Pre-fill if already submitted
+            const submission = submissions[quizId];
+            if (submission) {
+                document.getElementById('studentScore').value = submission.student_score;
+            } else {
+                document.getElementById('studentScore').value = '';
+            }
+            
+            document.getElementById('submitModal').classList.remove('hidden');
+        }
+
+        function closeSubmitModal() {
+            document.getElementById('submitModal').classList.add('hidden');
+            document.getElementById('submitForm').reset();
+        }
+
+        async function handleSubmit(e) {
+            e.preventDefault();
+            const btn = document.getElementById('submitBtn');
+            btn.disabled = true;
+            btn.innerHTML = '<svg class="w-5 h-5 animate-spin mr-2 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>Submitting...';
+
+            try {
+                const quizId = document.getElementById('submitQuizId').value;
+                const totalItems = parseInt(document.getElementById('submitTotalItems').value);
+                const studentScore = parseInt(document.getElementById('studentScore').value);
+                const screenshotFile = document.getElementById('screenshotFile').files[0];
+
+                if (studentScore > totalItems) {
+                    throw new Error('Score cannot be greater than total items');
+                }
+
+                let screenshotUrl = null;
+                
+                // Upload screenshot if provided
+                if (screenshotFile) {
+                    const fileExt = screenshotFile.name.split('.').pop();
+                    const fileName = `${currentUser.id}/${quizId}_${Date.now()}.${fileExt}`;
+                    
+                    const { error: uploadError } = await getSupabase()
+                        .storage
+                        .from('quiz-screenshots')
+                        .upload(fileName, screenshotFile);
+                    
+                    if (uploadError) throw uploadError;
+                    
+                    const { data: { publicUrl } } = getSupabase()
+                        .storage
+                        .from('quiz-screenshots')
+                        .getPublicUrl(fileName);
+                    
+                    screenshotUrl = publicUrl;
+                }
+
+                // Check if updating or inserting
+                const existingSubmission = submissions[quizId];
+                
+                if (existingSubmission) {
+                    const { error } = await getSupabase()
+                        .from('quiz_submissions')
+                        .update({
+                            student_score: studentScore,
+                            total_items: totalItems,
+                            screenshot_url: screenshotUrl || existingSubmission.screenshot_url,
+                            updated_at: new Date().toISOString()
+                        })
+                        .eq('id', existingSubmission.id);
+                    
+                    if (error) throw error;
+                } else {
+                    const { error } = await getSupabase()
+                        .from('quiz_submissions')
+                        .insert({
+                            quiz_id: quizId,
+                            student_id: currentUser.id,
+                            student_score: studentScore,
+                            total_items: totalItems,
+                            screenshot_url: screenshotUrl
+                        });
+                    
+                    if (error) throw error;
+                }
+
+                showToast('Score submitted successfully!', 'success');
+                closeSubmitModal();
+                await loadData();
+            } catch (error) {
+                console.error('Error submitting score:', error);
+                showToast(error.message || 'Failed to submit score', 'error');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Submit Score';
+            }
+        }
+
+        function escapeHtml(text) {
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function showToast(message, type = 'info') {
+            const toast = document.getElementById('toast');
+            toast.className = `fixed bottom-4 right-4 px-6 py-3 rounded-xl shadow-lg z-50 flex items-center space-x-2 ${
+                type === 'success' ? 'bg-green-500 text-white' :
+                type === 'error' ? 'bg-red-500 text-white' : 'bg-brand text-white'
+            }`;
+            toast.innerHTML = `
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="${
+                        type === 'success' ? 'M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z' :
+                        type === 'error' ? 'M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z' :
+                        'M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z'
+                    }"/>
+                </svg>
+                <span>${message}</span>
+            `;
+            toast.classList.remove('hidden');
+            setTimeout(() => toast.classList.add('hidden'), 3000);
+        }
+    </script>
+</body>
+</html>

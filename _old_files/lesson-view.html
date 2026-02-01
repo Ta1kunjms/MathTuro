@@ -1,0 +1,985 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/png" href="Logo/MATHURO LOGO.png">
+    <title>Lesson View - MathTuro LMS</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: {
+                            50: '#f0fdf4',
+                            100: '#dcfce7',
+                            200: '#bbf7d0',
+                            300: '#86efac',
+                            400: '#4ade80',
+                            500: '#22c55e',
+                            600: '#16a34a',
+                            700: '#15803d',
+                            800: '#166534',
+                            900: '#14532d',
+                        },
+                        brand: '#005801',
+                        'brand-dark': '#004601',
+                        'brand-light': '#006B01',
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', 'sans-serif'],
+                    },
+                },
+            },
+        }
+    </script>
+    <style>
+        body { font-family: 'Inter', system-ui, sans-serif; }
+        
+        .gradient-text {
+            background: linear-gradient(135deg, #005801 0%, #22c55e 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .glass-sidebar {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+        }
+        
+        .lesson-nav-item {
+            transition: all 0.2s ease;
+        }
+        
+        .lesson-nav-item:hover {
+            background-color: rgba(0, 88, 1, 0.05);
+        }
+        
+        .lesson-nav-item.active {
+            background: linear-gradient(135deg, #005801 0%, #16a34a 100%);
+            color: white;
+            box-shadow: 0 4px 15px rgba(0, 88, 1, 0.3);
+        }
+        
+        .lesson-nav-item.active .lesson-icon {
+            color: white;
+        }
+        
+        .sidebar-link {
+            transition: all 0.2s ease;
+        }
+        
+        .sidebar-link:hover, .sidebar-link.active {
+            background: linear-gradient(135deg, #005801 0%, #16a34a 100%);
+            color: white;
+        }
+        
+        .sidebar-link.active {
+            box-shadow: 0 4px 15px rgba(0, 88, 1, 0.3);
+        }
+        
+        .content-card {
+            transition: all 0.3s ease;
+        }
+        
+        .video-container {
+            position: relative;
+            padding-bottom: 56.25%;
+            height: 0;
+            overflow: hidden;
+        }
+        
+        .video-container iframe {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+        
+        .prose h1, .prose h2, .prose h3 {
+            color: #1f2937;
+            font-weight: 600;
+        }
+        
+        .prose p {
+            color: #4b5563;
+            line-height: 1.75;
+        }
+        
+        .prose ul, .prose ol {
+            color: #4b5563;
+        }
+        
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; }
+        ::-webkit-scrollbar-thumb { background: #005801; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: #004601; }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <!-- Mobile Menu Overlay -->
+    <div id="mobileOverlay" class="fixed inset-0 bg-black bg-opacity-50 z-40 hidden lg:hidden"></div>
+    
+    <!-- Sidebar -->
+    <aside id="sidebar" class="fixed left-0 top-0 h-full w-72 glass-sidebar border-r border-gray-200 z-50 transform -translate-x-full lg:translate-x-0 transition-transform duration-300">
+        <!-- Logo -->
+        <div class="p-6 border-b border-gray-100">
+            <a href="index.html" class="flex items-center space-x-3">
+                <div class="w-12 h-12 bg-white rounded-xl flex items-center justify-center shadow-lg">
+                    <img src="Logo/MATHURO LOGO.png" alt="MathTuro" class="w-10 h-10 object-contain">
+                </div>
+                <div>
+                    <span class="text-xl font-bold gradient-text">MathTuro</span>
+                    <p class="text-xs text-gray-500">Lesson View</p>
+                </div>
+            </a>
+        </div>
+        
+        <!-- User Info -->
+        <div class="p-6 border-b border-gray-100">
+            <div class="flex items-center space-x-3">
+                <div class="w-12 h-12 bg-brand/10 rounded-full flex items-center justify-center">
+                    <span id="userInitials" class="text-brand font-bold text-lg">--</span>
+                </div>
+                <div>
+                    <p id="sidebarUserName" class="font-semibold text-gray-800">Loading...</p>
+                    <p id="userRole" class="text-sm text-brand font-medium capitalize">Loading...</p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Module Info -->
+        <div class="p-4 border-b border-gray-100">
+            <p class="text-xs text-gray-500 uppercase tracking-wide mb-2">Current Module</p>
+            <h3 id="sidebarModuleTitle" class="font-semibold text-gray-800 text-sm line-clamp-2">Loading...</h3>
+        </div>
+        
+        <!-- Lessons Navigation -->
+        <div class="p-4 flex-1 overflow-y-auto" style="max-height: calc(100vh - 350px);">
+            <p class="text-xs text-gray-500 uppercase tracking-wide mb-3">Lessons</p>
+            <nav id="lessonsNavigation" class="space-y-2">
+                <!-- Lessons will be loaded here -->
+            </nav>
+        </div>
+        
+        <!-- Bottom Actions -->
+        <div class="absolute bottom-0 left-0 right-0 p-4 border-t border-gray-100 bg-white">
+            <a id="backToModulesLink" href="student-modules.html" class="flex items-center space-x-3 px-4 py-3 text-gray-600 hover:text-brand transition-colors">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 17l-5-5m0 0l5-5m-5 5h12"/>
+                </svg>
+                <span>Back to Modules</span>
+            </a>
+            <button id="logoutButton" class="w-full flex items-center space-x-3 px-4 py-3 text-red-600 hover:bg-red-50 rounded-xl transition-colors">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
+                </svg>
+                <span>Logout</span>
+            </button>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="lg:ml-72 min-h-screen">
+        <!-- Top Header -->
+        <header class="bg-white border-b border-gray-200 sticky top-0 z-30">
+            <div class="flex items-center justify-between px-4 lg:px-8 py-4">
+                <!-- Mobile Menu Button -->
+                <button id="mobileMenuBtn" class="lg:hidden p-2 text-gray-600 hover:text-brand rounded-lg">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
+                    </svg>
+                </button>
+                
+                <!-- Page Title -->
+                <div class="flex-1 lg:flex-none">
+                    <h1 id="headerTitle" class="text-xl lg:text-2xl font-bold text-gray-800">Lesson View</h1>
+                    <p id="headerSubtitle" class="text-sm text-gray-500 hidden sm:block">Learn and progress through lessons</p>
+                </div>
+                
+                <!-- Right Actions -->
+                <div class="flex items-center space-x-4">
+                    <!-- Progress Indicator -->
+                    <div id="progressIndicator" class="hidden md:flex items-center space-x-2 px-4 py-2 bg-brand/5 rounded-xl">
+                        <div class="w-8 h-8 bg-brand/10 rounded-full flex items-center justify-center">
+                            <span id="progressPercent" class="text-brand font-bold text-xs">0%</span>
+                        </div>
+                        <span class="text-sm text-gray-600">Progress</span>
+                    </div>
+                    
+                    <!-- User Menu -->
+                    <div class="relative">
+                        <button id="userMenuBtn" class="flex items-center space-x-2 p-2 rounded-lg hover:bg-gray-100">
+                            <div class="w-8 h-8 bg-brand/10 rounded-full flex items-center justify-center">
+                                <span id="headerUserInitials" class="text-brand font-semibold text-sm">--</span>
+                            </div>
+                        </button>
+                        
+                        <!-- Dropdown -->
+                        <div id="userDropdown" class="hidden absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-lg border border-gray-100 py-2">
+                            <div class="px-4 py-2 border-b border-gray-100">
+                                <p id="dropdownUserName" class="font-semibold text-gray-800">User</p>
+                                <p id="dropdownUserEmail" class="text-sm text-gray-500">email@example.com</p>
+                            </div>
+                            <button onclick="handleLogout()" class="w-full text-left px-4 py-2 text-red-600 hover:bg-red-50">Logout</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Lesson Content -->
+        <div class="p-4 lg:p-8">
+            <!-- Module Header Card -->
+            <div id="moduleHeader" class="bg-gradient-to-r from-brand to-brand-light rounded-2xl p-6 lg:p-8 text-white mb-8">
+                <div class="flex items-start justify-between">
+                    <div>
+                        <p class="text-white/80 text-sm mb-1">Module</p>
+                        <h2 id="moduleTitle" class="text-2xl lg:text-3xl font-bold mb-2">Loading...</h2>
+                        <p id="moduleDescription" class="text-white/80 max-w-2xl">Loading...</p>
+                    </div>
+                    <div class="hidden lg:flex items-center space-x-2 bg-white/20 px-4 py-2 rounded-xl">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
+                        </svg>
+                        <span id="lessonCount">0 Lessons</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Lesson Content Section -->
+            <div id="lessonContentSection" class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden mb-8">
+                <!-- Lesson Header -->
+                <div class="px-6 lg:px-8 py-6 border-b border-gray-100">
+                    <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between">
+                        <div>
+                            <div class="flex items-center space-x-2 mb-2">
+                                <span id="lessonBadge" class="px-3 py-1 bg-brand/10 text-brand text-sm font-medium rounded-full">Lesson 1</span>
+                                <span id="lessonStatus" class="px-3 py-1 bg-gray-100 text-gray-600 text-sm rounded-full hidden">Pending</span>
+                            </div>
+                            <h3 id="lessonTitle" class="text-xl lg:text-2xl font-bold text-gray-800">Loading...</h3>
+                        </div>
+                        <div id="lessonActions" class="flex space-x-2 mt-4 lg:mt-0">
+                            <!-- Edit button will appear here for teachers/admins -->
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Lesson Body -->
+                <div class="p-6 lg:p-8">
+                    <!-- Lesson Content -->
+                    <div id="lessonContent" class="prose max-w-none mb-8">
+                        <p class="text-gray-500">Loading lesson content...</p>
+                    </div>
+
+                    <!-- Video Section -->
+                    <div id="videoSection" class="mb-8 hidden">
+                        <div class="flex items-center space-x-2 mb-4">
+                            <div class="w-10 h-10 bg-red-100 rounded-xl flex items-center justify-center">
+                                <svg class="w-5 h-5 text-red-600" fill="currentColor" viewBox="0 0 24 24">
+                                    <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
+                                </svg>
+                            </div>
+                            <h4 class="text-lg font-semibold text-gray-800">Video Lesson</h4>
+                        </div>
+                        <div class="video-container bg-gray-900 rounded-xl overflow-hidden">
+                            <iframe
+                                id="lessonVideo"
+                                src=""
+                                frameborder="0"
+                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                allowfullscreen
+                            ></iframe>
+                        </div>
+                    </div>
+
+                    <!-- Quiz Section -->
+                    <div id="quizSection" class="mb-8 hidden">
+                        <div class="flex items-center space-x-2 mb-4">
+                            <div class="w-10 h-10 bg-purple-100 rounded-xl flex items-center justify-center">
+                                <svg class="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/>
+                                </svg>
+                            </div>
+                            <h4 class="text-lg font-semibold text-gray-800">Quiz</h4>
+                        </div>
+                        <div id="quizContent" class="bg-gradient-to-r from-purple-50 to-indigo-50 rounded-xl p-6 border border-purple-100">
+                            <!-- Quiz content will be loaded here -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Lesson Actions Bar -->
+                <div class="px-6 lg:px-8 py-4 bg-gray-50 border-t border-gray-100">
+                    <div id="lessonActionsBar" class="flex flex-wrap items-center justify-between gap-4">
+                        <!-- Actions will be loaded here -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- No Lessons Message -->
+            <div id="noLessonsMessage" class="hidden bg-white rounded-2xl p-12 text-center border border-gray-100">
+                <div class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <svg class="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
+                    </svg>
+                </div>
+                <h3 class="text-lg font-semibold text-gray-800 mb-2">No Lessons Available</h3>
+                <p class="text-gray-500 mb-6">This module doesn't have any lessons yet.</p>
+                <a id="noLessonsBackLink" href="student-modules.html" class="inline-flex items-center px-6 py-3 bg-brand text-white rounded-xl hover:bg-brand-dark transition-colors">
+                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 17l-5-5m0 0l5-5m-5 5h12"/>
+                    </svg>
+                    Back to Modules
+                </a>
+            </div>
+        </div>
+    </main>
+
+    <!-- Quiz Submission Form Modal -->
+    <div id="quizModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+        <div class="bg-white rounded-2xl p-6 lg:p-8 max-w-md w-full mx-4 shadow-2xl">
+            <div class="flex items-center space-x-3 mb-6">
+                <div class="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center">
+                    <svg class="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+                    </svg>
+                </div>
+                <div>
+                    <h3 class="text-lg font-bold text-gray-800">Submit Quiz Score</h3>
+                    <p class="text-sm text-gray-500">Enter your quiz results</p>
+                </div>
+            </div>
+            
+            <form id="quizForm" class="space-y-4">
+                <div>
+                    <label for="quizScore" class="block text-sm font-medium text-gray-700 mb-2">
+                        Your Score
+                    </label>
+                    <input
+                        type="number"
+                        id="quizScore"
+                        name="score"
+                        required
+                        min="0"
+                        class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-brand/20 focus:border-brand transition-colors"
+                        placeholder="Enter your score"
+                    >
+                </div>
+                <div>
+                    <label for="quizTotal" class="block text-sm font-medium text-gray-700 mb-2">
+                        Total Items
+                    </label>
+                    <input
+                        type="number"
+                        id="quizTotal"
+                        name="totalItems"
+                        required
+                        min="1"
+                        class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-brand/20 focus:border-brand transition-colors"
+                        placeholder="Enter total items"
+                    >
+                </div>
+                <div>
+                    <label for="quizScreenshot" class="block text-sm font-medium text-gray-700 mb-2">
+                        Screenshot (Optional)
+                    </label>
+                    <div class="border-2 border-dashed border-gray-200 rounded-xl p-4 text-center hover:border-brand transition-colors">
+                        <input
+                            type="file"
+                            id="quizScreenshot"
+                            name="screenshot"
+                            accept="image/*"
+                            class="hidden"
+                        >
+                        <label for="quizScreenshot" class="cursor-pointer">
+                            <svg class="w-8 h-8 text-gray-400 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                            </svg>
+                            <span class="text-sm text-gray-500">Click to upload screenshot</span>
+                        </label>
+                    </div>
+                </div>
+                <div class="flex space-x-3 pt-4">
+                    <button
+                        type="button"
+                        id="cancelQuiz"
+                        class="flex-1 px-4 py-3 text-gray-700 border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors"
+                    >
+                        Cancel
+                    </button>
+                    <button
+                        type="submit"
+                        class="flex-1 px-4 py-3 bg-brand text-white rounded-xl hover:bg-brand-dark transition-colors"
+                    >
+                        Submit Score
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Loading Indicator -->
+    <div id="loadingOverlay" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+        <div class="text-center bg-white p-8 rounded-2xl shadow-2xl">
+            <div class="relative w-16 h-16 mx-auto mb-4">
+                <div class="absolute inset-0 border-4 border-brand/20 rounded-full"></div>
+                <div class="absolute inset-0 border-4 border-brand border-t-transparent rounded-full animate-spin"></div>
+            </div>
+            <p class="text-gray-800 font-medium">Loading lesson...</p>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="js/config.js"></script>
+    <script src="js/utils.js"></script>
+    <script src="js/supabase.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/modules.js"></script>
+    <script src="js/student.js"></script>
+    <script src="js/teacher.js"></script>
+    <script src="js/uploads.js"></script>
+    <script>
+        /*
+            Lesson View Page JavaScript
+            Handles lesson display and navigation
+        */
+
+        // Current lesson and module information
+        let currentModule = null;
+        let currentLesson = null;
+        let lessons = [];
+        let currentUser = null;
+
+        // Wait for DOM to be fully loaded
+        document.addEventListener('DOMContentLoaded', async function() {
+            // Show loading overlay
+            const loadingOverlay = document.getElementById('loadingOverlay');
+            loadingOverlay.classList.remove('hidden');
+
+            try {
+                // Check if user is authenticated
+                const user = await checkAuthSession();
+                
+                if (!user) {
+                    redirectToLogin();
+                    return;
+                }
+
+                currentUser = user;
+                
+                // Update user info displays
+                updateUserDisplay(user);
+
+                // Get module ID from URL
+                const urlParams = new URLSearchParams(window.location.search);
+                const moduleId = urlParams.get('moduleId');
+                
+                if (!moduleId) {
+                    alert('Module ID not specified');
+                    redirectToDashboard();
+                    return;
+                }
+
+                // Load module and lessons
+                await loadModuleAndLessons(moduleId);
+
+                // Set up event listeners
+                setupEventListeners();
+
+            } catch (error) {
+                console.error('Page initialization error:', error);
+                alert('Failed to load page. Please try logging in again.');
+                redirectToLogin();
+            } finally {
+                // Hide loading overlay
+                loadingOverlay.classList.add('hidden');
+            }
+        });
+
+        function updateUserDisplay(user) {
+            const initials = getInitials(user.fullName);
+            
+            document.getElementById('sidebarUserName').textContent = user.fullName;
+            document.getElementById('userRole').textContent = user.role;
+            document.getElementById('userInitials').textContent = initials;
+            document.getElementById('headerUserInitials').textContent = initials;
+            document.getElementById('dropdownUserName').textContent = user.fullName;
+            document.getElementById('dropdownUserEmail').textContent = user.email;
+            
+            // Update back to modules links based on role
+            const modulesLink = user.role === 'student' ? 'student-modules.html' : 'modules.html';
+            const backToModulesLink = document.getElementById('backToModulesLink');
+            const noLessonsBackLink = document.getElementById('noLessonsBackLink');
+            if (backToModulesLink) backToModulesLink.href = modulesLink;
+            if (noLessonsBackLink) noLessonsBackLink.href = modulesLink;
+        }
+
+        function getInitials(name) {
+            return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+        }
+
+        function setupEventListeners() {
+            // Logout button
+            document.getElementById('logoutButton').addEventListener('click', handleLogout);
+
+            // Quiz modal
+            document.getElementById('cancelQuiz').addEventListener('click', hideQuizModal);
+            document.getElementById('quizForm').addEventListener('submit', handleQuizSubmit);
+
+            // Mobile menu
+            document.getElementById('mobileMenuBtn').addEventListener('click', toggleMobileMenu);
+            document.getElementById('mobileOverlay').addEventListener('click', toggleMobileMenu);
+
+            // User dropdown
+            document.getElementById('userMenuBtn').addEventListener('click', function() {
+                document.getElementById('userDropdown').classList.toggle('hidden');
+            });
+
+            // Close dropdown when clicking outside
+            document.addEventListener('click', function(e) {
+                const dropdown = document.getElementById('userDropdown');
+                const button = document.getElementById('userMenuBtn');
+                if (!dropdown.contains(e.target) && !button.contains(e.target)) {
+                    dropdown.classList.add('hidden');
+                }
+            });
+        }
+
+        function toggleMobileMenu() {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('mobileOverlay');
+            sidebar.classList.toggle('-translate-x-full');
+            overlay.classList.toggle('hidden');
+        }
+
+        async function handleLogout() {
+            if (await logout()) {
+                redirectToLogin();
+            }
+        }
+
+        async function loadModuleAndLessons(moduleId) {
+            try {
+                currentModule = await getModuleById(moduleId);
+                
+                if (!currentModule) {
+                    alert('Module not found');
+                    redirectToDashboard();
+                    return;
+                }
+
+                lessons = currentModule.lessons || [];
+
+                // Display module information
+                document.getElementById('moduleTitle').textContent = currentModule.title;
+                document.getElementById('moduleDescription').textContent = currentModule.description;
+                document.getElementById('sidebarModuleTitle').textContent = currentModule.title;
+                document.getElementById('lessonCount').textContent = `${lessons.length} Lesson${lessons.length !== 1 ? 's' : ''}`;
+
+                // Display lessons navigation
+                displayLessonsNavigation();
+
+                // Load first lesson by default or show no lessons message
+                if (lessons.length > 0) {
+                    document.getElementById('lessonContentSection').classList.remove('hidden');
+                    document.getElementById('noLessonsMessage').classList.add('hidden');
+                    await loadLesson(lessons[0].id);
+                } else {
+                    document.getElementById('lessonContentSection').classList.add('hidden');
+                    document.getElementById('noLessonsMessage').classList.remove('hidden');
+                }
+
+                // Update progress indicator for students
+                if (currentUser.role === 'student') {
+                    updateProgressIndicator();
+                }
+
+            } catch (error) {
+                console.error('Error loading module and lessons:', error);
+                alert('Failed to load module');
+            }
+        }
+
+        function displayLessonsNavigation() {
+            const navContainer = document.getElementById('lessonsNavigation');
+            
+            if (lessons.length > 0) {
+                navContainer.innerHTML = lessons.map((lesson, index) => {
+                    const status = getLessonStatus(lesson);
+                    const isCompleted = status === 'Completed';
+                    const icon = getLessonIcon(lesson);
+                    
+                    return `
+                        <button
+                            onclick="loadLesson(${lesson.id})"
+                            id="lessonNav-${lesson.id}"
+                            class="lesson-nav-item w-full text-left p-3 rounded-xl transition-all"
+                        >
+                            <div class="flex items-center space-x-3">
+                                <div class="lesson-icon w-8 h-8 rounded-lg flex items-center justify-center text-lg ${isCompleted ? 'bg-green-100' : 'bg-gray-100'}">
+                                    ${isCompleted ? '✓' : icon}
+                                </div>
+                                <div class="flex-1 min-w-0">
+                                    <p class="text-sm font-medium truncate">Lesson ${index + 1}</p>
+                                    <p class="text-xs opacity-75 truncate">${lesson.title}</p>
+                                </div>
+                            </div>
+                        </button>
+                    `;
+                }).join('');
+            } else {
+                navContainer.innerHTML = '<p class="text-gray-500 text-center py-4 text-sm">No lessons available</p>';
+            }
+        }
+
+        function getLessonStatus(lesson) {
+            if (currentUser.role !== 'student') {
+                return 'Available';
+            }
+            const completedLessons = JSON.parse(localStorage.getItem('completedLessons') || '[]');
+            return completedLessons.includes(lesson.id) ? 'Completed' : 'Pending';
+        }
+
+        function getLessonIcon(lesson) {
+            if (lesson.video_url) return '🎥';
+            if (lesson.quiz_url) return '📝';
+            return '📄';
+        }
+
+        function updateProgressIndicator() {
+            const completedLessons = JSON.parse(localStorage.getItem('completedLessons') || '[]');
+            const completedCount = lessons.filter(l => completedLessons.includes(l.id)).length;
+            const percentage = lessons.length > 0 ? Math.round((completedCount / lessons.length) * 100) : 0;
+            
+            document.getElementById('progressPercent').textContent = `${percentage}%`;
+            document.getElementById('progressIndicator').classList.remove('hidden');
+        }
+
+        async function loadLesson(lessonId) {
+            try {
+                currentLesson = lessons.find(lesson => lesson.id === lessonId);
+                
+                if (!currentLesson) {
+                    console.error('Lesson not found:', lessonId);
+                    return;
+                }
+
+                const lessonIndex = lessons.findIndex(l => l.id === lessonId) + 1;
+
+                // Display lesson info
+                document.getElementById('lessonTitle').textContent = currentLesson.title;
+                document.getElementById('lessonBadge').textContent = `Lesson ${lessonIndex}`;
+                document.getElementById('lessonContent').innerHTML = currentLesson.content || '<p class="text-gray-500">No content available for this lesson.</p>';
+
+                // Update status badge
+                const status = getLessonStatus(currentLesson);
+                const statusEl = document.getElementById('lessonStatus');
+                if (currentUser.role === 'student') {
+                    statusEl.classList.remove('hidden');
+                    statusEl.textContent = status;
+                    statusEl.className = `px-3 py-1 text-sm rounded-full ${status === 'Completed' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}`;
+                } else {
+                    statusEl.classList.add('hidden');
+                }
+
+                // Display video if available
+                const videoSection = document.getElementById('videoSection');
+                const lessonVideo = document.getElementById('lessonVideo');
+                
+                if (currentLesson.video_url) {
+                    videoSection.classList.remove('hidden');
+                    const embedUrl = convertToEmbedUrl(currentLesson.video_url);
+                    lessonVideo.src = embedUrl;
+                } else {
+                    videoSection.classList.add('hidden');
+                    lessonVideo.src = '';
+                }
+
+                // Display quiz if available
+                const quizSection = document.getElementById('quizSection');
+                const quizContent = document.getElementById('quizContent');
+                
+                if (currentLesson.quiz_url) {
+                    quizSection.classList.remove('hidden');
+                    quizContent.innerHTML = `
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="font-medium text-gray-800">Ready to test your knowledge?</p>
+                                <p class="text-sm text-gray-500 mt-1">Complete the quiz and submit your score</p>
+                            </div>
+                            <a href="${currentLesson.quiz_url}" target="_blank" 
+                               class="inline-flex items-center px-4 py-2 bg-purple-600 text-white rounded-xl hover:bg-purple-700 transition-colors">
+                                <span>Open Quiz</span>
+                                <svg class="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
+                                </svg>
+                            </a>
+                        </div>
+                    `;
+                } else {
+                    quizSection.classList.add('hidden');
+                }
+
+                // Update navigation to highlight active lesson
+                document.querySelectorAll('.lesson-nav-item').forEach(btn => {
+                    btn.classList.remove('active');
+                });
+                
+                const activeBtn = document.getElementById(`lessonNav-${lessonId}`);
+                if (activeBtn) {
+                    activeBtn.classList.add('active');
+                }
+
+                // Show lesson actions based on user role
+                await displayLessonActions();
+
+            } catch (error) {
+                console.error('Error loading lesson:', error);
+                alert('Failed to load lesson');
+            }
+        }
+
+        async function displayLessonActions() {
+            const actionsBar = document.getElementById('lessonActionsBar');
+            const lessonActions = document.getElementById('lessonActions');
+
+            actionsBar.innerHTML = '';
+            lessonActions.innerHTML = '';
+
+            if (currentUser.role === 'student') {
+                await displayStudentActions();
+            } else {
+                displayTeacherActions();
+            }
+        }
+
+        async function displayStudentActions() {
+            const actionsBar = document.getElementById('lessonActionsBar');
+            
+            const completedLessons = JSON.parse(localStorage.getItem('completedLessons') || '[]');
+            const isCompleted = completedLessons.includes(currentLesson.id);
+
+            // Navigation buttons
+            const navDiv = document.createElement('div');
+            navDiv.className = 'flex space-x-2';
+
+            const currentIndex = lessons.findIndex(l => l.id === currentLesson.id);
+            
+            if (currentIndex > 0) {
+                const prevBtn = document.createElement('button');
+                prevBtn.className = 'flex items-center px-4 py-2 border border-gray-200 text-gray-700 rounded-xl hover:bg-gray-50 transition-colors';
+                prevBtn.innerHTML = `
+                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+                    </svg>
+                    Previous
+                `;
+                prevBtn.onclick = () => loadLesson(lessons[currentIndex - 1].id);
+                navDiv.appendChild(prevBtn);
+            }
+
+            if (currentIndex < lessons.length - 1) {
+                const nextBtn = document.createElement('button');
+                nextBtn.className = 'flex items-center px-4 py-2 border border-gray-200 text-gray-700 rounded-xl hover:bg-gray-50 transition-colors';
+                nextBtn.innerHTML = `
+                    Next
+                    <svg class="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                    </svg>
+                `;
+                nextBtn.onclick = () => loadLesson(lessons[currentIndex + 1].id);
+                navDiv.appendChild(nextBtn);
+            }
+
+            actionsBar.appendChild(navDiv);
+
+            // Action buttons
+            const actionDiv = document.createElement('div');
+            actionDiv.className = 'flex space-x-2';
+
+            // Mark as Complete button
+            if (!isCompleted) {
+                const completeBtn = document.createElement('button');
+                completeBtn.className = 'flex items-center px-4 py-2 bg-brand text-white rounded-xl hover:bg-brand-dark transition-colors';
+                completeBtn.innerHTML = `
+                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                    </svg>
+                    Mark Complete
+                `;
+                completeBtn.onclick = async () => {
+                    await markLessonComplete(currentLesson.id);
+                    completedLessons.push(currentLesson.id);
+                    localStorage.setItem('completedLessons', JSON.stringify(completedLessons));
+                    displayLessonsNavigation();
+                    updateProgressIndicator();
+                    await displayLessonActions();
+                    
+                    // Update status badge
+                    const statusEl = document.getElementById('lessonStatus');
+                    statusEl.textContent = 'Completed';
+                    statusEl.className = 'px-3 py-1 text-sm rounded-full bg-green-100 text-green-700';
+                };
+                actionDiv.appendChild(completeBtn);
+            } else {
+                const completedText = document.createElement('span');
+                completedText.className = 'flex items-center px-4 py-2 bg-green-50 text-green-700 rounded-xl';
+                completedText.innerHTML = `
+                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                    </svg>
+                    Completed
+                `;
+                actionDiv.appendChild(completedText);
+            }
+
+            // Quiz submission button if quiz is available
+            if (currentLesson.quiz_url) {
+                const quizBtn = document.createElement('button');
+                quizBtn.className = 'flex items-center px-4 py-2 bg-purple-600 text-white rounded-xl hover:bg-purple-700 transition-colors';
+                quizBtn.innerHTML = `
+                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+                    </svg>
+                    Submit Score
+                `;
+                quizBtn.onclick = showQuizModal;
+                actionDiv.appendChild(quizBtn);
+            }
+
+            actionsBar.appendChild(actionDiv);
+        }
+
+        function displayTeacherActions() {
+            const lessonActions = document.getElementById('lessonActions');
+            
+            const editBtn = document.createElement('a');
+            editBtn.className = 'inline-flex items-center px-4 py-2 bg-yellow-500 text-white rounded-xl hover:bg-yellow-600 transition-colors';
+            editBtn.innerHTML = `
+                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                </svg>
+                Edit Lesson
+            `;
+            editBtn.href = `edit-lesson.html?id=${currentLesson.id}`;
+            lessonActions.appendChild(editBtn);
+
+            const deleteBtn = document.createElement('button');
+            deleteBtn.className = 'inline-flex items-center px-4 py-2 bg-red-500 text-white rounded-xl hover:bg-red-600 transition-colors ml-2';
+            deleteBtn.innerHTML = `
+                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                </svg>
+                Delete
+            `;
+            deleteBtn.onclick = async function() {
+                if (confirm('Are you sure you want to delete this lesson?')) {
+                    await deleteLesson(currentLesson.id);
+                    await loadModuleAndLessons(currentModule.id);
+                }
+            };
+            lessonActions.appendChild(deleteBtn);
+
+            // Navigation in actions bar
+            const actionsBar = document.getElementById('lessonActionsBar');
+            const navDiv = document.createElement('div');
+            navDiv.className = 'flex space-x-2';
+
+            const currentIndex = lessons.findIndex(l => l.id === currentLesson.id);
+            
+            if (currentIndex > 0) {
+                const prevBtn = document.createElement('button');
+                prevBtn.className = 'flex items-center px-4 py-2 border border-gray-200 text-gray-700 rounded-xl hover:bg-gray-50 transition-colors';
+                prevBtn.innerHTML = `
+                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+                    </svg>
+                    Previous
+                `;
+                prevBtn.onclick = () => loadLesson(lessons[currentIndex - 1].id);
+                navDiv.appendChild(prevBtn);
+            }
+
+            if (currentIndex < lessons.length - 1) {
+                const nextBtn = document.createElement('button');
+                nextBtn.className = 'flex items-center px-4 py-2 border border-gray-200 text-gray-700 rounded-xl hover:bg-gray-50 transition-colors';
+                nextBtn.innerHTML = `
+                    Next
+                    <svg class="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                    </svg>
+                `;
+                nextBtn.onclick = () => loadLesson(lessons[currentIndex + 1].id);
+                navDiv.appendChild(nextBtn);
+            }
+
+            actionsBar.appendChild(navDiv);
+        }
+
+        function showQuizModal() {
+            document.getElementById('quizForm').reset();
+            document.getElementById('quizModal').classList.remove('hidden');
+        }
+
+        function hideQuizModal() {
+            document.getElementById('quizModal').classList.add('hidden');
+        }
+
+        async function handleQuizSubmit(e) {
+            e.preventDefault();
+            
+            try {
+                const form = document.getElementById('quizForm');
+                const formData = new FormData(form);
+                
+                const score = formData.get('score');
+                const totalItems = formData.get('totalItems');
+                const screenshotFile = formData.get('screenshot').size > 0 ? formData.get('screenshot') : null;
+
+                const success = await submitQuizScore(
+                    currentLesson.id,
+                    score,
+                    totalItems,
+                    screenshotFile
+                );
+                
+                if (success) {
+                    hideQuizModal();
+                    alert('Quiz score submitted successfully');
+                    await displayLessonActions();
+                }
+
+            } catch (error) {
+                console.error('Error submitting quiz score:', error);
+                alert('Failed to submit quiz score');
+            }
+        }
+
+        function convertToEmbedUrl(url) {
+            let videoId = '';
+            
+            const watchMatch = url.match(/[?&]v=([^&]+)/);
+            if (watchMatch) {
+                videoId = watchMatch[1];
+            } else {
+                const shortMatch = url.match(/youtu\.be\/([^?]+)/);
+                if (shortMatch) {
+                    videoId = shortMatch[1];
+                }
+            }
+
+            if (videoId) {
+                return `https://www.youtube.com/embed/${videoId}`;
+            }
+
+            return url;
+        }
+    </script>
+</body>
+</html>

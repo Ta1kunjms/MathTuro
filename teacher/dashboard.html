@@ -1,0 +1,1073 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/png" href="../Logo/MATHURO LOGO.png">
+    <title>Teacher Dashboard - MathTuro LMS</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: {
+                            50: '#f0fdf4',
+                            100: '#dcfce7',
+                            200: '#bbf7d0',
+                            300: '#86efac',
+                            400: '#4ade80',
+                            500: '#22c55e',
+                            600: '#16a34a',
+                            700: '#15803d',
+                            800: '#166534',
+                            900: '#14532d',
+                        },
+                        brand: '#005801',
+                        'brand-dark': '#004601',
+                        'brand-light': '#006B01',
+                        teacher: {
+                            50: '#fdf2f8',
+                            100: '#fce7f3',
+                            200: '#fbcfe8',
+                            500: '#910568',
+                            600: '#720455',
+                            700: '#5a0344',
+                            800: '#4a0338',
+                        },
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', 'sans-serif'],
+                    },
+                },
+            },
+        }
+    </script>
+    <style>
+        body { font-family: 'Inter', system-ui, sans-serif; }
+        
+        .gradient-text {
+            background: linear-gradient(135deg, #005801 0%, #22c55e 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .glass-sidebar {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+        }
+        
+        .stat-card {
+            transition: all 0.3s ease;
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-4px);
+        }
+        
+        .submission-card {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .submission-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+        }
+        
+        .sidebar-link {
+            transition: all 0.2s ease;
+        }
+        
+        .sidebar-link:hover, .sidebar-link.active {
+            background: linear-gradient(135deg, #005801 0%, #006B01 100%);
+            color: white;
+        }
+        
+        .sidebar-link.active {
+            box-shadow: 0 4px 15px rgba(0, 88, 1, 0.3);
+        }
+        
+        .btn-approve {
+            background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+        }
+        
+        .btn-approve:hover {
+            background: linear-gradient(135deg, #16a34a 0%, #15803d 100%);
+        }
+        
+        .btn-reject {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+        }
+        
+        .btn-reject:hover {
+            background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+        }
+        
+        /* Custom scrollbar */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; }
+        ::-webkit-scrollbar-thumb { background: #005801; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: #004601; }
+
+        .pulse-badge {
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+    </style>
+    <link rel="stylesheet" href="../shared/css/base.css">
+    <link rel="stylesheet" href="assets/css/teacher.css">
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <!-- Mobile Menu Overlay -->
+    <div id="mobileOverlay" class="fixed inset-0 bg-black bg-opacity-50 z-40 hidden lg:hidden"></div>
+    
+    <!-- Sidebar -->
+    <aside id="sidebar" class="fixed left-0 top-0 h-full w-72 glass-sidebar border-r border-gray-200 z-50 transform -translate-x-full lg:translate-x-0 transition-transform duration-300">
+        <!-- Logo -->
+        <div class="p-6 border-b border-gray-100">
+            <a href="../public/index.html" class="flex items-center space-x-3">
+                <div class="w-12 h-12 bg-white rounded-xl flex items-center justify-center shadow-lg">
+                    <img src="../Logo/MATHURO LOGO.png" alt="MathTuro" class="w-10 h-10 object-contain">
+                </div>
+                <div>
+                    <span class="text-xl font-bold gradient-text">MathTuro</span>
+                    <p class="text-xs text-gray-500">Teacher Portal</p>
+                </div>
+            </a>
+        </div>
+        
+        <!-- User Info -->
+        <div class="p-6 border-b border-gray-100">
+            <div class="flex items-center space-x-3">
+                <div class="w-12 h-12 bg-teacher-100 rounded-full flex items-center justify-center">
+                    <span id="userInitials" class="text-teacher-600 font-bold text-lg">--</span>
+                </div>
+                <div>
+                    <p id="sidebarUserName" class="font-semibold text-gray-800">Loading...</p>
+                    <p class="text-sm text-teacher-600 font-medium">Teacher</p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Navigation -->
+        <nav class="p-4 space-y-2">
+            <a href="dashboard.html" class="sidebar-link active flex items-center space-x-3 px-4 py-3 rounded-xl text-gray-700">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
+                </svg>
+                <span>Dashboard</span>
+            </a>
+            <a href="submissions.html" class="sidebar-link flex items-center space-x-3 px-4 py-3 rounded-xl text-gray-700">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/>
+                </svg>
+                <span>Submissions</span>
+                <span id="pendingBadge" class="pulse-badge ml-auto bg-yellow-500 text-white text-xs px-2 py-0.5 rounded-full hidden">0</span>
+            </a>
+            <a href="manage-modules.html" class="sidebar-link flex items-center space-x-3 px-4 py-3 rounded-xl text-gray-700">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
+                </svg>
+                <span>Manage Modules</span>
+            </a>
+            <a href="manage-videos.html" class="sidebar-link flex items-center space-x-3 px-4 py-3 rounded-xl text-gray-700">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                </svg>
+                <span>Manage Videos</span>
+            </a>
+            <a href="manage-quizzes.html" class="sidebar-link flex items-center space-x-3 px-4 py-3 rounded-xl text-gray-700">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/>
+                </svg>
+                <span>Manage Quizzes</span>
+            </a>
+            
+            <a href="#" onclick="showStudentsPage()" class="sidebar-link flex items-center space-x-3 px-4 py-3 rounded-xl text-gray-700">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
+                </svg>
+                <span>Student Progress</span>
+            </a>
+            <a href="#" onclick="showReportsPage()" class="sidebar-link flex items-center space-x-3 px-4 py-3 rounded-xl text-gray-700">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                </svg>
+                <span>Reports</span>
+            </a>
+        </nav>
+        
+        <!-- Bottom Actions -->
+        <div class="absolute bottom-0 left-0 right-0 p-4 border-t border-gray-100 bg-white">
+            <a href="../public/index.html" class="flex items-center space-x-3 px-4 py-3 text-gray-600 hover:text-brand transition-colors">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
+                </svg>
+                <span>Back to Home</span>
+            </a>
+            <button id="logoutButton" class="w-full flex items-center space-x-3 px-4 py-3 text-red-600 hover:bg-red-50 rounded-xl transition-colors">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
+                </svg>
+                <span>Logout</span>
+            </button>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="lg:ml-72 min-h-screen">
+        <!-- Top Header -->
+        <header class="bg-white border-b border-gray-200 sticky top-0 z-30">
+            <div class="flex items-center justify-between px-4 lg:px-8 py-4">
+                <!-- Mobile Menu Button -->
+                <button id="mobileMenuBtn" class="lg:hidden p-2 text-gray-600 hover:text-brand rounded-lg">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
+                    </svg>
+                </button>
+                
+                <!-- Page Title -->
+                <div class="flex-1 lg:flex-none">
+                    <h1 class="text-xl lg:text-2xl font-bold text-gray-800">Teacher Dashboard</h1>
+                    <p class="text-sm text-gray-500 hidden sm:block">Manage your modules and review submissions.</p>
+                </div>
+                
+                <!-- Right Actions -->
+                <div class="flex items-center space-x-4">
+                    <!-- Quick Add -->
+                    <a href="manage-modules.html" class="hidden sm:inline-flex items-center space-x-2 bg-brand text-white px-4 py-2 rounded-xl font-medium hover:bg-brand-dark transition-colors">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+                        </svg>
+                        <span>New Module</span>
+                    </a>
+                    
+                    <!-- User Menu -->
+                    <div class="relative">
+                        <button id="userMenuBtn" class="flex items-center space-x-2 p-2 rounded-lg hover:bg-gray-100">
+                            <div class="w-8 h-8 bg-teacher-100 rounded-full flex items-center justify-center">
+                                <span id="headerUserInitials" class="text-teacher-600 font-semibold text-sm">--</span>
+                            </div>
+                            <svg class="w-4 h-4 text-gray-500 hidden sm:block" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                            </svg>
+                        </button>
+                        
+                        <!-- Dropdown -->
+                        <div id="userDropdown" class="hidden absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-lg border border-gray-100 py-2">
+                            <div class="px-4 py-2 border-b border-gray-100">
+                                <p id="dropdownUserName" class="font-semibold text-gray-800">User</p>
+                                <p id="dropdownUserEmail" class="text-sm text-gray-500">email@example.com</p>
+                            </div>
+                            <button onclick="handleLogout()" class="w-full text-left px-4 py-2 text-red-600 hover:bg-red-50">Logout</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Dashboard Content -->
+        <div class="p-4 lg:p-8">
+            <!-- Welcome Banner -->
+            <div class="bg-gradient-to-r from-teacher-600 to-teacher-800 rounded-2xl p-6 lg:p-8 text-white mb-8">
+                <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between">
+                    <div>
+                        <h2 class="text-2xl lg:text-3xl font-bold mb-2">Welcome back, <span id="welcomeName">Teacher</span>! 👋</h2>
+                        <p class="text-white/80">You have <span id="pendingCount" class="font-bold text-yellow-300">0</span> submissions waiting for review.</p>
+                    </div>
+                    <div class="mt-4 lg:mt-0">
+                        <a href="submissions.html" class="inline-flex items-center space-x-2 bg-white text-teacher-600 px-6 py-3 rounded-xl font-semibold hover:bg-gray-100 transition-colors">
+                            <span>Review Submissions</span>
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/>
+                            </svg>
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Stats Grid -->
+            <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6 mb-8">
+                <!-- Pending Submissions -->
+                <div class="stat-card bg-white rounded-2xl p-6 border border-gray-100 shadow-sm">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="w-12 h-12 bg-yellow-100 rounded-xl flex items-center justify-center">
+                            <svg class="w-6 h-6 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            </svg>
+                        </div>
+                    </div>
+                    <div class="text-3xl font-bold text-yellow-600" id="pendingStat">0</div>
+                    <div class="text-sm text-gray-500">Pending Reviews</div>
+                </div>
+
+                <!-- Approved Today -->
+                <div class="stat-card bg-white rounded-2xl p-6 border border-gray-100 shadow-sm">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center">
+                            <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            </svg>
+                        </div>
+                    </div>
+                    <div class="text-3xl font-bold text-green-600" id="approvedStat">0</div>
+                    <div class="text-sm text-gray-500">Approved</div>
+                </div>
+
+                <!-- Rejected -->
+                <div class="stat-card bg-white rounded-2xl p-6 border border-gray-100 shadow-sm">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="w-12 h-12 bg-red-100 rounded-xl flex items-center justify-center">
+                            <svg class="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            </svg>
+                        </div>
+                    </div>
+                    <div class="text-3xl font-bold text-red-600" id="rejectedStat">0</div>
+                    <div class="text-sm text-gray-500">Rejected</div>
+                </div>
+
+                <!-- Total Students -->
+                <div class="stat-card bg-white rounded-2xl p-6 border border-gray-100 shadow-sm">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center">
+                            <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
+                            </svg>
+                        </div>
+                    </div>
+                    <div class="text-3xl font-bold text-blue-600" id="studentsStat">0</div>
+                    <div class="text-sm text-gray-500">Active Students</div>
+                </div>
+            </div>
+
+            <!-- Main Content Grid -->
+            <div class="grid lg:grid-cols-3 gap-6 lg:gap-8">
+                <!-- Left Column - Pending Submissions -->
+                <div class="lg:col-span-2 space-y-6">
+                    <!-- Pending Submissions -->
+                    <div class="bg-white rounded-2xl border border-gray-100 shadow-sm">
+                        <div class="p-6 border-b border-gray-100">
+                            <div class="flex items-center justify-between">
+                                <h3 class="text-lg font-bold text-gray-800">Pending Submissions</h3>
+                                <a href="submissions.html" class="text-brand hover:text-brand-dark text-sm font-medium">View All</a>
+                            </div>
+                        </div>
+                        <div id="pendingSubmissionsList" class="divide-y divide-gray-100">
+                            <!-- Content loaded dynamically -->
+                            <div class="p-8 text-center text-gray-500">
+                                <svg class="w-12 h-12 mx-auto mb-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+                                </svg>
+                                <p>Loading submissions...</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Your Modules -->
+                    <div class="bg-white rounded-2xl border border-gray-100 shadow-sm">
+                        <div class="p-6 border-b border-gray-100">
+                            <div class="flex items-center justify-between">
+                                <h3 class="text-lg font-bold text-gray-800">Your Modules</h3>
+                                <a href="manage-modules.html" class="text-brand hover:text-brand-dark text-sm font-medium">Manage All</a>
+                            </div>
+                        </div>
+                        <div id="modulesList" class="p-6 grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <!-- Content loaded dynamically -->
+                            <div class="col-span-2 text-center py-8 text-gray-500">
+                                <p>Loading modules...</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Content Stats -->
+                    <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
+                        <h3 class="text-lg font-bold text-gray-800 mb-4">Content Overview</h3>
+                        <div class="grid grid-cols-3 gap-4">
+                            <a href="manage-modules.html" class="text-center p-4 bg-brand/5 rounded-xl hover:bg-brand/10 transition-colors">
+                                <div class="w-12 h-12 bg-brand/10 rounded-full flex items-center justify-center mx-auto mb-2">
+                                    <svg class="w-6 h-6 text-brand" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
+                                    </svg>
+                                </div>
+                                <div class="text-2xl font-bold text-brand" id="modulesCount">0</div>
+                                <div class="text-xs text-gray-500">Modules</div>
+                            </a>
+                            <a href="manage-videos.html" class="text-center p-4 bg-teacher-50 rounded-xl hover:bg-teacher-100 transition-colors">
+                                <div class="w-12 h-12 bg-teacher-100 rounded-full flex items-center justify-center mx-auto mb-2">
+                                    <svg class="w-6 h-6 text-teacher-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                                    </svg>
+                                </div>
+                                <div class="text-2xl font-bold text-teacher-600" id="videosCount">0</div>
+                                <div class="text-xs text-gray-500">Videos</div>
+                            </a>
+                            <a href="manage-quizzes.html" class="text-center p-4 bg-orange-50 rounded-xl hover:bg-orange-100 transition-colors">
+                                <div class="w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-2">
+                                    <svg class="w-6 h-6 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/>
+                                    </svg>
+                                </div>
+                                <div class="text-2xl font-bold text-orange-600" id="quizzesCount">0</div>
+                                <div class="text-xs text-gray-500">Quizzes</div>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right Column - Activity & Quick Stats -->
+                <div class="space-y-6">
+                    <!-- Quick Actions -->
+                    <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
+                        <h3 class="text-lg font-bold text-gray-800 mb-4">Quick Actions</h3>
+                        <div class="space-y-3">
+                            <a href="manage-modules.html" class="flex items-center space-x-3 p-3 bg-brand/10 rounded-xl hover:bg-brand/20 transition-colors">
+                                <div class="w-10 h-10 bg-brand/20 rounded-lg flex items-center justify-center">
+                                    <svg class="w-5 h-5 text-brand" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+                                    </svg>
+                                </div>
+                                <div>
+                                    <span class="font-medium text-gray-700 block">Create Module</span>
+                                    <span class="text-xs text-gray-500">Add PDF or images</span>
+                                </div>
+                            </a>
+                            <a href="manage-videos.html" class="flex items-center space-x-3 p-3 bg-teacher-50 rounded-xl hover:bg-teacher-100 transition-colors">
+                                <div class="w-10 h-10 bg-teacher-100 rounded-lg flex items-center justify-center">
+                                    <svg class="w-5 h-5 text-teacher-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                                    </svg>
+                                </div>
+                                <div>
+                                    <span class="font-medium text-gray-700 block">Manage Videos</span>
+                                    <span class="text-xs text-gray-500">YouTube tutorials</span>
+                                </div>
+                            </a>
+                            <a href="manage-quizzes.html" class="flex items-center space-x-3 p-3 bg-orange-50 rounded-xl hover:bg-orange-100 transition-colors">
+                                <div class="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center">
+                                    <svg class="w-5 h-5 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/>
+                                    </svg>
+                                </div>
+                                <div>
+                                    <span class="font-medium text-gray-700 block">Manage Quizzes</span>
+                                    <span class="text-xs text-gray-500">External quiz links</span>
+                                </div>
+                            </a>
+                            <a href="submissions.html" class="flex items-center space-x-3 p-3 bg-yellow-50 rounded-xl hover:bg-yellow-100 transition-colors">
+                                <div class="w-10 h-10 bg-yellow-100 rounded-lg flex items-center justify-center">
+                                    <svg class="w-5 h-5 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/>
+                                    </svg>
+                                </div>
+                                <div>
+                                    <span class="font-medium text-gray-700 block">Review Submissions</span>
+                                    <span class="text-xs text-gray-500">Approve or reject scores</span>
+                                </div>
+                            </a>
+                            <a href="#" onclick="showStudentsPage()" class="flex items-center space-x-3 p-3 bg-blue-50 rounded-xl hover:bg-blue-100 transition-colors">
+                                <div class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+                                    <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
+                                    </svg>
+                                </div>
+                                <div>
+                                    <span class="font-medium text-gray-700 block">Student Progress</span>
+                                    <span class="text-xs text-gray-500">View all students</span>
+                                </div>
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- Recent Activity -->
+                    <div class="bg-white rounded-2xl border border-gray-100 shadow-sm">
+                        <div class="p-6 border-b border-gray-100">
+                            <h3 class="text-lg font-bold text-gray-800">Recent Activity</h3>
+                        </div>
+                        <div id="recentActivity" class="divide-y divide-gray-100 max-h-80 overflow-y-auto">
+                            <!-- Content loaded dynamically -->
+                            <div class="p-6 text-center text-gray-500">
+                                <p>No recent activity</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Performance Overview -->
+                    <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
+                        <h3 class="text-lg font-bold text-gray-800 mb-4">Class Performance</h3>
+                        <div class="space-y-4">
+                            <div>
+                                <div class="flex justify-between text-sm mb-1">
+                                    <span class="text-gray-600">Average Score</span>
+                                    <span id="avgScorePercent" class="font-semibold text-brand">0%</span>
+                                </div>
+                                <div class="h-2 bg-gray-200 rounded-full overflow-hidden">
+                                    <div id="avgScoreBar" class="h-full bg-brand rounded-full transition-all duration-500" style="width: 0%"></div>
+                                </div>
+                            </div>
+                            <div>
+                                <div class="flex justify-between text-sm mb-1">
+                                    <span class="text-gray-600">Completion Rate</span>
+                                    <span id="completionPercent" class="font-semibold text-green-600">0%</span>
+                                </div>
+                                <div class="h-2 bg-gray-200 rounded-full overflow-hidden">
+                                    <div id="completionBar" class="h-full bg-green-500 rounded-full transition-all duration-500" style="width: 0%"></div>
+                                </div>
+                            </div>
+                            <div>
+                                <div class="flex justify-between text-sm mb-1">
+                                    <span class="text-gray-600">Submission Rate</span>
+                                    <span id="submissionPercent" class="font-semibold text-blue-600">0%</span>
+                                </div>
+                                <div class="h-2 bg-gray-200 rounded-full overflow-hidden">
+                                    <div id="submissionBar" class="h-full bg-blue-500 rounded-full transition-all duration-500" style="width: 0%"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div class="bg-white rounded-2xl p-8 text-center">
+            <div class="inline-block animate-spin rounded-full h-12 w-12 border-4 border-teacher-600 border-t-transparent mb-4"></div>
+            <p class="text-gray-600 font-medium">Loading your dashboard...</p>
+        </div>
+    </div>
+
+    <!-- Review Modal -->
+    <div id="reviewModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div class="bg-white rounded-2xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+            <div class="p-6 border-b border-gray-100 flex items-center justify-between">
+                <h3 class="text-xl font-bold text-gray-800">Review Submission</h3>
+                <button onclick="closeReviewModal()" class="p-2 text-gray-500 hover:text-gray-700 rounded-lg hover:bg-gray-100">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                </button>
+            </div>
+            <div id="reviewModalContent" class="p-6">
+                <!-- Content loaded dynamically -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="../shared/js/config.js"></script>
+    <script src="../shared/js/utils.js"></script>
+    <script src="../shared/js/supabase.js"></script>
+    <script src="../shared/js/auth.js"></script>
+    <script src="assets/js/teacher.js"></script>
+    <script src="../shared/js/modules.js"></script>
+    
+    <script>
+        // Global variables
+        let currentUser = null;
+        let pendingSubmissions = [];
+
+        // DOM Elements
+        const loadingOverlay = document.getElementById('loadingOverlay');
+        const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+        const mobileOverlay = document.getElementById('mobileOverlay');
+        const sidebar = document.getElementById('sidebar');
+        const userMenuBtn = document.getElementById('userMenuBtn');
+        const userDropdown = document.getElementById('userDropdown');
+
+        // Initialize Dashboard
+        document.addEventListener('DOMContentLoaded', async function() {
+            try {
+                // Check authentication
+                currentUser = await checkAuthSession();
+                
+                if (!currentUser || currentUser.role !== 'teacher') {
+                    redirectToLogin();
+                    return;
+                }
+
+                // Update UI with user info
+                updateUserInfo(currentUser);
+                
+                // Load dashboard data
+                await Promise.all([
+                    loadDashboardStats(),
+                    loadPendingSubmissions(),
+                    loadModules(),
+                    loadRecentActivity()
+                ]);
+
+                // Setup event listeners
+                setupEventListeners();
+
+            } catch (error) {
+                console.error('Dashboard initialization error:', error);
+                showToast('Failed to load dashboard. Please try again.', 'error');
+            } finally {
+                loadingOverlay.classList.add('hidden');
+            }
+        });
+
+        // Update user information across the UI
+        function updateUserInfo(user) {
+            const initials = getInitials(user.fullName);
+            const firstName = user.fullName.split(' ')[0];
+            
+            document.getElementById('sidebarUserName').textContent = user.fullName;
+            document.getElementById('userInitials').textContent = initials;
+            document.getElementById('headerUserInitials').textContent = initials;
+            document.getElementById('welcomeName').textContent = firstName;
+            document.getElementById('dropdownUserName').textContent = user.fullName;
+            document.getElementById('dropdownUserEmail').textContent = user.email;
+        }
+
+        function getInitials(name) {
+            return name.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2);
+        }
+
+        // Load dashboard statistics
+        async function loadDashboardStats() {
+            try {
+                // Get all submissions
+                const { data: allSubmissions } = await getSupabase()
+                    .from('quiz_submissions')
+                    .select('status, student_score, total_items');
+
+                const pending = allSubmissions ? allSubmissions.filter(s => s.status === 'pending').length : 0;
+                const approved = allSubmissions ? allSubmissions.filter(s => s.status === 'approved').length : 0;
+                const rejected = allSubmissions ? allSubmissions.filter(s => s.status === 'rejected').length : 0;
+
+                // Get student count
+                const { data: students } = await getSupabase()
+                    .from('users')
+                    .select('id')
+                    .eq('role', 'student');
+
+                const studentCount = students ? students.length : 0;
+
+                // Update UI
+                document.getElementById('pendingStat').textContent = pending;
+                document.getElementById('approvedStat').textContent = approved;
+                document.getElementById('rejectedStat').textContent = rejected;
+                document.getElementById('studentsStat').textContent = studentCount;
+                document.getElementById('pendingCount').textContent = pending;
+
+                // Update badge
+                const badge = document.getElementById('pendingBadge');
+                if (pending > 0) {
+                    badge.textContent = pending;
+                    badge.classList.remove('hidden');
+                }
+
+                // Calculate performance metrics
+                if (allSubmissions && allSubmissions.length > 0) {
+                    const approvedSubs = allSubmissions.filter(s => s.status === 'approved');
+                    if (approvedSubs.length > 0) {
+                        const validSubs = approvedSubs.filter(s => s.student_score !== null && s.total_items > 0);
+                        if (validSubs.length > 0) {
+                            const avgScore = Math.round(validSubs.reduce((sum, s) => sum + (s.student_score / s.total_items * 100), 0) / validSubs.length);
+                            document.getElementById('avgScorePercent').textContent = avgScore + '%';
+                            document.getElementById('avgScoreBar').style.width = avgScore + '%';
+                        }
+                    }
+
+                    const completionRate = Math.round(((approved + rejected) / allSubmissions.length) * 100);
+                    document.getElementById('completionPercent').textContent = completionRate + '%';
+                    document.getElementById('completionBar').style.width = completionRate + '%';
+
+                    const submissionRate = studentCount > 0 ? Math.min(100, Math.round((allSubmissions.length / studentCount) * 20)) : 0;
+                    document.getElementById('submissionPercent').textContent = submissionRate + '%';
+                    document.getElementById('submissionBar').style.width = submissionRate + '%';
+                }
+
+            } catch (error) {
+                console.error('Error loading stats:', error);
+            }
+        }
+
+        // Load pending submissions
+        async function loadPendingSubmissions() {
+            const container = document.getElementById('pendingSubmissionsList');
+            
+            try {
+                const { data: submissions } = await getSupabase()
+                    .from('quiz_submissions')
+                    .select('*, users(full_name), quizzes(title), modules(title)')
+                    .eq('status', 'pending')
+                    .order('submitted_at', { ascending: true })
+                    .limit(5);
+
+                pendingSubmissions = submissions || [];
+
+                if (!submissions || submissions.length === 0) {
+                    container.innerHTML = `
+                        <div class="p-8 text-center">
+                            <div class="w-16 h-16 mx-auto bg-green-100 rounded-full flex items-center justify-center mb-4">
+                                <svg class="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                                </svg>
+                            </div>
+                            <p class="text-gray-600 font-medium">All caught up!</p>
+                            <p class="text-gray-500 text-sm">No pending submissions to review.</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                container.innerHTML = submissions.map(sub => `
+                    <div class="submission-card p-4 flex items-center justify-between hover:bg-gray-50">
+                        <div class="flex items-center space-x-4">
+                            <div class="w-12 h-12 bg-yellow-100 rounded-full flex items-center justify-center">
+                                <span class="text-yellow-600 font-bold">${getInitials(sub.users?.full_name || 'Student')}</span>
+                            </div>
+                            <div>
+                                <p class="font-medium text-gray-800">${escapeHtml(sub.users?.full_name || 'Student')}</p>
+                                <p class="text-sm text-gray-500">${escapeHtml(sub.quizzes?.title || sub.modules?.title || 'Quiz')} • Score: ${sub.student_score || 0}/${sub.total_items || 0}</p>
+                                <p class="text-xs text-gray-400">${formatDate(sub.submitted_at)}</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center space-x-2">
+                            <a href="submissions.html" class="px-4 py-2 bg-brand text-white rounded-lg text-sm font-medium hover:bg-brand-dark transition-colors">
+                                Review
+                            </a>
+                        </div>
+                    </div>
+                `).join('');
+
+            } catch (error) {
+                console.error('Error loading submissions:', error);
+                container.innerHTML = '<p class="p-6 text-center text-red-500">Failed to load submissions</p>';
+            }
+        }
+
+        // Load modules
+        async function loadModules() {
+            const container = document.getElementById('modulesList');
+            
+            try {
+                const { data: modules, error } = await getSupabase()
+                    .from('modules')
+                    .select('*')
+                    .eq('teacher_id', currentUser.id)
+                    .order('created_at', { ascending: false })
+                    .limit(4);
+
+                if (error) throw error;
+
+                // Load total counts for content overview (standalone tables)
+                const { data: allModules } = await getSupabase()
+                    .from('modules')
+                    .select('id')
+                    .eq('teacher_id', currentUser.id);
+                
+                const { data: allVideos } = await getSupabase()
+                    .from('videos')
+                    .select('id')
+                    .eq('teacher_id', currentUser.id);
+                
+                const { data: allQuizzes } = await getSupabase()
+                    .from('quizzes')
+                    .select('id')
+                    .eq('teacher_id', currentUser.id);
+
+                // Update content overview stats
+                document.getElementById('modulesCount').textContent = allModules?.length || 0;
+                document.getElementById('videosCount').textContent = allVideos?.length || 0;
+                document.getElementById('quizzesCount').textContent = allQuizzes?.length || 0;
+
+                if (!modules || modules.length === 0) {
+                    container.innerHTML = `
+                        <div class="col-span-2 text-center py-8">
+                            <svg class="w-12 h-12 mx-auto mb-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
+                            </svg>
+                            <p class="text-gray-500 mb-4">No modules created yet</p>
+                            <a href="manage-modules.html" class="inline-flex items-center space-x-2 text-brand font-medium hover:text-brand-dark">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+                                </svg>
+                                <span>Create your first module</span>
+                            </a>
+                        </div>
+                    `;
+                    return;
+                }
+
+                container.innerHTML = modules.map(module => `
+                    <div class="bg-gray-50 rounded-xl p-4 border border-gray-100 hover:shadow-md transition-shadow">
+                        <div class="flex items-start justify-between mb-3">
+                            <div class="w-10 h-10 ${module.content_type === 'pdf' ? 'bg-red-100' : 'bg-blue-100'} rounded-lg flex items-center justify-center">
+                                ${module.content_type === 'pdf' ? `
+                                    <svg class="w-5 h-5 text-red-600" fill="currentColor" viewBox="0 0 24 24">
+                                        <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8l-6-6zm-1 2l5 5h-5V4z"/>
+                                    </svg>
+                                ` : `
+                                    <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                                    </svg>
+                                `}
+                            </div>
+                            <span class="px-2 py-1 text-xs font-medium rounded-full ${module.status === 'published' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'}">
+                                ${module.status === 'published' ? 'Published' : 'Draft'}
+                            </span>
+                        </div>
+                        <h4 class="font-semibold text-gray-800 mb-1 truncate">${escapeHtml(module.title)}</h4>
+                        <p class="text-sm text-gray-500 mb-3 line-clamp-2">${escapeHtml(module.description || 'No description')}</p>
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs text-gray-400">${module.content_type === 'pdf' ? 'PDF Document' : 'Image Gallery'}</span>
+                            <a href="manage-modules.html" class="inline-flex items-center text-sm text-brand font-medium hover:text-brand-dark">
+                                Manage
+                                <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                                </svg>
+                            </a>
+                        </div>
+                    </div>
+                `).join('');
+
+            } catch (error) {
+                console.error('Error loading modules:', error);
+                container.innerHTML = '<p class="col-span-2 text-center text-red-500 py-4">Failed to load modules</p>';
+            }
+        }
+
+        // Load recent activity
+        async function loadRecentActivity() {
+            const container = document.getElementById('recentActivity');
+            
+            try {
+                const { data: submissions } = await getSupabase()
+                    .from('quiz_submissions')
+                    .select('*, users(full_name), quizzes(title), modules(title)')
+                    .order('submitted_at', { ascending: false })
+                    .limit(5);
+
+                if (!submissions || submissions.length === 0) {
+                    container.innerHTML = '<div class="p-6 text-center text-gray-500"><p>No recent activity</p></div>';
+                    return;
+                }
+
+                container.innerHTML = submissions.map(sub => {
+                    const statusColors = {
+                        pending: 'text-yellow-600 bg-yellow-100',
+                        approved: 'text-green-600 bg-green-100',
+                        rejected: 'text-red-600 bg-red-100'
+                    };
+                    
+                    const statusIcons = {
+                        pending: '⏳',
+                        approved: '✓',
+                        rejected: '✕'
+                    };
+
+                    const quizTitle = sub.quizzes?.title || sub.modules?.title || 'Quiz';
+
+                    return `
+                        <div class="p-4 flex items-center space-x-4 hover:bg-gray-50">
+                            <div class="w-10 h-10 ${statusColors[sub.status].split(' ')[1]} rounded-full flex items-center justify-center">
+                                <span class="text-lg">${statusIcons[sub.status]}</span>
+                            </div>
+                            <div class="flex-1 min-w-0">
+                                <p class="font-medium text-gray-800 truncate">${escapeHtml(sub.users?.full_name || 'Student')}</p>
+                                <p class="text-sm text-gray-500 truncate">${escapeHtml(quizTitle)}</p>
+                            </div>
+                            <span class="text-xs text-gray-400">${formatDate(sub.submitted_at)}</span>
+                        </div>
+                    `;
+                }).join('');
+
+            } catch (error) {
+                console.error('Error loading activity:', error);
+            }
+        }
+
+        // Open review modal
+        async function openReviewModal(submissionId) {
+            const modal = document.getElementById('reviewModal');
+            const content = document.getElementById('reviewModalContent');
+            
+            const submission = pendingSubmissions.find(s => s.id === submissionId);
+            
+            if (!submission) {
+                // Fetch if not in cache
+                const { data } = await getSupabase()
+                    .from('quiz_submissions')
+                    .select('*, users(full_name), lessons(title)')
+                    .eq('id', submissionId)
+                    .single();
+                    
+                if (!data) {
+                    showToast('Submission not found', 'error');
+                    return;
+                }
+                
+                renderReviewModal(data, content);
+            } else {
+                renderReviewModal(submission, content);
+            }
+            
+            modal.classList.remove('hidden');
+        }
+
+        function renderReviewModal(submission, content) {
+            content.innerHTML = `
+                <div class="space-y-6">
+                    <div class="flex items-center space-x-4 p-4 bg-gray-50 rounded-xl">
+                        <div class="w-14 h-14 bg-teacher-100 rounded-full flex items-center justify-center">
+                            <span class="text-teacher-600 font-bold text-lg">${getInitials(submission.users?.full_name || 'S')}</span>
+                        </div>
+                        <div>
+                            <p class="font-semibold text-gray-800 text-lg">${escapeHtml(submission.users?.full_name || 'Student')}</p>
+                            <p class="text-gray-500">${escapeHtml(submission.lessons?.title || 'Quiz')}</p>
+                        </div>
+                    </div>
+                    
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="bg-blue-50 rounded-xl p-4 text-center">
+                            <p class="text-3xl font-bold text-blue-600">${submission.score}/${submission.total_items}</p>
+                            <p class="text-sm text-blue-700">Score</p>
+                        </div>
+                        <div class="bg-green-50 rounded-xl p-4 text-center">
+                            <p class="text-3xl font-bold text-green-600">${Math.round((submission.score / submission.total_items) * 100)}%</p>
+                            <p class="text-sm text-green-700">Percentage</p>
+                        </div>
+                    </div>
+                    
+                    ${submission.screenshot_url ? `
+                        <div>
+                            <p class="font-medium text-gray-700 mb-2">Screenshot Proof</p>
+                            <div class="border border-gray-200 rounded-xl overflow-hidden">
+                                <img src="${submission.screenshot_url}" alt="Quiz Screenshot" class="w-full h-auto max-h-96 object-contain bg-gray-100" onclick="window.open('${submission.screenshot_url}', '_blank')">
+                            </div>
+                        </div>
+                    ` : '<p class="text-gray-500 italic">No screenshot provided</p>'}
+                    
+                    <div>
+                        <label class="block font-medium text-gray-700 mb-2">Feedback Comment (Optional)</label>
+                        <textarea id="reviewComment" class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-teacher-500" rows="3" placeholder="Provide feedback for the student..."></textarea>
+                    </div>
+                    
+                    <div class="flex space-x-4">
+                        <button onclick="handleApprove('${submission.id}')" class="flex-1 btn-approve text-white py-3 rounded-xl font-semibold flex items-center justify-center space-x-2">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                            </svg>
+                            <span>Approve</span>
+                        </button>
+                        <button onclick="handleReject('${submission.id}')" class="flex-1 btn-reject text-white py-3 rounded-xl font-semibold flex items-center justify-center space-x-2">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                            </svg>
+                            <span>Reject</span>
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+
+        function closeReviewModal() {
+            document.getElementById('reviewModal').classList.add('hidden');
+        }
+
+        async function handleApprove(submissionId) {
+            const comment = document.getElementById('reviewComment').value;
+            
+            if (await approveQuizSubmission(submissionId, comment)) {
+                showToast('Submission approved successfully!', 'success');
+                closeReviewModal();
+                await Promise.all([loadDashboardStats(), loadPendingSubmissions(), loadRecentActivity()]);
+            }
+        }
+
+        async function handleReject(submissionId) {
+            const comment = document.getElementById('reviewComment').value;
+            
+            if (!comment.trim()) {
+                showToast('Please provide a reason for rejection', 'warning');
+                return;
+            }
+            
+            if (await rejectQuizSubmission(submissionId, comment)) {
+                showToast('Submission rejected', 'info');
+                closeReviewModal();
+                await Promise.all([loadDashboardStats(), loadPendingSubmissions(), loadRecentActivity()]);
+            }
+        }
+
+        // Helper functions
+        function formatDate(dateString) {
+            if (!dateString) return '';
+            const date = new Date(dateString);
+            const now = new Date();
+            const diff = now - date;
+            
+            if (diff < 60000) return 'Just now';
+            if (diff < 3600000) return `${Math.floor(diff / 60000)} min ago`;
+            if (diff < 86400000) return `${Math.floor(diff / 3600000)} hours ago`;
+            if (diff < 604800000) return `${Math.floor(diff / 86400000)} days ago`;
+            
+            return date.toLocaleDateString();
+        }
+
+        function escapeHtml(text) {
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // Setup event listeners
+        function setupEventListeners() {
+            mobileMenuBtn.addEventListener('click', () => {
+                sidebar.classList.toggle('-translate-x-full');
+                mobileOverlay.classList.toggle('hidden');
+            });
+
+            mobileOverlay.addEventListener('click', () => {
+                sidebar.classList.add('-translate-x-full');
+                mobileOverlay.classList.add('hidden');
+            });
+
+            userMenuBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                userDropdown.classList.toggle('hidden');
+            });
+
+            document.addEventListener('click', () => {
+                userDropdown.classList.add('hidden');
+            });
+
+            document.getElementById('logoutButton').addEventListener('click', handleLogout);
+        }
+
+        async function handleLogout() {
+            if (await logout()) {
+                redirectToLogin();
+            }
+        }
+
+        function showStudentsPage() {
+            showToast('Student progress page coming soon!', 'info');
+        }
+
+        function showReportsPage() {
+            showToast('Reports page coming soon!', 'info');
+        }
+
+        // Close modal on backdrop click
+        document.getElementById('reviewModal').addEventListener('click', (e) => {
+            if (e.target === document.getElementById('reviewModal')) {
+                closeReviewModal();
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,222 @@
+/*
+  File: base.css
+  Purpose: Shared base styles for all pages in MathTuro LMS
+  Used by: Student, Teacher, Admin pages
+*/
+
+/* ============================================
+   CSS VARIABLES
+   ============================================ */
+:root {
+  /* Brand Colors */
+  --primary-green: #005801;
+  --light-green: #34C759;
+  --brand: #005801;
+  --brand-dark: #004601;
+  --brand-light: #006B01;
+  
+  /* Accent Colors */
+  --accent-purple: #7C0058;
+  --accent-orange: #FEA501;
+  
+  /* Background Colors */
+  --bg-light: #F5F5F5;
+  --bg-white: #FFFFFF;
+  
+  /* Text Colors */
+  --text-primary: #1F2937;
+  --text-secondary: #6B7280;
+  --text-muted: #9CA3AF;
+  
+  /* Primary Green Scale */
+  --primary-50: #f0fdf4;
+  --primary-100: #dcfce7;
+  --primary-200: #bbf7d0;
+  --primary-300: #86efac;
+  --primary-400: #4ade80;
+  --primary-500: #22c55e;
+  --primary-600: #16a34a;
+  --primary-700: #15803d;
+  --primary-800: #166534;
+  --primary-900: #14532d;
+  
+  /* Spacing */
+  --spacing-xs: 0.25rem;
+  --spacing-sm: 0.5rem;
+  --spacing-md: 1rem;
+  --spacing-lg: 1.5rem;
+  --spacing-xl: 2rem;
+  
+  /* Border Radius */
+  --radius-sm: 0.25rem;
+  --radius-md: 0.5rem;
+  --radius-lg: 0.75rem;
+  --radius-xl: 1rem;
+  
+  /* Shadows */
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  
+  /* Transitions */
+  --transition-fast: 150ms ease;
+  --transition-normal: 300ms ease;
+  --transition-slow: 500ms ease;
+}
+
+/* ============================================
+   BASE STYLES
+   ============================================ */
+body {
+  font-family: 'Inter', system-ui, sans-serif;
+  background: var(--bg-light);
+  color: var(--text-primary);
+  line-height: 1.5;
+}
+
+/* ============================================
+   TYPOGRAPHY
+   ============================================ */
+.font-montserrat { font-family: 'Montserrat', sans-serif; }
+.font-kanit { font-family: 'Kanit', sans-serif; }
+
+.gradient-text {
+  background: linear-gradient(135deg, #005801 0%, #22c55e 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* ============================================
+   LAYOUT COMPONENTS
+   ============================================ */
+.glass-sidebar {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(20px);
+}
+
+.sidebar-link {
+  transition: all 0.2s ease;
+}
+
+/* ============================================
+   CARD STYLES
+   ============================================ */
+.stat-card {
+  transition: all 0.3s ease;
+}
+
+.stat-card:hover {
+  transform: translateY(-4px);
+}
+
+/* Neumorphic Effects */
+.neu-flat {
+  background: linear-gradient(135deg, #E8E8E8 0%, #FFFFFF 100%);
+  box-shadow: -6px 6px 12px rgba(166, 166, 166, 0.2),
+              6px -6px 12px rgba(166, 166, 166, 0.2),
+              -6px -6px 12px rgba(255, 255, 255, 0.9),
+              6px 6px 15px rgba(166, 166, 166, 0.9),
+              inset 1px 1px 2px rgba(255, 255, 255, 0.3),
+              inset -1px -1px 2px rgba(166, 166, 166, 0.5);
+}
+
+.neu-card {
+  background: #E7F4E7;
+  box-shadow: -6px 6px 12px rgba(92, 98, 92, 0.2),
+              6px -6px 12px rgba(92, 98, 92, 0.2),
+              -6px -6px 12px rgba(255, 255, 255, 0.9),
+              6px 6px 15px rgba(92, 98, 92, 0.9),
+              inset 1px 1px 2px rgba(255, 255, 255, 0.3),
+              inset -1px -1px 2px rgba(92, 98, 92, 0.5);
+}
+
+/* ============================================
+   BUTTON STYLES
+   ============================================ */
+.btn-primary {
+  background: linear-gradient(135deg, var(--brand) 0%, var(--brand-light) 100%);
+  color: white;
+  padding: 0.5rem 1rem;
+  border-radius: var(--radius-md);
+  transition: var(--transition-normal);
+}
+
+.btn-primary:hover {
+  box-shadow: 0 4px 15px rgba(0, 88, 1, 0.3);
+  transform: translateY(-1px);
+}
+
+/* ============================================
+   ANIMATION CLASSES
+   ============================================ */
+.notification-badge {
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+
+.fade-in {
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* ============================================
+   CUSTOM SCROLLBAR
+   ============================================ */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: #f1f1f1; }
+::-webkit-scrollbar-thumb { background: var(--brand); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--brand-dark); }
+
+/* ============================================
+   FORM STYLES
+   ============================================ */
+.form-input {
+  width: 100%;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid #d1d5db;
+  border-radius: var(--radius-md);
+  transition: var(--transition-fast);
+}
+
+.form-input:focus {
+  outline: none;
+  border-color: var(--brand);
+  box-shadow: 0 0 0 3px rgba(0, 88, 1, 0.1);
+}
+
+/* ============================================
+   UTILITY CLASSES
+   ============================================ */
+.text-brand { color: var(--brand); }
+.bg-brand { background-color: var(--brand); }
+.border-brand { border-color: var(--brand); }
+
+.progress-ring {
+  transform: rotate(-90deg);
+}
+
+/* Video and Image Components */
+.video-card:hover { transform: translateY(-2px); box-shadow: 0 10px 40px -12px rgba(0, 0, 0, 0.15); }
+.quiz-card:hover { transform: translateY(-2px); box-shadow: 0 10px 40px -12px rgba(0, 0, 0, 0.15); }
+.upload-zone:hover { border-color: #005801; background: rgba(0, 88, 1, 0.05); }
+.upload-zone.drag-over { border-color: #005801; background: rgba(0, 88, 1, 0.1); }
+
+/* PDF Viewer */
+.pdf-container { height: 70vh; }
+
+/* Image Gallery */
+.image-gallery img { cursor: pointer; transition: transform 0.3s; }
+.image-gallery img:hover { transform: scale(1.02); }
+
+/* Lightbox */
+.lightbox { background: rgba(0, 0, 0, 0.95); }

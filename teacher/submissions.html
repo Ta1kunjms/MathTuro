@@ -1,0 +1,883 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/png" href="../Logo/MATHURO LOGO.png">
+    <title>Quiz Submissions - MathTuro LMS</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: {
+                            50: '#f0fdf4',
+                            100: '#dcfce7',
+                            200: '#bbf7d0',
+                            300: '#86efac',
+                            400: '#4ade80',
+                            500: '#22c55e',
+                            600: '#16a34a',
+                            700: '#15803d',
+                            800: '#166534',
+                            900: '#14532d',
+                        },
+                        brand: '#005801',
+                        'brand-dark': '#004601',
+                        'brand-light': '#006B01',
+                        teacher: {
+                            50: '#fdf2f8',
+                            100: '#fce7f3',
+                            200: '#fbcfe8',
+                            500: '#910568',
+                            600: '#720455',
+                            700: '#5a0344',
+                            800: '#4a0338',
+                        },
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', 'sans-serif'],
+                    },
+                },
+            },
+        }
+    </script>
+    <style>
+        body { font-family: 'Inter', system-ui, sans-serif; }
+        
+        .gradient-text {
+            background: linear-gradient(135deg, #005801 0%, #22c55e 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .glass-sidebar {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+        }
+        
+        .submission-card {
+            transition: all 0.3s ease;
+        }
+        
+        .submission-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px -10px rgba(0, 0, 0, 0.1);
+        }
+        
+        .sidebar-link {
+            transition: all 0.2s ease;
+        }
+        
+        .sidebar-link:hover, .sidebar-link.active {
+            background: linear-gradient(135deg, #005801 0%, #16a34a 100%);
+            color: white;
+        }
+        
+        .sidebar-link.active {
+            box-shadow: 0 4px 15px rgba(0, 88, 1, 0.3);
+        }
+        
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; }
+        ::-webkit-scrollbar-thumb { background: #005801; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: #004601; }
+
+        .tab-button {
+            transition: all 0.2s ease;
+        }
+        
+        .tab-button.active {
+            background: linear-gradient(135deg, #005801 0%, #16a34a 100%);
+            color: white;
+            box-shadow: 0 4px 12px rgba(0, 88, 1, 0.3);
+        }
+    </style>
+    <link rel="stylesheet" href="../shared/css/base.css">
+    <link rel="stylesheet" href="assets/css/teacher.css">
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <!-- Mobile Menu Overlay -->
+    <div id="mobileOverlay" class="fixed inset-0 bg-black bg-opacity-50 z-40 hidden lg:hidden"></div>
+    
+    <!-- Sidebar -->
+    <aside id="sidebar" class="fixed left-0 top-0 h-full w-72 glass-sidebar border-r border-gray-200 z-50 transform -translate-x-full lg:translate-x-0 transition-transform duration-300 overflow-y-auto">
+        <!-- Logo -->
+        <div class="p-6 border-b border-gray-100">
+            <a href="dashboard.html" class="flex items-center space-x-3">
+                <div class="w-12 h-12 bg-white rounded-xl flex items-center justify-center shadow-lg">
+                    <img src="../Logo/MATHURO LOGO.png" alt="MathTuro" class="w-10 h-10 object-contain">
+                </div>
+                <div>
+                    <span class="text-xl font-bold gradient-text">MathTuro</span>
+                    <p class="text-xs text-gray-500" id="portalType">Student Portal</p>
+                </div>
+            </a>
+        </div>
+        
+        <!-- User Info -->
+        <div class="p-6 border-b border-gray-100">
+            <div class="flex items-center space-x-3">
+                <div class="w-12 h-12 bg-brand/10 rounded-full flex items-center justify-center">
+                    <span id="userInitials" class="text-brand font-bold text-lg">--</span>
+                </div>
+                <div class="flex-1">
+                    <p id="sidebarUserName" class="font-semibold text-gray-800">Loading...</p>
+                    <div class="flex items-center space-x-1">
+                        <span id="streakBadge" class="text-sm">🔥</span>
+                        <span id="streakCount" class="text-sm text-orange-500 font-medium">0 day streak</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Navigation -->
+        <nav id="navigationLinks" class="p-4 space-y-2 overflow-y-auto" style="max-height: calc(100vh - 320px);">
+            <!-- Dynamically populated based on role -->
+        </nav>
+        
+        <!-- Bottom Actions -->
+        <div class="absolute bottom-0 left-0 right-0 p-4 border-t border-gray-100 bg-white">
+            <a href="../public/index.html" class="flex items-center space-x-3 px-4 py-3 text-gray-600 hover:text-brand transition-colors">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
+                </svg>
+                <span>Back to Home</span>
+            </a>
+            <button id="logoutButton" class="w-full flex items-center space-x-3 px-4 py-3 text-red-600 hover:bg-red-50 rounded-xl transition-colors">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
+                </svg>
+                <span>Logout</span>
+            </button>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="lg:ml-72 min-h-screen">
+        <!-- Top Header -->
+        <header class="bg-white border-b border-gray-200 sticky top-0 z-30">
+            <div class="flex items-center justify-between px-4 lg:px-8 py-4">
+                <!-- Mobile Menu Button -->
+                <button id="mobileMenuBtn" class="lg:hidden p-2 text-gray-600 hover:text-brand rounded-lg">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
+                    </svg>
+                </button>
+                
+                <!-- Page Title -->
+                <div class="flex-1 lg:flex-none">
+                    <h1 class="text-xl lg:text-2xl font-bold text-gray-800">Quiz Submissions</h1>
+                    <p class="text-sm text-gray-500 hidden sm:block">Review and manage quiz submissions</p>
+                </div>
+                
+                <!-- Right Actions -->
+                <div class="flex items-center space-x-4">
+                    <!-- Search -->
+                    <div class="hidden md:block relative">
+                        <input type="text" id="searchInput" placeholder="Search submissions..." class="w-64 px-4 py-2 pl-10 border border-gray-200 rounded-xl focus:ring-2 focus:ring-brand/20 focus:border-brand">
+                        <svg class="w-5 h-5 absolute left-3 top-2.5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                        </svg>
+                    </div>
+                    
+                    <!-- User Menu -->
+                    <div class="relative">
+                        <button id="userMenuBtn" class="flex items-center space-x-2 p-2 rounded-lg hover:bg-gray-100">
+                            <div class="w-8 h-8 bg-brand/10 rounded-full flex items-center justify-center">
+                                <span id="headerUserInitials" class="text-brand font-semibold text-sm">--</span>
+                            </div>
+                        </button>
+                        
+                        <!-- Dropdown -->
+                        <div id="userDropdown" class="hidden absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-lg border border-gray-100 py-2">
+                            <div class="px-4 py-2 border-b border-gray-100">
+                                <p id="dropdownUserName" class="font-semibold text-gray-800">User</p>
+                                <p id="dropdownUserEmail" class="text-sm text-gray-500">email@example.com</p>
+                            </div>
+                            <button onclick="handleLogout()" class="w-full text-left px-4 py-2 text-red-600 hover:bg-red-50">Logout</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Submissions Content -->
+        <div class="p-4 lg:p-8">
+            <!-- Stats Cards -->
+            <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6 mb-8">
+                <div class="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm">
+                    <div class="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center mb-3">
+                        <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+                        </svg>
+                    </div>
+                    <div class="text-3xl font-bold text-blue-600" id="totalStat">0</div>
+                    <div class="text-sm text-gray-500">Total</div>
+                </div>
+                
+                <div class="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm">
+                    <div class="w-12 h-12 bg-yellow-100 rounded-xl flex items-center justify-center mb-3">
+                        <svg class="w-6 h-6 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                    </div>
+                    <div class="text-3xl font-bold text-yellow-600" id="pendingStat">0</div>
+                    <div class="text-sm text-gray-500">Pending</div>
+                </div>
+                
+                <div class="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm">
+                    <div class="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center mb-3">
+                        <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                    </div>
+                    <div class="text-3xl font-bold text-green-600" id="approvedStat">0</div>
+                    <div class="text-sm text-gray-500">Approved</div>
+                </div>
+                
+                <div class="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm">
+                    <div class="w-12 h-12 bg-red-100 rounded-xl flex items-center justify-center mb-3">
+                        <svg class="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                    </div>
+                    <div class="text-3xl font-bold text-red-600" id="rejectedStat">0</div>
+                    <div class="text-sm text-gray-500">Rejected</div>
+                </div>
+            </div>
+
+            <!-- Filter Tabs -->
+            <div class="bg-white rounded-2xl border border-gray-100 shadow-sm mb-6">
+                <div class="p-4 flex flex-wrap gap-2">
+                    <button class="tab-button active px-6 py-2.5 rounded-xl font-medium text-gray-600" data-filter="all">All</button>
+                    <button class="tab-button px-6 py-2.5 rounded-xl font-medium text-gray-600 hover:bg-gray-100" data-filter="pending">Pending</button>
+                    <button class="tab-button px-6 py-2.5 rounded-xl font-medium text-gray-600 hover:bg-gray-100" data-filter="approved">Approved</button>
+                    <button class="tab-button px-6 py-2.5 rounded-xl font-medium text-gray-600 hover:bg-gray-100" data-filter="rejected">Rejected</button>
+                </div>
+            </div>
+
+            <!-- Submissions List -->
+            <div class="bg-white rounded-2xl border border-gray-100 shadow-sm">
+                <div class="p-6 border-b border-gray-100 flex items-center justify-between">
+                    <h3 class="text-lg font-bold text-gray-800">Submissions</h3>
+                    <span id="submissionCount" class="text-sm text-gray-500">0 submissions</span>
+                </div>
+                <div id="submissionsList" class="divide-y divide-gray-100">
+                    <div class="p-12 text-center">
+                        <div class="inline-block animate-spin rounded-full h-8 w-8 border-4 border-brand border-t-transparent mb-4"></div>
+                        <p class="text-gray-500">Loading submissions...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Review Modal -->
+    <div id="reviewModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div class="bg-white rounded-2xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+            <div class="p-6 border-b border-gray-100 flex items-center justify-between">
+                <h3 class="text-xl font-bold text-gray-800">Review Submission</h3>
+                <button onclick="closeReviewModal()" class="p-2 text-gray-500 hover:text-gray-700 rounded-lg hover:bg-gray-100">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                </button>
+            </div>
+            <div id="reviewModalContent" class="p-6"></div>
+        </div>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div class="bg-white rounded-2xl p-8 text-center">
+            <div class="inline-block animate-spin rounded-full h-12 w-12 border-4 border-brand border-t-transparent mb-4"></div>
+            <p class="text-gray-600 font-medium">Loading...</p>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="../shared/js/config.js"></script>
+    <script src="../shared/js/utils.js"></script>
+    <script src="../shared/js/supabase.js"></script>
+    <script src="../shared/js/auth.js"></script>
+    <script src="assets/js/teacher.js"></script>
+    <script src="../shared/js/modules.js"></script>
+    
+    <script>
+        let currentUser = null;
+        let allSubmissions = [];
+        let currentFilter = 'all';
+
+        const loadingOverlay = document.getElementById('loadingOverlay');
+        const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+        const mobileOverlay = document.getElementById('mobileOverlay');
+        const sidebar = document.getElementById('sidebar');
+        const userMenuBtn = document.getElementById('userMenuBtn');
+        const userDropdown = document.getElementById('userDropdown');
+
+        document.addEventListener('DOMContentLoaded', async function() {
+            try {
+                currentUser = await checkAuthSession();
+                
+                if (!currentUser) {
+                    redirectToLogin();
+                    return;
+                }
+
+                updateUserInfo(currentUser);
+                setupNavigation(currentUser.role);
+                await loadSubmissions();
+                setupEventListeners();
+            } catch (error) {
+                console.error('Page initialization error:', error);
+                showToast('Failed to load page.', 'error');
+            } finally {
+                loadingOverlay.classList.add('hidden');
+            }
+        });
+
+        function updateUserInfo(user) {
+            const initials = getInitials(user.fullName);
+            document.getElementById('sidebarUserName').textContent = user.fullName;
+            const userRoleEl = document.getElementById('userRole');
+            if (userRoleEl) userRoleEl.textContent = user.role;
+            document.getElementById('userInitials').textContent = initials;
+            document.getElementById('headerUserInitials').textContent = initials;
+            document.getElementById('dropdownUserName').textContent = user.fullName;
+            document.getElementById('dropdownUserEmail').textContent = user.email;
+            
+            // Update portal type and styling based on role
+            const portalTypeEl = document.getElementById('portalType');
+            if (portalTypeEl) {
+                const portalLabels = { admin: 'Admin Portal', teacher: 'Teacher Portal', student: 'Student Portal' };
+                portalTypeEl.textContent = portalLabels[user.role] || 'Student Portal';
+            }
+            
+            // Update user avatar styling for teacher
+            const userInitialsEl = document.getElementById('userInitials');
+            const userAvatarContainer = userInitialsEl?.parentElement;
+            const streakBadge = document.getElementById('streakBadge');
+            const streakCount = document.getElementById('streakCount');
+            
+            if (user.role === 'teacher' || user.role === 'admin') {
+                // Use teacher colors and hide streak
+                if (userAvatarContainer) {
+                    userAvatarContainer.className = 'w-12 h-12 bg-teacher-100 rounded-full flex items-center justify-center';
+                }
+                if (userInitialsEl) {
+                    userInitialsEl.className = 'text-teacher-600 font-bold text-lg';
+                }
+                if (streakBadge) streakBadge.style.display = 'none';
+                if (streakCount) streakCount.textContent = 'Teacher';
+            }
+        }
+
+        function showStudentsPage() {
+            showToast('Student progress page coming soon!', 'info');
+        }
+
+        function showReportsPage() {
+            showToast('Reports page coming soon!', 'info');
+        }
+
+        function getInitials(name) {
+            return name.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2);
+        }
+
+        function setupNavigation(role) {
+            const navContainer = document.getElementById('navigationLinks');
+            const dashboardLink = role === 'admin' ? '../admin/dashboard.html' : role === 'teacher' ? 'dashboard.html' : '../student/dashboard.html';
+            
+            let navHTML = `
+                <p class="text-xs text-gray-400 uppercase tracking-wider px-4 mb-2">Main Menu</p>
+                <a href="${dashboardLink}" class="sidebar-link flex items-center space-x-3 px-4 py-3 rounded-xl text-gray-700">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
+                    </svg>
+                    <span>Dashboard</span>
+                </a>
+                <a href="../student/modules.html" class="sidebar-link flex items-center space-x-3 px-4 py-3 rounded-xl text-gray-700">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
+                    </svg>
+                    <span>Learning Modules</span>
+                </a>`;
+            
+            // Add student-specific navigation
+            if (role === 'student') {
+                navHTML += `
+                <a href="../public/tutorial-videos.html" class="sidebar-link flex items-center space-x-3 px-4 py-3 rounded-xl text-gray-700">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                    <span>Tutorial Videos</span>
+                </a>
+                <a href="../student/quizzes.html" class="sidebar-link flex items-center space-x-3 px-4 py-3 rounded-xl text-gray-700">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/>
+                    </svg>
+                    <span>Quizzes</span>
+                </a>
+                
+                <p class="text-xs text-gray-400 uppercase tracking-wider px-4 mb-2 mt-6">My Learning</p>
+                <a href="submissions.html" class="sidebar-link active flex items-center space-x-3 px-4 py-3 rounded-xl text-gray-700">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/>
+                    </svg>
+                    <span>My Submissions</span>
+                </a>
+                <a href="../student/dashboard.html#achievements" class="sidebar-link flex items-center space-x-3 px-4 py-3 rounded-xl text-gray-700">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"/>
+                    </svg>
+                    <span>Achievements</span>
+                </a>
+                <a href="../student/dashboard.html#leaderboard" class="sidebar-link flex items-center space-x-3 px-4 py-3 rounded-xl text-gray-700">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"/>
+                    </svg>
+                    <span>Leaderboard</span>
+                </a>`;
+            } else {
+                // Teacher/Admin navigation - match teacher-dashboard sidebar exactly
+                navHTML = `
+                <a href="${dashboardLink}" class="sidebar-link flex items-center space-x-3 px-4 py-3 rounded-xl text-gray-700">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
+                    </svg>
+                    <span>Dashboard</span>
+                </a>
+                <a href="submissions.html" class="sidebar-link active flex items-center space-x-3 px-4 py-3 rounded-xl text-gray-700">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/>
+                    </svg>
+                    <span>Submissions</span>
+                </a>
+                <a href="manage-modules.html" class="sidebar-link flex items-center space-x-3 px-4 py-3 rounded-xl text-gray-700">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
+                    </svg>
+                    <span>Manage Modules</span>
+                </a>
+                <a href="manage-videos.html" class="sidebar-link flex items-center space-x-3 px-4 py-3 rounded-xl text-gray-700">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                    </svg>
+                    <span>Manage Videos</span>
+                </a>
+                <a href="manage-quizzes.html" class="sidebar-link flex items-center space-x-3 px-4 py-3 rounded-xl text-gray-700">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/>
+                    </svg>
+                    <span>Manage Quizzes</span>
+                </a>
+                <a href="#" onclick="showStudentsPage()" class="sidebar-link flex items-center space-x-3 px-4 py-3 rounded-xl text-gray-700">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
+                    </svg>
+                    <span>Student Progress</span>
+                </a>
+                <a href="#" onclick="showReportsPage()" class="sidebar-link flex items-center space-x-3 px-4 py-3 rounded-xl text-gray-700">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                    </svg>
+                    <span>Reports</span>
+                </a>`;
+            }
+            
+            navContainer.innerHTML = navHTML;
+        }
+
+        async function loadSubmissions() {
+            try {
+                // First, get submissions
+                let query = getSupabase()
+                    .from('quiz_submissions')
+                    .select('*')
+                    .order('submitted_at', { ascending: false });
+
+                if (currentUser.role === 'student') {
+                    query = query.eq('user_id', currentUser.id);
+                }
+
+                const { data: submissions, error } = await query;
+                if (error) throw error;
+
+                if (!submissions || submissions.length === 0) {
+                    allSubmissions = [];
+                    updateStats();
+                    renderSubmissions();
+                    return;
+                }
+
+                // Get unique user IDs, quiz IDs, and module IDs
+                const userIds = [...new Set(submissions.map(s => s.user_id).filter(Boolean))];
+                const quizIds = [...new Set(submissions.map(s => s.quiz_id).filter(Boolean))];
+                const moduleIds = [...new Set(submissions.map(s => s.module_id).filter(Boolean))];
+
+                // Fetch users
+                let usersMap = {};
+                if (userIds.length > 0) {
+                    const { data: users } = await getSupabase()
+                        .from('users')
+                        .select('id, full_name, email')
+                        .in('id', userIds);
+                    if (users) {
+                        users.forEach(u => usersMap[u.id] = u);
+                    }
+                }
+
+                // Fetch quizzes
+                let quizzesMap = {};
+                if (quizIds.length > 0) {
+                    const { data: quizzes } = await getSupabase()
+                        .from('quizzes')
+                        .select('id, title, total_items, passing_score')
+                        .in('id', quizIds);
+                    if (quizzes) {
+                        quizzes.forEach(q => quizzesMap[q.id] = q);
+                    }
+                }
+
+                // Fetch modules
+                let modulesMap = {};
+                if (moduleIds.length > 0) {
+                    const { data: modules } = await getSupabase()
+                        .from('modules')
+                        .select('id, title')
+                        .in('id', moduleIds);
+                    if (modules) {
+                        modules.forEach(m => modulesMap[m.id] = m);
+                    }
+                }
+
+                // Combine data
+                allSubmissions = submissions.map(s => ({
+                    ...s,
+                    users: usersMap[s.user_id] || null,
+                    quizzes: quizzesMap[s.quiz_id] || null,
+                    modules: modulesMap[s.module_id] || null
+                }));
+
+                updateStats();
+                renderSubmissions();
+            } catch (error) {
+                console.error('Error loading submissions:', error);
+                document.getElementById('submissionsList').innerHTML = `
+                    <div class="p-12 text-center text-red-500">
+                        <p>Failed to load submissions: ${error.message || 'Unknown error'}</p>
+                    </div>
+                `;
+            }
+        }
+
+        function updateStats() {
+            document.getElementById('totalStat').textContent = allSubmissions.length;
+            document.getElementById('pendingStat').textContent = allSubmissions.filter(s => s.status === 'pending').length;
+            document.getElementById('approvedStat').textContent = allSubmissions.filter(s => s.status === 'approved').length;
+            document.getElementById('rejectedStat').textContent = allSubmissions.filter(s => s.status === 'rejected').length;
+        }
+
+        function renderSubmissions() {
+            const container = document.getElementById('submissionsList');
+            const searchTerm = document.getElementById('searchInput')?.value?.toLowerCase() || '';
+            
+            let filtered = allSubmissions;
+            if (currentFilter !== 'all') filtered = filtered.filter(s => s.status === currentFilter);
+            if (searchTerm) {
+                filtered = filtered.filter(s => 
+                    s.users?.full_name?.toLowerCase().includes(searchTerm) ||
+                    s.quizzes?.title?.toLowerCase().includes(searchTerm) ||
+                    s.modules?.title?.toLowerCase().includes(searchTerm)
+                );
+            }
+
+            document.getElementById('submissionCount').textContent = `${filtered.length} submissions`;
+
+            if (filtered.length === 0) {
+                container.innerHTML = `
+                    <div class="p-12 text-center text-gray-500">
+                        <svg class="w-16 h-16 mx-auto text-gray-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+                        </svg>
+                        <p class="text-lg font-medium">No submissions found</p>
+                    </div>
+                `;
+                return;
+            }
+
+            const statusColors = {
+                pending: { bg: 'bg-yellow-100', text: 'text-yellow-700' },
+                approved: { bg: 'bg-green-100', text: 'text-green-700' },
+                rejected: { bg: 'bg-red-100', text: 'text-red-700' }
+            };
+
+            container.innerHTML = filtered.map(sub => {
+                const colors = statusColors[sub.status] || statusColors.pending;
+                const canReview = (currentUser.role === 'teacher' || currentUser.role === 'admin') && sub.status === 'pending';
+                
+                const scoreDisplay = sub.student_score !== null && sub.total_items !== null 
+                    ? `<span class="text-lg font-bold ${sub.student_score >= (sub.quizzes?.passing_score || sub.total_items * 0.7) ? 'text-green-600' : 'text-red-600'}">${sub.student_score}/${sub.total_items}</span>` 
+                    : '';
+                const quizTitle = sub.quizzes?.title || sub.modules?.title || 'Unknown Quiz';
+                
+                return `
+                    <div class="submission-card p-4 lg:p-6 flex flex-col lg:flex-row lg:items-center justify-between hover:bg-gray-50">
+                        <div class="flex items-center space-x-4 mb-4 lg:mb-0">
+                            <div class="w-12 h-12 ${colors.bg} rounded-xl flex items-center justify-center">
+                                <span class="${colors.text} font-semibold">${getInitials(sub.users?.full_name || 'User')}</span>
+                            </div>
+                            <div>
+                                <p class="font-semibold text-gray-800">${escapeHtml(sub.users?.full_name || 'Unknown')}</p>
+                                <p class="text-sm text-gray-500">${escapeHtml(quizTitle)}</p>
+                                <p class="text-xs text-gray-400">${formatDate(sub.submitted_at)}</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center space-x-4">
+                            ${scoreDisplay}
+                            <span class="px-3 py-1.5 rounded-full text-xs font-medium ${colors.bg} ${colors.text} capitalize">${sub.status}</span>
+                            <button onclick="viewSubmission('${sub.id}')" class="p-2 text-gray-500 hover:text-brand rounded-lg" title="View">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                                </svg>
+                            </button>
+                            ${canReview ? `<button onclick="openReviewModal('${sub.id}')" class="px-4 py-2 bg-brand text-white rounded-lg font-medium hover:bg-brand-dark">Review</button>` : ''}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function viewSubmission(id) {
+            const sub = allSubmissions.find(s => s.id === id);
+            if (!sub) return;
+
+            const statusColors = {
+                pending: 'bg-yellow-100 text-yellow-700',
+                approved: 'bg-green-100 text-green-700',
+                rejected: 'bg-red-100 text-red-700'
+            };
+
+            const quizTitle = sub.quizzes?.title || sub.modules?.title || 'Unknown Quiz';
+            const passingScore = sub.quizzes?.passing_score || Math.floor(sub.total_items * 0.7);
+            const passed = sub.student_score >= passingScore;
+            const scoreDisplay = sub.student_score !== null ? `${sub.student_score}/${sub.total_items}` : 'Pending';
+
+            document.getElementById('reviewModalContent').innerHTML = `
+                <div class="space-y-6">
+                    <div class="flex items-center space-x-4">
+                        <div class="w-16 h-16 bg-brand/10 rounded-xl flex items-center justify-center">
+                            <span class="text-brand font-bold text-xl">${getInitials(sub.users?.full_name || 'User')}</span>
+                        </div>
+                        <div>
+                            <h4 class="text-xl font-bold text-gray-800">${escapeHtml(sub.users?.full_name || 'Unknown')}</h4>
+                            <p class="text-gray-500">${escapeHtml(sub.users?.email || '')}</p>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="bg-gray-50 rounded-xl p-4">
+                            <p class="text-sm text-gray-500">Quiz</p>
+                            <p class="font-semibold">${escapeHtml(quizTitle)}</p>
+                        </div>
+                        <div class="bg-gray-50 rounded-xl p-4">
+                            <p class="text-sm text-gray-500">Submitted</p>
+                            <p class="font-semibold">${formatDate(sub.submitted_at)}</p>
+                        </div>
+                        <div class="bg-gray-50 rounded-xl p-4">
+                            <p class="text-sm text-gray-500">Student Score</p>
+                            <p class="font-bold text-2xl ${passed ? 'text-green-600' : 'text-red-600'}">${scoreDisplay}</p>
+                            <p class="text-xs text-gray-400">Passing: ${passingScore}/${sub.total_items}</p>
+                        </div>
+                        <div class="bg-gray-50 rounded-xl p-4">
+                            <p class="text-sm text-gray-500">Status</p>
+                            <span class="inline-block px-3 py-1 rounded-full text-sm font-medium ${statusColors[sub.status]} capitalize mt-1">${sub.status}</span>
+                        </div>
+                    </div>
+                    ${sub.screenshot_url ? `
+                    <div>
+                        <h5 class="font-semibold mb-2">Screenshot Evidence</h5>
+                        <div class="bg-gray-50 rounded-xl p-4">
+                            <img src="${sub.screenshot_url}" alt="Quiz Screenshot" class="max-w-full rounded-lg cursor-pointer hover:opacity-90" onclick="window.open('${sub.screenshot_url}', '_blank')">
+                            <p class="text-xs text-gray-400 mt-2">Click to view full size</p>
+                        </div>
+                    </div>
+                    ` : ''}
+                    ${sub.teacher_comment ? `<div><h5 class="font-semibold mb-2">Teacher Comment</h5><div class="bg-gray-50 rounded-xl p-4"><p class="text-gray-600">${escapeHtml(sub.teacher_comment)}</p></div></div>` : ''}
+                </div>
+            `;
+            document.getElementById('reviewModal').classList.remove('hidden');
+        }
+
+        function openReviewModal(id) {
+            const sub = allSubmissions.find(s => s.id === id);
+            if (!sub) return;
+
+            const quizTitle = sub.quizzes?.title || sub.modules?.title || 'Unknown Quiz';
+            const passingScore = sub.quizzes?.passing_score || Math.floor(sub.total_items * 0.7);
+            const passed = sub.student_score >= passingScore;
+
+            document.getElementById('reviewModalContent').innerHTML = `
+                <div class="space-y-6">
+                    <div class="flex items-center space-x-4">
+                        <div class="w-16 h-16 bg-brand/10 rounded-xl flex items-center justify-center">
+                            <span class="text-brand font-bold text-xl">${getInitials(sub.users?.full_name || 'User')}</span>
+                        </div>
+                        <div>
+                            <h4 class="text-xl font-bold text-gray-800">${escapeHtml(sub.users?.full_name || 'Unknown')}</h4>
+                            <p class="text-gray-500">${escapeHtml(quizTitle)}</p>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-gray-50 rounded-xl p-4">
+                        <div class="flex items-center justify-between mb-2">
+                            <p class="text-sm text-gray-500">Student's Reported Score</p>
+                            <span class="font-bold text-xl ${passed ? 'text-green-600' : 'text-red-600'}">${sub.student_score}/${sub.total_items}</span>
+                        </div>
+                        <p class="text-xs text-gray-400">Passing score: ${passingScore}/${sub.total_items}</p>
+                    </div>
+                    
+                    ${sub.screenshot_url ? `
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Screenshot Evidence (verify score)</label>
+                        <div class="bg-gray-100 rounded-xl p-2">
+                            <img src="${sub.screenshot_url}" alt="Quiz Screenshot" class="max-w-full max-h-64 mx-auto rounded-lg cursor-pointer hover:opacity-90 object-contain" onclick="window.open('${sub.screenshot_url}', '_blank')">
+                        </div>
+                        <p class="text-xs text-gray-400 mt-1 text-center">Click image to view full size</p>
+                    </div>
+                    ` : '<p class="text-yellow-600 text-sm bg-yellow-50 p-3 rounded-lg">⚠️ No screenshot was submitted</p>'}
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Teacher Comment (optional)</label>
+                        <textarea id="reviewFeedback" rows="3" class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-brand/20 focus:border-brand resize-none" placeholder="Add a comment...">${sub.teacher_comment || ''}</textarea>
+                    </div>
+                    <div class="flex space-x-3">
+                        <button onclick="approveSubmission('${id}')" class="flex-1 py-3 bg-green-600 text-white rounded-xl font-semibold hover:bg-green-700 flex items-center justify-center space-x-2">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                            <span>Approve</span>
+                        </button>
+                        <button onclick="rejectSubmission('${id}')" class="flex-1 py-3 bg-red-600 text-white rounded-xl font-semibold hover:bg-red-700 flex items-center justify-center space-x-2">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                            <span>Reject</span>
+                        </button>
+                    </div>
+                </div>
+            `;
+            document.getElementById('reviewModal').classList.remove('hidden');
+        }
+
+        async function approveSubmission(id) {
+            const feedback = document.getElementById('reviewFeedback').value;
+
+            try {
+                const { error } = await getSupabase()
+                    .from('quiz_submissions')
+                    .update({ 
+                        status: 'approved', 
+                        teacher_comment: feedback || null, 
+                        reviewed_at: new Date().toISOString(), 
+                        reviewed_by: currentUser.id 
+                    })
+                    .eq('id', id);
+
+                if (error) throw error;
+                showToast('Submission approved!', 'success');
+                closeReviewModal();
+                await loadSubmissions();
+            } catch (error) {
+                console.error('Error:', error);
+                showToast('Failed to approve', 'error');
+            }
+        }
+
+        async function rejectSubmission(id) {
+            const feedback = document.getElementById('reviewFeedback').value;
+            if (!feedback) {
+                showToast('Please provide a comment explaining the rejection', 'error');
+                return;
+            }
+
+            try {
+                const { error } = await getSupabase()
+                    .from('quiz_submissions')
+                    .update({ 
+                        status: 'rejected', 
+                        teacher_comment: feedback, 
+                        reviewed_at: new Date().toISOString(), 
+                        reviewed_by: currentUser.id 
+                    })
+                    .eq('id', id);
+
+                if (error) throw error;
+                showToast('Submission rejected', 'success');
+                closeReviewModal();
+                await loadSubmissions();
+            } catch (error) {
+                console.error('Error:', error);
+                showToast('Failed to reject', 'error');
+            }
+        }
+
+        function closeReviewModal() {
+            document.getElementById('reviewModal').classList.add('hidden');
+        }
+
+        function formatDate(dateString) {
+            if (!dateString) return '';
+            return new Date(dateString).toLocaleString('en-US', { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+        }
+
+        function escapeHtml(text) {
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function setupEventListeners() {
+            mobileMenuBtn.addEventListener('click', () => {
+                sidebar.classList.toggle('-translate-x-full');
+                mobileOverlay.classList.toggle('hidden');
+            });
+
+            mobileOverlay.addEventListener('click', () => {
+                sidebar.classList.add('-translate-x-full');
+                mobileOverlay.classList.add('hidden');
+            });
+
+            userMenuBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                userDropdown.classList.toggle('hidden');
+            });
+
+            document.addEventListener('click', () => userDropdown.classList.add('hidden'));
+            document.getElementById('logoutButton').addEventListener('click', handleLogout);
+
+            document.querySelectorAll('.tab-button').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    document.querySelectorAll('.tab-button').forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    currentFilter = btn.dataset.filter;
+                    renderSubmissions();
+                });
+            });
+
+            document.getElementById('searchInput')?.addEventListener('input', renderSubmissions);
+
+            document.getElementById('reviewModal').addEventListener('click', (e) => {
+                if (e.target === document.getElementById('reviewModal')) closeReviewModal();
+            });
+        }
+
+        async function handleLogout() {
+            if (await logout()) redirectToLogin();
+        }
+    </script>
+</body>
+</html>

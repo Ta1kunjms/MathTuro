@@ -35,8 +35,18 @@
 */
 async function login(email, password) {
   try {
+    // Check if Supabase is initialized
+    const supabase = getSupabase();
+    if (!supabase) {
+      if (typeof showToast === 'function') {
+        showToast('Login failed: Database connection not available. Please refresh the page.', 'error');
+      }
+      console.error('Supabase client not initialized');
+      return null;
+    }
+
     // Step 1: Sign in with Supabase Auth using email and password
-    const { data: authData, error: authError } = await getSupabase().auth.signInWithPassword({
+    const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
       email: email,
       password: password
     });
@@ -50,7 +60,7 @@ async function login(email, password) {
     }
 
     // Step 2: Get user role from the database
-    let { data: userData, error: userError } = await getSupabase()
+    let { data: userData, error: userError } = await supabase
       .from('users')
       .select('id, email, role, full_name')
       .eq('id', authData.user.id)
@@ -66,7 +76,7 @@ async function login(email, password) {
       const fullName = userMeta.full_name || authData.user.email.split('@')[0];
 
       // Insert the user record
-      const { data: newUser, error: insertError } = await getSupabase()
+      const { data: newUser, error: insertError } = await supabase
         .from('users')
         .insert({
           id: authData.user.id,
@@ -84,7 +94,7 @@ async function login(email, password) {
         if (typeof showToast === 'function') {
           showToast('Error: Could not create user profile. Please contact support.', 'error');
         }
-        await getSupabase().auth.signOut();
+        await supabase.auth.signOut();
         return null;
       }
 
@@ -131,21 +141,26 @@ async function login(email, password) {
 */
 async function logout() {
   try {
-    // Sign out from Supabase Auth
-    const { error } = await getSupabase().auth.signOut();
-    
-    if (error) {
-      if (typeof showToast === 'function') {
-        showToast('Logout failed: ' + error.message, 'error');
+    // Get Supabase client
+    const supabase = getSupabase();
+    if (supabase) {
+      // Sign out from Supabase Auth
+      const { error } = await supabase.auth.signOut();
+      
+      if (error) {
+        if (typeof showToast === 'function') {
+          showToast('Logout failed: ' + error.message, 'error');
+        }
       }
-      return false;
     }
 
-    // Clear user data from localStorage
+    // Clear user data from localStorage regardless
     localStorage.removeItem('user');
     
     return true;
   } catch (error) {
+    // Clear user data from localStorage even if signOut fails
+    localStorage.removeItem('user');
     if (typeof showToast === 'function') {
       showToast('Logout failed: ' + error.message, 'error');
     }
@@ -175,8 +190,15 @@ async function logout() {
 */
 async function checkAuthSession() {
   try {
+    // Get Supabase client
+    const supabase = getSupabase();
+    if (!supabase) {
+      localStorage.removeItem('user');
+      return null;
+    }
+
     // Get current session from Supabase
-    const { data: { session }, error } = await getSupabase().auth.getSession();
+    const { data: { session }, error } = await supabase.auth.getSession();
 
     // If session is invalid, clear user data
     if (error || !session) {
@@ -189,7 +211,7 @@ async function checkAuthSession() {
     
     // If no user data in localStorage, try to fetch from database
     if (!user) {
-      const { data: userData, error: userError } = await getSupabase()
+      const { data: userData, error: userError } = await supabase
         .from('users')
         .select('id, email, role, full_name')
         .eq('id', session.user.id)

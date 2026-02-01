@@ -1,0 +1,856 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/png" href="../Logo/MATHURO-LOGO.png">
+    <title>Admin Dashboard - MathTuro LMS</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: {
+                            50: '#f0fdf4',
+                            100: '#dcfce7',
+                            200: '#bbf7d0',
+                            300: '#86efac',
+                            400: '#4ade80',
+                            500: '#22c55e',
+                            600: '#16a34a',
+                            700: '#15803d',
+                            800: '#166534',
+                            900: '#14532d',
+                        },
+                        brand: '#005801',
+                        'brand-dark': '#004601',
+                        'brand-light': '#006B01',
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', 'sans-serif'],
+                    },
+                },
+            },
+        }
+    </script>
+    <style>
+        body { font-family: 'Inter', system-ui, sans-serif; }
+        
+        .gradient-text {
+            background: linear-gradient(135deg, #005801 0%, #22c55e 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .glass-sidebar {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+        }
+        
+        .stat-card {
+            transition: all 0.3s ease;
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-4px);
+        }
+        
+        .sidebar-link {
+            transition: all 0.2s ease;
+        }
+        
+        .sidebar-link:hover, .sidebar-link.active {
+            background: linear-gradient(135deg, #dc2626 0%, #ef4444 100%);
+            color: white;
+        }
+        
+        .sidebar-link.active {
+            box-shadow: 0 4px 15px rgba(220, 38, 38, 0.3);
+        }
+        
+        .action-card {
+            transition: all 0.3s ease;
+        }
+        
+        .action-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 15px 30px -10px rgba(0, 0, 0, 0.15);
+        }
+        
+        /* Custom scrollbar */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; }
+        ::-webkit-scrollbar-thumb { background: #dc2626; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: #b91c1c; }
+
+        .chart-bar {
+            transition: height 0.5s ease, background-color 0.3s ease;
+        }
+        
+        .chart-bar:hover {
+            filter: brightness(1.1);
+        }
+    </style>
+    <link rel="stylesheet" href="../shared/css/base.css">
+    <link rel="stylesheet" href="assets/css/admin.css">
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <!-- Mobile Menu Overlay -->
+    <div id="mobileOverlay" class="fixed inset-0 bg-black bg-opacity-50 z-40 hidden lg:hidden"></div>
+    
+    <!-- Sidebar -->
+    <aside id="sidebar" class="fixed left-0 top-0 h-full w-72 glass-sidebar border-r border-gray-200 z-50 transform -translate-x-full lg:translate-x-0 transition-transform duration-300">
+        <!-- Logo -->
+        <div class="p-6 border-b border-gray-100">
+            <a href="../index.html" class="flex items-center space-x-3">
+                <div class="w-12 h-12 bg-white rounded-xl flex items-center justify-center shadow-lg">
+                    <img src="../Logo/MATHURO-LOGO.png" alt="MathTuro" class="w-10 h-10 object-contain">
+                </div>
+                <div>
+                    <span class="text-xl font-bold gradient-text">MathTuro</span>
+                    <p class="text-xs text-gray-500">Admin Portal</p>
+                </div>
+            </a>
+        </div>
+        
+        <!-- User Info -->
+        <div class="p-6 border-b border-gray-100">
+            <div class="flex items-center space-x-3">
+                <div class="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center">
+                    <span id="userInitials" class="text-red-600 font-bold text-lg">--</span>
+                </div>
+                <div>
+                    <p id="sidebarUserName" class="font-semibold text-gray-800">Loading...</p>
+                    <p class="text-sm text-red-600 font-medium">Administrator</p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Navigation -->
+        <nav class="p-4 space-y-2">
+            <a href="dashboard.html" class="sidebar-link active flex items-center space-x-3 px-4 py-3 rounded-xl text-gray-700">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
+                </svg>
+                <span>Dashboard</span>
+            </a>
+            <a href="users.html" class="sidebar-link flex items-center space-x-3 px-4 py-3 rounded-xl text-gray-700">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
+                </svg>
+                <span>User Management</span>
+            </a>
+            <a href="../teacher/manage-modules.html" class="sidebar-link flex items-center space-x-3 px-4 py-3 rounded-xl text-gray-700">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
+                </svg>
+                <span>Modules</span>
+            </a>
+            <a href="../teacher/submissions.html" class="sidebar-link flex items-center space-x-3 px-4 py-3 rounded-xl text-gray-700">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/>
+                </svg>
+                <span>Submissions</span>
+            </a>
+            <a href="activity.html" class="sidebar-link flex items-center space-x-3 px-4 py-3 rounded-xl text-gray-700">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+                <span>Activity Log</span>
+            </a>
+            <a href="#" onclick="showSettings()" class="sidebar-link flex items-center space-x-3 px-4 py-3 rounded-xl text-gray-700">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                </svg>
+                <span>Settings</span>
+            </a>
+        </nav>
+        
+        <!-- Bottom Actions -->
+        <div class="absolute bottom-0 left-0 right-0 p-4 border-t border-gray-100 bg-white">
+            <a href="../index.html" class="flex items-center space-x-3 px-4 py-3 text-gray-600 hover:text-brand transition-colors">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
+                </svg>
+                <span>Back to Home</span>
+            </a>
+            <button id="logoutButton" class="w-full flex items-center space-x-3 px-4 py-3 text-red-600 hover:bg-red-50 rounded-xl transition-colors">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
+                </svg>
+                <span>Logout</span>
+            </button>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="lg:ml-72 min-h-screen">
+        <!-- Top Header -->
+        <header class="bg-white border-b border-gray-200 sticky top-0 z-30">
+            <div class="flex items-center justify-between px-4 lg:px-8 py-4">
+                <!-- Mobile Menu Button -->
+                <button id="mobileMenuBtn" class="lg:hidden p-2 text-gray-600 hover:text-red-600 rounded-lg">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
+                    </svg>
+                </button>
+                
+                <!-- Page Title -->
+                <div class="flex-1 lg:flex-none">
+                    <h1 class="text-xl lg:text-2xl font-bold text-gray-800">Admin Dashboard</h1>
+                    <p class="text-sm text-gray-500 hidden sm:block">System overview and management.</p>
+                </div>
+                
+                <!-- Right Actions -->
+                <div class="flex items-center space-x-4">
+                    <!-- Quick Add User -->
+                    <a href="users.html" class="hidden sm:inline-flex items-center space-x-2 bg-red-600 text-white px-4 py-2 rounded-xl font-medium hover:bg-red-700 transition-colors">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"/>
+                        </svg>
+                        <span>Add User</span>
+                    </a>
+                    
+                    <!-- User Menu -->
+                    <div class="relative">
+                        <button id="userMenuBtn" class="flex items-center space-x-2 p-2 rounded-lg hover:bg-gray-100">
+                            <div class="w-8 h-8 bg-red-100 rounded-full flex items-center justify-center">
+                                <span id="headerUserInitials" class="text-red-600 font-semibold text-sm">--</span>
+                            </div>
+                            <svg class="w-4 h-4 text-gray-500 hidden sm:block" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                            </svg>
+                        </button>
+                        
+                        <!-- Dropdown -->
+                        <div id="userDropdown" class="hidden absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-lg border border-gray-100 py-2">
+                            <div class="px-4 py-2 border-b border-gray-100">
+                                <p id="dropdownUserName" class="font-semibold text-gray-800">User</p>
+                                <p id="dropdownUserEmail" class="text-sm text-gray-500">email@example.com</p>
+                            </div>
+                            <button onclick="handleLogout()" class="w-full text-left px-4 py-2 text-red-600 hover:bg-red-50">Logout</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Dashboard Content -->
+        <div class="p-4 lg:p-8">
+            <!-- Welcome Banner -->
+            <div class="bg-gradient-to-r from-red-600 to-red-800 rounded-2xl p-6 lg:p-8 text-white mb-8">
+                <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between">
+                    <div>
+                        <h2 class="text-2xl lg:text-3xl font-bold mb-2">Welcome, <span id="welcomeName">Admin</span>! 🔒</h2>
+                        <p class="text-white/80">You have full administrative access to the system.</p>
+                    </div>
+                    <div class="mt-4 lg:mt-0 flex space-x-3">
+                        <a href="users.html" class="inline-flex items-center space-x-2 bg-white text-red-600 px-6 py-3 rounded-xl font-semibold hover:bg-gray-100 transition-colors">
+                            <span>Manage Users</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Stats Grid -->
+            <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6 mb-8">
+                <!-- Total Users -->
+                <div class="stat-card bg-white rounded-2xl p-6 border border-gray-100 shadow-sm">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center">
+                            <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
+                            </svg>
+                        </div>
+                    </div>
+                    <div class="text-3xl font-bold text-blue-600" id="totalUsersStat">0</div>
+                    <div class="text-sm text-gray-500">Total Users</div>
+                </div>
+
+                <!-- Students -->
+                <div class="stat-card bg-white rounded-2xl p-6 border border-gray-100 shadow-sm">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center">
+                            <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
+                            </svg>
+                        </div>
+                    </div>
+                    <div class="text-3xl font-bold text-green-600" id="studentsStat">0</div>
+                    <div class="text-sm text-gray-500">Students</div>
+                </div>
+
+                <!-- Teachers -->
+                <div class="stat-card bg-white rounded-2xl p-6 border border-gray-100 shadow-sm">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center">
+                            <svg class="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z"/>
+                            </svg>
+                        </div>
+                    </div>
+                    <div class="text-3xl font-bold text-purple-600" id="teachersStat">0</div>
+                    <div class="text-sm text-gray-500">Teachers</div>
+                </div>
+
+                <!-- Modules -->
+                <div class="stat-card bg-white rounded-2xl p-6 border border-gray-100 shadow-sm">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="w-12 h-12 bg-orange-100 rounded-xl flex items-center justify-center">
+                            <svg class="w-6 h-6 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
+                            </svg>
+                        </div>
+                    </div>
+                    <div class="text-3xl font-bold text-orange-600" id="modulesStat">0</div>
+                    <div class="text-sm text-gray-500">Modules</div>
+                </div>
+            </div>
+
+            <!-- Secondary Stats -->
+            <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6 mb-8">
+                <div class="stat-card bg-white rounded-2xl p-6 border border-gray-100 shadow-sm">
+                    <div class="text-2xl font-bold text-teal-600" id="lessonsStat">0</div>
+                    <div class="text-sm text-gray-500">Total Lessons</div>
+                </div>
+                <div class="stat-card bg-white rounded-2xl p-6 border border-gray-100 shadow-sm">
+                    <div class="text-2xl font-bold text-yellow-600" id="pendingStat">0</div>
+                    <div class="text-sm text-gray-500">Pending Reviews</div>
+                </div>
+                <div class="stat-card bg-white rounded-2xl p-6 border border-gray-100 shadow-sm">
+                    <div class="text-2xl font-bold text-green-600" id="approvedStat">0</div>
+                    <div class="text-sm text-gray-500">Approved</div>
+                </div>
+                <div class="stat-card bg-white rounded-2xl p-6 border border-gray-100 shadow-sm">
+                    <div class="text-2xl font-bold text-red-600" id="rejectedStat">0</div>
+                    <div class="text-sm text-gray-500">Rejected</div>
+                </div>
+            </div>
+
+            <!-- Main Content Grid -->
+            <div class="grid lg:grid-cols-3 gap-6 lg:gap-8">
+                <!-- Left Column -->
+                <div class="lg:col-span-2 space-y-6">
+                    <!-- Quick Actions -->
+                    <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
+                        <h3 class="text-lg font-bold text-gray-800 mb-6">Quick Actions</h3>
+                        <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
+                            <a href="users.html" class="action-card p-4 bg-blue-50 rounded-xl text-center hover:bg-blue-100">
+                                <div class="w-12 h-12 mx-auto bg-blue-100 rounded-xl flex items-center justify-center mb-3">
+                                    <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"/>
+                                    </svg>
+                                </div>
+                                <p class="font-medium text-gray-700">Add User</p>
+                            </a>
+                            <a href="../teacher/manage-modules.html" class="action-card p-4 bg-green-50 rounded-xl text-center hover:bg-green-100">
+                                <div class="w-12 h-12 mx-auto bg-green-100 rounded-xl flex items-center justify-center mb-3">
+                                    <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+                                    </svg>
+                                </div>
+                                <p class="font-medium text-gray-700">New Module</p>
+                            </a>
+                            <a href="../teacher/submissions.html" class="action-card p-4 bg-yellow-50 rounded-xl text-center hover:bg-yellow-100">
+                                <div class="w-12 h-12 mx-auto bg-yellow-100 rounded-xl flex items-center justify-center mb-3">
+                                    <svg class="w-6 h-6 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/>
+                                    </svg>
+                                </div>
+                                <p class="font-medium text-gray-700">Submissions</p>
+                            </a>
+                            <a href="activity.html" class="action-card p-4 bg-purple-50 rounded-xl text-center hover:bg-purple-100">
+                                <div class="w-12 h-12 mx-auto bg-purple-100 rounded-xl flex items-center justify-center mb-3">
+                                    <svg class="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                    </svg>
+                                </div>
+                                <p class="font-medium text-gray-700">Activity Log</p>
+                            </a>
+                            <a href="#" onclick="exportData()" class="action-card p-4 bg-teal-50 rounded-xl text-center hover:bg-teal-100">
+                                <div class="w-12 h-12 mx-auto bg-teal-100 rounded-xl flex items-center justify-center mb-3">
+                                    <svg class="w-6 h-6 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                                    </svg>
+                                </div>
+                                <p class="font-medium text-gray-700">Export Data</p>
+                            </a>
+                            <a href="#" onclick="showSettings()" class="action-card p-4 bg-gray-50 rounded-xl text-center hover:bg-gray-100">
+                                <div class="w-12 h-12 mx-auto bg-gray-100 rounded-xl flex items-center justify-center mb-3">
+                                    <svg class="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                    </svg>
+                                </div>
+                                <p class="font-medium text-gray-700">Settings</p>
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- User Distribution Chart -->
+                    <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
+                        <h3 class="text-lg font-bold text-gray-800 mb-6">User Distribution</h3>
+                        <div class="flex items-end justify-center space-x-8 h-48">
+                            <div class="text-center">
+                                <div id="studentsBar" class="chart-bar w-20 bg-green-500 rounded-t-lg mx-auto" style="height: 0%"></div>
+                                <p class="mt-2 font-medium text-gray-700">Students</p>
+                                <p id="studentsBarValue" class="text-sm text-gray-500">0</p>
+                            </div>
+                            <div class="text-center">
+                                <div id="teachersBar" class="chart-bar w-20 bg-purple-500 rounded-t-lg mx-auto" style="height: 0%"></div>
+                                <p class="mt-2 font-medium text-gray-700">Teachers</p>
+                                <p id="teachersBarValue" class="text-sm text-gray-500">0</p>
+                            </div>
+                            <div class="text-center">
+                                <div id="adminsBar" class="chart-bar w-20 bg-red-500 rounded-t-lg mx-auto" style="height: 0%"></div>
+                                <p class="mt-2 font-medium text-gray-700">Admins</p>
+                                <p id="adminsBarValue" class="text-sm text-gray-500">0</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Recent Users -->
+                    <div class="bg-white rounded-2xl border border-gray-100 shadow-sm">
+                        <div class="p-6 border-b border-gray-100 flex items-center justify-between">
+                            <h3 class="text-lg font-bold text-gray-800">Recent Users</h3>
+                            <a href="users.html" class="text-red-600 hover:text-red-700 text-sm font-medium">View All</a>
+                        </div>
+                        <div id="recentUsersList" class="divide-y divide-gray-100">
+                            <!-- Content loaded dynamically -->
+                            <div class="p-6 text-center text-gray-500">
+                                <p>Loading users...</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right Column -->
+                <div class="space-y-6">
+                    <!-- System Status -->
+                    <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
+                        <h3 class="text-lg font-bold text-gray-800 mb-4">System Status</h3>
+                        <div class="space-y-4">
+                            <div class="flex items-center justify-between">
+                                <span class="text-gray-600">Database</span>
+                                <span class="flex items-center text-green-600">
+                                    <span class="w-2 h-2 bg-green-500 rounded-full mr-2"></span>
+                                    Online
+                                </span>
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <span class="text-gray-600">Authentication</span>
+                                <span class="flex items-center text-green-600">
+                                    <span class="w-2 h-2 bg-green-500 rounded-full mr-2"></span>
+                                    Active
+                                </span>
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <span class="text-gray-600">Storage</span>
+                                <span class="flex items-center text-green-600">
+                                    <span class="w-2 h-2 bg-green-500 rounded-full mr-2"></span>
+                                    Available
+                                </span>
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <span class="text-gray-600">API</span>
+                                <span class="flex items-center text-green-600">
+                                    <span class="w-2 h-2 bg-green-500 rounded-full mr-2"></span>
+                                    Operational
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Recent Activity -->
+                    <div class="bg-white rounded-2xl border border-gray-100 shadow-sm">
+                        <div class="p-6 border-b border-gray-100">
+                            <h3 class="text-lg font-bold text-gray-800">Recent Activity</h3>
+                        </div>
+                        <div id="recentActivity" class="divide-y divide-gray-100 max-h-80 overflow-y-auto">
+                            <!-- Content loaded dynamically -->
+                            <div class="p-6 text-center text-gray-500">
+                                <p>No recent activity</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Platform Info -->
+                    <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
+                        <h3 class="text-lg font-bold text-gray-800 mb-4">Platform Info</h3>
+                        <div class="space-y-3 text-sm">
+                            <div class="flex justify-between">
+                                <span class="text-gray-500">Version</span>
+                                <span class="font-medium text-gray-800">1.0.0</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-500">Last Updated</span>
+                                <span class="font-medium text-gray-800">Feb 2, 2026</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-500">Environment</span>
+                                <span class="font-medium text-gray-800">Production</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div class="bg-white rounded-2xl p-8 text-center">
+            <div class="inline-block animate-spin rounded-full h-12 w-12 border-4 border-red-600 border-t-transparent mb-4"></div>
+            <p class="text-gray-600 font-medium">Loading admin dashboard...</p>
+        </div>
+    </div>
+
+    <!-- Modal Container -->
+    <div id="modalContainer" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div id="modalContent" class="bg-white rounded-2xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+            <!-- Modal content loaded dynamically -->
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="../shared/js/config.js"></script>
+    <script src="../shared/js/utils.js"></script>
+    <script src="../shared/js/supabase.js"></script>
+    <script src="../shared/js/auth.js"></script>
+    <script src="assets/js/admin.js"></script>
+    <script src="../shared/js/modules.js"></script>
+    
+    <script>
+        // Global variables
+        let currentUser = null;
+
+        // DOM Elements
+        const loadingOverlay = document.getElementById('loadingOverlay');
+        const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+        const mobileOverlay = document.getElementById('mobileOverlay');
+        const sidebar = document.getElementById('sidebar');
+        const userMenuBtn = document.getElementById('userMenuBtn');
+        const userDropdown = document.getElementById('userDropdown');
+
+        // Initialize Dashboard
+        document.addEventListener('DOMContentLoaded', async function() {
+            try {
+                // Check authentication
+                currentUser = await checkAuthSession();
+                
+                if (!currentUser || currentUser.role !== 'admin') {
+                    redirectToLogin();
+                    return;
+                }
+
+                // Update UI with user info
+                updateUserInfo(currentUser);
+                
+                // Load dashboard data
+                await Promise.all([
+                    loadDashboardStats(),
+                    loadRecentUsers(),
+                    loadRecentActivity()
+                ]);
+
+                // Setup event listeners
+                setupEventListeners();
+
+            } catch (error) {
+                console.error('Dashboard initialization error:', error);
+                showToast('Failed to load dashboard. Please try again.', 'error');
+            } finally {
+                loadingOverlay.classList.add('hidden');
+            }
+        });
+
+        // Update user information across the UI
+        function updateUserInfo(user) {
+            const initials = getInitials(user.fullName);
+            const firstName = user.fullName.split(' ')[0];
+            
+            document.getElementById('sidebarUserName').textContent = user.fullName;
+            document.getElementById('userInitials').textContent = initials;
+            document.getElementById('headerUserInitials').textContent = initials;
+            document.getElementById('welcomeName').textContent = firstName;
+            document.getElementById('dropdownUserName').textContent = user.fullName;
+            document.getElementById('dropdownUserEmail').textContent = user.email;
+        }
+
+        function getInitials(name) {
+            return name.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2);
+        }
+
+        // Load dashboard statistics
+        async function loadDashboardStats() {
+            try {
+                // Get user counts
+                const { data: users } = await getSupabase()
+                    .from('users')
+                    .select('role');
+
+                const students = users ? users.filter(u => u.role === 'student').length : 0;
+                const teachers = users ? users.filter(u => u.role === 'teacher').length : 0;
+                const admins = users ? users.filter(u => u.role === 'admin').length : 0;
+                const total = users ? users.length : 0;
+
+                // Get module and lesson counts
+                const { data: modules } = await getSupabase()
+                    .from('modules')
+                    .select('id');
+                
+                const { data: lessons } = await getSupabase()
+                    .from('lessons')
+                    .select('id');
+
+                // Get submission counts
+                const { data: submissions } = await getSupabase()
+                    .from('quiz_submissions')
+                    .select('status');
+
+                const pending = submissions ? submissions.filter(s => s.status === 'pending').length : 0;
+                const approved = submissions ? submissions.filter(s => s.status === 'approved').length : 0;
+                const rejected = submissions ? submissions.filter(s => s.status === 'rejected').length : 0;
+
+                // Update UI
+                document.getElementById('totalUsersStat').textContent = total;
+                document.getElementById('studentsStat').textContent = students;
+                document.getElementById('teachersStat').textContent = teachers;
+                document.getElementById('modulesStat').textContent = modules ? modules.length : 0;
+                document.getElementById('lessonsStat').textContent = lessons ? lessons.length : 0;
+                document.getElementById('pendingStat').textContent = pending;
+                document.getElementById('approvedStat').textContent = approved;
+                document.getElementById('rejectedStat').textContent = rejected;
+
+                // Update chart
+                const maxUsers = Math.max(students, teachers, admins, 1);
+                document.getElementById('studentsBar').style.height = `${(students / maxUsers) * 100}%`;
+                document.getElementById('teachersBar').style.height = `${(teachers / maxUsers) * 100}%`;
+                document.getElementById('adminsBar').style.height = `${(admins / maxUsers) * 100}%`;
+                document.getElementById('studentsBarValue').textContent = students;
+                document.getElementById('teachersBarValue').textContent = teachers;
+                document.getElementById('adminsBarValue').textContent = admins;
+
+            } catch (error) {
+                console.error('Error loading stats:', error);
+            }
+        }
+
+        // Load recent users
+        async function loadRecentUsers() {
+            const container = document.getElementById('recentUsersList');
+            
+            try {
+                const { data: users } = await getSupabase()
+                    .from('users')
+                    .select('*')
+                    .order('created_at', { ascending: false })
+                    .limit(5);
+
+                if (!users || users.length === 0) {
+                    container.innerHTML = '<div class="p-6 text-center text-gray-500"><p>No users found</p></div>';
+                    return;
+                }
+
+                const roleColors = {
+                    student: 'bg-green-100 text-green-700',
+                    teacher: 'bg-purple-100 text-purple-700',
+                    admin: 'bg-red-100 text-red-700'
+                };
+
+                container.innerHTML = users.map(user => `
+                    <div class="p-4 flex items-center justify-between hover:bg-gray-50">
+                        <div class="flex items-center space-x-4">
+                            <div class="w-10 h-10 ${roleColors[user.role]?.split(' ')[0] || 'bg-gray-100'} rounded-full flex items-center justify-center">
+                                <span class="${roleColors[user.role]?.split(' ')[1] || 'text-gray-600'} font-semibold text-sm">${getInitials(user.full_name)}</span>
+                            </div>
+                            <div>
+                                <p class="font-medium text-gray-800">${escapeHtml(user.full_name)}</p>
+                                <p class="text-sm text-gray-500">${escapeHtml(user.email)}</p>
+                            </div>
+                        </div>
+                        <span class="px-3 py-1 rounded-full text-xs font-medium ${roleColors[user.role]}">${user.role}</span>
+                    </div>
+                `).join('');
+
+            } catch (error) {
+                console.error('Error loading users:', error);
+                container.innerHTML = '<p class="p-6 text-center text-red-500">Failed to load users</p>';
+            }
+        }
+
+        // Load recent activity
+        async function loadRecentActivity() {
+            const container = document.getElementById('recentActivity');
+            
+            try {
+                // Get recent submissions as activity
+                const { data: submissions } = await getSupabase()
+                    .from('quiz_submissions')
+                    .select('*, users(full_name)')
+                    .order('submitted_at', { ascending: false })
+                    .limit(5);
+
+                if (!submissions || submissions.length === 0) {
+                    container.innerHTML = '<div class="p-6 text-center text-gray-500"><p>No recent activity</p></div>';
+                    return;
+                }
+
+                container.innerHTML = submissions.map(sub => {
+                    const statusColors = {
+                        pending: 'bg-yellow-100 text-yellow-600',
+                        approved: 'bg-green-100 text-green-600',
+                        rejected: 'bg-red-100 text-red-600'
+                    };
+                    
+                    const statusIcons = {
+                        pending: '⏳',
+                        approved: '✓',
+                        rejected: '✕'
+                    };
+
+                    return `
+                        <div class="p-4 flex items-center space-x-4 hover:bg-gray-50">
+                            <div class="w-10 h-10 ${statusColors[sub.status].split(' ')[0]} rounded-full flex items-center justify-center">
+                                <span>${statusIcons[sub.status]}</span>
+                            </div>
+                            <div class="flex-1 min-w-0">
+                                <p class="font-medium text-gray-800 truncate">${escapeHtml(sub.users?.full_name || 'User')}</p>
+                                <p class="text-sm text-gray-500">Quiz submission • ${sub.status}</p>
+                            </div>
+                            <span class="text-xs text-gray-400">${formatDate(sub.submitted_at)}</span>
+                        </div>
+                    `;
+                }).join('');
+
+            } catch (error) {
+                console.error('Error loading activity:', error);
+            }
+        }
+
+        // Helper functions
+        function formatDate(dateString) {
+            if (!dateString) return '';
+            const date = new Date(dateString);
+            const now = new Date();
+            const diff = now - date;
+            
+            if (diff < 60000) return 'Just now';
+            if (diff < 3600000) return `${Math.floor(diff / 60000)} min ago`;
+            if (diff < 86400000) return `${Math.floor(diff / 3600000)} hours ago`;
+            if (diff < 604800000) return `${Math.floor(diff / 86400000)} days ago`;
+            
+            return date.toLocaleDateString();
+        }
+
+        function escapeHtml(text) {
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // Setup event listeners
+        function setupEventListeners() {
+            mobileMenuBtn.addEventListener('click', () => {
+                sidebar.classList.toggle('-translate-x-full');
+                mobileOverlay.classList.toggle('hidden');
+            });
+
+            mobileOverlay.addEventListener('click', () => {
+                sidebar.classList.add('-translate-x-full');
+                mobileOverlay.classList.add('hidden');
+            });
+
+            userMenuBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                userDropdown.classList.toggle('hidden');
+            });
+
+            document.addEventListener('click', () => {
+                userDropdown.classList.add('hidden');
+            });
+
+            document.getElementById('logoutButton').addEventListener('click', handleLogout);
+        }
+
+        async function handleLogout() {
+            if (await logout()) {
+                redirectToLogin();
+            }
+        }
+
+        function showSettings() {
+            showModal('System Settings', `
+                <div class="space-y-6">
+                    <div>
+                        <h4 class="font-semibold text-gray-800 mb-3">General Settings</h4>
+                        <div class="space-y-4">
+                            <div class="flex items-center justify-between p-4 bg-gray-50 rounded-xl">
+                                <div>
+                                    <p class="font-medium text-gray-800">Allow Registration</p>
+                                    <p class="text-sm text-gray-500">Allow new users to register</p>
+                                </div>
+                                <label class="relative inline-flex items-center cursor-pointer">
+                                    <input type="checkbox" checked class="sr-only peer">
+                                    <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-red-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-red-600"></div>
+                                </label>
+                            </div>
+                            <div class="flex items-center justify-between p-4 bg-gray-50 rounded-xl">
+                                <div>
+                                    <p class="font-medium text-gray-800">Email Notifications</p>
+                                    <p class="text-sm text-gray-500">Send email notifications to users</p>
+                                </div>
+                                <label class="relative inline-flex items-center cursor-pointer">
+                                    <input type="checkbox" checked class="sr-only peer">
+                                    <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-red-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-red-600"></div>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    <button class="w-full py-3 bg-red-600 text-white rounded-xl font-semibold hover:bg-red-700 transition-colors">Save Settings</button>
+                </div>
+            `);
+        }
+
+        function exportData() {
+            showToast('Preparing export... This feature is coming soon!', 'info');
+        }
+
+        function showModal(title, content) {
+            const modal = document.getElementById('modalContainer');
+            const modalContent = document.getElementById('modalContent');
+            
+            modalContent.innerHTML = `
+                <div class="p-6 border-b border-gray-100 flex items-center justify-between">
+                    <h3 class="text-xl font-bold text-gray-800">${title}</h3>
+                    <button onclick="closeModal()" class="p-2 text-gray-500 hover:text-gray-700 rounded-lg hover:bg-gray-100">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                        </svg>
+                    </button>
+                </div>
+                <div class="p-6">${content}</div>
+            `;
+            
+            modal.classList.remove('hidden');
+        }
+
+        function closeModal() {
+            document.getElementById('modalContainer').classList.add('hidden');
+        }
+
+        // Close modal on backdrop click
+        document.getElementById('modalContainer').addEventListener('click', (e) => {
+            if (e.target === document.getElementById('modalContainer')) {
+                closeModal();
+            }
+        });
+    </script>
+</body>
+</html>

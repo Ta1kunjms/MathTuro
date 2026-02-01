@@ -286,12 +286,15 @@ function isAuthenticated() {
   Function Name: getBasePath
   Purpose:
   - Determines the correct base path based on current location
+  - Works for Vercel deployment where all files are served from root
 */
 function getBasePath() {
   const path = window.location.pathname;
-  if (path.includes('/student/') || path.includes('/teacher/') || path.includes('/admin/') || path.includes('/public/')) {
+  // If we're in a role subfolder (student, teacher, admin), go up one level
+  if (path.includes('/student/') || path.includes('/teacher/') || path.includes('/admin/')) {
     return '../';
   }
+  // If we're at root level (login.html, index.html, etc.)
   return '';
 }
 
@@ -311,7 +314,7 @@ function getBasePath() {
 */
 function redirectToLogin() {
   const basePath = getBasePath();
-  window.location.href = basePath + 'public/login.html';
+  window.location.href = basePath + 'login.html';
 }
 
 /*

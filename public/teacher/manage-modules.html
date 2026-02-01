@@ -1,0 +1,893 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/png" href="../Logo/MATHURO-LOGO.png">
+    <title>Manage Modules - MathTuro LMS</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: {
+                            50: '#f0fdf4',
+                            100: '#dcfce7',
+                            200: '#bbf7d0',
+                            300: '#86efac',
+                            400: '#4ade80',
+                            500: '#22c55e',
+                            600: '#16a34a',
+                            700: '#15803d',
+                            800: '#166534',
+                            900: '#14532d',
+                        },
+                        brand: '#005801',
+                        'brand-dark': '#004601',
+                        'brand-light': '#006B01',
+                        teacher: {
+                            50: '#fdf2f8',
+                            100: '#fce7f3',
+                            200: '#fbcfe8',
+                            500: '#910568',
+                            600: '#720455',
+                            700: '#5a0344',
+                            800: '#4a0338',
+                        },
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', 'sans-serif'],
+                    },
+                },
+            },
+        }
+    </script>
+    <style>
+        body { font-family: 'Inter', system-ui, sans-serif; }
+        
+        .gradient-text {
+            background: linear-gradient(135deg, #005801 0%, #22c55e 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .glass-sidebar {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+        }
+        
+        .sidebar-link {
+            transition: all 0.2s ease;
+        }
+        
+        .sidebar-link:hover, .sidebar-link.active {
+            background: linear-gradient(135deg, #005801 0%, #006B01 100%);
+            color: white;
+        }
+        
+        .sidebar-link.active {
+            box-shadow: 0 4px 15px rgba(0, 88, 1, 0.3);
+        }
+        
+        .module-card {
+            transition: all 0.3s ease;
+        }
+        
+        .module-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+        }
+        
+        .upload-zone:hover {
+            border-color: #005801;
+            background: rgba(0, 88, 1, 0.05);
+        }
+        
+        .upload-zone.drag-over {
+            border-color: #005801;
+            background: rgba(0, 88, 1, 0.1);
+        }
+        
+        /* Custom scrollbar */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; }
+        ::-webkit-scrollbar-thumb { background: #005801; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: #004601; }
+    </style>
+    <link rel="stylesheet" href="../shared/css/base.css">
+    <link rel="stylesheet" href="assets/css/teacher.css">
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <!-- Mobile Menu Overlay -->
+    <div id="mobileOverlay" class="fixed inset-0 bg-black bg-opacity-50 z-40 hidden lg:hidden"></div>
+    
+    <!-- Sidebar -->
+    <aside id="sidebar" class="fixed left-0 top-0 h-full w-72 glass-sidebar border-r border-gray-200 z-50 transform -translate-x-full lg:translate-x-0 transition-transform duration-300">
+        <!-- Logo -->
+        <div class="p-6 border-b border-gray-100">
+            <a href="../index.html" class="flex items-center space-x-3">
+                <div class="w-12 h-12 bg-white rounded-xl flex items-center justify-center shadow-lg">
+                    <img src="../Logo/MATHURO-LOGO.png" alt="MathTuro" class="w-10 h-10 object-contain">
+                </div>
+                <div>
+                    <span class="text-xl font-bold gradient-text">MathTuro</span>
+                    <p class="text-xs text-gray-500">Teacher Portal</p>
+                </div>
+            </a>
+        </div>
+        
+        <!-- User Info -->
+        <div class="p-6 border-b border-gray-100">
+            <div class="flex items-center space-x-3">
+                <div class="w-12 h-12 bg-teacher-100 rounded-full flex items-center justify-center">
+                    <span id="userInitials" class="text-teacher-600 font-bold text-lg">--</span>
+                </div>
+                <div>
+                    <p id="sidebarUserName" class="font-semibold text-gray-800">Loading...</p>
+                    <p class="text-sm text-teacher-600 font-medium">Teacher</p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Navigation -->
+        <nav class="p-4 space-y-2">
+            <a href="dashboard.html" class="sidebar-link flex items-center space-x-3 px-4 py-3 rounded-xl text-gray-700">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
+                </svg>
+                <span>Dashboard</span>
+            </a>
+            <a href="submissions.html" class="sidebar-link flex items-center space-x-3 px-4 py-3 rounded-xl text-gray-700">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/>
+                </svg>
+                <span>Submissions</span>
+            </a>
+            <a href="manage-modules.html" class="sidebar-link active flex items-center space-x-3 px-4 py-3 rounded-xl text-gray-700">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
+                </svg>
+                <span>Manage Modules</span>
+            </a>
+            <a href="manage-videos.html" class="sidebar-link flex items-center space-x-3 px-4 py-3 rounded-xl text-gray-700">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                </svg>
+                <span>Manage Videos</span>
+            </a>
+            <a href="manage-quizzes.html" class="sidebar-link flex items-center space-x-3 px-4 py-3 rounded-xl text-gray-700">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/>
+                </svg>
+                <span>Manage Quizzes</span>
+            </a>
+            <a href="#" onclick="showStudentsPage()" class="sidebar-link flex items-center space-x-3 px-4 py-3 rounded-xl text-gray-700">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
+                </svg>
+                <span>Student Progress</span>
+            </a>
+            <a href="#" onclick="showReportsPage()" class="sidebar-link flex items-center space-x-3 px-4 py-3 rounded-xl text-gray-700">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                </svg>
+                <span>Reports</span>
+            </a>
+        </nav>
+        
+        <!-- Bottom Actions -->
+        <div class="absolute bottom-0 left-0 right-0 p-4 border-t border-gray-100 bg-white">
+            <a href="../index.html" class="flex items-center space-x-3 px-4 py-3 text-gray-600 hover:text-brand transition-colors">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
+                </svg>
+                <span>Back to Home</span>
+            </a>
+            <button id="logoutButton" class="w-full flex items-center space-x-3 px-4 py-3 text-red-600 hover:bg-red-50 rounded-xl transition-colors">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
+                </svg>
+                <span>Logout</span>
+            </button>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="lg:ml-72 min-h-screen">
+        <!-- Top Header -->
+        <header class="bg-white border-b border-gray-200 sticky top-0 z-30">
+            <div class="flex items-center justify-between px-4 lg:px-8 py-4">
+                <!-- Mobile Menu Button -->
+                <button id="mobileMenuBtn" class="lg:hidden p-2 text-gray-600 hover:text-brand rounded-lg">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
+                    </svg>
+                </button>
+                
+                <!-- Page Title -->
+                <div class="flex-1 lg:flex-none">
+                    <h1 class="text-xl lg:text-2xl font-bold text-gray-800">Manage Modules</h1>
+                    <p class="text-sm text-gray-500 hidden sm:block">Upload and organize learning materials</p>
+                </div>
+                
+                <!-- Right Actions -->
+                <div class="flex items-center space-x-4">
+                    <button onclick="openCreateModuleModal()" class="inline-flex items-center space-x-2 bg-brand text-white px-4 py-2 rounded-xl font-medium hover:bg-brand-dark transition-colors">
+                        <i class="fas fa-plus"></i>
+                        <span class="hidden sm:inline">Create Module</span>
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Content Area -->
+        <div class="p-4 lg:p-8">
+            <!-- Stats Cards -->
+            <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+                <div class="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-12 h-12 bg-brand/10 rounded-xl flex items-center justify-center">
+                            <i class="fas fa-book text-brand text-xl"></i>
+                        </div>
+                        <div>
+                            <p class="text-2xl font-bold text-gray-900" id="totalModules">0</p>
+                            <p class="text-sm text-gray-500">Total Modules</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center">
+                            <i class="fas fa-check-circle text-green-600 text-xl"></i>
+                        </div>
+                        <div>
+                            <p class="text-2xl font-bold text-gray-900" id="publishedModules">0</p>
+                            <p class="text-sm text-gray-500">Published</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-12 h-12 bg-yellow-100 rounded-xl flex items-center justify-center">
+                            <i class="fas fa-file-alt text-yellow-600 text-xl"></i>
+                        </div>
+                        <div>
+                            <p class="text-2xl font-bold text-gray-900" id="draftModules">0</p>
+                            <p class="text-sm text-gray-500">Drafts</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center">
+                            <i class="fas fa-file-pdf text-blue-600 text-xl"></i>
+                        </div>
+                        <div>
+                            <p class="text-2xl font-bold text-gray-900" id="pdfModules">0</p>
+                            <p class="text-sm text-gray-500">PDF Files</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Modules Grid -->
+            <div id="modulesGrid" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                <!-- Loading state -->
+                <div class="col-span-full text-center py-12">
+                    <div class="inline-block animate-spin rounded-full h-12 w-12 border-4 border-brand border-t-transparent"></div>
+                    <p class="mt-4 text-gray-600">Loading modules...</p>
+                </div>
+            </div>
+
+            <!-- Empty State -->
+            <div id="emptyState" class="hidden text-center py-16">
+                <div class="w-24 h-24 bg-brand/10 rounded-full flex items-center justify-center mx-auto mb-6">
+                    <i class="fas fa-book-open text-brand text-4xl"></i>
+                </div>
+                <h3 class="text-xl font-bold text-gray-800 mb-2">No Modules Yet</h3>
+                <p class="text-gray-600 mb-6">Create your first module to get started.</p>
+                <button onclick="openCreateModuleModal()" class="inline-flex items-center space-x-2 bg-brand text-white px-6 py-3 rounded-xl font-medium hover:bg-brand-dark transition-colors">
+                    <i class="fas fa-plus"></i>
+                    <span>Create Module</span>
+                </button>
+            </div>
+        </div>
+    </main>
+
+    <!-- Create Module Modal -->
+    <div id="createModuleModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <div class="p-6 border-b border-gray-100 flex items-center justify-between sticky top-0 bg-white z-10">
+                <h3 class="text-xl font-bold text-gray-800">Create New Module</h3>
+                <button onclick="closeCreateModuleModal()" class="p-2 text-gray-500 hover:text-gray-700 rounded-lg hover:bg-gray-100">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <form id="createModuleForm" class="p-6 space-y-6">
+                <!-- Module Title -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Module Title *</label>
+                    <input type="text" id="moduleTitle" required class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-brand focus:border-transparent" placeholder="e.g., Introduction to Algebra">
+                </div>
+
+                <!-- Module Description -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Description</label>
+                    <textarea id="moduleDescription" rows="3" class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-brand focus:border-transparent" placeholder="Brief description of the module..."></textarea>
+                </div>
+
+                <!-- Content Type -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-3">Content Type *</label>
+                    <div class="grid grid-cols-2 gap-4">
+                        <label class="relative cursor-pointer">
+                            <input type="radio" name="contentType" value="pdf" checked class="peer sr-only">
+                            <div class="p-4 border-2 border-gray-200 rounded-xl peer-checked:border-brand peer-checked:bg-green-50 transition-all">
+                                <div class="flex items-center space-x-3">
+                                    <div class="w-10 h-10 bg-red-100 rounded-lg flex items-center justify-center">
+                                        <i class="fas fa-file-pdf text-red-600"></i>
+                                    </div>
+                                    <div>
+                                        <p class="font-medium text-gray-800">PDF Document</p>
+                                        <p class="text-xs text-gray-500">Upload a PDF file</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </label>
+                        <label class="relative cursor-pointer">
+                            <input type="radio" name="contentType" value="images" class="peer sr-only">
+                            <div class="p-4 border-2 border-gray-200 rounded-xl peer-checked:border-brand peer-checked:bg-green-50 transition-all">
+                                <div class="flex items-center space-x-3">
+                                    <div class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+                                        <i class="fas fa-images text-blue-600"></i>
+                                    </div>
+                                    <div>
+                                        <p class="font-medium text-gray-800">Images</p>
+                                        <p class="text-xs text-gray-500">Multiple images</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- PDF Upload Zone -->
+                <div id="pdfUploadZone" class="upload-zone">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Upload PDF *</label>
+                    <div id="pdfDropZone" class="border-2 border-dashed border-gray-300 rounded-xl p-8 text-center cursor-pointer hover:border-brand transition-colors">
+                        <input type="file" id="pdfInput" accept=".pdf" class="hidden">
+                        <div class="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <i class="fas fa-cloud-upload-alt text-red-600 text-xl"></i>
+                        </div>
+                        <p class="text-gray-600 mb-1">Drop your PDF here or <span class="text-brand font-medium">browse</span></p>
+                        <p class="text-xs text-gray-500">Max file size: 50MB</p>
+                    </div>
+                    <div id="pdfPreview" class="hidden mt-4 p-4 bg-gray-50 rounded-xl flex items-center justify-between">
+                        <div class="flex items-center space-x-3">
+                            <div class="w-10 h-10 bg-red-100 rounded-lg flex items-center justify-center">
+                                <i class="fas fa-file-pdf text-red-600"></i>
+                            </div>
+                            <div>
+                                <p id="pdfFileName" class="font-medium text-gray-800 text-sm"></p>
+                                <p id="pdfFileSize" class="text-xs text-gray-500"></p>
+                            </div>
+                        </div>
+                        <button type="button" onclick="removePdf()" class="p-2 text-red-600 hover:bg-red-50 rounded-lg">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Images Upload Zone -->
+                <div id="imagesUploadZone" class="hidden upload-zone">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Upload Images *</label>
+                    <div id="imagesDropZone" class="border-2 border-dashed border-gray-300 rounded-xl p-8 text-center cursor-pointer hover:border-brand transition-colors">
+                        <input type="file" id="imagesInput" accept="image/*" multiple class="hidden">
+                        <div class="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <i class="fas fa-cloud-upload-alt text-blue-600 text-xl"></i>
+                        </div>
+                        <p class="text-gray-600 mb-1">Drop images here or <span class="text-brand font-medium">browse</span></p>
+                        <p class="text-xs text-gray-500">JPG, PNG, GIF • Max 10MB each</p>
+                    </div>
+                    <div id="imagesPreview" class="hidden mt-4 grid grid-cols-3 gap-3"></div>
+                </div>
+
+                <!-- Status -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Status</label>
+                    <select id="moduleStatus" class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-brand focus:border-transparent">
+                        <option value="draft">Draft - Only you can see</option>
+                        <option value="published">Published - Visible to students</option>
+                    </select>
+                </div>
+
+                <!-- Submit Button -->
+                <div class="flex space-x-4 pt-4">
+                    <button type="button" onclick="closeCreateModuleModal()" class="flex-1 px-6 py-3 border border-gray-300 rounded-xl font-medium text-gray-700 hover:bg-gray-50 transition-colors">
+                        Cancel
+                    </button>
+                    <button type="submit" id="createModuleBtn" class="flex-1 px-6 py-3 bg-brand text-white rounded-xl font-medium hover:bg-brand-dark transition-colors flex items-center justify-center space-x-2">
+                        <span>Create Module</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Module Detail Modal -->
+    <div id="moduleDetailModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+            <div class="p-6 border-b border-gray-100 flex items-center justify-between sticky top-0 bg-white z-10">
+                <h3 id="detailModuleTitle" class="text-xl font-bold text-gray-800">Module Details</h3>
+                <button onclick="closeModuleDetailModal()" class="p-2 text-gray-500 hover:text-gray-700 rounded-lg hover:bg-gray-100">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div id="moduleDetailContent" class="p-6">
+                <!-- Content loaded dynamically -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="hidden fixed bottom-4 right-4 px-6 py-3 rounded-xl shadow-lg z-50 flex items-center space-x-3"></div>
+
+    <!-- Scripts -->
+    <script src="../shared/js/config.js"></script>
+    <script src="../shared/js/supabase.js"></script>
+    
+    <script>
+        // Global variables
+        let currentUser = null;
+        let modules = [];
+        let selectedPdf = null;
+        let selectedImages = [];
+        let currentModuleId = null;
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', async function() {
+            try {
+                await checkAuth();
+                await loadModules();
+                setupEventListeners();
+                setupMobileMenu();
+            } catch (error) {
+                console.error('Init error:', error);
+                showToast('Failed to load. Please refresh.', 'error');
+            }
+        });
+
+        // Setup mobile menu
+        function setupMobileMenu() {
+            const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+            const sidebar = document.getElementById('sidebar');
+            const mobileOverlay = document.getElementById('mobileOverlay');
+
+            mobileMenuBtn.addEventListener('click', () => {
+                sidebar.classList.toggle('-translate-x-full');
+                mobileOverlay.classList.toggle('hidden');
+            });
+
+            mobileOverlay.addEventListener('click', () => {
+                sidebar.classList.add('-translate-x-full');
+                mobileOverlay.classList.add('hidden');
+            });
+        }
+
+        async function checkAuth() {
+            const { data: { session } } = await getSupabase().auth.getSession();
+            if (!session) {
+                window.location.href = '../login.html';
+                return;
+            }
+            
+            const { data: user } = await getSupabase()
+                .from('users')
+                .select('*')
+                .eq('id', session.user.id)
+                .single();
+            
+            if (!user || (user.role !== 'teacher' && user.role !== 'admin')) {
+                window.location.href = '../login.html';
+                return;
+            }
+            
+            currentUser = user;
+            
+            // Update sidebar user info
+            const initials = user.full_name ? user.full_name.split(' ').map(n => n[0]).join('').toUpperCase() : '--';
+            document.getElementById('userInitials').textContent = initials;
+            document.getElementById('sidebarUserName').textContent = user.full_name || 'Teacher';
+        }
+
+        async function logout() {
+            await getSupabase().auth.signOut();
+            window.location.href = '../login.html';
+        }
+
+        function showStudentsPage() {
+            showToast('Student progress page coming soon!', 'info');
+        }
+
+        function showReportsPage() {
+            showToast('Reports page coming soon!', 'info');
+        }
+
+        // Setup event listeners
+        function setupEventListeners() {
+            // Logout button
+            document.getElementById('logoutButton').addEventListener('click', logout);
+
+            // Content type toggle
+            document.querySelectorAll('input[name="contentType"]').forEach(input => {
+                input.addEventListener('change', function() {
+                    if (this.value === 'pdf') {
+                        document.getElementById('pdfUploadZone').classList.remove('hidden');
+                        document.getElementById('imagesUploadZone').classList.add('hidden');
+                    } else {
+                        document.getElementById('pdfUploadZone').classList.add('hidden');
+                        document.getElementById('imagesUploadZone').classList.remove('hidden');
+                    }
+                });
+            });
+
+            // PDF upload
+            const pdfDropZone = document.getElementById('pdfDropZone');
+            const pdfInput = document.getElementById('pdfInput');
+            
+            pdfDropZone.addEventListener('click', () => pdfInput.click());
+            pdfDropZone.addEventListener('dragover', (e) => { e.preventDefault(); pdfDropZone.classList.add('drag-over'); });
+            pdfDropZone.addEventListener('dragleave', () => pdfDropZone.classList.remove('drag-over'));
+            pdfDropZone.addEventListener('drop', (e) => { e.preventDefault(); pdfDropZone.classList.remove('drag-over'); handlePdfSelect(e.dataTransfer.files[0]); });
+            pdfInput.addEventListener('change', (e) => handlePdfSelect(e.target.files[0]));
+
+            // Images upload
+            const imagesDropZone = document.getElementById('imagesDropZone');
+            const imagesInput = document.getElementById('imagesInput');
+            
+            imagesDropZone.addEventListener('click', () => imagesInput.click());
+            imagesDropZone.addEventListener('dragover', (e) => { e.preventDefault(); imagesDropZone.classList.add('drag-over'); });
+            imagesDropZone.addEventListener('dragleave', () => imagesDropZone.classList.remove('drag-over'));
+            imagesDropZone.addEventListener('drop', (e) => { e.preventDefault(); imagesDropZone.classList.remove('drag-over'); handleImagesSelect(e.dataTransfer.files); });
+            imagesInput.addEventListener('change', (e) => handleImagesSelect(e.target.files));
+
+            // Create module form
+            document.getElementById('createModuleForm').addEventListener('submit', handleCreateModule);
+        }
+
+        // Load modules
+        async function loadModules() {
+            try {
+                const { data, error } = await getSupabase()
+                    .from('modules')
+                    .select('*')
+                    .eq('teacher_id', currentUser.id)
+                    .order('created_at', { ascending: false });
+
+                if (error) throw error;
+                modules = data || [];
+                updateStats();
+                renderModules();
+            } catch (error) {
+                console.error('Error loading modules:', error);
+                showToast('Failed to load modules', 'error');
+            }
+        }
+
+        function updateStats() {
+            document.getElementById('totalModules').textContent = modules.length;
+            document.getElementById('publishedModules').textContent = modules.filter(m => m.status === 'published').length;
+            document.getElementById('draftModules').textContent = modules.filter(m => m.status === 'draft').length;
+            document.getElementById('pdfModules').textContent = modules.filter(m => m.content_type === 'pdf').length;
+        }
+
+        // Render modules grid
+        function renderModules() {
+            const grid = document.getElementById('modulesGrid');
+            const emptyState = document.getElementById('emptyState');
+
+            if (modules.length === 0) {
+                grid.innerHTML = '';
+                emptyState.classList.remove('hidden');
+                return;
+            }
+
+            emptyState.classList.add('hidden');
+            grid.innerHTML = modules.map(module => `
+                <div class="module-card bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden transition-all cursor-pointer" onclick="openModuleDetail('${module.id}')">
+                    <div class="h-32 bg-gradient-to-br from-brand to-brand-light flex items-center justify-center">
+                        ${module.content_type === 'pdf' ? `
+                            <i class="fas fa-file-pdf text-white/80 text-5xl"></i>
+                        ` : `
+                            <i class="fas fa-images text-white/80 text-5xl"></i>
+                        `}
+                    </div>
+                    <div class="p-5">
+                        <div class="flex items-start justify-between mb-2">
+                            <h3 class="font-bold text-gray-800 line-clamp-2">${module.title}</h3>
+                            <span class="px-2 py-1 text-xs rounded-full ${module.status === 'published' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'}">${module.status}</span>
+                        </div>
+                        <p class="text-sm text-gray-600 line-clamp-2 mb-4">${module.description || 'No description'}</p>
+                        <div class="flex items-center space-x-4 text-sm text-gray-500">
+                            <span class="flex items-center space-x-1">
+                                <i class="fas fa-file text-xs"></i>
+                                <span>${module.content_type === 'pdf' ? 'PDF' : 'Images'}</span>
+                            </span>
+                            <span class="flex items-center space-x-1">
+                                <i class="fas fa-calendar text-xs"></i>
+                                <span>${new Date(module.created_at).toLocaleDateString()}</span>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Handle PDF selection
+        function handlePdfSelect(file) {
+            if (!file || file.type !== 'application/pdf') {
+                showToast('Please select a valid PDF file', 'error');
+                return;
+            }
+            if (file.size > 50 * 1024 * 1024) {
+                showToast('File size must be under 50MB', 'error');
+                return;
+            }
+            selectedPdf = file;
+            document.getElementById('pdfFileName').textContent = file.name;
+            document.getElementById('pdfFileSize').textContent = formatFileSize(file.size);
+            document.getElementById('pdfPreview').classList.remove('hidden');
+            document.getElementById('pdfDropZone').classList.add('hidden');
+        }
+
+        function removePdf() {
+            selectedPdf = null;
+            document.getElementById('pdfInput').value = '';
+            document.getElementById('pdfPreview').classList.add('hidden');
+            document.getElementById('pdfDropZone').classList.remove('hidden');
+        }
+
+        // Handle images selection
+        function handleImagesSelect(files) {
+            const validImages = Array.from(files).filter(f => f.type.startsWith('image/') && f.size <= 10 * 1024 * 1024);
+            if (validImages.length === 0) {
+                showToast('Please select valid images (max 10MB each)', 'error');
+                return;
+            }
+            selectedImages = [...selectedImages, ...validImages];
+            renderImagePreviews();
+        }
+
+        function renderImagePreviews() {
+            const preview = document.getElementById('imagesPreview');
+            if (selectedImages.length === 0) {
+                preview.classList.add('hidden');
+                return;
+            }
+            preview.classList.remove('hidden');
+            preview.innerHTML = selectedImages.map((img, index) => `
+                <div class="relative group">
+                    <img src="${URL.createObjectURL(img)}" class="w-full h-24 object-cover rounded-lg">
+                    <button type="button" onclick="removeImage(${index})" class="absolute top-1 right-1 p-1 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity">
+                        <i class="fas fa-times text-xs"></i>
+                    </button>
+                </div>
+            `).join('');
+        }
+
+        function removeImage(index) {
+            selectedImages.splice(index, 1);
+            renderImagePreviews();
+        }
+
+        // Create module
+        async function handleCreateModule(e) {
+            e.preventDefault();
+            const btn = document.getElementById('createModuleBtn');
+            btn.disabled = true;
+            btn.innerHTML = '<div class="animate-spin rounded-full h-5 w-5 border-2 border-white border-t-transparent"></div>';
+
+            try {
+                const contentType = document.querySelector('input[name="contentType"]:checked').value;
+                let pdfUrl = null;
+                let imageUrls = [];
+
+                // Upload files
+                if (contentType === 'pdf') {
+                    if (!selectedPdf) throw new Error('Please select a PDF file');
+                    pdfUrl = await uploadFile(selectedPdf, 'learning-materials');
+                } else {
+                    if (selectedImages.length === 0) throw new Error('Please select at least one image');
+                    for (const img of selectedImages) {
+                        const url = await uploadFile(img, 'learning-materials');
+                        imageUrls.push(url);
+                    }
+                }
+
+                // Create module
+                const { data, error } = await getSupabase()
+                    .from('modules')
+                    .insert({
+                        title: document.getElementById('moduleTitle').value,
+                        description: document.getElementById('moduleDescription').value,
+                        content_type: contentType,
+                        pdf_url: pdfUrl,
+                        image_urls: imageUrls.length > 0 ? imageUrls : null,
+                        status: document.getElementById('moduleStatus').value,
+                        teacher_id: currentUser.id
+                    })
+                    .select()
+                    .single();
+
+                if (error) throw error;
+
+                showToast('Module created successfully!', 'success');
+                closeCreateModuleModal();
+                await loadModules();
+            } catch (error) {
+                console.error('Error creating module:', error);
+                showToast(error.message || 'Failed to create module', 'error');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<span>Create Module</span>';
+            }
+        }
+
+        // Upload file to Supabase storage
+        async function uploadFile(file, bucket) {
+            const fileName = `${currentUser.id}/${Date.now()}_${file.name.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
+            const { data, error } = await getSupabase().storage.from(bucket).upload(fileName, file);
+            if (error) throw error;
+            const { data: urlData } = getSupabase().storage.from(bucket).getPublicUrl(fileName);
+            return urlData.publicUrl;
+        }
+
+        // Open module detail
+        async function openModuleDetail(moduleId) {
+            currentModuleId = moduleId;
+            const module = modules.find(m => m.id === moduleId);
+            if (!module) return;
+
+            document.getElementById('detailModuleTitle').textContent = module.title;
+            
+            const content = document.getElementById('moduleDetailContent');
+            content.innerHTML = `
+                <div class="space-y-6">
+                    <!-- Module Info -->
+                    <div class="flex items-start justify-between">
+                        <div>
+                            <p class="text-gray-600 mb-2">${module.description || 'No description'}</p>
+                            <div class="flex items-center space-x-4 text-sm">
+                                <span class="px-3 py-1 rounded-full ${module.status === 'published' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'}">${module.status}</span>
+                                <span class="text-gray-500">${module.content_type === 'pdf' ? 'PDF Document' : 'Image Gallery'}</span>
+                            </div>
+                        </div>
+                        <div class="flex space-x-2">
+                            <button onclick="toggleModuleStatus('${module.id}')" class="px-4 py-2 border border-gray-300 rounded-lg text-sm hover:bg-gray-50">
+                                ${module.status === 'published' ? 'Unpublish' : 'Publish'}
+                            </button>
+                            <button onclick="deleteModule('${module.id}')" class="px-4 py-2 border border-red-300 text-red-600 rounded-lg text-sm hover:bg-red-50">Delete</button>
+                        </div>
+                    </div>
+
+                    <!-- Content Preview -->
+                    <div class="border-t pt-6">
+                        <h4 class="font-semibold text-gray-800 mb-4">Module Content</h4>
+                        ${module.content_type === 'pdf' && module.pdf_url ? `
+                            <a href="${module.pdf_url}" target="_blank" class="flex items-center space-x-3 p-4 bg-red-50 rounded-xl hover:bg-red-100 transition-colors">
+                                <div class="w-12 h-12 bg-red-100 rounded-lg flex items-center justify-center">
+                                    <i class="fas fa-file-pdf text-red-600 text-xl"></i>
+                                </div>
+                                <div>
+                                    <p class="font-medium text-gray-800">View PDF Document</p>
+                                    <p class="text-sm text-gray-500">Click to open in new tab</p>
+                                </div>
+                            </a>
+                        ` : module.image_urls?.length > 0 ? `
+                            <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+                                ${module.image_urls.map((url, i) => `
+                                    <a href="${url}" target="_blank" class="block">
+                                        <img src="${url}" alt="Image ${i + 1}" class="w-full h-24 object-cover rounded-lg hover:opacity-80 transition-opacity">
+                                    </a>
+                                `).join('')}
+                            </div>
+                        ` : '<p class="text-gray-500">No content uploaded</p>'}
+                    </div>
+
+                    <!-- Quick Links to Videos & Quizzes -->
+                    <div class="border-t pt-6">
+                        <h4 class="font-semibold text-gray-800 mb-4">Related Content</h4>
+                        <div class="grid grid-cols-2 gap-4">
+                            <a href="manage-videos.html" class="flex items-center space-x-3 p-4 bg-brand/5 rounded-xl hover:bg-brand/10 transition-colors">
+                                <div class="w-10 h-10 bg-brand/10 rounded-lg flex items-center justify-center">
+                                    <i class="fas fa-video text-brand"></i>
+                                </div>
+                                <div>
+                                    <p class="font-medium text-gray-800">Manage Videos</p>
+                                    <p class="text-xs text-gray-500">Add tutorial videos</p>
+                                </div>
+                            </a>
+                            <a href="manage-quizzes.html" class="flex items-center space-x-3 p-4 bg-brand/5 rounded-xl hover:bg-brand/10 transition-colors">
+                                <div class="w-10 h-10 bg-brand/10 rounded-lg flex items-center justify-center">
+                                    <i class="fas fa-clipboard-list text-brand"></i>
+                                </div>
+                                <div>
+                                    <p class="font-medium text-gray-800">Manage Quizzes</p>
+                                    <p class="text-xs text-gray-500">Add quiz links</p>
+                                </div>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            document.getElementById('moduleDetailModal').classList.remove('hidden');
+        }
+
+        // Modal functions
+        function openCreateModuleModal() {
+            document.getElementById('createModuleModal').classList.remove('hidden');
+            document.getElementById('createModuleForm').reset();
+            selectedPdf = null;
+            selectedImages = [];
+            removePdf();
+            document.getElementById('imagesPreview').classList.add('hidden');
+        }
+
+        function closeCreateModuleModal() {
+            document.getElementById('createModuleModal').classList.add('hidden');
+        }
+
+        function closeModuleDetailModal() {
+            document.getElementById('moduleDetailModal').classList.add('hidden');
+        }
+
+        async function deleteModule(moduleId) {
+            if (!confirm('Delete this module and all its content?')) return;
+            try {
+                const { error } = await getSupabase().from('modules').delete().eq('id', moduleId);
+                if (error) throw error;
+                showToast('Module deleted', 'success');
+                closeModuleDetailModal();
+                await loadModules();
+            } catch (error) {
+                showToast('Failed to delete module', 'error');
+            }
+        }
+
+        async function toggleModuleStatus(moduleId) {
+            const module = modules.find(m => m.id === moduleId);
+            const newStatus = module.status === 'published' ? 'draft' : 'published';
+            try {
+                const { error } = await getSupabase().from('modules').update({ status: newStatus }).eq('id', moduleId);
+                if (error) throw error;
+                showToast(`Module ${newStatus}`, 'success');
+                await loadModules();
+                openModuleDetail(moduleId);
+            } catch (error) {
+                showToast('Failed to update status', 'error');
+            }
+        }
+
+        // Utilities
+        function formatFileSize(bytes) {
+            if (bytes < 1024) return bytes + ' B';
+            if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+            return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+        }
+
+        function showToast(message, type = 'info') {
+            const toast = document.getElementById('toast');
+            toast.className = `fixed bottom-4 right-4 px-6 py-3 rounded-xl shadow-lg z-50 flex items-center space-x-3 ${type === 'error' ? 'bg-red-600' : type === 'success' ? 'bg-green-600' : 'bg-gray-800'} text-white`;
+            toast.innerHTML = `<i class="fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-circle' : 'info-circle'}"></i><span>${message}</span>`;
+            toast.classList.remove('hidden');
+            setTimeout(() => toast.classList.add('hidden'), 3000);
+        }
+    </script>
+</body>
+</html>

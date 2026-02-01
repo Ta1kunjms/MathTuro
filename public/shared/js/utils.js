@@ -541,10 +541,10 @@ function handleSessionExpired() {
   showToast('Your session has expired. Please log in again.', 'warning');
   
   setTimeout(() => {
-    // Use getBasePath from auth.js if available, otherwise detect path
+    // Detect path and redirect to login
     const path = window.location.pathname;
-    const basePath = (path.includes('/student/') || path.includes('/teacher/') || path.includes('/admin/') || path.includes('/public/')) ? '../' : '';
-    window.location.href = basePath + 'public/login.html';
+    const basePath = (path.includes('/student/') || path.includes('/teacher/') || path.includes('/admin/')) ? '../' : '';
+    window.location.href = basePath + 'login.html';
   }, 2000);
 }
 

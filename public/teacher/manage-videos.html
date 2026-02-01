@@ -1,0 +1,740 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/png" href="../Logo/MATHURO-LOGO.png">
+    <title>Manage Videos - MathTuro LMS</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: {
+                            50: '#f0fdf4',
+                            100: '#dcfce7',
+                            200: '#bbf7d0',
+                            300: '#86efac',
+                            400: '#4ade80',
+                            500: '#22c55e',
+                            600: '#16a34a',
+                            700: '#15803d',
+                            800: '#166534',
+                            900: '#14532d',
+                        },
+                        brand: '#005801',
+                        'brand-dark': '#004601',
+                        'brand-light': '#006B01',
+                        teacher: {
+                            50: '#fdf2f8',
+                            100: '#fce7f3',
+                            200: '#fbcfe8',
+                            500: '#910568',
+                            600: '#720455',
+                            700: '#5a0344',
+                            800: '#4a0338',
+                        },
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', 'sans-serif'],
+                    },
+                },
+            },
+        }
+    </script>
+    <style>
+        body { font-family: 'Inter', system-ui, sans-serif; }
+        
+        .gradient-text {
+            background: linear-gradient(135deg, #005801 0%, #22c55e 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .glass-sidebar {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+        }
+        
+        .sidebar-link {
+            transition: all 0.2s ease;
+        }
+        
+        .sidebar-link:hover, .sidebar-link.active {
+            background: linear-gradient(135deg, #005801 0%, #006B01 100%);
+            color: white;
+        }
+        
+        .sidebar-link.active {
+            box-shadow: 0 4px 15px rgba(0, 88, 1, 0.3);
+        }
+        
+        .video-card {
+            transition: all 0.3s ease;
+        }
+        
+        .video-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+        }
+        
+        .status-badge {
+            padding: 4px 12px;
+            border-radius: 9999px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+        
+        /* Custom scrollbar */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; }
+        ::-webkit-scrollbar-thumb { background: #005801; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: #004601; }
+    </style>
+    <link rel="stylesheet" href="../shared/css/base.css">
+    <link rel="stylesheet" href="assets/css/teacher.css">
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <!-- Mobile Menu Overlay -->
+    <div id="mobileOverlay" class="fixed inset-0 bg-black bg-opacity-50 z-40 hidden lg:hidden"></div>
+    
+    <!-- Sidebar -->
+    <aside id="sidebar" class="fixed left-0 top-0 h-full w-72 glass-sidebar border-r border-gray-200 z-50 transform -translate-x-full lg:translate-x-0 transition-transform duration-300">
+        <!-- Logo -->
+        <div class="p-6 border-b border-gray-100">
+            <a href="../index.html" class="flex items-center space-x-3">
+                <div class="w-12 h-12 bg-white rounded-xl flex items-center justify-center shadow-lg">
+                    <img src="../Logo/MATHURO-LOGO.png" alt="MathTuro" class="w-10 h-10 object-contain">
+                </div>
+                <div>
+                    <span class="text-xl font-bold gradient-text">MathTuro</span>
+                    <p class="text-xs text-gray-500">Teacher Portal</p>
+                </div>
+            </a>
+        </div>
+        
+        <!-- User Info -->
+        <div class="p-6 border-b border-gray-100">
+            <div class="flex items-center space-x-3">
+                <div class="w-12 h-12 bg-teacher-100 rounded-full flex items-center justify-center">
+                    <span id="userInitials" class="text-teacher-600 font-bold text-lg">--</span>
+                </div>
+                <div>
+                    <p id="sidebarUserName" class="font-semibold text-gray-800">Loading...</p>
+                    <p class="text-sm text-teacher-600 font-medium">Teacher</p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Navigation -->
+        <nav class="p-4 space-y-2">
+            <a href="dashboard.html" class="sidebar-link flex items-center space-x-3 px-4 py-3 rounded-xl text-gray-700">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
+                </svg>
+                <span>Dashboard</span>
+            </a>
+            <a href="submissions.html" class="sidebar-link flex items-center space-x-3 px-4 py-3 rounded-xl text-gray-700">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/>
+                </svg>
+                <span>Submissions</span>
+            </a>
+            <a href="manage-modules.html" class="sidebar-link flex items-center space-x-3 px-4 py-3 rounded-xl text-gray-700">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
+                </svg>
+                <span>Manage Modules</span>
+            </a>
+            <a href="manage-videos.html" class="sidebar-link active flex items-center space-x-3 px-4 py-3 rounded-xl text-gray-700">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                </svg>
+                <span>Manage Videos</span>
+            </a>
+            <a href="manage-quizzes.html" class="sidebar-link flex items-center space-x-3 px-4 py-3 rounded-xl text-gray-700">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/>
+                </svg>
+                <span>Manage Quizzes</span>
+            </a>
+            <a href="#" onclick="showStudentsPage()" class="sidebar-link flex items-center space-x-3 px-4 py-3 rounded-xl text-gray-700">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
+                </svg>
+                <span>Student Progress</span>
+            </a>
+            <a href="#" onclick="showReportsPage()" class="sidebar-link flex items-center space-x-3 px-4 py-3 rounded-xl text-gray-700">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                </svg>
+                <span>Reports</span>
+            </a>
+        </nav>
+        
+        <!-- Bottom Actions -->
+        <div class="absolute bottom-0 left-0 right-0 p-4 border-t border-gray-100 bg-white">
+            <a href="../index.html" class="flex items-center space-x-3 px-4 py-3 text-gray-600 hover:text-brand transition-colors">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
+                </svg>
+                <span>Back to Home</span>
+            </a>
+            <button id="logoutButton" class="w-full flex items-center space-x-3 px-4 py-3 text-red-600 hover:bg-red-50 rounded-xl transition-colors">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
+                </svg>
+                <span>Logout</span>
+            </button>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="lg:ml-72 min-h-screen">
+        <!-- Top Header -->
+        <header class="bg-white border-b border-gray-200 sticky top-0 z-30">
+            <div class="flex items-center justify-between px-4 lg:px-8 py-4">
+                <!-- Mobile Menu Button -->
+                <button id="mobileMenuBtn" class="lg:hidden p-2 text-gray-600 hover:text-brand rounded-lg">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
+                    </svg>
+                </button>
+                
+                <!-- Page Title -->
+                <div class="flex-1 lg:flex-none">
+                    <h1 class="text-xl lg:text-2xl font-bold text-gray-800">Manage Videos</h1>
+                    <p class="text-sm text-gray-500 hidden sm:block">Upload and manage tutorial videos for your students</p>
+                </div>
+                
+                <!-- Right Actions -->
+                <div class="flex items-center space-x-4">
+                    <button onclick="openAddVideoModal()" class="inline-flex items-center space-x-2 bg-brand text-white px-4 py-2 rounded-xl font-medium hover:bg-brand-dark transition-colors">
+                        <i class="fas fa-plus"></i>
+                        <span class="hidden sm:inline">Add Video</span>
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Content Area -->
+        <div class="p-4 lg:p-8">
+            <!-- Stats Cards -->
+            <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+                <div class="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-12 h-12 bg-brand/10 rounded-xl flex items-center justify-center">
+                            <i class="fas fa-video text-brand text-xl"></i>
+                        </div>
+                        <div>
+                            <p class="text-2xl font-bold text-gray-900" id="totalVideos">0</p>
+                            <p class="text-sm text-gray-500">Total Videos</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center">
+                            <i class="fas fa-check-circle text-green-600 text-xl"></i>
+                        </div>
+                        <div>
+                            <p class="text-2xl font-bold text-gray-900" id="publishedVideos">0</p>
+                            <p class="text-sm text-gray-500">Published</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-12 h-12 bg-yellow-100 rounded-xl flex items-center justify-center">
+                            <i class="fas fa-file-alt text-yellow-600 text-xl"></i>
+                        </div>
+                        <div>
+                            <p class="text-2xl font-bold text-gray-900" id="draftVideos">0</p>
+                            <p class="text-sm text-gray-500">Drafts</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center">
+                            <i class="fas fa-eye text-blue-600 text-xl"></i>
+                        </div>
+                        <div>
+                            <p class="text-2xl font-bold text-gray-900" id="totalViews">0</p>
+                            <p class="text-sm text-gray-500">Total Views</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Filters -->
+            <div class="bg-white rounded-2xl p-4 mb-6 border border-gray-100 shadow-sm">
+                <div class="flex flex-col sm:flex-row gap-4">
+                    <div class="flex-1">
+                        <div class="relative">
+                            <i class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                            <input type="text" id="searchInput" placeholder="Search videos..." 
+                                class="w-full pl-11 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-brand focus:border-transparent">
+                        </div>
+                    </div>
+                    <select id="categoryFilter" class="px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-brand bg-white">
+                        <option value="">All Categories</option>
+                        <option value="algebra">Algebra</option>
+                        <option value="geometry">Geometry</option>
+                        <option value="calculus">Calculus</option>
+                        <option value="statistics">Statistics</option>
+                        <option value="trigonometry">Trigonometry</option>
+                        <option value="arithmetic">Arithmetic</option>
+                        <option value="number-theory">Number Theory</option>
+                        <option value="other">Other</option>
+                    </select>
+                    <select id="statusFilter" class="px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-brand bg-white">
+                        <option value="">All Status</option>
+                        <option value="published">Published</option>
+                        <option value="draft">Draft</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Videos Grid -->
+            <div id="videosGrid" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                <!-- Videos loaded dynamically -->
+            </div>
+
+            <!-- Empty State -->
+            <div id="emptyState" class="hidden text-center py-16">
+                <div class="w-20 h-20 bg-brand/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <i class="fas fa-video text-brand text-3xl"></i>
+                </div>
+                <h3 class="text-xl font-semibold text-gray-900 mb-2">No videos yet</h3>
+                <p class="text-gray-500 mb-6">Start by adding your first tutorial video</p>
+                <button onclick="openAddVideoModal()" class="inline-flex items-center space-x-2 bg-brand text-white px-6 py-3 rounded-xl font-medium hover:bg-brand-dark transition-colors">
+                    <i class="fas fa-plus"></i>
+                    <span>Add Video</span>
+                </button>
+            </div>
+        </div>
+    </main>
+
+    <!-- Add/Edit Video Modal -->
+    <div id="videoModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+            <div class="flex items-center justify-between p-6 border-b border-gray-100">
+                <h2 id="modalTitle" class="text-xl font-bold text-gray-900">Add Video</h2>
+                <button onclick="closeVideoModal()" class="p-2 text-gray-500 hover:text-gray-700 rounded-lg hover:bg-gray-100">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <form id="videoForm" class="p-6 space-y-5">
+                <input type="hidden" id="videoId">
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Video Title *</label>
+                    <input type="text" id="videoTitle" required 
+                        class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-brand focus:border-transparent"
+                        placeholder="e.g., Introduction to Quadratic Equations">
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                    <textarea id="videoDescription" rows="3" 
+                        class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-brand focus:border-transparent"
+                        placeholder="What will students learn from this video?"></textarea>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Video URL *</label>
+                    <input type="url" id="videoUrl" required 
+                        class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-brand focus:border-transparent"
+                        placeholder="https://youtube.com/watch?v=...">
+                    <p class="text-xs text-gray-500 mt-1">YouTube, Vimeo, or any video URL</p>
+                </div>
+
+                <!-- Thumbnail Preview -->
+                <div id="thumbnailPreview" class="hidden">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Preview</label>
+                    <img id="thumbnailImg" class="w-full h-48 object-cover rounded-xl border border-gray-200">
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Category *</label>
+                        <select id="videoCategory" required class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-brand">
+                            <option value="">Select Category</option>
+                            <option value="algebra">Algebra</option>
+                            <option value="geometry">Geometry</option>
+                            <option value="calculus">Calculus</option>
+                            <option value="statistics">Statistics</option>
+                            <option value="trigonometry">Trigonometry</option>
+                            <option value="arithmetic">Arithmetic</option>
+                            <option value="number-theory">Number Theory</option>
+                            <option value="other">Other</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Grade Level</label>
+                        <select id="videoGradeLevel" class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-brand">
+                            <option value="">All Levels</option>
+                            <option value="grade-7">Grade 7</option>
+                            <option value="grade-8">Grade 8</option>
+                            <option value="grade-9">Grade 9</option>
+                            <option value="grade-10">Grade 10</option>
+                            <option value="grade-11">Grade 11</option>
+                            <option value="grade-12">Grade 12</option>
+                            <option value="college">College</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Subject</label>
+                        <input type="text" id="videoSubject" 
+                            class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-brand focus:border-transparent"
+                            placeholder="e.g., Mathematics">
+                    </div>
+                </div>
+
+                <div class="flex items-center space-x-3">
+                    <input type="checkbox" id="videoPublished" class="w-5 h-5 text-brand rounded focus:ring-brand">
+                    <label for="videoPublished" class="text-sm font-medium text-gray-700">Publish immediately (visible to students)</label>
+                </div>
+
+                <div class="flex space-x-3 pt-4">
+                    <button type="button" onclick="closeVideoModal()" 
+                        class="flex-1 px-6 py-3 border border-gray-300 rounded-xl font-medium text-gray-700 hover:bg-gray-50 transition-colors">
+                        Cancel
+                    </button>
+                    <button type="submit" id="submitBtn" 
+                        class="flex-1 px-6 py-3 bg-brand text-white rounded-xl font-medium hover:bg-brand-dark transition-colors">
+                        Save Video
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Toast -->
+    <div id="toast" class="hidden fixed bottom-4 right-4 px-6 py-3 rounded-xl shadow-lg z-50 flex items-center space-x-2"></div>
+
+    <!-- Scripts -->
+    <script src="../shared/js/config.js"></script>
+    <script src="../shared/js/supabase.js"></script>
+    <script>
+        let currentUser = null;
+        let videos = [];
+        let editingVideoId = null;
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', async () => {
+            await checkAuth();
+            await loadVideos();
+            setupEventListeners();
+            setupMobileMenu();
+        });
+
+        // Setup mobile menu
+        function setupMobileMenu() {
+            const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+            const sidebar = document.getElementById('sidebar');
+            const mobileOverlay = document.getElementById('mobileOverlay');
+
+            mobileMenuBtn.addEventListener('click', () => {
+                sidebar.classList.toggle('-translate-x-full');
+                mobileOverlay.classList.toggle('hidden');
+            });
+
+            mobileOverlay.addEventListener('click', () => {
+                sidebar.classList.add('-translate-x-full');
+                mobileOverlay.classList.add('hidden');
+            });
+        }
+
+        async function checkAuth() {
+            const { data: { session } } = await getSupabase().auth.getSession();
+            if (!session) {
+                window.location.href = '../login.html';
+                return;
+            }
+            
+            const { data: user } = await getSupabase()
+                .from('users')
+                .select('*')
+                .eq('id', session.user.id)
+                .single();
+            
+            if (!user || user.role !== 'teacher') {
+                window.location.href = '../login.html';
+                return;
+            }
+            
+            currentUser = user;
+            
+            // Update sidebar user info
+            const initials = user.full_name ? user.full_name.split(' ').map(n => n[0]).join('').toUpperCase() : '--';
+            document.getElementById('userInitials').textContent = initials;
+            document.getElementById('sidebarUserName').textContent = user.full_name || 'Teacher';
+        }
+
+        async function logout() {
+            await getSupabase().auth.signOut();
+            window.location.href = '../login.html';
+        }
+
+        function showStudentsPage() {
+            showToast('Student progress page coming soon!', 'info');
+        }
+
+        function showReportsPage() {
+            showToast('Reports page coming soon!', 'info');
+        }
+
+        async function loadVideos() {
+            try {
+                const { data, error } = await getSupabase()
+                    .from('videos')
+                    .select('*')
+                    .eq('teacher_id', currentUser.id)
+                    .order('created_at', { ascending: false });
+
+                if (error) throw error;
+                videos = data || [];
+                updateStats();
+                renderVideos();
+            } catch (error) {
+                console.error('Error loading videos:', error);
+                showToast('Failed to load videos', 'error');
+            }
+        }
+
+        function updateStats() {
+            document.getElementById('totalVideos').textContent = videos.length;
+            document.getElementById('publishedVideos').textContent = videos.filter(v => v.is_published).length;
+            document.getElementById('draftVideos').textContent = videos.filter(v => !v.is_published).length;
+            document.getElementById('totalViews').textContent = videos.reduce((sum, v) => sum + (v.view_count || 0), 0);
+        }
+
+        function renderVideos() {
+            const grid = document.getElementById('videosGrid');
+            const emptyState = document.getElementById('emptyState');
+            
+            // Apply filters
+            const search = document.getElementById('searchInput').value.toLowerCase();
+            const category = document.getElementById('categoryFilter').value;
+            const status = document.getElementById('statusFilter').value;
+            
+            let filtered = videos.filter(v => {
+                if (search && !v.title.toLowerCase().includes(search) && !v.description?.toLowerCase().includes(search)) return false;
+                if (category && v.category !== category) return false;
+                if (status === 'published' && !v.is_published) return false;
+                if (status === 'draft' && v.is_published) return false;
+                return true;
+            });
+
+            if (filtered.length === 0) {
+                grid.innerHTML = '';
+                emptyState.classList.remove('hidden');
+                return;
+            }
+
+            emptyState.classList.add('hidden');
+            grid.innerHTML = filtered.map(video => `
+                <div class="video-card bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden transition-all duration-200">
+                    <div class="relative">
+                        <img src="${getYouTubeThumbnail(video.video_url)}" alt="${video.title}" 
+                            class="w-full h-40 object-cover bg-gray-100">
+                        <div class="absolute top-2 right-2">
+                            <span class="status-badge ${video.is_published ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}">
+                                ${video.is_published ? 'Published' : 'Draft'}
+                            </span>
+                        </div>
+                    </div>
+                    <div class="p-4">
+                        <h3 class="font-semibold text-gray-900 mb-1 line-clamp-2">${video.title}</h3>
+                        <p class="text-sm text-gray-500 mb-3 line-clamp-2">${video.description || 'No description'}</p>
+                        <div class="flex items-center justify-between text-xs text-gray-400 mb-3">
+                            <span><i class="fas fa-folder mr-1"></i>${video.category || 'Uncategorized'}</span>
+                            <span><i class="fas fa-eye mr-1"></i>${video.view_count || 0} views</span>
+                        </div>
+                        <div class="flex space-x-2">
+                            <button onclick="editVideo('${video.id}')" 
+                                class="flex-1 px-3 py-2 text-sm bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors">
+                                <i class="fas fa-edit mr-1"></i>Edit
+                            </button>
+                            <button onclick="togglePublish('${video.id}', ${video.is_published})" 
+                                class="flex-1 px-3 py-2 text-sm ${video.is_published ? 'bg-yellow-100 text-yellow-700 hover:bg-yellow-200' : 'bg-green-100 text-green-700 hover:bg-green-200'} rounded-lg transition-colors">
+                                <i class="fas fa-${video.is_published ? 'eye-slash' : 'check'} mr-1"></i>
+                                ${video.is_published ? 'Unpublish' : 'Publish'}
+                            </button>
+                            <button onclick="deleteVideo('${video.id}')" 
+                                class="px-3 py-2 text-sm bg-red-100 text-red-700 rounded-lg hover:bg-red-200 transition-colors">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function getYouTubeThumbnail(url) {
+            if (!url) return 'https://via.placeholder.com/320x180?text=No+Thumbnail';
+            const match = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([a-zA-Z0-9_-]+)/);
+            if (match) return `https://img.youtube.com/vi/${match[1]}/mqdefault.jpg`;
+            return 'https://via.placeholder.com/320x180?text=Video';
+        }
+
+        function setupEventListeners() {
+            // Logout button
+            document.getElementById('logoutButton').addEventListener('click', logout);
+            
+            document.getElementById('videoForm').addEventListener('submit', handleSubmit);
+            document.getElementById('searchInput').addEventListener('input', renderVideos);
+            document.getElementById('categoryFilter').addEventListener('change', renderVideos);
+            document.getElementById('statusFilter').addEventListener('change', renderVideos);
+            
+            // Thumbnail preview
+            document.getElementById('videoUrl').addEventListener('input', function() {
+                const thumbnail = getYouTubeThumbnail(this.value);
+                if (thumbnail && !thumbnail.includes('placeholder')) {
+                    document.getElementById('thumbnailImg').src = thumbnail;
+                    document.getElementById('thumbnailPreview').classList.remove('hidden');
+                } else {
+                    document.getElementById('thumbnailPreview').classList.add('hidden');
+                }
+            });
+        }
+
+        function openAddVideoModal() {
+            editingVideoId = null;
+            document.getElementById('modalTitle').textContent = 'Add Video';
+            document.getElementById('videoForm').reset();
+            document.getElementById('thumbnailPreview').classList.add('hidden');
+            document.getElementById('videoModal').classList.remove('hidden');
+        }
+
+        function closeVideoModal() {
+            document.getElementById('videoModal').classList.add('hidden');
+            editingVideoId = null;
+        }
+
+        function editVideo(id) {
+            const video = videos.find(v => v.id === id);
+            if (!video) return;
+            
+            editingVideoId = id;
+            document.getElementById('modalTitle').textContent = 'Edit Video';
+            document.getElementById('videoId').value = id;
+            document.getElementById('videoTitle').value = video.title;
+            document.getElementById('videoDescription').value = video.description || '';
+            document.getElementById('videoUrl').value = video.video_url;
+            document.getElementById('videoCategory').value = video.category || '';
+            document.getElementById('videoGradeLevel').value = video.grade_level || '';
+            document.getElementById('videoSubject').value = video.subject || '';
+            document.getElementById('videoPublished').checked = video.is_published;
+            
+            // Show thumbnail
+            const thumbnail = getYouTubeThumbnail(video.video_url);
+            if (thumbnail && !thumbnail.includes('placeholder')) {
+                document.getElementById('thumbnailImg').src = thumbnail;
+                document.getElementById('thumbnailPreview').classList.remove('hidden');
+            }
+            
+            document.getElementById('videoModal').classList.remove('hidden');
+        }
+
+        async function handleSubmit(e) {
+            e.preventDefault();
+            const btn = document.getElementById('submitBtn');
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Saving...';
+
+            try {
+                const videoData = {
+                    title: document.getElementById('videoTitle').value,
+                    description: document.getElementById('videoDescription').value,
+                    video_url: document.getElementById('videoUrl').value,
+                    thumbnail_url: getYouTubeThumbnail(document.getElementById('videoUrl').value),
+                    category: document.getElementById('videoCategory').value,
+                    grade_level: document.getElementById('videoGradeLevel').value || null,
+                    subject: document.getElementById('videoSubject').value || null,
+                    is_published: document.getElementById('videoPublished').checked
+                };
+
+                let result;
+                if (editingVideoId) {
+                    result = await getSupabase()
+                        .from('videos')
+                        .update(videoData)
+                        .eq('id', editingVideoId);
+                } else {
+                    // Only add teacher_id for new videos
+                    videoData.teacher_id = currentUser.id;
+                    result = await getSupabase()
+                        .from('videos')
+                        .insert(videoData);
+                }
+
+                if (result.error) throw result.error;
+
+                showToast(editingVideoId ? 'Video updated!' : 'Video added!', 'success');
+                closeVideoModal();
+                await loadVideos();
+            } catch (error) {
+                console.error('Error saving video:', error);
+                showToast('Failed to save video: ' + error.message, 'error');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Save Video';
+            }
+        }
+
+        async function togglePublish(id, currentStatus) {
+            try {
+                const { error } = await getSupabase()
+                    .from('videos')
+                    .update({ is_published: !currentStatus })
+                    .eq('id', id);
+
+                if (error) throw error;
+                showToast(currentStatus ? 'Video unpublished' : 'Video published!', 'success');
+                await loadVideos();
+            } catch (error) {
+                showToast('Failed to update video', 'error');
+            }
+        }
+
+        async function deleteVideo(id) {
+            if (!confirm('Are you sure you want to delete this video?')) return;
+            
+            try {
+                const { error } = await getSupabase()
+                    .from('videos')
+                    .delete()
+                    .eq('id', id);
+
+                if (error) throw error;
+                showToast('Video deleted', 'success');
+                await loadVideos();
+            } catch (error) {
+                showToast('Failed to delete video', 'error');
+            }
+        }
+
+        function showToast(message, type = 'info') {
+            const toast = document.getElementById('toast');
+            toast.className = `fixed bottom-4 right-4 px-6 py-3 rounded-xl shadow-lg z-50 flex items-center space-x-2 ${
+                type === 'success' ? 'bg-green-500 text-white' :
+                type === 'error' ? 'bg-red-500 text-white' : 'bg-gray-800 text-white'
+            }`;
+            toast.innerHTML = `<i class="fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-circle' : 'info-circle'}"></i><span>${message}</span>`;
+            toast.classList.remove('hidden');
+            setTimeout(() => toast.classList.add('hidden'), 3000);
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,25 @@
+{
+  "rewrites": [
+    { "source": "/", "destination": "/public/index.html" },
+    { "source": "/login.html", "destination": "/public/login.html" },
+    { "source": "/register.html", "destination": "/public/register.html" },
+    { "source": "/modules.html", "destination": "/public/modules.html" },
+    { "source": "/contact.html", "destination": "/public/contact.html" },
+    { "source": "/about.html", "destination": "/public/about.html" },
+    { "source": "/privacy.html", "destination": "/public/privacy.html" },
+    { "source": "/terms.html", "destination": "/public/terms.html" },
+    { "source": "/reset-password.html", "destination": "/public/reset-password.html" },
+    { "source": "/tutorial-videos.html", "destination": "/public/tutorial-videos.html" },
+    { "source": "/developer.html", "destination": "/public/developer.html" }
+  ],
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        { "key": "X-Content-Type-Options", "value": "nosniff" },
+        { "key": "X-Frame-Options", "value": "DENY" },
+        { "key": "X-XSS-Protection", "value": "1; mode=block" }
+      ]
+    }
+  ]
+}

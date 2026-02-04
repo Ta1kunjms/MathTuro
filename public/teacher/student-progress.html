@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Student Progress - MathTuro LMS</title>
+  <link rel="icon" type="image/png" href="../Logo/MATHURO-LOGO.png">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../shared/css/base.css">
+  <link rel="stylesheet" href="assets/css/teacher.css">
+</head>
+<body class="bg-gray-50 min-h-screen">
+  <div class="flex">
+    <!-- Sidebar include -->
+    <iframe src="dashboard.html" style="width:0;height:0;border:0; border:none; display:none;"></iframe>
+    <main class="flex-1 p-8">
+      <h1 class="text-2xl font-bold mb-6">Student Progress</h1>
+      <div id="progressTableContainer" class="bg-white rounded-xl shadow p-6">
+        <table class="min-w-full divide-y divide-gray-200">
+          <thead>
+            <tr>
+              <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Student</th>
+              <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Module</th>
+              <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Quiz</th>
+              <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Score</th>
+              <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+              <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Submitted</th>
+            </tr>
+          </thead>
+          <tbody id="progressTableBody">
+            <tr><td colspan="6" class="text-center py-8 text-gray-400">Loading...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </main>
+  </div>
+  <script src="../shared/js/supabase.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', async function() {
+      const tableBody = document.getElementById('progressTableBody');
+      try {
+        const { data, error } = await getSupabase()
+          .from('quiz_submissions')
+          .select('*, users(full_name), modules(title), quizzes(title)')
+          .order('submitted_at', { ascending: false });
+        if (error) throw error;
+        if (!data || data.length === 0) {
+          tableBody.innerHTML = '<tr><td colspan="6" class="text-center py-8 text-gray-400">No submissions found.</td></tr>';
+          return;
+        }
+        tableBody.innerHTML = data.map(sub => `
+          <tr class="hover:bg-gray-50">
+            <td class="px-4 py-2">${sub.users?.full_name || 'Student'}</td>
+            <td class="px-4 py-2">${sub.modules?.title || '-'}</td>
+            <td class="px-4 py-2">${sub.quizzes?.title || '-'}</td>
+            <td class="px-4 py-2">${sub.student_score ?? '-'} / ${sub.total_items ?? '-'}</td>
+            <td class="px-4 py-2">
+              <span class="px-2 py-1 rounded-full text-xs ${sub.status === 'approved' ? 'bg-green-100 text-green-700' : sub.status === 'pending' ? 'bg-yellow-100 text-yellow-700' : 'bg-red-100 text-red-700'}">
+                ${sub.status.charAt(0).toUpperCase() + sub.status.slice(1)}
+              </span>
+            </td>
+            <td class="px-4 py-2 text-xs text-gray-500">${sub.submitted_at ? new Date(sub.submitted_at).toLocaleString() : '-'}</td>
+          </tr>
+        `).join('');
+      } catch (err) {
+        tableBody.innerHTML = '<tr><td colspan="6" class="text-center py-8 text-red-400">Failed to load data.</td></tr>';
+      }
+    });
+  </script>
+</body>
+</html>

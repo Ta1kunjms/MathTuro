@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/png" href="../Logo/MATHURO-LOGO.png">
+    <title>Lesson Plan Input - MathTuro LMS</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../shared/css/base.css">
+    <link rel="stylesheet" href="assets/css/teacher.css">
+    <style>
+        body { font-family: 'Inter', system-ui, sans-serif; }
+        .section-title { @apply font-bold text-lg mt-8 mb-2; }
+        .section-label { @apply font-semibold; }
+        .note { @apply text-xs text-gray-500 italic; }
+        .highlight { @apply bg-yellow-200 font-bold; }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <main class="max-w-3xl mx-auto p-4 lg:p-8 bg-white rounded-xl shadow mt-8 mb-8">
+        <div class="flex flex-col items-center mb-6">
+            <img src="../Logo/MATHURO-LOGO.png" alt="MathTuro" class="w-16 h-16 mb-2">
+            <h1 class="text-2xl font-bold gradient-text mb-1">LESSON PLAN INPUT</h1>
+            <p class="text-sm text-gray-600">Mindanao State University - College of Education</p>
+        </div>
+        <form id="lessonPlanForm" class="space-y-6">
+            <div>
+                <label class="section-label">I. Objectives</label>
+                <textarea name="objectives" rows="2" class="w-full border rounded p-2 mt-1" placeholder="At the end of the 45 minutes period, the learners are expected to:"></textarea>
+            </div>
+            <div>
+                <label class="section-label">II. Subject Matter</label>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-1">
+                    <input name="topic" class="border rounded p-2" placeholder="Topic">
+                    <input name="references" class="border rounded p-2" placeholder="References">
+                    <input name="materials" class="border rounded p-2 md:col-span-2" placeholder="Materials">
+                </div>
+            </div>
+            <div>
+                <label class="section-label">III. Procedure</label>
+                <div class="note mb-2">(Follow the suggested time per section. You may edit as needed.)</div>
+                <div class="mb-4">
+                    <span class="font-semibold">Setting up digital equipment (2 minutes):</span>
+                    <textarea name="setup" rows="1" class="w-full border rounded p-2 mt-1" placeholder="e.g., TV, Projector, HDMI, Speaker, etc."></textarea>
+                </div>
+                <div class="mb-4">
+                    <span class="font-semibold">1. Preliminaries (1 minute):</span>
+                    <textarea name="preliminaries" rows="2" class="w-full border rounded p-2 mt-1" placeholder="Greetings, Self-Introduction, Overview, Classroom rules..."></textarea>
+                </div>
+                <div class="mb-4">
+                    <span class="font-semibold">Classroom Rules (Can modify):</span>
+                    <textarea name="classroom_rules" rows="1" class="w-full border rounded p-2 mt-1" placeholder="Classroom rules..."></textarea>
+                </div>
+                <div class="mb-4">
+                    <span class="font-semibold">Learning Objectives:</span>
+                    <textarea name="learning_objectives" rows="1" class="w-full border rounded p-2 mt-1" placeholder="Learning objectives..."></textarea>
+                </div>
+                <div class="mb-4">
+                    <span class="font-semibold">2. Activity (5 minutes):</span>
+                    <textarea name="activity" rows="2" class="w-full border rounded p-2 mt-1" placeholder="Describe the activity..."></textarea>
+                </div>
+                <div class="mb-4">
+                    <span class="font-semibold">3. Analysis (3 minutes):</span>
+                    <textarea name="analysis" rows="2" class="w-full border rounded p-2 mt-1" placeholder="Guide questions, analysis..."></textarea>
+                </div>
+                <div class="mb-4">
+                    <span class="font-semibold">4. Abstraction (15 minutes):</span>
+                    <textarea name="abstraction" rows="2" class="w-full border rounded p-2 mt-1" placeholder="Concept discussion, examples..."></textarea>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2">
+                        <input name="example1" class="border rounded p-2" placeholder="Example 1">
+                        <input name="example2" class="border rounded p-2" placeholder="Example 2">
+                    </div>
+                </div>
+                <div class="mb-4">
+                    <span class="font-semibold">5. Application (8 minutes):</span>
+                    <textarea name="application" rows="2" class="w-full border rounded p-2 mt-1" placeholder="Student activity, drills..."></textarea>
+                </div>
+                <div class="mb-4">
+                    <span class="font-semibold">Generalization (Optional):</span>
+                    <textarea name="generalization" rows="1" class="w-full border rounded p-2 mt-1" placeholder="Generalization question..."></textarea>
+                </div>
+                <div class="mb-4">
+                    <span class="font-semibold">Valuing (3 minutes):</span>
+                    <textarea name="valuing" rows="1" class="w-full border rounded p-2 mt-1" placeholder="Valuing..."></textarea>
+                </div>
+                <div class="mb-4">
+                    <span class="font-semibold">6. Assessment (8 minutes):</span>
+                    <textarea name="assessment" rows="2" class="w-full border rounded p-2 mt-1" placeholder="Quiz, gamified assessment, etc..."></textarea>
+                </div>
+            </div>
+            <div>
+                <label class="section-label">Prepared By:</label>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-1">
+                    <input name="prepared_by1" class="border rounded p-2" placeholder="Name, Year, BSED Mathematics">
+                    <input name="prepared_by2" class="border rounded p-2" placeholder="Name, Year, BSED Mathematics">
+                    <input name="prepared_by3" class="border rounded p-2" placeholder="Name, Year, BSED Mathematics">
+                </div>
+            </div>
+            <div class="flex justify-end mt-6">
+                <button type="submit" class="bg-brand text-white px-6 py-2 rounded-xl font-semibold hover:bg-brand-dark transition-colors">Save Lesson Plan</button>
+            </div>
+        </form>
+    </main>
+    <script>
+        document.getElementById('lessonPlanForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            alert('Lesson plan saved! (This is a demo. Saving to backend can be implemented.)');
+        });
+    </script>
+</body>
+</html>

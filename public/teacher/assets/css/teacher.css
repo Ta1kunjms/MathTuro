@@ -20,6 +20,12 @@
 /* ============================================
    TEACHER SIDEBAR
    ============================================ */
+/* Make only the sidebar-scrollable area scrollable, not the whole sidebar */
+.sidebar-scrollable {
+  overflow-y: auto;
+  min-height: 0;
+}
+
 .sidebar-link:hover, 
 .sidebar-link.active {
   background: linear-gradient(135deg, #005801 0%, #006B01 100%);

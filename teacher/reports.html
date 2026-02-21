@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reports - MathTuro LMS</title>
+    <link rel="icon" type="image/png" href="../Logo/MATHURO-LOGO.png">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Export Libraries -->
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: {
+                            50: '#f0fdf4',
+                            100: '#dcfce7',
+                            200: '#bbf7d0',
+                            300: '#86efac',
+                            400: '#4ade80',
+                            500: '#22c55e',
+                            600: '#16a34a',
+                            700: '#15803d',
+                            800: '#166534',
+                            900: '#14532d',
+                        },
+                        brand: '#005801',
+                        'brand-dark': '#004601',
+                        'brand-light': '#006B01',
+                        teacher: {
+                            50: '#fdf2f8',
+                            100: '#fce7f3',
+                            200: '#fbcfe8',
+                            500: '#910568',
+                            600: '#720455',
+                            700: '#5a0344',
+                            800: '#4a0338',
+                        },
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', 'sans-serif'],
+                    },
+                },
+            },
+        }
+    </script>
+    <style>
+        body { font-family: 'Inter', system-ui, sans-serif; }
+        
+        .gradient-text {
+            background: linear-gradient(135deg, #005801 0%, #22c55e 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .glass-sidebar {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+        }
+        
+        .sidebar-link {
+            transition: all 0.2s ease;
+        }
+        
+        .sidebar-link:hover, .sidebar-link.active {
+            background: linear-gradient(135deg, #005801 0%, #006B01 100%);
+            color: white;
+        }
+        
+        .sidebar-link.active {
+            box-shadow: 0 4px 15px rgba(0, 88, 1, 0.3);
+        }
+        
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; }
+        ::-webkit-scrollbar-thumb { background: #005801; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: #004601; }
+    </style>
+    <link rel="stylesheet" href="../shared/css/base.css">
+    <link rel="stylesheet" href="assets/css/teacher.css">
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <!-- Mobile Menu Overlay -->
+    <div id="mobileOverlay" class="fixed inset-0 bg-black bg-opacity-50 z-40 hidden lg:hidden"></div>
+    
+    <!-- Sidebar (injected by JS) -->
+    <div id="sidebar"></div>
+
+    <!-- Main Content -->
+    <main class="lg:ml-72 min-h-screen">
+        <!-- Top Header -->
+        <header class="bg-white border-b border-gray-200 sticky top-0 z-30">
+            <div class="flex items-center justify-between px-4 lg:px-8 py-4">
+                <!-- Mobile Menu Button -->
+                <button id="mobileMenuBtn" class="lg:hidden p-2 text-gray-600 hover:text-brand rounded-lg">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
+                    </svg>
+                </button>
+                
+                <!-- Page Title -->
+                <div class="flex-1 lg:flex-none">
+                    <h1 class="text-xl lg:text-2xl font-bold text-gray-800">Reports</h1>
+                    <p class="text-sm text-gray-500 hidden sm:block">Student performance reports with detailed quiz scores</p>
+                </div>
+                
+                <!-- Right Actions -->
+                <div class="flex items-center space-x-4">
+                    <!-- User Menu -->
+                    <div class="relative">
+                        <button id="userMenuBtn" class="flex items-center space-x-2 p-2 rounded-lg hover:bg-gray-100">
+                            <div class="w-8 h-8 bg-teacher-100 rounded-full flex items-center justify-center">
+                                <span id="headerUserInitials" class="text-teacher-600 font-semibold text-sm">--</span>
+                            </div>
+                        </button>
+                        
+                        <!-- Dropdown -->
+                        <div id="userDropdown" class="hidden absolute right-0 mt-2 w-64 bg-white rounded-xl shadow-lg border border-gray-100 py-2">
+                            <div class="px-4 py-2 border-b border-gray-100">
+                                <p id="dropdownUserName" class="font-semibold text-gray-800 truncate">User</p>
+                                <p id="dropdownUserEmail" class="text-sm text-gray-500 truncate">email@example.com</p>
+                            </div>
+                            <button onclick="handleLogout()" class="w-full text-left px-4 py-2 text-red-600 hover:bg-red-50">Logout</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Content Area -->
+        <div class="p-4 lg:p-8">
+            <div class="bg-white rounded-2xl border border-gray-100 shadow-sm">
+                <!-- Header with Export Buttons -->
+                <div class="p-6 border-b border-gray-100 flex flex-col sm:flex-row justify-between items-start sm:items-center space-y-4 sm:space-y-0">
+                    <div>
+                        <h2 class="text-lg font-semibold text-gray-800">Student Performance Report</h2>
+                        <p class="text-sm text-gray-500">Detailed quiz scores and performance metrics</p>
+                    </div>
+                    <div id="exportButtons" class="flex space-x-3">
+                        <button onclick="exportToExcel()" class="flex items-center space-x-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                            </svg>
+                            <span>Export Excel</span>
+                        </button>
+                        <button onclick="exportToPDF()" class="flex items-center space-x-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                            </svg>
+                            <span>Export PDF</span>
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Table Container -->
+                <div id="reportTableContainer" class="overflow-x-auto">
+                    <table id="reportTable" class="min-w-full divide-y divide-gray-200">
+                        <thead id="reportTableHeader" class="bg-gray-50">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Student Name</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Student Email</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Total Average</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Pass/Fail</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Total Quizzes</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Completed Quizzes</th>
+                            </tr>
+                        </thead>
+                        <tbody id="reportTableBody" class="bg-white divide-y divide-gray-200">
+                            <tr><td colspan="10" class="text-center py-8 text-gray-400">Loading...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Scripts -->
+    <script src="../shared/js/config.js"></script>
+    <script src="../shared/js/supabase.js"></script>
+    <script src="../shared/js/auth.js"></script>
+    <script src="assets/js/sidebar.js"></script>
+    <script>
+        let reportData = {
+            students: [],
+            quizzes: [],
+            submissions: [],
+            studentScores: []
+        };
+
+        // Mobile menu setup
+        document.addEventListener('DOMContentLoaded', function() {
+            const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+            const sidebar = document.getElementById('sidebar');
+            const mobileOverlay = document.getElementById('mobileOverlay');
+
+            if (mobileMenuBtn && sidebar && mobileOverlay) {
+                mobileMenuBtn.addEventListener('click', () => {
+                    sidebar.classList.toggle('-translate-x-full');
+                    mobileOverlay.classList.toggle('hidden');
+                });
+
+                mobileOverlay.addEventListener('click', () => {
+                    sidebar.classList.add('-translate-x-full');
+                    mobileOverlay.classList.add('hidden');
+                });
+            }
+
+            const userMenuBtn = document.getElementById('userMenuBtn');
+            const userDropdown = document.getElementById('userDropdown');
+            
+            if (userMenuBtn && userDropdown) {
+                userMenuBtn.addEventListener('click', () => {
+                    userDropdown.classList.toggle('hidden');
+                });
+
+                document.addEventListener('click', (e) => {
+                    if (!userMenuBtn.contains(e.target) && !userDropdown.contains(e.target)) {
+                        userDropdown.classList.add('hidden');
+                    }
+                });
+            }
+
+            loadUserInfo();
+            loadReportData();
+        });
+
+        async function loadUserInfo() {
+            try {
+                const supabase = getSupabase();
+                if (!supabase) {
+                    throw new Error('Supabase client not initialized');
+                }
+                const { data: { session } } = await supabase.auth.getSession();
+                
+                if (!session) {
+                    window.location.href = '../login.html';
+                    return;
+                }
+
+                const { data: user } = await supabase
+                    .from('users')
+                    .select('*')
+                    .eq('id', session.user.id)
+                    .single();
+
+                if (user) {
+                    const initials = user.full_name ? user.full_name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) : '--';
+                    const headerEl = document.getElementById('headerUserInitials');
+                    const nameEl = document.getElementById('dropdownUserName');
+                    const emailEl = document.getElementById('dropdownUserEmail');
+                    if (headerEl) headerEl.textContent = initials;
+                    if (nameEl) nameEl.textContent = user.full_name || 'User';
+                    if (emailEl) emailEl.textContent = user.email || '';
+                }
+            } catch (error) {
+                console.error('Error loading user info:', error);
+            }
+        }
+
+        async function loadReportData() {
+            const tableBody = document.getElementById('reportTableBody');
+            const tableHeader = document.getElementById('reportTableHeader');
+            
+            try {
+                const supabase = getSupabase();
+                if (!supabase) {
+                    throw new Error('Supabase client not initialized');
+                }
+
+                const { data: students, error: studentsError } = await supabase
+                    .from('users')
+                    .select('*')
+                    .eq('role', 'student');
+                
+                if (studentsError) {
+                    console.error('Error loading students:', studentsError);
+                    throw studentsError;
+                }
+
+                const { data: quizzes, error: quizzesError } = await supabase
+                    .from('quizzes')
+                    .select('*')
+                    .order('created_at', { ascending: true });
+                
+                if (quizzesError) {
+                    console.error('Error loading quizzes:', quizzesError);
+                    throw quizzesError;
+                }
+
+                const { data: submissions, error: submissionsError } = await supabase
+                    .from('quiz_submissions')
+                    .select('*');
+                
+                if (submissionsError) {
+                    console.error('Error loading submissions:', submissionsError);
+                    throw submissionsError;
+                }
+
+                reportData.students = students;
+                reportData.quizzes = quizzes;
+                reportData.submissions = submissions;
+
+                const studentScores = students.map(student => ({
+                    id: student.id,
+                    name: student.full_name,
+                    email: student.email,
+                    scores: {}
+                }));
+
+                studentScores.forEach(student => {
+                    quizzes.forEach(quiz => {
+                        const studentSubmissions = submissions.filter(
+                            sub => sub.user_id === student.id && sub.quiz_id === quiz.id
+                        );
+                        
+                        if (studentSubmissions.length > 0) {
+                            const latestSubmission = studentSubmissions.reduce((latest, current) => {
+                                return new Date(current.submitted_at) > new Date(latest.submitted_at) ? current : latest;
+                            });
+                            
+                            student.scores[quiz.id] = {
+                                score: latestSubmission.student_score,
+                                totalItems: latestSubmission.total_items
+                            };
+                        } else {
+                            student.scores[quiz.id] = null;
+                        }
+                    });
+                });
+
+                reportData.studentScores = studentScores;
+
+                const quizHeaderRow = tableHeader.querySelector('tr');
+                const averageColumn = quizHeaderRow.children[2];
+                quizzes.forEach((quiz, index) => {
+                    const th = document.createElement('th');
+                    th.className = 'px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase';
+                    th.textContent = `Quiz ${index + 1} (${quiz.total_items} items)`;
+                    quizHeaderRow.insertBefore(th, averageColumn);
+                });
+
+                let rows = '';
+                studentScores.forEach(student => {
+                    const quizScores = quizzes.map(quiz => student.scores[quiz.id]);
+                    const validScores = quizScores.filter(score => score !== null);
+                    const averageScore = validScores.length > 0 
+                        ? (validScores.reduce((sum, score) => sum + (score.score / score.totalItems * 100), 0) / validScores.length) 
+                        : 0;
+
+                    const passRate = averageScore >= 70;
+
+                    rows += `<tr class="hover:bg-gray-50">
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${student.name}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${student.email}</td>`;
+
+                    quizzes.forEach(quiz => {
+                        const score = student.scores[quiz.id];
+                        if (score) {
+                            const percentage = (score.score / score.totalItems * 100).toFixed(1);
+                            const isPass = percentage >= 70;
+                            rows += `<td class="px-6 py-4 whitespace-nowrap text-sm ${isPass ? 'text-green-600' : 'text-red-600'}">${score.score}/${score.totalItems} (${percentage}%)</td>`;
+                        } else {
+                            rows += `<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-400">-</td>`;
+                        }
+                    });
+
+                    rows += `<td class="px-6 py-4 whitespace-nowrap text-sm ${averageScore >= 70 ? 'text-green-600' : 'text-red-600'} font-medium">${averageScore.toFixed(1)}%</td>`;
+                    rows += `<td class="px-6 py-4 whitespace-nowrap">
+                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${passRate ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}">
+                            ${passRate ? 'Pass' : 'Fail'}
+                        </span>
+                    </td>`;
+                    rows += `<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${quizzes.length}</td>`;
+                    rows += `<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${validScores.length}</td>`;
+                    rows += `</tr>`;
+                });
+
+                tableBody.innerHTML = rows || '<tr><td colspan="10" class="text-center py-8 text-gray-400">No data found.</td></tr>';
+
+            } catch (err) {
+                console.error('Error loading report data:', err);
+                tableBody.innerHTML = `<tr><td colspan="10" class="text-center py-8 text-red-400">Failed to load data: ${err.message}</td></tr>`;
+            }
+        }
+
+        function exportToExcel() {
+            const { students, quizzes, studentScores } = reportData;
+            
+            const worksheetData = [];
+            
+            const headers = ['Student Name', 'Student Email'];
+            quizzes.forEach((quiz, index) => {
+                headers.push(`Quiz ${index + 1} (${quiz.total_items} items)`);
+            });
+            headers.push('Total Average', 'Pass/Fail', 'Total Quizzes', 'Completed Quizzes');
+            worksheetData.push(headers);
+            
+            studentScores.forEach(student => {
+                const row = [student.name, student.email];
+                
+                quizzes.forEach(quiz => {
+                    const score = student.scores[quiz.id];
+                    if (score) {
+                        row.push(`${score.score}/${score.total_items} (${(score.score / score.total_items * 100).toFixed(1)}%)`);
+                    } else {
+                        row.push('-');
+                    }
+                });
+                
+                const quizScores = quizzes.map(quiz => student.scores[quiz.id]);
+                const validScores = quizScores.filter(score => score !== null);
+                const averageScore = validScores.length > 0 
+                    ? (validScores.reduce((sum, score) => sum + (score.score / score.totalItems * 100), 0) / validScores.length) 
+                    : 0;
+                    
+                row.push(`${averageScore.toFixed(1)}%`);
+                row.push(averageScore >= 70 ? 'Pass' : 'Fail');
+                row.push(reportData.quizzes.length);
+                row.push(validScores.length);
+                
+                worksheetData.push(row);
+            });
+            
+            const worksheet = XLSX.utils.aoa_to_sheet(worksheetData);
+            const workbook = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(workbook, worksheet, 'Student Reports');
+            
+            XLSX.writeFile(workbook, `student_reports_${new Date().toISOString().split('T')[0]}.xlsx`);
+        }
+
+        function exportToPDF() {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            
+            doc.setFontSize(18);
+            doc.text('Student Performance Report', 14, 20);
+            
+            doc.setFontSize(12);
+            doc.text(`Generated on: ${new Date().toLocaleDateString()}`, 14, 30);
+            doc.text(`Total Students: ${reportData.students.length}`, 14, 38);
+            doc.text(`Total Quizzes: ${reportData.quizzes.length}`, 14, 46);
+            
+            const tableData = [];
+            const headers = ['Student Name', 'Student Email'];
+            reportData.quizzes.forEach((quiz, index) => {
+                headers.push(`Quiz ${index + 1}`);
+            });
+            headers.push('Avg', 'Pass/Fail', 'Total', 'Completed');
+            
+            reportData.studentScores.forEach(student => {
+                const row = [student.name, student.email];
+                
+                reportData.quizzes.forEach(quiz => {
+                    const score = student.scores[quiz.id];
+                    if (score) {
+                        const percentage = (score.score / score.totalItems * 100).toFixed(0);
+                        row.push(`${score.score}/${score.totalItems}`);
+                    } else {
+                        row.push('-');
+                    }
+                });
+                
+                const quizScores = reportData.quizzes.map(quiz => student.scores[quiz.id]);
+                const validScores = quizScores.filter(score => score !== null);
+                const averageScore = validScores.length > 0 
+                    ? (validScores.reduce((sum, score) => sum + (score.score / score.totalItems * 100), 0) / validScores.length) 
+                    : 0;
+                    
+                row.push(`${averageScore.toFixed(0)}%`);
+                row.push(averageScore >= 70 ? 'Pass' : 'Fail');
+                row.push(reportData.quizzes.length);
+                row.push(validScores.length);
+                
+                tableData.push(row);
+            });
+            
+            doc.autoTable({
+                head: [headers],
+                body: tableData,
+                startY: 55,
+                theme: 'grid',
+                styles: {
+                    fontSize: 8,
+                    cellPadding: 3
+                },
+                headStyles: {
+                    fillColor: '#005801',
+                    textColor: 255,
+                    fontStyle: 'bold'
+                },
+                alternateRowStyles: {
+                    fillColor: '#f8f9fa'
+                }
+            });
+            
+            doc.save(`student_reports_${new Date().toISOString().split('T')[0]}.pdf`);
+        }
+
+        async function handleLogout() {
+            try {
+                const supabase = getSupabase();
+                if (!supabase) {
+                    throw new Error('Supabase client not initialized');
+                }
+                await supabase.auth.signOut();
+                window.location.href = '../login.html';
+            } catch (error) {
+                console.error('Logout error:', error);
+                window.location.href = '../login.html';
+            }
+        }
+    </script>
+</body>
+</html>

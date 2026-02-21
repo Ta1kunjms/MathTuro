@@ -334,18 +334,16 @@ function redirectToLogin() {
 */
 function redirectToDashboard() {
   const user = JSON.parse(localStorage.getItem('user'));
-  const basePath = getBasePath();
-  
   if (user) {
     switch (user.role) {
       case 'student':
-        window.location.href = basePath + 'student/dashboard.html';
+        window.location.href = '/student/dashboard.html';
         break;
       case 'teacher':
-        window.location.href = basePath + 'teacher/dashboard.html';
+        window.location.href = '/teacher/dashboard.html';
         break;
       case 'admin':
-        window.location.href = basePath + 'admin/dashboard.html';
+        window.location.href = '/admin/dashboard.html';
         break;
       default:
         // If role is unknown, sign out and redirect to login

@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lesson Plan Manager - MathTuro LMS</title>
+  <link rel="icon" type="image/png" href="../Logo/MATHURO-LOGO.png">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: {
+              50: '#f0fdf4',
+              100: '#dcfce7',
+              200: '#bbf7d0',
+              300: '#86efac',
+              400: '#4ade80',
+              500: '#22c55e',
+              600: '#16a34a',
+              700: '#15803d',
+              800: '#166534',
+              900: '#14532d',
+            },
+            brand: '#005801',
+            'brand-dark': '#004601',
+            'brand-light': '#006B01',
+            teacher: {
+              50: '#fdf2f8',
+              100: '#fce7f3',
+              200: '#fbcfe8',
+              500: '#910568',
+              600: '#720455',
+              700: '#5a0344',
+              800: '#4a0338',
+            },
+          },
+          fontFamily: {
+            sans: ['Inter', 'system-ui', 'sans-serif'],
+          },
+        },
+      },
+    }
+  </script>
+  <style>
+    body { font-family: 'Inter', system-ui, sans-serif; }
+
+    .gradient-text {
+      background: linear-gradient(135deg, #005801 0%, #22c55e 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .glass-sidebar {
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(20px);
+    }
+
+    .sidebar-link {
+      transition: all 0.2s ease;
+    }
+
+    .sidebar-link:hover, .sidebar-link.active {
+      background: linear-gradient(135deg, #005801 0%, #006B01 100%);
+      color: white;
+    }
+
+    .sidebar-link.active {
+      box-shadow: 0 4px 15px rgba(0, 88, 1, 0.3);
+    }
+
+    .upload-zone:hover {
+      border-color: #005801;
+      background: rgba(0, 88, 1, 0.05);
+    }
+
+    .upload-zone.drag-over {
+      border-color: #005801;
+      background: rgba(0, 88, 1, 0.1);
+    }
+
+    /* Custom scrollbar */
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: #f1f1f1; }
+    ::-webkit-scrollbar-thumb { background: #005801; border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: #004601; }
+  </style>
+  <link rel="stylesheet" href="../shared/css/base.css">
+  <link rel="stylesheet" href="assets/css/teacher.css">
+</head>
+<body class="bg-gray-50 min-h-screen">
+  <!-- Mobile Menu Overlay -->
+  <div id="mobileOverlay" class="fixed inset-0 bg-black bg-opacity-50 z-40 hidden lg:hidden"></div>
+  <!-- Sidebar (injected by JS) -->
+  <div id="sidebar"></div>
+
+  <!-- Main Content -->
+  <main class="lg:ml-72 min-h-screen">
+    <!-- Top Header -->
+    <header class="bg-white border-b border-gray-200 sticky top-0 z-30">
+      <div class="flex items-center justify-between px-4 lg:px-8 py-4">
+        <!-- Mobile Menu Button -->
+        <button id="mobileMenuBtn" class="lg:hidden p-2 text-gray-600 hover:text-brand rounded-lg">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
+          </svg>
+        </button>
+
+        <!-- Page Title -->
+        <div class="flex-1 lg:flex-none">
+          <h1 class="text-xl lg:text-2xl font-bold text-gray-800">Lesson Plan Manager</h1>
+          <p class="text-sm text-gray-500 hidden sm:block">Upload, preview, and manage your lesson plan files</p>
+        </div>
+
+        <!-- Right Actions -->
+        <div class="flex items-center space-x-4">
+          <!-- User Menu -->
+          <div class="relative">
+            <button id="userMenuBtn" class="flex items-center space-x-2 p-2 rounded-lg hover:bg-gray-100">
+              <div class="w-8 h-8 bg-teacher-100 rounded-full flex items-center justify-center">
+                <span id="headerUserInitials" class="text-teacher-600 font-semibold text-sm">--</span>
+              </div>
+            </button>
+
+            <!-- Dropdown -->
+            <div id="userDropdown" class="hidden absolute right-0 mt-2 w-64 bg-white rounded-xl shadow-lg border border-gray-100 py-2">
+              <div class="px-4 py-2 border-b border-gray-100">
+                <p id="dropdownUserName" class="font-semibold text-gray-800 truncate">User</p>
+                <p id="dropdownUserEmail" class="text-sm text-gray-500 truncate">email@example.com</p>
+              </div>
+              <button onclick="handleLogout()" class="w-full text-left px-4 py-2 text-red-600 hover:bg-red-50">Logout</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- Content Area -->
+    <div class="p-4 lg:p-8">
+      <div class="w-full max-w-5xl mx-auto bg-white rounded-2xl border border-gray-100 shadow-sm p-8">
+        <!-- Module, Lesson, Period Selectors -->
+        <div class="flex flex-col md:flex-row md:items-end gap-4 mb-6">
+          <div class="flex flex-col w-full md:w-1/4">
+            <label for="moduleSelect" class="font-semibold text-gray-700 mb-1">Module <span class="text-red-500">*</span></label>
+            <input type="text" id="moduleSelect" placeholder="e.g. Module 1" class="px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-600 focus:border-transparent" required />
+          </div>
+          <div class="flex flex-col w-full md:w-1/4">
+            <label for="lessonSelect" class="font-semibold text-gray-700 mb-1">Lesson (optional)</label>
+            <input type="text" id="lessonSelect" placeholder="e.g. Lesson 1" class="px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-600 focus:border-transparent" />
+          </div>
+          <div class="flex flex-col w-full md:w-1/4">
+            <label for="periodTypeSelect" class="font-semibold text-gray-700 mb-1">Period Type <span class="text-red-500">*</span></label>
+            <select id="periodTypeSelect" class="px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-600 focus:border-transparent" required>
+              <option value="">Select Type</option>
+              <option value="week">Week</option>
+              <option value="month">Month</option>
+              <option value="quarter">Quarter</option>
+            </select>
+          </div>
+          <div class="flex flex-col w-full md:w-1/4">
+            <label for="periodValueInput" class="font-semibold text-gray-700 mb-1">Period Value <span class="text-red-500">*</span></label>
+            <input id="periodValueInput" type="text" placeholder="e.g. 1, 2, Jan, Q1" class="px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-600 focus:border-transparent" required />
+          </div>
+        </div>
+        <!-- Drag and Drop Upload Zone -->
+        <div id="uploadZone" class="upload-zone flex flex-col items-center justify-center border-2 border-dashed border-green-600 rounded-xl p-8 mb-8 bg-green-50 cursor-pointer transition hover:bg-green-100">
+          <svg class="w-12 h-12 text-green-600 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+          <p class="font-semibold text-green-700">Drag & drop files here or <span class="underline cursor-pointer text-green-800" id="browseFiles">browse</span></p>
+          <p class="text-gray-500 text-sm mt-1">PDF, Word, PowerPoint, Images, etc. (Max 20MB each)</p>
+          <input type="file" id="fileInput" class="hidden" multiple accept=".pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.txt,.odt,.rtf,.csv,.zip,.rar,.jpg,.jpeg,.png,.gif" />
+        </div>
+        <!-- Search and Sort -->
+        <div class="flex flex-col sm:flex-row items-center justify-between mb-6 gap-2">
+          <input type="text" id="searchInput" placeholder="Search files..." class="w-full sm:w-64 px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-600 focus:border-transparent" />
+          <select id="sortSelect" class="w-full sm:w-48 px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-600 focus:border-transparent">
+            <option value="date_desc">Newest First</option>
+            <option value="date_asc">Oldest First</option>
+            <option value="name_asc">Name A-Z</option>
+            <option value="name_desc">Name Z-A</option>
+          </select>
+        </div>
+        <!-- File Cards Grid -->
+        <div id="fileCardsGrid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+          <!-- Cards will be injected here -->
+        </div>
+        <!-- Empty State -->
+        <div id="emptyState" class="flex flex-col items-center justify-center py-16 text-center text-gray-500 hidden">
+          <div class="bg-green-100 rounded-full w-20 h-20 flex items-center justify-center mb-4"><svg class="w-10 h-10 text-green-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect width="16" height="12" x="4" y="6" rx="2" fill="#22c55e"/></svg></div>
+          <div class="text-lg font-semibold mb-2">No Lesson Plan Files Yet</div>
+          <div class="mb-4">Upload your lesson plan files to get started.</div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script src="../shared/js/config.js"></script>
+  <script src="../shared/js/utils.js"></script>
+  <script src="../shared/js/supabase.js"></script>
+  <script src="../shared/js/auth.js"></script>
+  <script src="assets/js/sidebar.js"></script>
+  <script src="assets/js/lessonplan-dnd.js"></script>
+  <script>
+    // Mobile menu toggle
+    const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+    const mobileOverlay = document.getElementById('mobileOverlay');
+
+    if (mobileMenuBtn) {
+      mobileMenuBtn.addEventListener('click', () => {
+        const sidebar = document.getElementById('sidebar').querySelector('aside') || document.getElementById('sidebar');
+        sidebar.classList.toggle('-translate-x-full');
+        mobileOverlay.classList.toggle('hidden');
+      });
+    }
+
+    if (mobileOverlay) {
+      mobileOverlay.addEventListener('click', () => {
+        const sidebar = document.getElementById('sidebar').querySelector('aside') || document.getElementById('sidebar');
+        sidebar.classList.add('-translate-x-full');
+        mobileOverlay.classList.add('hidden');
+      });
+    }
+
+    // User menu dropdown toggle
+    const userMenuBtn = document.getElementById('userMenuBtn');
+    const userDropdown = document.getElementById('userDropdown');
+
+    if (userMenuBtn) {
+      userMenuBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        userDropdown.classList.toggle('hidden');
+      });
+    }
+
+    document.addEventListener('click', () => {
+      if (userDropdown) userDropdown.classList.add('hidden');
+    });
+
+    // Populate header user info from auth
+    document.addEventListener('DOMContentLoaded', async () => {
+      try {
+        const supabase = getSupabase();
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session && session.user) {
+          const { data: userData } = await supabase
+            .from('users')
+            .select('full_name, email')
+            .eq('id', session.user.id)
+            .single();
+          if (userData) {
+            const name = userData.full_name || session.user.email;
+            const initials = name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+            const headerInitials = document.getElementById('headerUserInitials');
+            const dropdownName = document.getElementById('dropdownUserName');
+            const dropdownEmail = document.getElementById('dropdownUserEmail');
+            if (headerInitials) headerInitials.textContent = initials;
+            if (dropdownName) dropdownName.textContent = name;
+            if (dropdownEmail) dropdownEmail.textContent = userData.email || session.user.email;
+          }
+        }
+      } catch (err) {
+        console.error('Error loading user info:', err);
+      }
+    });
+  </script>
+</body>
+</html>

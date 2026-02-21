@@ -131,13 +131,13 @@
     <aside id="sidebar" class="fixed left-0 top-0 h-full w-72 glass-sidebar border-r border-gray-200 z-50 transform -translate-x-full lg:translate-x-0 transition-transform duration-300">
         <!-- Logo -->
         <div class="p-6 border-b border-gray-100">
-            <a href="../public/index.html" class="flex items-center space-x-3">
+            <a href="dashboard.html" class="flex items-center space-x-3">
                 <div class="w-12 h-12 bg-white rounded-xl flex items-center justify-center shadow-lg">
                     <img src="../Logo/MATHURO-LOGO.png" alt="MathTuro" class="w-10 h-10 object-contain">
                 </div>
                 <div>
                     <span class="text-xl font-bold gradient-text">MathTuro</span>
-                    <p class="text-xs text-gray-500">Lesson View</p>
+                    <p class="text-xs text-gray-500">Student Portal</p>
                 </div>
             </a>
         </div>
@@ -290,12 +290,23 @@
                             <h4 class="text-lg font-semibold text-gray-800">Video Lesson</h4>
                         </div>
                         <div class="video-container bg-gray-900 rounded-xl overflow-hidden">
+                            <div id="videoThumbnail" class="absolute inset-0 flex items-center justify-center cursor-pointer bg-gray-900">
+                                <img id="thumbnailImage" src="" alt="Video Thumbnail" class="w-full h-full object-cover">
+                                <div class="absolute inset-0 flex items-center justify-center bg-black/30 hover:bg-black/50 transition-colors">
+                                    <div class="w-20 h-20 bg-red-600 rounded-full flex items-center justify-center shadow-2xl hover:scale-110 transition-transform">
+                                        <svg class="w-8 h-8 text-white ml-1" fill="currentColor" viewBox="0 0 24 24">
+                                            <path d="M8 5v14l11-7z"/>
+                                        </svg>
+                                    </div>
+                                </div>
+                            </div>
                             <iframe
                                 id="lessonVideo"
                                 src=""
                                 frameborder="0"
                                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                                 allowfullscreen
+                                class="hidden"
                             ></iframe>
                         </div>
                     </div>
@@ -515,7 +526,7 @@
             document.getElementById('dropdownUserEmail').textContent = user.email;
             
             // Update back to modules links based on role
-            const modulesLink = user.role === 'student' ? 'modules.html' : '../teacher/manage-modules.html';
+            const modulesLink = user.role === 'student' ? 'modules.html' : '/teacher/manage-modules.html';
             const backToModulesLink = document.getElementById('backToModulesLink');
             const noLessonsBackLink = document.getElementById('noLessonsBackLink');
             if (backToModulesLink) backToModulesLink.href = modulesLink;
@@ -693,14 +704,25 @@
                 // Display video if available
                 const videoSection = document.getElementById('videoSection');
                 const lessonVideo = document.getElementById('lessonVideo');
+                const videoThumbnail = document.getElementById('videoThumbnail');
+                const thumbnailImage = document.getElementById('thumbnailImage');
                 
                 if (currentLesson.video_url) {
                     videoSection.classList.remove('hidden');
-                    const embedUrl = convertToEmbedUrl(currentLesson.video_url);
-                    lessonVideo.src = embedUrl;
+                    const thumbnailUrl = getYouTubeThumbnail(currentLesson.video_url);
+                    thumbnailImage.src = thumbnailUrl;
+                    
+                    // Add click event listener to play video
+                    videoThumbnail.onclick = function() {
+                        const embedUrl = convertToEmbedUrl(currentLesson.video_url);
+                        lessonVideo.src = embedUrl;
+                        videoThumbnail.classList.add('hidden');
+                        lessonVideo.classList.remove('hidden');
+                    };
                 } else {
                     videoSection.classList.add('hidden');
                     lessonVideo.src = '';
+                    thumbnailImage.src = '';
                 }
 
                 // Display quiz if available
@@ -963,6 +985,18 @@
             }
         }
 
+        function getYouTubeThumbnail(url) {
+            const watchMatch = url.match(/[?&]v=([^&]+)/);
+            const shortMatch = url.match(/youtu\.be\/([^?]+)/);
+            const videoId = watchMatch ? watchMatch[1] : (shortMatch ? shortMatch[1] : null);
+            
+            if (videoId) {
+                return `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`;
+            }
+            
+            return 'https://via.placeholder.com/320x180?text=Video';
+        }
+
         function convertToEmbedUrl(url) {
             let videoId = '';
             
@@ -977,7 +1011,7 @@
             }
 
             if (videoId) {
-                return `https://www.youtube.com/embed/${videoId}`;
+                return `https://www.youtube.com/embed/${videoId}?autoplay=1`;
             }
 
             return url;

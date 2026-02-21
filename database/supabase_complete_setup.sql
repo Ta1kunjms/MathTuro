@@ -90,12 +90,15 @@ CREATE INDEX IF NOT EXISTS idx_progress_module ON public.lesson_progress(module_
 CREATE TABLE IF NOT EXISTS public.quiz_submissions (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     user_id UUID NOT NULL REFERENCES public.users(id) ON DELETE CASCADE,
-    lesson_id UUID NOT NULL REFERENCES public.lessons(id) ON DELETE CASCADE,
-    module_id UUID NOT NULL REFERENCES public.modules(id) ON DELETE CASCADE,
+    lesson_id UUID REFERENCES public.lessons(id) ON DELETE CASCADE,
+    module_id UUID REFERENCES public.modules(id) ON DELETE CASCADE,
+    quiz_id UUID REFERENCES public.quizzes(id) ON DELETE CASCADE,
     screenshot_url TEXT,
-    score INTEGER CHECK (score >= 0 AND score <= 100),
+    student_score INTEGER DEFAULT 0,
+    total_items INTEGER DEFAULT 0,
     status VARCHAR(20) DEFAULT 'pending' CHECK (status IN ('pending', 'reviewed', 'approved', 'rejected')),
     teacher_feedback TEXT,
+    teacher_comment TEXT,
     reviewed_by UUID REFERENCES public.users(id),
     reviewed_at TIMESTAMP WITH TIME ZONE,
     submitted_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
@@ -105,6 +108,7 @@ CREATE TABLE IF NOT EXISTS public.quiz_submissions (
 
 CREATE INDEX IF NOT EXISTS idx_submissions_user ON public.quiz_submissions(user_id);
 CREATE INDEX IF NOT EXISTS idx_submissions_lesson ON public.quiz_submissions(lesson_id);
+CREATE INDEX IF NOT EXISTS idx_submissions_quiz ON public.quiz_submissions(quiz_id);
 CREATE INDEX IF NOT EXISTS idx_submissions_status ON public.quiz_submissions(status);
 
 -- Table: notifications
@@ -139,6 +143,37 @@ CREATE INDEX IF NOT EXISTS idx_activity_user ON public.activity_log(user_id);
 CREATE INDEX IF NOT EXISTS idx_activity_action ON public.activity_log(action);
 CREATE INDEX IF NOT EXISTS idx_activity_created ON public.activity_log(created_at DESC);
 
+-- Table: quizzes
+CREATE TABLE IF NOT EXISTS public.quizzes (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    module_id UUID REFERENCES public.modules(id) ON DELETE CASCADE,
+    title VARCHAR(200) NOT NULL,
+    description TEXT,
+    quiz_url TEXT NOT NULL, -- External quiz URL (Google Forms, Quizizz, etc.)
+    total_items INTEGER NOT NULL DEFAULT 10, -- Total possible score
+    passing_score INTEGER DEFAULT 0, -- Minimum passing score (optional)
+    order_index INTEGER DEFAULT 0,
+    is_required BOOLEAN DEFAULT true,
+    deadline TIMESTAMP WITH TIME ZONE, -- Optional deadline
+    created_by UUID REFERENCES public.users(id) ON DELETE SET NULL,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    category VARCHAR(100),
+    subject VARCHAR(100),
+    grade_level VARCHAR(50),
+    is_published BOOLEAN DEFAULT false,
+    teacher_id UUID REFERENCES public.users(id) ON DELETE SET NULL,
+    video_id UUID REFERENCES public.videos(id) ON DELETE SET NULL,
+    time_limit_minutes INTEGER DEFAULT 0
+);
+
+CREATE INDEX IF NOT EXISTS idx_quizzes_module ON public.quizzes(module_id);
+CREATE INDEX IF NOT EXISTS idx_quizzes_teacher ON public.quizzes(teacher_id);
+CREATE INDEX IF NOT EXISTS idx_quizzes_video ON public.quizzes(video_id);
+CREATE INDEX IF NOT EXISTS idx_quizzes_category ON public.quizzes(category);
+CREATE INDEX IF NOT EXISTS idx_quizzes_grade_level ON public.quizzes(grade_level);
+CREATE INDEX IF NOT EXISTS idx_quizzes_published ON public.quizzes(is_published);
+
 -- ============================================================
 -- SECTION 3: ENABLE ROW LEVEL SECURITY
 -- ============================================================
@@ -149,6 +184,7 @@ ALTER TABLE public.lesson_progress ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.quiz_submissions ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.notifications ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.activity_log ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.quizzes ENABLE ROW LEVEL SECURITY;
 
 -- ============================================================
 -- SECTION 4: RLS POLICIES
@@ -271,15 +307,40 @@ CREATE POLICY "submissions_create_own" ON public.quiz_submissions
 
 CREATE POLICY "teachers_view_submissions" ON public.quiz_submissions
     FOR SELECT USING (
-        EXISTS (SELECT 1 FROM public.modules WHERE id = module_id AND teacher_id = auth.uid())
+        EXISTS (SELECT 1 FROM public.modules WHERE id = module_id AND teacher_id = auth.uid()) OR
+        EXISTS (SELECT 1 FROM public.quizzes WHERE id = quiz_id AND teacher_id = auth.uid())
     );
 
 CREATE POLICY "teachers_update_submissions" ON public.quiz_submissions
     FOR UPDATE USING (
-        EXISTS (SELECT 1 FROM public.modules WHERE id = module_id AND teacher_id = auth.uid())
+        EXISTS (SELECT 1 FROM public.modules WHERE id = module_id AND teacher_id = auth.uid()) OR
+        EXISTS (SELECT 1 FROM public.quizzes WHERE id = quiz_id AND teacher_id = auth.uid())
     );
 
 CREATE POLICY "admin_manage_submissions" ON public.quiz_submissions
+    FOR ALL USING (
+        EXISTS (SELECT 1 FROM public.users WHERE id = auth.uid() AND role = 'admin')
+    );
+
+-- Quizzes Table Policies
+CREATE POLICY "anyone_view_published_quizzes" ON public.quizzes
+    FOR SELECT USING (is_published = true);
+
+CREATE POLICY "teachers_view_own_quizzes" ON public.quizzes
+    FOR SELECT USING (teacher_id = auth.uid());
+
+CREATE POLICY "teachers_insert_quizzes" ON public.quizzes
+    FOR INSERT WITH CHECK (
+        EXISTS (SELECT 1 FROM public.users WHERE id = auth.uid() AND role IN ('teacher', 'admin'))
+    );
+
+CREATE POLICY "teachers_update_own_quizzes" ON public.quizzes
+    FOR UPDATE USING (teacher_id = auth.uid());
+
+CREATE POLICY "teachers_delete_own_quizzes" ON public.quizzes
+    FOR DELETE USING (teacher_id = auth.uid());
+
+CREATE POLICY "admin_all_quizzes" ON public.quizzes
     FOR ALL USING (
         EXISTS (SELECT 1 FROM public.users WHERE id = auth.uid() AND role = 'admin')
     );
@@ -344,6 +405,10 @@ CREATE TRIGGER update_progress_updated_at
 
 CREATE TRIGGER update_submissions_updated_at
     BEFORE UPDATE ON public.quiz_submissions
+    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+CREATE TRIGGER update_quizzes_updated_at
+    BEFORE UPDATE ON public.quizzes
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
 -- Function: Update module lesson count

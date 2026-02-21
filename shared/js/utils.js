@@ -543,7 +543,7 @@ function handleSessionExpired() {
   setTimeout(() => {
     // Use getBasePath from auth.js if available, otherwise detect path
     const path = window.location.pathname;
-    const basePath = (path.includes('/student/') || path.includes('/teacher/') || path.includes('/admin/') || path.includes('/public/')) ? '../' : '';
+    const basePath = (path.includes('/student/') || path.includes('/teacher/') || path.includes('/admin/')) ? '../' : '';
     window.location.href = basePath + 'public/login.html';
   }, 2000);
 }

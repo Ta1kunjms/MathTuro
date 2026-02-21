@@ -96,27 +96,31 @@ CREATE POLICY "quizzes_read_published" ON public.quizzes
         EXISTS (SELECT 1 FROM public.modules WHERE id = module_id AND status = 'published')
     );
 
--- Teachers can view their own quizzes (even draft modules)
+-- Teachers can view their own quizzes (even draft modules or no module)
 CREATE POLICY "teachers_view_own_quizzes" ON public.quizzes
     FOR SELECT USING (
+        teacher_id = auth.uid() OR
         EXISTS (SELECT 1 FROM public.modules WHERE id = module_id AND teacher_id = auth.uid())
     );
 
--- Teachers can INSERT quizzes for their own modules (WITH CHECK is required for INSERT)
+-- Teachers can INSERT quizzes for their own modules or without modules
 CREATE POLICY "teachers_insert_quizzes" ON public.quizzes
     FOR INSERT WITH CHECK (
+        teacher_id = auth.uid() OR
         EXISTS (SELECT 1 FROM public.modules WHERE id = module_id AND teacher_id = auth.uid())
     );
 
 -- Teachers can update their own quizzes
 CREATE POLICY "teachers_update_quizzes" ON public.quizzes
     FOR UPDATE USING (
+        teacher_id = auth.uid() OR
         EXISTS (SELECT 1 FROM public.modules WHERE id = module_id AND teacher_id = auth.uid())
     );
 
 -- Teachers can delete their own quizzes
 CREATE POLICY "teachers_delete_quizzes" ON public.quizzes
     FOR DELETE USING (
+        teacher_id = auth.uid() OR
         EXISTS (SELECT 1 FROM public.modules WHERE id = module_id AND teacher_id = auth.uid())
     );
 
@@ -142,5 +146,38 @@ CREATE POLICY "admin_delete_quizzes" ON public.quizzes
     );
 
 -- ============================================================
--- DONE! Video and Quiz insert should now work for teachers
+-- STEP 4: CREATE CORRECT RLS POLICIES FOR QUIZ SUBMISSIONS
+-- ============================================================
+
+DROP POLICY IF EXISTS "submissions_read_own" ON public.quiz_submissions;
+DROP POLICY IF EXISTS "submissions_create_own" ON public.quiz_submissions;
+DROP POLICY IF EXISTS "teachers_view_submissions" ON public.quiz_submissions;
+DROP POLICY IF EXISTS "teachers_update_submissions" ON public.quiz_submissions;
+DROP POLICY IF EXISTS "admin_manage_submissions" ON public.quiz_submissions;
+
+CREATE POLICY "submissions_read_own" ON public.quiz_submissions
+    FOR SELECT USING (user_id = auth.uid());
+
+CREATE POLICY "submissions_create_own" ON public.quiz_submissions
+    FOR INSERT WITH CHECK (user_id = auth.uid());
+
+CREATE POLICY "teachers_view_submissions" ON public.quiz_submissions
+    FOR SELECT USING (
+        EXISTS (SELECT 1 FROM public.modules WHERE id = module_id AND teacher_id = auth.uid()) OR
+        EXISTS (SELECT 1 FROM public.quizzes WHERE id = quiz_id AND teacher_id = auth.uid())
+    );
+
+CREATE POLICY "teachers_update_submissions" ON public.quiz_submissions
+    FOR UPDATE USING (
+        EXISTS (SELECT 1 FROM public.modules WHERE id = module_id AND teacher_id = auth.uid()) OR
+        EXISTS (SELECT 1 FROM public.quizzes WHERE id = quiz_id AND teacher_id = auth.uid())
+    );
+
+CREATE POLICY "admin_manage_submissions" ON public.quiz_submissions
+    FOR ALL USING (
+        EXISTS (SELECT 1 FROM public.users WHERE id = auth.uid() AND role = 'admin')
+    );
+
+-- ============================================================
+-- DONE! Video, Quiz, and Submission management should now work for teachers
 -- ============================================================

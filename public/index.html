@@ -822,6 +822,50 @@
         </div>
     </section>
 
+    <!-- Researchers Section -->
+    <section class="py-20 px-4" style="background: rgba(158, 169, 159, 0.15);">
+        <div class="container mx-auto max-w-6xl">
+            <div class="text-center mb-16">
+                <span class="inline-block px-4 py-1 bg-green-100 text-primary-green rounded-full text-sm font-medium mb-4">RESEARCHERS</span>
+                <h2 class="font-montserrat font-bold text-4xl md:text-6xl text-primary-green italic mb-4">
+                    Our Researchers
+                </h2>
+                <p class="text-gray-700 text-lg md:text-xl max-w-3xl mx-auto">
+                    Meet the brilliant minds behind MathTuro's development and research.
+                </p>
+            </div>
+            
+            <div class="grid md:grid-cols-3 gap-8">
+                <!-- Researcher 1 -->
+                <div class="bg-white rounded-3xl p-8 hover-lift shadow-lg text-center">
+                    <div class="w-40 h-40 mx-auto mb-6 rounded-full overflow-hidden border-4 border-primary-green">
+                        <img src="Researchers/JOHN ARVY.jpg" alt="John Arvy" class="w-full h-full object-cover">
+                    </div>
+                    <h3 class="font-montserrat font-bold text-xl mb-2 text-primary-green">John Arvy</h3>
+                    <p class="text-gray-600">Researcher</p>
+                </div>
+                
+                <!-- Researcher 2 -->
+                <div class="bg-white rounded-3xl p-8 hover-lift shadow-lg text-center">
+                    <div class="w-40 h-40 mx-auto mb-6 rounded-full overflow-hidden border-4 border-primary-green">
+                        <img src="Researchers/Jamarvel Quino.jpg" alt="Jamarvel Quino" class="w-full h-full object-cover">
+                    </div>
+                    <h3 class="font-montserrat font-bold text-xl mb-2 text-primary-green">Jamarvel Quino</h3>
+                    <p class="text-gray-600">Researcher</p>
+                </div>
+                
+                <!-- Researcher 3 -->
+                <div class="bg-white rounded-3xl p-8 hover-lift shadow-lg text-center">
+                    <div class="w-40 h-40 mx-auto mb-6 rounded-full overflow-hidden border-4 border-primary-green">
+                        <img src="Researchers/Basti Ladringan.jpg" alt="Basti Ladringan" class="w-full h-full object-cover">
+                    </div>
+                    <h3 class="font-montserrat font-bold text-xl mb-2 text-primary-green">Basti Ladringan</h3>
+                    <p class="text-gray-600">Researcher</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
     <!-- CTA Section -->
     <section class="cta-section py-24 px-4 relative overflow-hidden">
         <!-- Decorative circles -->
@@ -988,7 +1032,7 @@
         }, observerOptions);
         
         // Observe elements for animation
-        document.querySelectorAll('.neu-step, .role-card-student, .role-card-teacher, .role-card-admin, .neu-card, .stat-card, .testimonial-card').forEach(el => {
+        document.querySelectorAll('.neu-step, .role-card-student, .role-card-teacher, .role-card-admin, .neu-card, .stat-card, .testimonial-card, .bg-white.rounded-3xl').forEach(el => {
             el.style.opacity = '0';
             observer.observe(el);
         });

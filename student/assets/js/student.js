@@ -167,20 +167,20 @@ async function submitQuizScore(lessonId, score, totalItems, screenshotFile = nul
 
     // Create quiz submission
     const { data, error } = await getSupabase()
-      .from('quiz_submissions')
-      .insert({
-        student_id: user.id,
-        lesson_id: lessonId,
-        score: numScore,
-        total_items: numTotalItems,
-        screenshot_url: screenshotUrl,
-        status: 'pending',
-        submitted_at: new Date().toISOString(),
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-      })
-      .select('*')
-      .single();
+        .from('quiz_submissions')
+        .insert({
+            user_id: user.id,
+            lesson_id: lessonId,
+            student_score: numScore,
+            total_items: numTotalItems,
+            screenshot_url: screenshotUrl,
+            status: 'pending',
+            submitted_at: new Date().toISOString(),
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString()
+        })
+        .select('*')
+        .single();
 
     if (error) {
       throw new Error(error.message);
@@ -272,7 +272,7 @@ async function getStudentProgressByModule(moduleId) {
         completed: lessonProgress && lessonProgress.completed,
         completed_at: lessonProgress?.completed_at,
         quiz_submitted: !!quizSubmission,
-        quiz_score: quizSubmission?.score,
+        quiz_score: quizSubmission?.student_score,
         quiz_total_items: quizSubmission?.total_items,
         quiz_status: quizSubmission?.status,
         quiz_screenshot_url: quizSubmission?.screenshot_url
@@ -469,7 +469,7 @@ async function updateQuizSubmission(submissionId, score, totalItems, screenshotF
     }
 
     const updateData = {
-      score: numScore,
+      student_score: numScore,
       total_items: numTotalItems,
       status: 'pending',
       teacher_comment: null,
@@ -773,7 +773,7 @@ async function getStudentAchievements() {
       { id: 'five_lessons', emoji: '📖', name: 'Bookworm', desc: 'Complete 5 lessons', earned: stats.completedLessons >= 5 },
       { id: 'ten_lessons', emoji: '📚', name: 'Scholar', desc: 'Complete 10 lessons', earned: stats.completedLessons >= 10 },
       { id: 'quiz_master', emoji: '⭐', name: 'Quiz Star', desc: 'Get 5 quizzes approved', earned: stats.approvedSubmissions >= 5 },
-      { id: 'perfect_score', emoji: '🎯', name: 'Perfectionist', desc: 'Get a perfect quiz score', earned: stats.submissions.some(s => s.score === s.total_items) },
+      { id: 'perfect_score', emoji: '🎯', name: 'Perfectionist', desc: 'Get a perfect quiz score', earned: stats.submissions.some(s => s.student_score === s.total_items) },
       { id: 'module_complete', emoji: '🎓', name: 'Module Master', desc: 'Complete a module', earned: stats.completedModules >= 1 },
       { id: 'streak_3', emoji: '🔥', name: '3 Day Streak', desc: 'Learn 3 days in a row', earned: streak >= 3 },
       { id: 'streak_7', emoji: '💪', name: 'Week Warrior', desc: 'Learn 7 days in a row', earned: streak >= 7 },

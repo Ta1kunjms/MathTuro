@@ -289,7 +289,7 @@ function isAuthenticated() {
 */
 function getBasePath() {
   const path = window.location.pathname;
-  if (path.includes('/student/') || path.includes('/teacher/') || path.includes('/admin/') || path.includes('/public/')) {
+  if (path.includes('/student/') || path.includes('/teacher/') || path.includes('/admin/')) {
     return '../';
   }
   return '';
@@ -336,10 +336,10 @@ function redirectToDashboard() {
   if (user) {
     switch (user.role) {
       case 'student':
-        window.location.href = basePath + 'student/dashboard.html';
+        window.location.href = '/student/dashboard.html';
         break;
       case 'teacher':
-        window.location.href = basePath + 'teacher/dashboard.html';
+        window.location.href = '/teacher/dashboard.html';
         break;
       case 'admin':
         window.location.href = basePath + 'admin/dashboard.html';

@@ -1,0 +1,566 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Profile - MathTuro LMS</title>
+    <link rel="icon" type="image/png" href="../Logo/MATHURO-LOGO.png">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: {
+                            50: '#f0fdf4',
+                            100: '#dcfce7',
+                            200: '#bbf7d0',
+                            300: '#86efac',
+                            400: '#4ade80',
+                            500: '#22c55e',
+                            600: '#16a34a',
+                            700: '#15803d',
+                            800: '#166534',
+                            900: '#14532d',
+                        },
+                        brand: '#005801',
+                        'brand-dark': '#004601',
+                        'brand-light': '#006B01',
+                        teacher: {
+                            50: '#fdf2f8',
+                            100: '#fce7f3',
+                            200: '#fbcfe8',
+                            500: '#910568',
+                            600: '#720455',
+                            700: '#5a0344',
+                            800: '#4a0338',
+                        },
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', 'sans-serif'],
+                    },
+                },
+            },
+        }
+    </script>
+    <style>
+        body { font-family: 'Inter', system-ui, sans-serif; }
+        
+        .gradient-text {
+            background: linear-gradient(135deg, #005801 0%, #22c55e 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .glass-sidebar {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+        }
+        
+        .sidebar-link {
+            transition: all 0.2s ease;
+        }
+        
+        .sidebar-link:hover, .sidebar-link.active {
+            background: linear-gradient(135deg, #005801 0%, #006B01 100%);
+            color: white;
+        }
+        
+        .sidebar-link.active {
+            box-shadow: 0 4px 15px rgba(0, 88, 1, 0.3);
+        }
+        
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; }
+        ::-webkit-scrollbar-thumb { background: #005801; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: #004601; }
+        
+        .password-toggle {
+            transition: all 0.2s ease;
+        }
+        
+        .password-toggle:hover {
+            color: #005801;
+        }
+        
+        .form-section {
+            animation: fadeIn 0.3s ease-in-out;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .input-error {
+            border-color: #ef4444 !important;
+        }
+        
+        .input-error:focus {
+            ring-color: #ef4444 !important;
+            border-color: #ef4444 !important;
+        }
+        
+        .error-message {
+            color: #ef4444;
+            font-size: 0.875rem;
+            margin-top: 0.25rem;
+        }
+        
+        .success-message {
+            color: #10b981;
+            font-size: 0.875rem;
+            margin-top: 0.25rem;
+        }
+    </style>
+    <link rel="stylesheet" href="../shared/css/base.css">
+    <link rel="stylesheet" href="assets/css/teacher.css">
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <!-- Mobile Menu Overlay -->
+    <div id="mobileOverlay" class="fixed inset-0 bg-black bg-opacity-50 z-40 hidden lg:hidden"></div>
+
+    <!-- Sidebar (injected by JS) -->
+    <div id="sidebar"></div>
+
+    <!-- Main Content -->
+    <main class="lg:ml-72 min-h-screen">
+        <!-- Top Header -->
+        <header class="bg-white border-b border-gray-200 sticky top-0 z-30">
+            <div class="flex items-center justify-between px-4 lg:px-8 py-4">
+                <!-- Mobile Menu Button -->
+                <button id="mobileMenuBtn" class="lg:hidden p-2 text-gray-600 hover:text-brand rounded-lg">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
+                    </svg>
+                </button>
+                
+                <!-- Page Title -->
+                <div class="flex-1 lg:flex-none">
+                    <h1 class="text-xl lg:text-2xl font-bold text-gray-800">Profile</h1>
+                    <p class="text-sm text-gray-500 hidden sm:block">Manage your account settings</p>
+                </div>
+                
+                <!-- Right Actions -->
+                <div class="flex items-center space-x-4">
+                    <!-- User Menu -->
+                    <div class="relative">
+                        <button id="userMenuBtn" class="flex items-center space-x-2 p-2 rounded-lg hover:bg-gray-100">
+                            <div class="w-8 h-8 bg-teacher-100 rounded-full flex items-center justify-center">
+                                <span id="headerUserInitials" class="text-teacher-600 font-semibold text-sm">--</span>
+                            </div>
+                        </button>
+                        
+                        <!-- Dropdown -->
+                        <div id="userDropdown" class="hidden absolute right-0 mt-2 w-64 bg-white rounded-xl shadow-lg border border-gray-100 py-2">
+                            <div class="px-4 py-2 border-b border-gray-100">
+                                <p id="dropdownUserName" class="font-semibold text-gray-800 truncate">User</p>
+                                <p id="dropdownUserEmail" class="text-sm text-gray-500 truncate">email@example.com</p>
+                            </div>
+                            <button onclick="handleLogout()" class="w-full text-left px-4 py-2 text-red-600 hover:bg-red-50">Logout</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Content Area -->
+        <div class="p-4 lg:p-8">
+            <div class="max-w-2xl mx-auto">
+                <!-- Profile Card -->
+                <div class="bg-white rounded-2xl border border-gray-100 shadow-sm">
+                    <div class="p-6 border-b border-gray-100">
+                        <h2 class="text-lg font-semibold text-gray-800">Profile Information</h2>
+                        <p class="text-sm text-gray-500">Update your personal information</p>
+                    </div>
+                    
+                    <form id="profileForm" class="p-6 space-y-6">
+                        <!-- Avatar -->
+                        <div class="flex items-center space-x-4">
+                            <div class="w-20 h-20 bg-teacher-100 rounded-full flex items-center justify-center">
+                                <span id="profileAvatar" class="text-teacher-600 font-bold text-2xl">--</span>
+                            </div>
+                            <div>
+                                <p class="text-sm text-gray-500">Your profile photo</p>
+                            </div>
+                        </div>
+                        
+                        <!-- Name -->
+                        <div>
+                            <label for="name" class="block text-sm font-medium text-gray-700 mb-2">Full Name</label>
+                            <input type="text" id="name" name="name" required 
+                                class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-brand focus:border-transparent"
+                                placeholder="Enter your full name">
+                        </div>
+                        
+                        <!-- Role (Read-only) -->
+                        <div>
+                            <label for="role" class="block text-sm font-medium text-gray-700 mb-2">Role</label>
+                            <input type="text" id="role" name="role" value="Teacher" disabled 
+                                class="w-full px-4 py-3 border border-gray-200 rounded-xl bg-gray-50 text-gray-500">
+                        </div>
+                        
+                        <!-- Email (Read-only) -->
+                        <div>
+                            <label for="email" class="block text-sm font-medium text-gray-700 mb-2">Email</label>
+                            <input type="email" id="email" name="email" required 
+                                class="w-full px-4 py-3 border border-gray-200 rounded-xl bg-gray-50 text-gray-500"
+                                placeholder="email@example.com" disabled>
+                        </div>
+                        
+                        <!-- Password Section -->
+                        <div class="form-section">
+                            <h3 class="text-md font-medium text-gray-800 mb-4">Password Settings</h3>
+                            
+                            <!-- Current Password -->
+                            <div>
+                                <label for="currentPassword" class="block text-sm font-medium text-gray-700 mb-2">Current Password</label>
+                                <div class="relative">
+                                    <input type="password" id="currentPassword" name="currentPassword" 
+                                        class="w-full px-4 py-3 pr-12 border border-gray-300 rounded-xl focus:ring-2 focus:ring-brand focus:border-transparent"
+                                        placeholder="Enter your current password">
+                                    <button type="button" onclick="togglePassword('currentPassword', 'currentPasswordToggle')" 
+                                        class="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-500 password-toggle">
+                                        <i id="currentPasswordToggle" class="fas fa-eye"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <!-- New Password -->
+                            <div>
+                                <label for="newPassword" class="block text-sm font-medium text-gray-700 mb-2">New Password</label>
+                                <div class="relative">
+                                    <input type="password" id="newPassword" name="newPassword" 
+                                        class="w-full px-4 py-3 pr-12 border border-gray-300 rounded-xl focus:ring-2 focus:ring-brand focus:border-transparent"
+                                        placeholder="Enter your new password">
+                                    <button type="button" onclick="togglePassword('newPassword', 'newPasswordToggle')" 
+                                        class="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-500 password-toggle">
+                                        <i id="newPasswordToggle" class="fas fa-eye"></i>
+                                    </button>
+                                </div>
+                                <div id="passwordRequirements" class="mt-2 text-xs text-gray-500">
+                                    <p>Password must be at least 8 characters long and contain:</p>
+                                    <ul class="list-disc list-inside mt-1 space-y-0.5">
+                                        <li class="text-red-500" id="reqLength">• At least 8 characters</li>
+                                        <li class="text-red-500" id="reqUppercase">• At least one uppercase letter</li>
+                                        <li class="text-red-500" id="reqLowercase">• At least one lowercase letter</li>
+                                        <li class="text-red-500" id="reqNumber">• At least one number</li>
+                                    </ul>
+                                </div>
+                            </div>
+                            
+                            <!-- Confirm New Password -->
+                            <div>
+                                <label for="confirmPassword" class="block text-sm font-medium text-gray-700 mb-2">Confirm New Password</label>
+                                <div class="relative">
+                                    <input type="password" id="confirmPassword" name="confirmPassword" 
+                                        class="w-full px-4 py-3 pr-12 border border-gray-300 rounded-xl focus:ring-2 focus:ring-brand focus:border-transparent"
+                                        placeholder="Confirm your new password">
+                                    <button type="button" onclick="togglePassword('confirmPassword', 'confirmPasswordToggle')" 
+                                        class="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-500 password-toggle">
+                                        <i id="confirmPasswordToggle" class="fas fa-eye"></i>
+                                    </button>
+                                </div>
+                                <div id="passwordMatch" class="mt-1 text-xs"></div>
+                            </div>
+                        </div>
+                        
+                        <!-- Submit Button -->
+                        <div class="flex justify-end pt-4">
+                            <button type="submit" class="px-6 py-3 bg-brand text-white rounded-xl font-medium hover:bg-brand-dark transition-colors flex items-center space-x-2">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                                </svg>
+                                <span>Save Changes</span>
+                            </button>
+                        </div>
+                    </form>
+                    
+                    <!-- Success Message -->
+                    <div id="profileMessage" class="px-6 pb-6 hidden">
+                        <div class="bg-green-50 border border-green-200 rounded-xl p-4 flex items-center space-x-3">
+                            <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                            </svg>
+                            <span class="text-green-700 font-medium">Profile updated successfully!</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Scripts -->
+    <script src="../shared/js/config.js"></script>
+    <script src="../shared/js/supabase.js"></script>
+    <script src="../shared/js/auth.js"></script>
+    <script src="assets/js/sidebar.js"></script>
+    <script>
+        // Mobile menu setup
+        document.addEventListener('DOMContentLoaded', function() {
+            const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+            const mobileOverlay = document.getElementById('mobileOverlay');
+
+            if (mobileMenuBtn && mobileOverlay) {
+                mobileMenuBtn.addEventListener('click', () => {
+                    const sidebarEl = document.getElementById('sidebar').querySelector('aside');
+                    if (sidebarEl) sidebarEl.classList.toggle('-translate-x-full');
+                    mobileOverlay.classList.toggle('hidden');
+                });
+
+                mobileOverlay.addEventListener('click', () => {
+                    const sidebarEl = document.getElementById('sidebar').querySelector('aside');
+                    if (sidebarEl) sidebarEl.classList.add('-translate-x-full');
+                    mobileOverlay.classList.add('hidden');
+                });
+            }
+
+            // User dropdown
+            const userMenuBtn = document.getElementById('userMenuBtn');
+            const userDropdown = document.getElementById('userDropdown');
+            
+            if (userMenuBtn && userDropdown) {
+                userMenuBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    userDropdown.classList.toggle('hidden');
+                });
+
+                document.addEventListener('click', (e) => {
+                    if (!userMenuBtn.contains(e.target) && !userDropdown.contains(e.target)) {
+                        userDropdown.classList.add('hidden');
+                    }
+                });
+            }
+
+            // Load user info
+            loadUserInfo();
+            
+            // Form submission
+            const form = document.getElementById('profileForm');
+            if (form) form.addEventListener('submit', handleProfileUpdate);
+            
+            // Password validation
+            const newPasswordInput = document.getElementById('newPassword');
+            if (newPasswordInput) {
+                newPasswordInput.addEventListener('input', validatePassword);
+            }
+            
+            const confirmPasswordInput = document.getElementById('confirmPassword');
+            if (confirmPasswordInput) {
+                confirmPasswordInput.addEventListener('input', checkPasswordMatch);
+            }
+        });
+
+        function togglePassword(inputId, toggleId) {
+            const input = document.getElementById(inputId);
+            const toggle = document.getElementById(toggleId);
+            
+            if (input.type === 'password') {
+                input.type = 'text';
+                toggle.classList.remove('fa-eye');
+                toggle.classList.add('fa-eye-slash');
+            } else {
+                input.type = 'password';
+                toggle.classList.remove('fa-eye-slash');
+                toggle.classList.add('fa-eye');
+            }
+        }
+
+        function validatePassword() {
+            const password = document.getElementById('newPassword').value;
+            const requirements = {
+                length: password.length >= 8,
+                uppercase: /[A-Z]/.test(password),
+                lowercase: /[a-z]/.test(password),
+                number: /[0-9]/.test(password)
+            };
+
+            // Update requirement indicators
+            document.getElementById('reqLength').className = requirements.length ? 'text-green-500' : 'text-red-500';
+            document.getElementById('reqUppercase').className = requirements.uppercase ? 'text-green-500' : 'text-red-500';
+            document.getElementById('reqLowercase').className = requirements.lowercase ? 'text-green-500' : 'text-red-500';
+            document.getElementById('reqNumber').className = requirements.number ? 'text-green-500' : 'text-red-500';
+
+            return Object.values(requirements).every(req => req === true);
+        }
+
+        function checkPasswordMatch() {
+            const newPassword = document.getElementById('newPassword').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+            const matchDiv = document.getElementById('passwordMatch');
+            
+            if (confirmPassword === '') {
+                matchDiv.textContent = '';
+                return;
+            }
+            
+            if (newPassword === confirmPassword) {
+                matchDiv.textContent = 'Passwords match';
+                matchDiv.className = 'mt-1 text-xs text-green-600';
+            } else {
+                matchDiv.textContent = 'Passwords do not match';
+                matchDiv.className = 'mt-1 text-xs text-red-600';
+            }
+        }
+
+        async function loadUserInfo() {
+            try {
+                const supabase = getSupabase();
+                if (!supabase) return;
+
+                const { data: { session } } = await supabase.auth.getSession();
+                
+                if (!session) {
+                    window.location.href = '../login.html';
+                    return;
+                }
+
+                const { data: user } = await supabase
+                    .from('users')
+                    .select('*')
+                    .eq('id', session.user.id)
+                    .single();
+
+                if (user) {
+                    const displayName = user.full_name && user.full_name.trim() ? user.full_name : '';
+                    const initials = displayName
+                        ? displayName.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
+                        : session.user.email.slice(0, 2).toUpperCase();
+
+                    // Sidebar user info (injected by sidebar.js)
+                    const userInitialsEl = document.getElementById('userInitials');
+                    const sidebarUserNameEl = document.getElementById('sidebarUserName');
+                    if (userInitialsEl) userInitialsEl.textContent = initials;
+                    if (sidebarUserNameEl) sidebarUserNameEl.textContent = displayName || session.user.email;
+
+                    // Header user info
+                    const headerInitialsEl = document.getElementById('headerUserInitials');
+                    const dropdownNameEl = document.getElementById('dropdownUserName');
+                    const dropdownEmailEl = document.getElementById('dropdownUserEmail');
+                    if (headerInitialsEl) headerInitialsEl.textContent = initials;
+                    if (dropdownNameEl) dropdownNameEl.textContent = displayName || session.user.email;
+                    if (dropdownEmailEl) dropdownEmailEl.textContent = user.email || session.user.email;
+
+                    // Fill form fields
+                    const profileAvatarEl = document.getElementById('profileAvatar');
+                    const nameEl = document.getElementById('name');
+                    const emailEl = document.getElementById('email');
+                    if (profileAvatarEl) profileAvatarEl.textContent = initials;
+                    if (nameEl) nameEl.value = displayName;
+                    if (emailEl) emailEl.value = user.email || session.user.email;
+                }
+            } catch (error) {
+                console.error('Error loading user info:', error);
+            }
+        }
+
+        async function handleProfileUpdate(e) {
+            e.preventDefault();
+            
+            const name = document.getElementById('name').value.trim();
+            const currentPassword = document.getElementById('currentPassword').value;
+            const newPassword = document.getElementById('newPassword').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+            const messageDiv = document.getElementById('profileMessage');
+            
+            try {
+                const supabase = getSupabase();
+                if (!supabase) return;
+
+                const { data: { session } } = await supabase.auth.getSession();
+                
+                if (!session) {
+                    window.location.href = '../login.html';
+                    return;
+                }
+
+                // Validate name
+                if (!name) {
+                    alert('Please enter your full name');
+                    return;
+                }
+
+                // Validate password if provided
+                if (newPassword) {
+                    if (!currentPassword) {
+                        alert('Please enter your current password');
+                        return;
+                    }
+
+                    if (!validatePassword()) {
+                        alert('New password does not meet security requirements');
+                        return;
+                    }
+
+                    if (newPassword !== confirmPassword) {
+                        alert('New passwords do not match');
+                        return;
+                    }
+
+                    if (newPassword === currentPassword) {
+                        alert('New password must be different from current password');
+                        return;
+                    }
+                }
+
+                // Update user name in users table
+                const { error: updateError } = await supabase
+                    .from('users')
+                    .update({ full_name: name })
+                    .eq('id', session.user.id);
+
+                if (updateError) throw updateError;
+
+                // Update password if provided
+                if (newPassword) {
+                    const { error: pwError } = await supabase.auth.updateUser({ password: newPassword });
+                    if (pwError) throw pwError;
+                }
+
+                // Refresh displayed name
+                const initials = name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+                const userInitialsEl = document.getElementById('userInitials');
+                const sidebarUserNameEl = document.getElementById('sidebarUserName');
+                const headerInitialsEl = document.getElementById('headerUserInitials');
+                const dropdownNameEl = document.getElementById('dropdownUserName');
+                const profileAvatarEl = document.getElementById('profileAvatar');
+                if (userInitialsEl) userInitialsEl.textContent = initials;
+                if (sidebarUserNameEl) sidebarUserNameEl.textContent = name;
+                if (headerInitialsEl) headerInitialsEl.textContent = initials;
+                if (dropdownNameEl) dropdownNameEl.textContent = name;
+                if (profileAvatarEl) profileAvatarEl.textContent = initials;
+
+                // Show success message
+                if (messageDiv) {
+                    messageDiv.classList.remove('hidden');
+                    setTimeout(() => messageDiv.classList.add('hidden'), 3000);
+                }
+
+                // Clear password fields
+                document.getElementById('currentPassword').value = '';
+                document.getElementById('newPassword').value = '';
+                document.getElementById('confirmPassword').value = '';
+                
+            } catch (error) {
+                console.error('Error updating profile:', error);
+                alert('Failed to update profile. Please try again.');
+            }
+        }
+
+        async function handleLogout() {
+            try {
+                const supabase = getSupabase();
+                if (supabase) await supabase.auth.signOut();
+                window.location.href = '../login.html';
+            } catch (error) {
+                console.error('Logout error:', error);
+                window.location.href = '../login.html';
+            }
+        }
+    </script>
+</body>
+</html>

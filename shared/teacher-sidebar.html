@@ -1,0 +1,143 @@
+<!-- Teacher Sidebar Component -->
+<aside class="teacher-sidebar">
+  <div class="sidebar-header">
+    <img src="/Logo/MathTuroLogo.png" alt="MathTuro Logo" class="sidebar-logo" />
+    <div>
+      <span class="sidebar-title">MathTuro</span><br />
+      <span class="sidebar-subtitle">Teacher Portal</span>
+    </div>
+  </div>
+  <div class="sidebar-profile">
+    <div class="sidebar-avatar">TJ</div>
+    <div>
+      <span class="sidebar-name" id="sidebar-teacher-name">Tycoon James Flores</span><br />
+      <span class="sidebar-role">Teacher</span>
+    </div>
+  </div>
+  <nav class="sidebar-nav">
+    <a href="/teacher/dashboard.html" class="sidebar-link" id="sidebar-dashboard"><span class="icon">🏠</span> Dashboard</a>
+    <a href="/teacher/submissions.html" class="sidebar-link" id="sidebar-submissions"><span class="icon">📝</span> Submissions</a>
+    <a href="/teacher/manage-modules.html" class="sidebar-link" id="sidebar-manage-modules"><span class="icon">📚</span> Manage Modules</a>
+    <a href="/teacher/manage-videos.html" class="sidebar-link" id="sidebar-manage-videos"><span class="icon">🎬</span> Manage Videos</a>
+    <a href="/teacher/manage-quizzes.html" class="sidebar-link" id="sidebar-manage-quizzes"><span class="icon">📝</span> Manage Quizzes</a>
+    <a href="/teacher/lesson-plan.html" class="sidebar-link" id="sidebar-lesson-plan"><span class="icon">📄</span> Lesson Plan</a>
+    <a href="/teacher/student-progress.html" class="sidebar-link" id="sidebar-student-progress"><span class="icon">👥</span> Student Progress</a>
+    <a href="/teacher/reports.html" class="sidebar-link" id="sidebar-reports"><span class="icon">📊</span> Reports</a>
+  </nav>
+  <button class="sidebar-logout" id="sidebar-logout">Logout</button>
+</aside>
+
+<!-- Sidebar Styles (can be moved to shared/css/base.css) -->
+<style>
+.teacher-sidebar {
+  width: 270px;
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 2px 16px rgba(0,0,0,0.08);
+  padding: 24px 0 0 0;
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+}
+.sidebar-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0 24px 16px 24px;
+}
+.sidebar-logo {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+}
+.sidebar-title {
+  font-weight: bold;
+  color: #16a34a;
+  font-size: 1.3rem;
+}
+.sidebar-subtitle {
+  color: #888;
+  font-size: 0.95rem;
+}
+.sidebar-profile {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0 24px 24px 24px;
+}
+.sidebar-avatar {
+  width: 48px;
+  height: 48px;
+  background: #f3f4f6;
+  color: #a21caf;
+  font-weight: bold;
+  font-size: 1.2rem;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.sidebar-name {
+  font-weight: 600;
+}
+.sidebar-role {
+  color: #a21caf;
+  font-size: 0.95rem;
+}
+.sidebar-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 0 24px;
+}
+.sidebar-link {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 16px;
+  border-radius: 12px;
+  color: #1e293b;
+  text-decoration: none;
+  font-weight: 500;
+  transition: background 0.15s, color 0.15s;
+}
+.sidebar-link.active, .sidebar-link:hover {
+  background: #16a34a;
+  color: #fff;
+  box-shadow: 0 2px 8px rgba(22,163,74,0.08);
+}
+.sidebar-logout {
+  margin: 32px 24px 0 24px;
+  padding: 12px 0;
+  border: none;
+  background: none;
+  color: #dc2626;
+  font-weight: 600;
+  font-size: 1.05rem;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+}
+</style>
+
+<script>
+// Highlight active link
+const path = window.location.pathname;
+document.querySelectorAll('.sidebar-link').forEach(link => {
+  if (link.getAttribute('href') && path.endsWith(link.getAttribute('href').split('/').pop())) {
+    link.classList.add('active');
+  }
+});
+// Logout handler (replace with your actual logout logic)
+document.getElementById('sidebar-logout').onclick = function() {
+  // Example: clear session and redirect
+  if (window.supabase) {
+    window.supabase.auth.signOut().then(() => {
+      window.location.href = '/login.html';
+    });
+  } else {
+    window.location.href = '/login.html';
+  }
+};
+</script>

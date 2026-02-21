@@ -103,59 +103,8 @@
 <body class="bg-gray-50 min-h-screen">
     <!-- Mobile Menu Overlay -->
     <div id="mobileOverlay" class="fixed inset-0 bg-black bg-opacity-50 z-40 hidden lg:hidden"></div>
-    
-    <!-- Sidebar -->
-    <aside id="sidebar" class="fixed left-0 top-0 h-full w-72 glass-sidebar border-r border-gray-200 z-50 transform -translate-x-full lg:translate-x-0 transition-transform duration-300 overflow-y-auto">
-        <!-- Logo -->
-        <div class="p-6 border-b border-gray-100">
-            <a href="dashboard.html" class="flex items-center space-x-3">
-                <div class="w-12 h-12 bg-white rounded-xl flex items-center justify-center shadow-lg">
-                    <img src="../Logo/MATHURO-LOGO.png" alt="MathTuro" class="w-10 h-10 object-contain">
-                </div>
-                <div>
-                    <span class="text-xl font-bold gradient-text">MathTuro</span>
-                    <p class="text-xs text-gray-500" id="portalType">Student Portal</p>
-                </div>
-            </a>
-        </div>
-        
-        <!-- User Info -->
-        <div class="p-6 border-b border-gray-100">
-            <div class="flex items-center space-x-3">
-                <div class="w-12 h-12 bg-brand/10 rounded-full flex items-center justify-center">
-                    <span id="userInitials" class="text-brand font-bold text-lg">--</span>
-                </div>
-                <div class="flex-1">
-                    <p id="sidebarUserName" class="font-semibold text-gray-800">Loading...</p>
-                    <div class="flex items-center space-x-1">
-                        <span id="streakBadge" class="text-sm">🔥</span>
-                        <span id="streakCount" class="text-sm text-orange-500 font-medium">0 day streak</span>
-                    </div>
-                </div>
-            </div>
-        </div>
-        
-        <!-- Navigation -->
-        <nav id="navigationLinks" class="p-4 space-y-2 overflow-y-auto" style="max-height: calc(100vh - 320px);">
-            <!-- Dynamically populated based on role -->
-        </nav>
-        
-        <!-- Bottom Actions -->
-        <div class="absolute bottom-0 left-0 right-0 p-4 border-t border-gray-100 bg-white">
-            <a href="../public/index.html" class="flex items-center space-x-3 px-4 py-3 text-gray-600 hover:text-brand transition-colors">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
-                </svg>
-                <span>Back to Home</span>
-            </a>
-            <button id="logoutButton" class="w-full flex items-center space-x-3 px-4 py-3 text-red-600 hover:bg-red-50 rounded-xl transition-colors">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
-                </svg>
-                <span>Logout</span>
-            </button>
-        </div>
-    </aside>
+    <!-- Sidebar (injected by JS) -->
+    <div id="sidebar"></div>
 
     <!-- Main Content -->
     <main class="lg:ml-72 min-h-screen">
@@ -188,16 +137,16 @@
                     <!-- User Menu -->
                     <div class="relative">
                         <button id="userMenuBtn" class="flex items-center space-x-2 p-2 rounded-lg hover:bg-gray-100">
-                            <div class="w-8 h-8 bg-brand/10 rounded-full flex items-center justify-center">
-                                <span id="headerUserInitials" class="text-brand font-semibold text-sm">--</span>
+                            <div class="w-8 h-8 bg-teacher-100 rounded-full flex items-center justify-center">
+                                <span id="headerUserInitials" class="text-teacher-600 font-semibold text-sm">--</span>
                             </div>
                         </button>
                         
                         <!-- Dropdown -->
-                        <div id="userDropdown" class="hidden absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-lg border border-gray-100 py-2">
+                        <div id="userDropdown" class="hidden absolute right-0 mt-2 w-64 bg-white rounded-xl shadow-lg border border-gray-100 py-2">
                             <div class="px-4 py-2 border-b border-gray-100">
-                                <p id="dropdownUserName" class="font-semibold text-gray-800">User</p>
-                                <p id="dropdownUserEmail" class="text-sm text-gray-500">email@example.com</p>
+                                <p id="dropdownUserName" class="font-semibold text-gray-800 truncate">User</p>
+                                <p id="dropdownUserEmail" class="text-sm text-gray-500 truncate">email@example.com</p>
                             </div>
                             <button onclick="handleLogout()" class="w-full text-left px-4 py-2 text-red-600 hover:bg-red-50">Logout</button>
                         </div>
@@ -307,6 +256,7 @@
     <script src="../shared/js/auth.js"></script>
     <script src="assets/js/teacher.js"></script>
     <script src="../shared/js/modules.js"></script>
+        <script src="assets/js/sidebar.js"></script>
     
     <script>
         let currentUser = null;
@@ -316,7 +266,6 @@
         const loadingOverlay = document.getElementById('loadingOverlay');
         const mobileMenuBtn = document.getElementById('mobileMenuBtn');
         const mobileOverlay = document.getElementById('mobileOverlay');
-        const sidebar = document.getElementById('sidebar');
         const userMenuBtn = document.getElementById('userMenuBtn');
         const userDropdown = document.getElementById('userDropdown');
 
@@ -330,7 +279,6 @@
                 }
 
                 updateUserInfo(currentUser);
-                setupNavigation(currentUser.role);
                 await loadSubmissions();
                 setupEventListeners();
             } catch (error) {
@@ -378,120 +326,15 @@
         }
 
         function showStudentsPage() {
-            showToast('Student progress page coming soon!', 'info');
+            window.location.href = 'student-progress.html';
         }
 
         function showReportsPage() {
-            showToast('Reports page coming soon!', 'info');
+            window.location.href = 'reports.html';
         }
 
         function getInitials(name) {
             return name.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2);
-        }
-
-        function setupNavigation(role) {
-            const navContainer = document.getElementById('navigationLinks');
-            const dashboardLink = role === 'admin' ? '../admin/dashboard.html' : role === 'teacher' ? 'dashboard.html' : '../student/dashboard.html';
-            
-            let navHTML = `
-                <p class="text-xs text-gray-400 uppercase tracking-wider px-4 mb-2">Main Menu</p>
-                <a href="${dashboardLink}" class="sidebar-link flex items-center space-x-3 px-4 py-3 rounded-xl text-gray-700">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
-                    </svg>
-                    <span>Dashboard</span>
-                </a>
-                <a href="../student/modules.html" class="sidebar-link flex items-center space-x-3 px-4 py-3 rounded-xl text-gray-700">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
-                    </svg>
-                    <span>Learning Modules</span>
-                </a>`;
-            
-            // Add student-specific navigation
-            if (role === 'student') {
-                navHTML += `
-                <a href="../public/tutorial-videos.html" class="sidebar-link flex items-center space-x-3 px-4 py-3 rounded-xl text-gray-700">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/>
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                    </svg>
-                    <span>Tutorial Videos</span>
-                </a>
-                <a href="../student/quizzes.html" class="sidebar-link flex items-center space-x-3 px-4 py-3 rounded-xl text-gray-700">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/>
-                    </svg>
-                    <span>Quizzes</span>
-                </a>
-                
-                <p class="text-xs text-gray-400 uppercase tracking-wider px-4 mb-2 mt-6">My Learning</p>
-                <a href="submissions.html" class="sidebar-link active flex items-center space-x-3 px-4 py-3 rounded-xl text-gray-700">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/>
-                    </svg>
-                    <span>My Submissions</span>
-                </a>
-                <a href="../student/dashboard.html#achievements" class="sidebar-link flex items-center space-x-3 px-4 py-3 rounded-xl text-gray-700">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"/>
-                    </svg>
-                    <span>Achievements</span>
-                </a>
-                <a href="../student/dashboard.html#leaderboard" class="sidebar-link flex items-center space-x-3 px-4 py-3 rounded-xl text-gray-700">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"/>
-                    </svg>
-                    <span>Leaderboard</span>
-                </a>`;
-            } else {
-                // Teacher/Admin navigation - match teacher-dashboard sidebar exactly
-                navHTML = `
-                <a href="${dashboardLink}" class="sidebar-link flex items-center space-x-3 px-4 py-3 rounded-xl text-gray-700">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
-                    </svg>
-                    <span>Dashboard</span>
-                </a>
-                <a href="submissions.html" class="sidebar-link active flex items-center space-x-3 px-4 py-3 rounded-xl text-gray-700">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/>
-                    </svg>
-                    <span>Submissions</span>
-                </a>
-                <a href="manage-modules.html" class="sidebar-link flex items-center space-x-3 px-4 py-3 rounded-xl text-gray-700">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
-                    </svg>
-                    <span>Manage Modules</span>
-                </a>
-                <a href="manage-videos.html" class="sidebar-link flex items-center space-x-3 px-4 py-3 rounded-xl text-gray-700">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/>
-                    </svg>
-                    <span>Manage Videos</span>
-                </a>
-                <a href="manage-quizzes.html" class="sidebar-link flex items-center space-x-3 px-4 py-3 rounded-xl text-gray-700">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/>
-                    </svg>
-                    <span>Manage Quizzes</span>
-                </a>
-                <a href="#" onclick="showStudentsPage()" class="sidebar-link flex items-center space-x-3 px-4 py-3 rounded-xl text-gray-700">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
-                    </svg>
-                    <span>Student Progress</span>
-                </a>
-                <a href="#" onclick="showReportsPage()" class="sidebar-link flex items-center space-x-3 px-4 py-3 rounded-xl text-gray-700">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
-                    </svg>
-                    <span>Reports</span>
-                </a>`;
-            }
-            
-            navContainer.innerHTML = navHTML;
         }
 
         async function loadSubmissions() {
@@ -507,12 +350,30 @@
                 }
 
                 const { data: submissions, error } = await query;
-                if (error) throw error;
+                if (error) {
+                    let msg = 'Failed to fetch submissions.';
+                    if (error.code === '42501' || error.message?.includes('RLS')) {
+                        msg += '<br>Access denied. Please check Supabase Row Level Security (RLS) policies for teacher access.';
+                    } else {
+                        msg += '<br>' + (error.message || 'Unknown error');
+                    }
+                    document.getElementById('submissionsList').innerHTML = `
+                        <div class="p-12 text-center text-red-500">
+                            <p>${msg}</p>
+                        </div>
+                    `;
+                    return;
+                }
 
                 if (!submissions || submissions.length === 0) {
                     allSubmissions = [];
                     updateStats();
                     renderSubmissions();
+                    document.getElementById('submissionsList').innerHTML = `
+                        <div class="p-12 text-center text-gray-500">
+                            <p>No submissions found.</p>
+                        </div>
+                    `;
                     return;
                 }
 
@@ -524,10 +385,14 @@
                 // Fetch users
                 let usersMap = {};
                 if (userIds.length > 0) {
-                    const { data: users } = await getSupabase()
+                    const { data: users, error: usersError } = await getSupabase()
                         .from('users')
                         .select('id, full_name, email')
                         .in('id', userIds);
+                    if (usersError) {
+                        document.getElementById('submissionsList').innerHTML = `<div class="p-12 text-center text-red-500">Failed to load user info: ${usersError.message}</div>`;
+                        return;
+                    }
                     if (users) {
                         users.forEach(u => usersMap[u.id] = u);
                     }
@@ -536,10 +401,14 @@
                 // Fetch quizzes
                 let quizzesMap = {};
                 if (quizIds.length > 0) {
-                    const { data: quizzes } = await getSupabase()
+                    const { data: quizzes, error: quizzesError } = await getSupabase()
                         .from('quizzes')
                         .select('id, title, total_items, passing_score')
                         .in('id', quizIds);
+                    if (quizzesError) {
+                        document.getElementById('submissionsList').innerHTML = `<div class="p-12 text-center text-red-500">Failed to load quiz info: ${quizzesError.message}</div>`;
+                        return;
+                    }
                     if (quizzes) {
                         quizzes.forEach(q => quizzesMap[q.id] = q);
                     }
@@ -548,10 +417,14 @@
                 // Fetch modules
                 let modulesMap = {};
                 if (moduleIds.length > 0) {
-                    const { data: modules } = await getSupabase()
+                    const { data: modules, error: modulesError } = await getSupabase()
                         .from('modules')
                         .select('id, title')
                         .in('id', moduleIds);
+                    if (modulesError) {
+                        document.getElementById('submissionsList').innerHTML = `<div class="p-12 text-center text-red-500">Failed to load module info: ${modulesError.message}</div>`;
+                        return;
+                    }
                     if (modules) {
                         modules.forEach(m => modulesMap[m.id] = m);
                     }
@@ -841,6 +714,7 @@
         }
 
         function setupEventListeners() {
+            const sidebar = document.getElementById('sidebar').querySelector('aside') || document.getElementById('sidebar');
             mobileMenuBtn.addEventListener('click', () => {
                 sidebar.classList.toggle('-translate-x-full');
                 mobileOverlay.classList.toggle('hidden');

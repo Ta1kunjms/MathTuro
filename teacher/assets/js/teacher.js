@@ -253,7 +253,7 @@ async function getStudentProgress(studentId) {
     const { data: progress, error: progressError } = await getSupabase()
       .from('lesson_progress')
       .select('*')
-      .eq('student_id', studentId);
+      .eq('user_id', studentId);
 
     if (progressError) {
       console.error('Error loading lesson progress:', progressError);
@@ -263,7 +263,7 @@ async function getStudentProgress(studentId) {
     const { data: submissions, error: submissionsError } = await getSupabase()
       .from('quiz_submissions')
       .select('*')
-      .eq('student_id', studentId);
+      .eq('user_id', studentId);
 
     if (submissionsError) {
       console.error('Error loading quiz submissions:', submissionsError);
@@ -323,7 +323,7 @@ async function getStudentProgress(studentId) {
     const totalQuizSubmissions = moduleProgress.reduce((sum, module) => sum + module.quiz_submissions, 0);
 
     return {
-      student_id: student.id,
+      user_id: student.id,
       student_name: student.full_name,
       student_email: student.email,
       total_lessons: totalLessons,
@@ -415,8 +415,8 @@ async function getStudentsByModule(moduleId) {
 
     // Process student progress
     return students.map(student => {
-      const studentProgress = progress.filter(p => p.student_id === student.id);
-      const studentSubmissions = submissions.filter(s => s.student_id === student.id);
+      const studentProgress = progress.filter(p => p.user_id === student.id);
+      const studentSubmissions = submissions.filter(s => s.user_id === student.id);
 
       const completedLessons = studentProgress.filter(p => p.completed).length;
       const submittedQuizzes = studentSubmissions.length;
@@ -426,7 +426,7 @@ async function getStudentsByModule(moduleId) {
         Math.round((completedLessons / lessons.length) * 100) : 0;
 
       return {
-        student_id: student.id,
+        user_id: student.id,
         student_name: student.full_name,
         student_email: student.email,
         total_lessons: lessons.length,

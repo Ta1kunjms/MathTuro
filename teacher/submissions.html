@@ -350,6 +350,10 @@
                 }
 
                 const { data: submissions, error } = await query;
+                console.log('Fetched submissions:', submissions, error);
+                if (submissions) {
+                    console.log('Submission statuses:', submissions.map(sub => ({ id: sub.id, status: sub.status })));
+                }
                 if (error) {
                     let msg = 'Failed to fetch submissions.';
                     if (error.code === '42501' || error.message?.includes('RLS')) {

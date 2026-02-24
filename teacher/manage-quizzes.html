@@ -629,6 +629,7 @@
             btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Saving...';
 
             try {
+                const now = new Date().toISOString();
                 const quizData = {
                     title: document.getElementById('quizTitle').value,
                     description: document.getElementById('quizDescription').value,
@@ -640,7 +641,8 @@
                     passing_score: parseInt(document.getElementById('quizPassingScore').value) || 0,
                     time_limit_minutes: parseInt(document.getElementById('quizTimeLimit').value) || 0,
                     is_published: document.getElementById('quizPublished').checked,
-                    teacher_id: currentUser.id
+                    teacher_id: currentUser.id,
+                    updated_at: now
                 };
 
                 let result;
@@ -650,6 +652,7 @@
                         .update(quizData)
                         .eq('id', editingQuizId);
                 } else {
+                    quizData.created_at = now;
                     result = await getSupabase()
                         .from('quizzes')
                         .insert(quizData);

@@ -1,7 +1,13 @@
 {
-  "outputDirectory": "public",
   "rewrites": [
-    { "source": "/", "destination": "/index.html" }
+    { "source": "/", "destination": "/index.html" },
+    { "source": "/teacher/(.*)", "destination": "/teacher/$1" },
+    { "source": "/student/(.*)", "destination": "/student/$1" },
+    { "source": "/admin/(.*)", "destination": "/admin/$1" },
+    { "source": "/shared/(.*)", "destination": "/shared/$1" },
+    { "source": "/Logo/(.*)", "destination": "/Logo/$1" },
+    { "source": "/Researchers/(.*)", "destination": "/Researchers/$1" },
+    { "source": "/public/(.*)", "destination": "/public/$1" }
   ],
   "headers": [
     {

@@ -77,6 +77,41 @@
         ::-webkit-scrollbar-track { background: #f1f1f1; }
         ::-webkit-scrollbar-thumb { background: #005801; border-radius: 3px; }
         ::-webkit-scrollbar-thumb:hover { background: #004601; }
+        
+        .card-hover {
+            transition: all 0.3s ease;
+        }
+        
+        .card-hover:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(0, 88, 1, 0.1);
+        }
+        
+        .nav-step {
+            padding: 0.5rem 1rem;
+            margin-right: 0.5rem;
+            background: #f3f4f6;
+            border-radius: 0.5rem;
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: #6b7280;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        .nav-step:hover {
+            background: #e5e7eb;
+            color: #374151;
+        }
+        
+        .nav-step.active {
+            background: linear-gradient(135deg, #005801 0%, #006B01 100%);
+            color: white;
+        }
+        
+        .progress-bar {
+            transition: width 0.3s ease;
+        }
     </style>
     <link rel="stylesheet" href="../shared/css/base.css">
     <link rel="stylesheet" href="assets/css/teacher.css">
@@ -131,30 +166,110 @@
 
         <!-- Content Area -->
         <div class="p-4 lg:p-8">
-            <div class="bg-white rounded-2xl border border-gray-100 shadow-sm">
-                <div class="p-6 border-b border-gray-100 flex items-center justify-between">
-                    <div>
-                        <h2 class="text-lg font-semibold text-gray-800">Student Progress</h2>
-                        <p class="text-sm text-gray-500">Track student submissions and performance</p>
+            <!-- Navigation Steps -->
+            <div id="navigationSteps" class="flex flex-wrap items-center mb-6 gap-2">
+                <div class="nav-step active" data-step="grade">Grade Levels</div>
+                <div class="nav-step" data-step="section">Sections</div>
+                <div class="nav-step" data-step="student">Students</div>
+                <div class="nav-step" data-step="quizzes">Quizzes</div>
+            </div>
+
+            <!-- Grade Levels View -->
+            <div id="gradeLevelView" class="space-y-4">
+                <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
+                    <div class="flex items-center justify-between mb-6">
+                        <h2 class="text-lg font-semibold text-gray-800">Select Grade Level</h2>
+                        <span id="gradeCount" class="text-sm text-gray-500">0 grade levels</span>
                     </div>
-                    <span id="submissionCount" class="text-sm text-gray-500">0 submissions</span>
+                    <div id="gradeLevelGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        <div class="col-span-full text-center py-8 text-gray-400">Loading grade levels...</div>
+                    </div>
                 </div>
-                <div id="progressTableContainer" class="overflow-x-auto">
-                    <table class="min-w-full divide-y divide-gray-200">
-                        <thead class="bg-gray-50">
-                            <tr>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Student</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Module</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Quiz</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Score</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Submitted</th>
-                            </tr>
-                        </thead>
-                        <tbody id="progressTableBody" class="bg-white divide-y divide-gray-200">
-                            <tr><td colspan="6" class="text-center py-8 text-gray-400">Loading...</td></tr>
-                        </tbody>
-                    </table>
+            </div>
+
+            <!-- Sections View -->
+            <div id="sectionView" class="space-y-4 hidden">
+                <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
+                    <div class="flex items-center justify-between mb-6">
+                        <h2 class="text-lg font-semibold text-gray-800">Select Section</h2>
+                        <span id="sectionCount" class="text-sm text-gray-500">0 sections</span>
+                    </div>
+                    <div id="sectionGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        <div class="col-span-full text-center py-8 text-gray-400">Loading sections...</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Students View -->
+            <div id="studentView" class="space-y-4 hidden">
+                <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
+                    <div class="flex items-center justify-between mb-6">
+                        <h2 class="text-lg font-semibold text-gray-800">Select Student</h2>
+                        <span id="studentCount" class="text-sm text-gray-500">0 students</span>
+                    </div>
+                    <div id="studentGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        <div class="col-span-full text-center py-8 text-gray-400">Loading students...</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quizzes View -->
+            <div id="quizzesView" class="space-y-4 hidden">
+                <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
+                    <div class="flex items-center justify-between mb-6">
+                        <h2 id="quizzesTitle" class="text-lg font-semibold text-gray-800">Student Quizzes</h2>
+                        <span id="quizCount" class="text-sm text-gray-500">0 quizzes</span>
+                    </div>
+                    <div id="quizzesTableContainer" class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Quiz</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Module</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Score</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Submitted</th>
+                                </tr>
+                            </thead>
+                            <tbody id="quizzesTableBody" class="bg-white divide-y divide-gray-200">
+                                <tr><td colspan="5" class="text-center py-8 text-gray-400">Loading quizzes...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Student Progress Summary -->
+            <div id="studentSummary" class="hidden">
+                <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-4">Progress Summary</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                        <div class="bg-primary-50 rounded-xl p-4">
+                            <div class="text-2xl font-bold text-primary-600" id="summaryTotalQuizzes">0</div>
+                            <div class="text-sm text-primary-700">Total Quizzes</div>
+                        </div>
+                        <div class="bg-green-50 rounded-xl p-4">
+                            <div class="text-2xl font-bold text-green-600" id="summaryApproved">0</div>
+                            <div class="text-sm text-green-700">Approved</div>
+                        </div>
+                        <div class="bg-yellow-50 rounded-xl p-4">
+                            <div class="text-2xl font-bold text-yellow-600" id="summaryPending">0</div>
+                            <div class="text-sm text-yellow-700">Pending</div>
+                        </div>
+                        <div class="bg-blue-50 rounded-xl p-4">
+                            <div class="text-2xl font-bold text-blue-600" id="summaryAverageScore">0%</div>
+                            <div class="text-sm text-blue-700">Average Score</div>
+                        </div>
+                    </div>
+                    <div class="space-y-3">
+                        <div class="flex items-center justify-between">
+                            <span class="text-sm text-gray-600">Overall Completion</span>
+                            <span class="text-sm font-semibold text-gray-900" id="summaryCompletion">0%</span>
+                        </div>
+                        <div class="w-full bg-gray-200 rounded-full h-2">
+                            <div id="completionBar" class="bg-gradient-to-r from-primary-500 to-primary-600 h-2 rounded-full" style="width: 0%"></div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -166,6 +281,13 @@
     <script src="../shared/js/auth.js"></script>
         <script src="assets/js/sidebar.js"></script>
     <script>
+        // State management
+        let currentState = {
+            gradeLevel: null,
+            section: null,
+            student: null
+        };
+
         // Mobile menu setup
         document.addEventListener('DOMContentLoaded', function() {
             const mobileMenuBtn = document.getElementById('mobileMenuBtn');
@@ -200,9 +322,18 @@
                 });
             }
 
-            // Load user info and data
+            // Navigation steps
+            const navSteps = document.querySelectorAll('.nav-step');
+            navSteps.forEach(step => {
+                step.addEventListener('click', () => {
+                    const stepName = step.dataset.step;
+                    navigateToStep(stepName);
+                });
+            });
+
+            // Load user info and initial data
             loadUserInfo();
-            loadProgressData();
+            loadGradeLevels();
         });
 
         async function loadUserInfo() {
@@ -238,51 +369,309 @@
             }
         }
 
-        async function loadProgressData() {
-            const tableBody = document.getElementById('progressTableBody');
-            const countSpan = document.getElementById('submissionCount');
-            
+        async function loadGradeLevels() {
             try {
                 const supabase = getSupabase();
                 if (!supabase) {
                     throw new Error('Supabase client not initialized');
                 }
+                
                 const { data, error } = await supabase
-                    .from('quiz_submissions')
-                    .select('*, user:users!quiz_submissions_user_id_fkey(full_name), modules(title), quizzes(title)')
-                    .order('submitted_at', { ascending: false });
+                    .from('grade_levels')
+                    .select('*')
+                    .eq('is_active', true)
+                    .order('name');
                 
                 if (error) {
-                    console.error('Error loading submissions:', error);
+                    console.error('Error loading grade levels:', error);
                     throw error;
                 }
                 
-                if (countSpan) {
-                    countSpan.textContent = `${data.length} submissions`;
-                }
+                document.getElementById('gradeCount').textContent = `${data.length} grade level${data.length !== 1 ? 's' : ''}`;
                 
-                if (!data || data.length === 0) {
-                    tableBody.innerHTML = '<tr><td colspan="6" class="text-center py-8 text-gray-400">No submissions found.</td></tr>';
-                    return;
+                const gradeGrid = document.getElementById('gradeLevelGrid');
+                if (data.length === 0) {
+                    gradeGrid.innerHTML = `
+                        <div class="col-span-full text-center py-8 text-gray-400">
+                            <svg class="w-16 h-16 mx-auto mb-3 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
+                            </svg>
+                            <p>No grade levels available</p>
+                            <p class="text-sm text-gray-500 mt-1">Admin hasn't created any grade levels yet</p>
+                        </div>
+                    `;
+                } else {
+                    gradeGrid.innerHTML = data.map(grade => `
+                        <div class="bg-white rounded-xl border border-gray-200 p-6 card-hover cursor-pointer" 
+                             onclick="selectGradeLevel('${grade.id}', '${grade.name}')">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <h3 class="font-semibold text-gray-900 text-lg">${grade.name}</h3>
+                                    <p class="text-sm text-gray-500 mt-1">${grade.description || `View sections in ${grade.name}`}</p>
+                                </div>
+                                <div class="w-10 h-10 bg-primary-100 rounded-full flex items-center justify-center">
+                                    <svg class="w-5 h-5 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                                    </svg>
+                                </div>
+                            </div>
+                        </div>
+                    `).join('');
                 }
-                
-                tableBody.innerHTML = data.map(sub => `
-                    <tr class="hover:bg-gray-50">
-                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${sub.user?.full_name || 'Student'}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${sub.modules?.title || '-'}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${sub.quizzes?.title || '-'}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${sub.student_score ?? '-'} / ${sub.total_items ?? '-'}</td>
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            <span class="px-2 py-1 rounded-full text-xs font-medium ${sub.status === 'approved' ? 'bg-green-100 text-green-700' : sub.status === 'pending' ? 'bg-yellow-100 text-yellow-700' : 'bg-red-100 text-red-700'}">
-                                ${sub.status ? sub.status.charAt(0).toUpperCase() + sub.status.slice(1) : 'Pending'}
-                            </span>
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-xs text-gray-500">${sub.submitted_at ? new Date(sub.submitted_at).toLocaleString() : '-'}</td>
-                    </tr>
-                `).join('');
             } catch (err) {
-                console.error('Error loading progress data:', err);
-                tableBody.innerHTML = `<tr><td colspan="6" class="text-center py-8 text-red-400">Failed to load data: ${err.message}</td></tr>`;
+                console.error('Error loading grade levels:', err);
+                document.getElementById('gradeLevelGrid').innerHTML = `
+                    <div class="col-span-full text-center py-8 text-red-400">
+                        <p>Failed to load grade levels: ${err.message}</p>
+                    </div>
+                `;
+            }
+        }
+
+        async function loadSections(gradeLevelId, gradeLevelName) {
+            try {
+                const supabase = getSupabase();
+                if (!supabase) {
+                    throw new Error('Supabase client not initialized');
+                }
+                
+                const { data, error } = await supabase
+                    .from('sections')
+                    .select('*')
+                    .eq('grade_level_id', gradeLevelId)
+                    .eq('is_active', true)
+                    .order('name');
+                
+                if (error) {
+                    console.error('Error loading sections:', error);
+                    throw error;
+                }
+                
+                document.getElementById('sectionCount').textContent = `${data.length} section${data.length !== 1 ? 's' : ''}`;
+                
+                const sectionGrid = document.getElementById('sectionGrid');
+                if (data.length === 0) {
+                    sectionGrid.innerHTML = `
+                        <div class="col-span-full text-center py-8 text-gray-400">
+                            <svg class="w-16 h-16 mx-auto mb-3 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
+                            </svg>
+                            <p>No sections available</p>
+                            <p class="text-sm text-gray-500 mt-1">No sections found for ${gradeLevelName}</p>
+                        </div>
+                    `;
+                } else {
+                    sectionGrid.innerHTML = data.map(section => `
+                        <div class="bg-white rounded-xl border border-gray-200 p-6 card-hover cursor-pointer" 
+                             onclick="selectSection('${section.id}', '${section.name}')">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <h3 class="font-semibold text-gray-900 text-lg">${section.name}</h3>
+                                    <p class="text-sm text-gray-500 mt-1">${section.description || `View students in ${section.name}`}</p>
+                                </div>
+                                <div class="w-10 h-10 bg-primary-100 rounded-full flex items-center justify-center">
+                                    <svg class="w-5 h-5 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                                    </svg>
+                                </div>
+                            </div>
+                        </div>
+                    `).join('');
+                }
+            } catch (err) {
+                console.error('Error loading sections:', err);
+                document.getElementById('sectionGrid').innerHTML = `
+                    <div class="col-span-full text-center py-8 text-red-400">
+                        <p>Failed to load sections: ${err.message}</p>
+                    </div>
+                `;
+            }
+        }
+
+        async function loadStudents(gradeLevelId, sectionId, sectionName) {
+            try {
+                const supabase = getSupabase();
+                if (!supabase) {
+                    throw new Error('Supabase client not initialized');
+                }
+                
+                const { data, error } = await supabase
+                    .from('users')
+                    .select('*')
+                    .eq('role', 'student')
+                    .eq('grade_level_id', gradeLevelId)
+                    .eq('section_id', sectionId)
+                    .order('full_name');
+                
+                if (error) {
+                    console.error('Error loading students:', error);
+                    throw error;
+                }
+                
+                document.getElementById('studentCount').textContent = `${data.length} student${data.length !== 1 ? 's' : ''}`;
+                
+                const studentGrid = document.getElementById('studentGrid');
+                if (data.length === 0) {
+                    studentGrid.innerHTML = `
+                        <div class="col-span-full text-center py-8 text-gray-400">
+                            <svg class="w-16 h-16 mx-auto mb-3 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
+                            </svg>
+                            <p>No students available</p>
+                            <p class="text-sm text-gray-500 mt-1">No students found in ${sectionName}</p>
+                        </div>
+                    `;
+                } else {
+                    studentGrid.innerHTML = data.map(student => `
+                        <div class="bg-white rounded-xl border border-gray-200 p-6 card-hover cursor-pointer" 
+                             onclick="selectStudent('${student.id}', '${student.full_name}')">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <h3 class="font-semibold text-gray-900 text-lg">${student.full_name}</h3>
+                                    <p class="text-sm text-gray-500 mt-1">${student.email}</p>
+                                </div>
+                                <div class="w-10 h-10 bg-primary-100 rounded-full flex items-center justify-center">
+                                    <svg class="w-5 h-5 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                                    </svg>
+                                </div>
+                            </div>
+                        </div>
+                    `).join('');
+                }
+            } catch (err) {
+                console.error('Error loading students:', err);
+                document.getElementById('studentGrid').innerHTML = `
+                    <div class="col-span-full text-center py-8 text-red-400">
+                        <p>Failed to load students: ${err.message}</p>
+                    </div>
+                `;
+            }
+        }
+
+        async function loadStudentQuizzes(studentId) {
+            try {
+                const supabase = getSupabase();
+                if (!supabase) {
+                    throw new Error('Supabase client not initialized');
+                }
+                
+                const { data, error } = await supabase
+                    .from('quiz_submissions')
+                    .select('*, modules(title), quizzes(title)')
+                    .eq('user_id', studentId)
+                    .order('submitted_at', { ascending: false });
+                
+                if (error) {
+                    console.error('Error loading quizzes:', error);
+                    throw error;
+                }
+                
+                document.getElementById('quizCount').textContent = `${data.length} quiz${data.length !== 1 ? 'zes' : ''}`;
+                
+                const tableBody = document.getElementById('quizzesTableBody');
+                if (data.length === 0) {
+                    tableBody.innerHTML = `<tr><td colspan="5" class="text-center py-8 text-gray-400">No quizzes submitted yet</td></tr>`;
+                } else {
+                    tableBody.innerHTML = data.map(sub => `
+                        <tr class="hover:bg-gray-50">
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${sub.quizzes?.title || '-'}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${sub.modules?.title || '-'}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${sub.student_score ?? '-'} / ${sub.total_items ?? '-'}</td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <span class="px-2 py-1 rounded-full text-xs font-medium ${sub.status === 'approved' ? 'bg-green-100 text-green-700' : sub.status === 'pending' ? 'bg-yellow-100 text-yellow-700' : 'bg-red-100 text-red-700'}">
+                                    ${sub.status ? sub.status.charAt(0).toUpperCase() + sub.status.slice(1) : 'Pending'}
+                                </span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-xs text-gray-500">${sub.submitted_at ? new Date(sub.submitted_at).toLocaleString() : '-'}</td>
+                        </tr>
+                    `).join('');
+                }
+
+                // Update summary
+                updateStudentSummary(data);
+            } catch (err) {
+                console.error('Error loading quizzes:', err);
+                document.getElementById('quizzesTableBody').innerHTML = `
+                    <tr><td colspan="5" class="text-center py-8 text-red-400">Failed to load quizzes: ${err.message}</td></tr>
+                `;
+            }
+        }
+
+        function updateStudentSummary(submissions) {
+            const totalQuizzes = submissions.length;
+            const approved = submissions.filter(sub => sub.status === 'approved').length;
+            const pending = submissions.filter(sub => sub.status === 'pending').length;
+            const completed = approved + pending;
+            const totalScore = submissions.reduce((sum, sub) => sum + (sub.student_score || 0), 0);
+            const totalPossible = submissions.reduce((sum, sub) => sum + (sub.total_items || 0), 0);
+            const averageScore = totalPossible > 0 ? Math.round((totalScore / totalPossible) * 100) : 0;
+            const completion = totalQuizzes > 0 ? Math.round((completed / totalQuizzes) * 100) : 0;
+
+            document.getElementById('summaryTotalQuizzes').textContent = totalQuizzes;
+            document.getElementById('summaryApproved').textContent = approved;
+            document.getElementById('summaryPending').textContent = pending;
+            document.getElementById('summaryAverageScore').textContent = `${averageScore}%`;
+            document.getElementById('summaryCompletion').textContent = `${completion}%`;
+            document.getElementById('completionBar').style.width = `${completion}%`;
+        }
+
+        function selectGradeLevel(gradeLevelId, gradeLevelName) {
+            currentState.gradeLevel = { id: gradeLevelId, name: gradeLevelName };
+            currentState.section = null;
+            currentState.student = null;
+            
+            navigateToStep('section');
+            loadSections(gradeLevelId, gradeLevelName);
+        }
+
+        function selectSection(sectionId, sectionName) {
+            currentState.section = { id: sectionId, name: sectionName };
+            currentState.student = null;
+            
+            navigateToStep('student');
+            loadStudents(currentState.gradeLevel.id, sectionId, sectionName);
+        }
+
+        function selectStudent(studentId, studentName) {
+            currentState.student = { id: studentId, name: studentName };
+            
+            document.getElementById('quizzesTitle').textContent = `${studentName}'s Quizzes`;
+            navigateToStep('quizzes');
+            loadStudentQuizzes(studentId);
+        }
+
+        function navigateToStep(stepName) {
+            // Update navigation UI
+            document.querySelectorAll('.nav-step').forEach(step => {
+                step.classList.remove('active');
+                if (step.dataset.step === stepName) {
+                    step.classList.add('active');
+                }
+            });
+
+            // Hide all views
+            document.getElementById('gradeLevelView').classList.add('hidden');
+            document.getElementById('sectionView').classList.add('hidden');
+            document.getElementById('studentView').classList.add('hidden');
+            document.getElementById('quizzesView').classList.add('hidden');
+            document.getElementById('studentSummary').classList.add('hidden');
+
+            // Show selected view
+            switch (stepName) {
+                case 'grade':
+                    document.getElementById('gradeLevelView').classList.remove('hidden');
+                    break;
+                case 'section':
+                    document.getElementById('sectionView').classList.remove('hidden');
+                    break;
+                case 'student':
+                    document.getElementById('studentView').classList.remove('hidden');
+                    break;
+                case 'quizzes':
+                    document.getElementById('quizzesView').classList.remove('hidden');
+                    document.getElementById('studentSummary').classList.remove('hidden');
+                    break;
             }
         }
 

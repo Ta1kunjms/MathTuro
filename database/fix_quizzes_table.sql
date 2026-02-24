@@ -16,6 +16,7 @@ ALTER TABLE public.quizzes ADD COLUMN IF NOT EXISTS is_required BOOLEAN DEFAULT 
 ALTER TABLE public.quizzes ADD COLUMN IF NOT EXISTS deadline TIMESTAMP WITH TIME ZONE;
 ALTER TABLE public.quizzes ADD COLUMN IF NOT EXISTS order_index INTEGER DEFAULT 0;
 ALTER TABLE public.quizzes ADD COLUMN IF NOT EXISTS created_by UUID REFERENCES public.users(id) ON DELETE SET NULL;
+ALTER TABLE public.quizzes ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW();
 
 -- Ensure module_id is nullable (from migration_v4)
 ALTER TABLE public.quizzes ALTER COLUMN module_id DROP NOT NULL;

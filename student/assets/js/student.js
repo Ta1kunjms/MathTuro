@@ -35,21 +35,10 @@
   - Shows alert if marking lesson complete fails
   - Logs error to console
 */
-async function markLessonComplete(lessonId) {
-  try {
-    // Get current user from localStorage
-    const user = JSON.parse(localStorage.getItem('user'));
-    
-    if (!user || user.role !== 'student') {
-      alert('You must be logged in as a student to mark lessons as complete');
-      return false;
-    }
-
-    // Check if progress record already exists
-    const { data: existingProgress, error: checkError } = await getSupabase()
+()
       .from('lesson_progress')
       .select('*')
-      .eq('student_id', user.id)
+      .eq('user_id', user.id)
       .eq('lesson_id', lessonId)
       .single();
 
@@ -67,14 +56,14 @@ async function markLessonComplete(lessonId) {
           completed_at: new Date().toISOString(),
           updated_at: new Date().toISOString()
         })
-        .eq('student_id', user.id)
+        .eq('user_id', user.id)
         .eq('lesson_id', lessonId);
     } else {
       // Create new record
       updateResult = await getSupabase()
         .from('lesson_progress')
         .insert({
-          student_id: user.id,
+          user_id: user.id,
           lesson_id: lessonId,
           completed: true,
           completed_at: new Date().toISOString(),
@@ -243,7 +232,7 @@ async function getStudentProgressByModule(moduleId) {
     const { data: progress, error: progressError } = await getSupabase()
       .from('lesson_progress')
       .select('*')
-      .eq('student_id', user.id)
+      .eq('user_id', user.id)
       .in('lesson_id', lessons.map(lesson => lesson.id));
 
     if (progressError) {
@@ -254,7 +243,7 @@ async function getStudentProgressByModule(moduleId) {
     const { data: submissions, error: submissionsError } = await getSupabase()
       .from('quiz_submissions')
       .select('*')
-      .eq('student_id', user.id)
+      .eq('user_id', user.id)
       .in('lesson_id', lessons.map(lesson => lesson.id));
 
     if (submissionsError) {
@@ -334,7 +323,7 @@ async function getQuizSubmissions(status = null) {
     let query = getSupabase()
       .from('quiz_submissions')
       .select('*, lessons(title, module_id), modules(title)')
-      .eq('student_id', user.id)
+      .eq('user_id', user.id)
       .order('submitted_at', { ascending: false });
 
     // Filter by status if provided
@@ -399,7 +388,7 @@ async function requestQuizResubmission(submissionId) {
         updated_at: new Date().toISOString()
       })
       .eq('id', submissionId)
-      .eq('student_id', user.id);
+      .eq('user_id', user.id);
 
     if (error) {
       throw new Error(error.message);
@@ -504,7 +493,7 @@ async function updateQuizSubmission(submissionId, score, totalItems, screenshotF
       .from('quiz_submissions')
       .update(updateData)
       .eq('id', submissionId)
-      .eq('student_id', user.id);
+      .eq('user_id', user.id);
 
     if (updateError) {
       throw new Error(updateError.message);
@@ -547,14 +536,14 @@ async function getStudentDashboardStats() {
     const { data: lessonProgress } = await getSupabase()
       .from('lesson_progress')
       .select('*, lessons(module_id)')
-      .eq('student_id', user.id)
+      .eq('user_id', user.id)
       .eq('completed', true);
 
     // Get quiz submissions
     const { data: submissions } = await getSupabase()
       .from('quiz_submissions')
       .select('score, total_items, status')
-      .eq('student_id', user.id);
+      .eq('user_id', user.id);
 
     // Calculate stats
     const completedLessons = lessonProgress?.length || 0;
@@ -619,7 +608,7 @@ async function getStudentStreak() {
     const { data: streakData } = await getSupabase()
       .from('student_streaks')
       .select('*')
-      .eq('student_id', user.id)
+      .eq('user_id', user.id)
       .single();
 
     return streakData?.current_streak || 0;
@@ -647,7 +636,7 @@ async function updateStudentStreak() {
     const { data: existing } = await getSupabase()
       .from('student_streaks')
       .select('*')
-      .eq('student_id', user.id)
+      .eq('user_id', user.id)
       .single();
 
     if (existing) {
@@ -671,13 +660,13 @@ async function updateStudentStreak() {
           last_activity_date: today,
           updated_at: new Date().toISOString()
         })
-        .eq('student_id', user.id);
+        .eq('user_id', user.id);
 
     } else {
       await getSupabase()
         .from('student_streaks')
         .insert({
-          student_id: user.id,
+          user_id: user.id,
           current_streak: 1,
           longest_streak: 1,
           last_activity_date: today,
@@ -707,7 +696,7 @@ async function getRecentActivity(limit = 10) {
     const { data: progress } = await getSupabase()
       .from('lesson_progress')
       .select('*, lessons(title, module_id)')
-      .eq('student_id', user.id)
+      .eq('user_id', user.id)
       .order('updated_at', { ascending: false })
       .limit(limit);
 
@@ -737,7 +726,7 @@ async function getWeeklyActivity() {
     const { data: activity } = await getSupabase()
       .from('lesson_progress')
       .select('updated_at')
-      .eq('student_id', user.id)
+      .eq('user_id', user.id)
       .gte('updated_at', startOfWeek.toISOString());
 
     const dayCounts = [0, 0, 0, 0, 0, 0, 0];
@@ -804,7 +793,7 @@ async function getStudentNotifications(limit = 10) {
     const { data: submissions } = await getSupabase()
       .from('quiz_submissions')
       .select('*, lessons(title)')
-      .eq('student_id', user.id)
+      .eq('user_id', user.id)
       .in('status', ['approved', 'rejected'])
       .order('reviewed_at', { ascending: false })
       .limit(limit);
@@ -874,7 +863,7 @@ async function trackVideoView(videoId) {
       .from('video_views')
       .insert({
         video_id: videoId,
-        student_id: user.id,
+        user_id: user.id,
         viewed_at: new Date().toISOString()
       });
 
@@ -1001,11 +990,11 @@ async function saveStudentNote(noteContent, lessonId = null) {
       await getSupabase()
         .from('student_notes')
         .upsert({
-          student_id: user.id,
+          user_id: user.id,
           lesson_id: lessonId,
           content: noteContent,
           updated_at: new Date().toISOString()
-        }, { onConflict: 'student_id,lesson_id' });
+        }, { onConflict: 'user_id,lesson_id' });
     } catch {
       // Fallback to localStorage
       const key = lessonId ? `note_${user.id}_${lessonId}` : `note_${user.id}_general`;
@@ -1034,7 +1023,7 @@ async function getStudentNotes(lessonId = null) {
       const { data } = await getSupabase()
         .from('student_notes')
         .select('content')
-        .eq('student_id', user.id)
+        .eq('user_id', user.id)
         .eq('lesson_id', lessonId)
         .single();
 

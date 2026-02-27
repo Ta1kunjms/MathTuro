@@ -457,11 +457,26 @@ async function updateQuizSubmission(submissionId, score, totalItems, screenshotF
       return false;
     }
 
+    // Get existing submission data to check current status
+    const { data: existingSubmission, error: getError } = await getSupabase()
+      .from('quiz_submissions')
+      .select('status')
+      .eq('id', submissionId)
+      .eq('user_id', user.id)
+      .single();
+
+    if (getError) {
+      throw new Error(getError.message);
+    }
+
     const updateData = {
       student_score: numScore,
       total_items: numTotalItems,
       status: 'pending',
       teacher_comment: null,
+      teacher_feedback: null,
+      reviewed_at: null,
+      reviewed_by: null,
       updated_at: new Date().toISOString()
     };
 

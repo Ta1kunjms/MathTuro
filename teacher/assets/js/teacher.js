@@ -577,3 +577,134 @@ async function sendNotification(studentId, title, message) {
     return false;
   }
 }
+
+/*
+  Function Name: loadTeacherSections
+  Purpose:
+  - Loads and displays the teacher's assigned sections on the dashboard
+  - Fetches sections from database using getTeacherSections function
+  - Displays sections with grade level information
+
+  When it runs:
+  - Called on teacher dashboard initialization
+  - Can be called manually to refresh section data
+
+  Who can use it:
+  - Teacher / Admin
+
+  Backend interaction:
+  - Calls getTeacherSections function which queries sections table
+  - Filters sections by teacher_id
+
+  Error handling:
+  - Handles database query errors
+  - Shows message if no sections are assigned
+*/
+async function loadTeacherSections(teacherId) {
+  try {
+    const sectionsContainer = document.getElementById('mySections');
+    if (!sectionsContainer) {
+      return;
+    }
+
+    // Show loading state
+    sectionsContainer.innerHTML = `
+      <div class="p-6 text-center text-gray-500">
+        <div class="inline-block animate-spin rounded-full h-8 w-8 border-4 border-teacher-600 border-t-transparent mb-2"></div>
+        <p>Loading sections...</p>
+      </div>
+    `;
+
+    // Fetch teacher sections
+    const sections = await getTeacherSections(teacherId);
+
+    if (sections.length === 0) {
+      sectionsContainer.innerHTML = `
+        <div class="p-6 text-center text-gray-500">
+          <p>No sections assigned</p>
+        </div>
+      `;
+      return;
+    }
+
+    // Display sections
+    let html = '';
+    for (const section of sections) {
+      // Get student count for the section
+      const students = await getStudentsBySection(section.id);
+      
+      html += `
+        <div class="p-4 hover:bg-gray-50 transition-colors">
+          <div class="flex items-center justify-between">
+            <div>
+              <h4 class="font-semibold text-gray-800">${section.name}</h4>
+              <p class="text-sm text-gray-600">${section.grade_levels?.name || 'N/A'}</p>
+            </div>
+            <div class="text-right">
+              <p class="text-sm font-medium text-teacher-600">${students.length} Students</p>
+              <button 
+                onclick="viewSectionStudents('${section.id}', '${section.name}')"
+                class="text-xs text-teacher-600 hover:text-teacher-700 mt-1"
+              >
+                View Students
+              </button>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    sectionsContainer.innerHTML = html;
+
+  } catch (error) {
+    console.error('Error loading teacher sections:', error);
+    const sectionsContainer = document.getElementById('mySections');
+    if (sectionsContainer) {
+      sectionsContainer.innerHTML = `
+        <div class="p-6 text-center text-gray-500">
+          <p>Error loading sections</p>
+        </div>
+      `;
+    }
+  }
+}
+
+/*
+  Function Name: viewSectionStudents
+  Purpose:
+  - Displays students in a specific section
+  - Can be used to show a modal or navigate to student list
+
+  When it runs:
+  - Called when teacher clicks "View Students" button on a section
+  - Can be customized to show a modal or new page
+
+  Who can use it:
+  - Teacher / Admin
+
+  Backend interaction:
+  - Calls getStudentsBySection function which queries users table
+  - Filters students by section_id
+
+  Error handling:
+  - Handles database query errors
+  - Shows message if no students found
+*/
+async function viewSectionStudents(sectionId, sectionName) {
+  try {
+    const students = await getStudentsBySection(sectionId);
+    
+    if (students.length === 0) {
+      alert(`No students in ${sectionName}`);
+      return;
+    }
+
+    // Create a simple alert with student names (can be expanded to a modal)
+    const studentNames = students.map(student => student.full_name).join('\n');
+    alert(`Students in ${sectionName}:\n\n${studentNames}`);
+
+  } catch (error) {
+    console.error('Error viewing section students:', error);
+    alert('Error loading students');
+  }
+}

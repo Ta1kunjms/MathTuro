@@ -253,6 +253,8 @@
                                 <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">User</th>
                                 <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Email</th>
                                 <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Role</th>
+                                <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Grade</th>
+                                <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Section</th>
                                 <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Joined</th>
                                 <th class="px-6 py-4 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">Actions</th>
                             </tr>
@@ -302,11 +304,25 @@
                 
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-2">Role</label>
-                    <select id="userRole" required class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-red-500/20 focus:border-red-500">
+                    <select id="userRole" required class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-red-500/20 focus:border-red-500" onchange="updateRoleSpecificFields()">
                         <option value="">Select a role</option>
                         <option value="student">Student</option>
                         <option value="teacher">Teacher</option>
                         <option value="admin">Admin</option>
+                    </select>
+                </div>
+                
+                <div id="gradeLevelField" class="hidden">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Grade Level</label>
+                    <select id="userGradeLevel" class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-red-500/20 focus:border-red-500">
+                        <option value="">Select grade level</option>
+                    </select>
+                </div>
+                
+                <div id="sectionField" class="hidden">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Section</label>
+                    <select id="userSection" class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-red-500/20 focus:border-red-500">
+                        <option value="">Select section</option>
                     </select>
                 </div>
                 
@@ -391,6 +407,59 @@
             document.getElementById('sidebarUserName').textContent = user.fullName;
             document.getElementById('userInitials').textContent = initials;
         }
+        
+        function updateRoleSpecificFields() {
+            const role = document.getElementById('userRole').value;
+            const gradeLevelField = document.getElementById('gradeLevelField');
+            const sectionField = document.getElementById('sectionField');
+            
+            if (role === 'student') {
+                gradeLevelField.classList.remove('hidden');
+                sectionField.classList.remove('hidden');
+                loadGradeLevels();
+            } else {
+                gradeLevelField.classList.add('hidden');
+                sectionField.classList.add('hidden');
+                document.getElementById('userGradeLevel').value = '';
+                document.getElementById('userSection').value = '';
+            }
+        }
+        
+        async function loadGradeLevels() {
+            const gradeLevels = await getGradeLevels();
+            const gradeLevelSelect = document.getElementById('userGradeLevel');
+            
+            // Clear existing options
+            gradeLevelSelect.innerHTML = '<option value="">Select grade level</option>';
+            
+            // Add grade levels
+            gradeLevels.forEach(gradeLevel => {
+                const option = document.createElement('option');
+                option.value = gradeLevel.id;
+                option.textContent = gradeLevel.name;
+                gradeLevelSelect.appendChild(option);
+            });
+            
+            // Load sections when grade level changes
+            gradeLevelSelect.addEventListener('change', loadSections);
+        }
+        
+        async function loadSections() {
+            const gradeLevelId = document.getElementById('userGradeLevel').value;
+            const sections = await getSectionsByGradeLevel(gradeLevelId);
+            const sectionSelect = document.getElementById('userSection');
+            
+            // Clear existing options
+            sectionSelect.innerHTML = '<option value="">Select section</option>';
+            
+            // Add sections
+            sections.forEach(section => {
+                const option = document.createElement('option');
+                option.value = section.id;
+                option.textContent = section.name;
+                sectionSelect.appendChild(option);
+            });
+        }
 
         function getInitials(name) {
             return name.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2);
@@ -400,17 +469,34 @@
             try {
                 const { data, error } = await getSupabase()
                     .from('users')
-                    .select('*')
+                    .select(`
+                        *,
+                        grade_levels (
+                            id,
+                            name
+                        ),
+                        sections (
+                            id,
+                            name
+                        )
+                    `)
                     .order('created_at', { ascending: false });
 
                 if (error) throw error;
-                allUsers = data || [];
+                
+                // Process data to include grade and section names
+                allUsers = (data || []).map(user => ({
+                    ...user,
+                    grade_level: user.grade_levels?.name || 'N/A',
+                    section: user.sections?.name || 'N/A'
+                }));
+                
                 updateStats();
                 renderUsers();
             } catch (error) {
                 console.error('Error loading users:', error);
                 document.getElementById('usersTableBody').innerHTML = `
-                    <tr><td colspan="5" class="px-6 py-12 text-center text-red-500">Failed to load users.</td></tr>
+                    <tr><td colspan="7" class="px-6 py-12 text-center text-red-500">Failed to load users.</td></tr>
                 `;
             }
         }
@@ -476,6 +562,8 @@
                         <td class="px-6 py-4">
                             <span class="px-3 py-1 rounded-full text-xs font-medium ${colors.bg} ${colors.text} capitalize">${user.role}</span>
                         </td>
+                        <td class="px-6 py-4 text-gray-500 text-sm">${user.grade_level || 'N/A'}</td>
+                        <td class="px-6 py-4 text-gray-500 text-sm">${user.section || 'N/A'}</td>
                         <td class="px-6 py-4 text-gray-500 text-sm">${formatDate(user.created_at)}</td>
                         <td class="px-6 py-4 text-right">
                             <div class="flex items-center justify-end space-x-2">
@@ -517,6 +605,28 @@
             document.getElementById('userPassword').value = '';
             document.getElementById('passwordField').style.display = 'block';
             document.getElementById('userPassword').required = false;
+            
+            // Update role-specific fields
+            updateRoleSpecificFields();
+            
+            // Load user's grade and section if student
+            if (user.role === 'student') {
+                // Need to load grade levels first, then select the user's grade
+                setTimeout(async () => {
+                    const gradeLevelSelect = document.getElementById('userGradeLevel');
+                    if (user.grade_level_id) {
+                        gradeLevelSelect.value = user.grade_level_id;
+                        await loadSections();
+                        
+                        // Now select the user's section
+                        const sectionSelect = document.getElementById('userSection');
+                        if (user.section_id) {
+                            sectionSelect.value = user.section_id;
+                        }
+                    }
+                }, 100);
+            }
+            
             document.getElementById('userModal').classList.remove('hidden');
         }
 
@@ -562,11 +672,22 @@
             const email = document.getElementById('userEmail').value.trim();
             const password = document.getElementById('userPassword').value;
             const role = document.getElementById('userRole').value;
+            const gradeLevelId = document.getElementById('userGradeLevel').value;
+            const sectionId = document.getElementById('userSection').value;
 
             try {
                 if (userId) {
                     // Update existing user
                     const updateData = { full_name: fullName, email, role };
+                    
+                    // Add grade and section if student
+                    if (role === 'student') {
+                        updateData.grade_level_id = gradeLevelId || null;
+                        updateData.section_id = sectionId || null;
+                    } else {
+                        updateData.grade_level_id = null;
+                        updateData.section_id = null;
+                    }
                     
                     const { error } = await getSupabase()
                         .from('users')
@@ -594,14 +715,22 @@
                     if (authError) throw authError;
 
                     // Then create user record
+                    const userData = {
+                        id: authData.user.id,
+                        email,
+                        full_name: fullName,
+                        role
+                    };
+                    
+                    // Add grade and section if student
+                    if (role === 'student') {
+                        userData.grade_level_id = gradeLevelId || null;
+                        userData.section_id = sectionId || null;
+                    }
+
                     const { error: userError } = await getSupabase()
                         .from('users')
-                        .insert({
-                            id: authData.user.id,
-                            email,
-                            full_name: fullName,
-                            role
-                        });
+                        .insert(userData);
 
                     if (userError) throw userError;
                     showToast('User created successfully', 'success');

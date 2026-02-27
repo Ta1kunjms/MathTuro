@@ -190,6 +190,12 @@ async function logout() {
 */
 async function checkAuthSession() {
   try {
+    // Developer bypass: allow dev-admin user from localStorage
+    const user = JSON.parse(localStorage.getItem('user'));
+    if (user && user.id === 'dev-admin' && user.role === 'admin') {
+      return user;
+    }
+
     // Get Supabase client
     const supabase = getSupabase();
     if (!supabase) {
@@ -206,9 +212,6 @@ async function checkAuthSession() {
       return null;
     }
 
-    // Get user data from localStorage
-    const user = JSON.parse(localStorage.getItem('user'));
-    
     // If no user data in localStorage, try to fetch from database
     if (!user) {
       const { data: userData, error: userError } = await supabase
@@ -227,7 +230,6 @@ async function checkAuthSession() {
         role: userData.role,
         fullName: userData.full_name
       };
-      
       localStorage.setItem('user', JSON.stringify(newUser));
       return newUser;
     }

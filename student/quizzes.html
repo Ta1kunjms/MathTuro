@@ -716,19 +716,23 @@
                 // Check if updating or inserting
                 const existingSubmission = submissions[quizId];
                 
-                if (existingSubmission) {
-                    console.log('Existing submission:', existingSubmission);
-                    // Update the submission
-                    const { error: updateError } = await getSupabase()
-                        .from('quiz_submissions')
-                        .update({
-                            student_score: studentScore,
-                            total_items: totalItems,
-                            screenshot_url: screenshotUrl || existingSubmission.screenshot_url,
-                            status: 'pending', // Reset to pending when updating
-                            updated_at: new Date().toISOString()
-                        })
-                        .eq('id', existingSubmission.id);
+                    if (existingSubmission) {
+                        console.log('Existing submission:', existingSubmission);
+                        // Update the submission
+                        const { error: updateError } = await getSupabase()
+                            .from('quiz_submissions')
+                            .update({
+                                student_score: studentScore,
+                                total_items: totalItems,
+                                screenshot_url: screenshotUrl || existingSubmission.screenshot_url,
+                                status: 'pending', // Reset to pending when updating
+                                teacher_comment: null, // Clear teacher comment when student updates
+                                teacher_feedback: null, // Clear teacher feedback when student updates
+                                reviewed_at: null, // Clear reviewed timestamp
+                                reviewed_by: null, // Clear reviewed by user
+                                updated_at: new Date().toISOString()
+                            })
+                            .eq('id', existingSubmission.id);
                     
                     if (updateError) throw updateError;
                     

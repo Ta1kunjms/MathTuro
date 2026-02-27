@@ -369,6 +369,53 @@
                         </div>
                     </div>
 
+                    <!-- Role-Specific Fields - Grade/Section -->
+                    <div id="roleSpecificFields" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <!-- Grade Level Field - For both teachers and students -->
+                        <div class="space-y-2" id="gradeLevelField">
+                            <label for="gradeLevel" class="block text-sm font-semibold text-gray-700">
+                                Grade Level <span class="text-red-500">*</span>
+                            </label>
+                            <div class="relative">
+                                <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                                    <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                    </svg>
+                                </div>
+                                <select
+                                    id="gradeLevel"
+                                    name="gradeLevel"
+                                    required
+                                    class="w-full pl-11 pr-4 py-3.5 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent input-focus-effect transition-all text-gray-900 placeholder-gray-400"
+                                >
+                                    <option value="">Select your grade level</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Section Field - For teachers and students -->
+                        <div class="space-y-2" id="sectionField">
+                            <label for="section" class="block text-sm font-semibold text-gray-700">
+                                Section <span class="text-red-500">*</span>
+                            </label>
+                            <div class="relative">
+                                <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                                    <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/>
+                                    </svg>
+                                </div>
+                                <select
+                                    id="section"
+                                    name="section"
+                                    required
+                                    class="w-full pl-11 pr-4 py-3.5 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent input-focus-effect transition-all text-gray-900 placeholder-gray-400"
+                                >
+                                    <option value="">Select your section</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
                     <!-- Password Input -->
                     <div class="space-y-2">
                         <label for="password" class="block text-sm font-semibold text-gray-700">
@@ -632,7 +679,62 @@
             document.getElementById('errorMessage').classList.add('hidden');
         }
 
+        // Load grade levels from database
+        async function loadGradeLevels() {
+            try {
+                const gradeLevels = await getGradeLevels();
+                const gradeLevelSelect = document.getElementById('gradeLevel');
+                
+                // Clear existing options
+                gradeLevelSelect.innerHTML = '<option value="">Select your grade level</option>';
+                
+                // Add grade levels
+                gradeLevels.forEach(grade => {
+                    const option = document.createElement('option');
+                    option.value = grade.id;
+                    option.textContent = grade.name;
+                    gradeLevelSelect.appendChild(option);
+                });
+            } catch (error) {
+                console.error('Error loading grade levels:', error);
+            }
+        }
+
+        // Load sections for selected grade level
+        async function loadSections(gradeLevelId) {
+            try {
+                const sections = await getSectionsByGradeLevel(gradeLevelId);
+                const sectionSelect = document.getElementById('section');
+                
+                // Clear existing options
+                sectionSelect.innerHTML = '<option value="">Select your section</option>';
+                
+                // Add sections
+                sections.forEach(section => {
+                    const option = document.createElement('option');
+                    option.value = section.id;
+                    option.textContent = section.name;
+                    sectionSelect.appendChild(option);
+                });
+            } catch (error) {
+                console.error('Error loading sections:', error);
+            }
+        }
+
         document.addEventListener('DOMContentLoaded', function() {
+            // Load grade levels when page loads
+            loadGradeLevels();
+            
+            // Add event listener for grade level change
+            document.getElementById('gradeLevel').addEventListener('change', function() {
+                const gradeLevelId = this.value;
+                if (gradeLevelId) {
+                    loadSections(gradeLevelId);
+                } else {
+                    // Clear sections if no grade level selected
+                    document.getElementById('section').innerHTML = '<option value="">Select your section</option>';
+                }
+            });
             const registerForm = document.getElementById('registerForm');
             const registerButton = document.getElementById('registerButton');
             const passwordInput = document.getElementById('password');
@@ -664,6 +766,8 @@
                 const confirmPassword = confirmPasswordInput.value;
                 const termsAccepted = document.getElementById('terms').checked;
                 const selectedRole = document.getElementById('selectedRole').value;
+                const gradeLevelId = document.getElementById('gradeLevel').value;
+                const sectionId = document.getElementById('section').value;
 
                 // Validation
                 if (!fullName) {
@@ -673,6 +777,17 @@
 
                 if (!email) {
                     showError('Please enter your email address.');
+                    return;
+                }
+                
+                // Validate grade and section fields
+                if (!gradeLevelId) {
+                    showError('Please select a grade level.');
+                    return;
+                }
+                
+                if (!sectionId) {
+                    showError('Please select a section.');
                     return;
                 }
 
@@ -732,6 +847,8 @@
                             .from('users')
                             .insert({
                                 id: authData.user.id,
+                                grade_level_id: gradeLevelId,
+                                section_id: sectionId,
                                 email: email,
                                 full_name: fullName,
                                 role: selectedRole,

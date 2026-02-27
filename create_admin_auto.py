@@ -20,7 +20,7 @@ def get_config():
     else:
         raise Exception("Could not find Supabase configuration in config.js")
 
-# Main function to create admin account directly
+# Main function to create admin account automatically
 def main():
     try:
         # Get Supabase configuration
@@ -29,19 +29,15 @@ def main():
         print("Connecting to Supabase...")
         supabase = create_client(config['url'], config['key'])
         
-        # Prompt for admin account details
-        email = input("Enter admin email (e.g., admin@mathturo.com): ").strip()
-        if not email:
-            email = "admin@mathturo.com"
-            
-        full_name = input("Enter admin full name (e.g., MathTuro Admin): ").strip()
-        if not full_name:
-            full_name = "MathTuro Admin"
-            
-        password = input("Enter admin password (minimum 8 characters): ").strip()
-        while len(password) < 8:
-            print("Password must be at least 8 characters long")
-            password = input("Enter admin password (minimum 8 characters): ").strip()
+        # Default admin account details
+        email = "admin@mathturo.com"
+        full_name = "MathTuro Admin"
+        password = "Admin1234!"
+        
+        print(f"\nCreating admin account:")
+        print(f"Email: {email}")
+        print(f"Name: {full_name}")
+        print(f"Password: {password}")
         
         print("\nCreating admin account...")
         

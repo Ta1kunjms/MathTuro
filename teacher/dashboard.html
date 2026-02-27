@@ -409,6 +409,19 @@
                         </div>
                     </div>
 
+                    <!-- My Sections -->
+                    <div class="bg-white rounded-2xl border border-gray-100 shadow-sm">
+                        <div class="p-6 border-b border-gray-100">
+                            <h3 class="text-lg font-bold text-gray-800">My Sections</h3>
+                        </div>
+                        <div id="mySections" class="divide-y divide-gray-100 max-h-80 overflow-y-auto">
+                            <!-- Content loaded dynamically -->
+                            <div class="p-6 text-center text-gray-500">
+                                <p>No sections assigned</p>
+                            </div>
+                        </div>
+                    </div>
+
                     <!-- Performance Overview -->
                     <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
                         <h3 class="text-lg font-bold text-gray-800 mb-4">Class Performance</h3>
@@ -513,7 +526,8 @@
                     loadDashboardStats(),
                     loadPendingSubmissions(),
                     loadModules(),
-                    loadRecentActivity()
+                    loadRecentActivity(),
+                    loadTeacherSections(currentUser.id)
                 ]);
 
                 // Setup event listeners

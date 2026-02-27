@@ -789,3 +789,418 @@ srOnlyStyle.textContent = `
   }
 `;
 document.head.appendChild(srOnlyStyle);
+
+// ============================================
+// Grade and Section Management Functions
+// ============================================
+
+/*
+  Function Name: getGradeLevels
+  Purpose:
+  - Fetches all active grade levels from the database
+  - Returns an array of grade level objects
+
+  When it runs:
+  - Called when need to populate grade level dropdowns or display grade options
+  - Can be used by all user roles
+
+  Backend interaction:
+  - Queries the grade_levels table for active grade levels
+
+  Error handling:
+  - Handles database query errors
+  - Returns empty array if no grade levels found
+*/
+async function getGradeLevels() {
+  try {
+    const supabase = getSupabase();
+    const { data, error } = await supabase
+      .from('grade_levels')
+      .select('*')
+      .eq('is_active', true)
+      .order('name');
+
+    if (error) {
+      console.error('Error fetching grade levels:', error);
+      return [];
+    }
+
+    return data || [];
+  } catch (error) {
+    console.error('Error fetching grade levels:', error);
+    return [];
+  }
+}
+
+/*
+  Function Name: getSectionsByGradeLevel
+  Purpose:
+  - Fetches all active sections for a specific grade level
+  - Returns an array of section objects
+
+  When it runs:
+  - Called when need to populate section dropdowns based on selected grade level
+  - Can be used by all user roles
+
+  Backend interaction:
+  - Queries the sections table for active sections with matching grade_level_id
+
+  Error handling:
+  - Handles database query errors
+  - Returns empty array if no sections found
+*/
+async function getSectionsByGradeLevel(gradeLevelId) {
+  try {
+    const supabase = getSupabase();
+    const { data, error } = await supabase
+      .from('sections')
+      .select('*')
+      .eq('grade_level_id', gradeLevelId)
+      .eq('is_active', true)
+      .order('name');
+
+    if (error) {
+      console.error('Error fetching sections:', error);
+      return [];
+    }
+
+    return data || [];
+  } catch (error) {
+    console.error('Error fetching sections:', error);
+    return [];
+  }
+}
+
+/*
+  Function Name: getTeacherSections
+  Purpose:
+  - Fetches all sections assigned to a specific teacher
+  - Returns an array of section objects with grade level information
+
+  When it runs:
+  - Called when teacher views their dashboard or section management
+  - Can be used by teachers and admins
+
+  Backend interaction:
+  - Queries the sections table for sections where teacher_id matches
+
+  Error handling:
+  - Handles database query errors
+  - Returns empty array if no sections found
+*/
+async function getTeacherSections(teacherId) {
+  try {
+    const supabase = getSupabase();
+    const { data, error } = await supabase
+      .from('sections')
+      .select(`
+        *,
+        grade_levels (
+          id,
+          name
+        )
+      `)
+      .eq('teacher_id', teacherId)
+      .eq('is_active', true)
+      .order('name');
+
+    if (error) {
+      console.error('Error fetching teacher sections:', error);
+      return [];
+    }
+
+    return data || [];
+  } catch (error) {
+    console.error('Error fetching teacher sections:', error);
+    return [];
+  }
+}
+
+/*
+  Function Name: getStudentsBySection
+  Purpose:
+  - Fetches all students enrolled in a specific section
+  - Returns an array of student objects with user information
+
+  When it runs:
+  - Called when teacher views students in their section
+  - Can be used by teachers and admins
+
+  Backend interaction:
+  - Queries the users table for students with matching section_id
+
+  Error handling:
+  - Handles database query errors
+  - Returns empty array if no students found
+*/
+async function getStudentsBySection(sectionId) {
+  try {
+    const supabase = getSupabase();
+    const { data, error } = await supabase
+      .from('users')
+      .select('*')
+      .eq('section_id', sectionId)
+      .eq('role', 'student')
+      .order('full_name');
+
+    if (error) {
+      console.error('Error fetching students by section:', error);
+      return [];
+    }
+
+    return data || [];
+  } catch (error) {
+    console.error('Error fetching students by section:', error);
+    return [];
+  }
+}
+
+/*
+  Function Name: getStudentGradeSection
+  Purpose:
+  - Fetches the grade level and section information for a specific student
+  - Returns an object with grade level and section details
+
+  When it runs:
+  - Called when student views their profile or dashboard
+  - Can be used by students and teachers
+
+  Backend interaction:
+  - Joins users with grade_levels and sections tables
+
+  Error handling:
+  - Handles database query errors
+  - Returns null if no grade/section information found
+*/
+async function getStudentGradeSection(studentId) {
+  try {
+    const supabase = getSupabase();
+    const { data, error } = await supabase
+      .from('users')
+      .select(`
+        id,
+        full_name,
+        email,
+        grade_level_id,
+        section_id,
+        grade_levels (
+          id,
+          name
+        ),
+        sections (
+          id,
+          name
+        )
+      `)
+      .eq('id', studentId)
+      .single();
+
+    if (error) {
+      console.error('Error fetching student grade/section:', error);
+      return null;
+    }
+
+    return {
+      student: {
+        id: data.id,
+        full_name: data.full_name,
+        email: data.email
+      },
+      gradeLevel: data.grade_levels ? {
+        id: data.grade_levels.id,
+        name: data.grade_levels.name
+      } : null,
+      section: data.sections ? {
+        id: data.sections.id,
+        name: data.sections.name
+      } : null
+    };
+  } catch (error) {
+    console.error('Error fetching student grade/section:', error);
+    return null;
+  }
+}
+
+// Grade Level Management Functions
+async function createGradeLevel(name, description = '') {
+  try {
+    const user = JSON.parse(localStorage.getItem('user'));
+    const supabase = getSupabase();
+    
+    const { data, error } = await supabase
+      .from('grade_levels')
+      .insert({
+        name: name,
+        description: description,
+        created_by: user.id,
+        is_active: true
+      })
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Error creating grade level:', error);
+      return null;
+    }
+
+    return data;
+  } catch (error) {
+    console.error('Error creating grade level:', error);
+    return null;
+  }
+}
+
+async function updateGradeLevel(id, name, description = '', isActive = true) {
+  try {
+    const user = JSON.parse(localStorage.getItem('user'));
+    const supabase = getSupabase();
+    
+    const { data, error } = await supabase
+      .from('grade_levels')
+      .update({
+        name: name,
+        description: description,
+        is_active: isActive,
+        created_by: user.id
+      })
+      .eq('id', id)
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Error updating grade level:', error);
+      return null;
+    }
+
+    return data;
+  } catch (error) {
+    console.error('Error updating grade level:', error);
+    return null;
+  }
+}
+
+async function deleteGradeLevel(id) {
+  try {
+    const supabase = getSupabase();
+    
+    const { error } = await supabase
+      .from('grade_levels')
+      .delete()
+      .eq('id', id);
+
+    if (error) {
+      console.error('Error deleting grade level:', error);
+      return false;
+    }
+
+    return true;
+  } catch (error) {
+    console.error('Error deleting grade level:', error);
+    return false;
+  }
+}
+
+// Section Management Functions
+async function createSection(name, gradeLevelId, teacherId = null, description = '') {
+  try {
+    const user = JSON.parse(localStorage.getItem('user'));
+    const supabase = getSupabase();
+    
+    const { data, error } = await supabase
+      .from('sections')
+      .insert({
+        name: name,
+        grade_level_id: gradeLevelId,
+        teacher_id: teacherId,
+        description: description,
+        created_by: user.id,
+        is_active: true
+      })
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Error creating section:', error);
+      return null;
+    }
+
+    return data;
+  } catch (error) {
+    console.error('Error creating section:', error);
+    return null;
+  }
+}
+
+async function updateSection(id, name, gradeLevelId, teacherId = null, description = '', isActive = true) {
+  try {
+    const user = JSON.parse(localStorage.getItem('user'));
+    const supabase = getSupabase();
+    
+    const { data, error } = await supabase
+      .from('sections')
+      .update({
+        name: name,
+        grade_level_id: gradeLevelId,
+        teacher_id: teacherId,
+        description: description,
+        is_active: isActive,
+        created_by: user.id
+      })
+      .eq('id', id)
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Error updating section:', error);
+      return null;
+    }
+
+    return data;
+  } catch (error) {
+    console.error('Error updating section:', error);
+    return null;
+  }
+}
+
+async function deleteSection(id) {
+  try {
+    const supabase = getSupabase();
+    
+    const { error } = await supabase
+      .from('sections')
+      .delete()
+      .eq('id', id);
+
+    if (error) {
+      console.error('Error deleting section:', error);
+      return false;
+    }
+
+    return true;
+  } catch (error) {
+    console.error('Error deleting section:', error);
+    return false;
+  }
+}
+
+// Get all teachers (for section assignment)
+async function getTeachers() {
+  try {
+    const supabase = getSupabase();
+    const { data, error } = await supabase
+      .from('users')
+      .select('id, full_name, email')
+      .eq('role', 'teacher')
+      .order('full_name');
+
+    if (error) {
+      console.error('Error fetching teachers:', error);
+      return [];
+    }
+
+    return data || [];
+  } catch (error) {
+    console.error('Error fetching teachers:', error);
+    return [];
+  }
+}

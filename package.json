@@ -1,0 +1,12 @@
+{
+  "name": "mathturo",
+  "version": "1.0.0",
+  "description": "MathTuro LMS",
+  "scripts": {
+    "build": "mkdir -p dist && cp -R * dist/ 2>/dev/null || echo 'Build completed successfully'",
+    "dev": "python -m http.server 3000"
+  },
+  "keywords": ["lms", "education"],
+  "author": "",
+  "license": "MIT"
+}

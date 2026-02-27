@@ -30,6 +30,9 @@ document.addEventListener('DOMContentLoaded', function () {
                             <span id="streakBadge" class="text-sm">🔥</span>
                             <span id="streakCount" class="text-sm text-orange-500 font-medium">0 day streak</span>
                         </div>
+                        <div id="gradeSectionInfo" class="text-xs text-gray-500 mt-1">
+                            <!-- Grade and section info will be loaded here -->
+                        </div>
                     </div>
                 </div>
             </div>
@@ -162,8 +165,26 @@ async function loadSidebarUserInfo() {
       if (userInitialsEl) userInitialsEl.textContent = initials;
       if (sidebarUserNameEl) sidebarUserNameEl.textContent = displayName;
     }
+
+    // Load grade and section information
+    await loadGradeSectionInfo(session.user.id);
   } catch (error) {
     console.error('Error loading sidebar user info:', error);
+  }
+}
+
+async function loadGradeSectionInfo(studentId) {
+  try {
+    const gradeSectionInfo = await getStudentGradeSection(studentId);
+    const gradeSectionEl = document.getElementById('gradeSectionInfo');
+    
+    if (gradeSectionEl && gradeSectionInfo) {
+      const gradeLevel = gradeSectionInfo.gradeLevel?.name || 'N/A';
+      const section = gradeSectionInfo.section?.name || 'N/A';
+      gradeSectionEl.textContent = `${gradeLevel} - ${section}`;
+    }
+  } catch (error) {
+    console.error('Error loading grade/section info:', error);
   }
 }
 

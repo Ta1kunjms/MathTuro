@@ -83,7 +83,7 @@
                 
                 <!-- Page Title -->
                 <div class="flex-1 lg:flex-none">
-                    <h1 class="text-xl lg:text-2xl font-bold text-gray-800">Module View</h1>
+                    <h1 id="moduleTitle" class="text-xl lg:text-2xl font-bold text-gray-800">Module View</h1>
                     <p class="text-sm text-gray-500 hidden sm:block">View module content and complete activities</p>
                 </div>
                 
@@ -336,8 +336,8 @@
                 }
 
                 currentUser = await checkAuthSession();
-                if (!currentUser) {
-                    window.location.href = '../login.html';
+                if (!currentUser || currentUser.role !== 'student') {
+                    redirectToLogin();
                     return;
                 }
 
@@ -773,6 +773,5 @@
             setTimeout(() => toast.classList.add('hidden'), 4000);
         }
     </script>
-    </main>
 </body>
 </html>

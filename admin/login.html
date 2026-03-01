@@ -134,6 +134,42 @@
                     >
                 </div>
 
+                <div class="p-3 bg-amber-900/40 border border-amber-700 rounded-md">
+                    <div class="flex items-center justify-between">
+                        <p class="text-sm text-amber-200 font-medium">Grade & Section Assignment</p>
+                        <span class="text-[10px] font-semibold uppercase tracking-wide px-2 py-1 rounded bg-amber-800 text-amber-100">Admin Only</span>
+                    </div>
+                    <p class="text-xs text-amber-300 mt-1">These fields are only available in admin registration mode.</p>
+                </div>
+
+                <div>
+                    <label for="regGradeLevel" class="block text-sm font-medium text-gray-300 mb-1">
+                        Assign Grade Level <span class="text-red-400">*</span>
+                    </label>
+                    <select
+                        id="regGradeLevel"
+                        name="gradeLevel"
+                        class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                        required
+                    >
+                        <option value="">Assign grade level</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label for="regSection" class="block text-sm font-medium text-gray-300 mb-1">
+                        Assign Section <span class="text-red-400">*</span>
+                    </label>
+                    <select
+                        id="regSection"
+                        name="section"
+                        class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                        required
+                    >
+                        <option value="">Assign section</option>
+                    </select>
+                </div>
+
                 <div>
                     <label for="regPassword" class="block text-sm font-medium text-gray-300 mb-1">
                         Password <span class="text-red-400">*</span>
@@ -259,6 +295,42 @@
         }
 
         document.addEventListener('DOMContentLoaded', function() {
+            async function loadAdminGradeLevels() {
+                const gradeSelect = document.getElementById('regGradeLevel');
+                const gradeLevels = await getGradeLevels();
+
+                gradeSelect.innerHTML = '<option value="">Assign grade level</option>';
+                gradeLevels.forEach(grade => {
+                    const option = document.createElement('option');
+                    option.value = grade.id;
+                    option.textContent = grade.name;
+                    gradeSelect.appendChild(option);
+                });
+            }
+
+            async function loadAdminSections(gradeLevelId) {
+                const sectionSelect = document.getElementById('regSection');
+
+                if (!gradeLevelId) {
+                    sectionSelect.innerHTML = '<option value="">Assign section</option>';
+                    return;
+                }
+
+                const sections = await getSectionsByGradeLevel(gradeLevelId);
+                sectionSelect.innerHTML = '<option value="">Assign section</option>';
+                sections.forEach(section => {
+                    const option = document.createElement('option');
+                    option.value = section.id;
+                    option.textContent = section.name;
+                    sectionSelect.appendChild(option);
+                });
+            }
+
+            loadAdminGradeLevels();
+            document.getElementById('regGradeLevel').addEventListener('change', function() {
+                loadAdminSections(this.value);
+            });
+
             // Login form handler
             document.getElementById('loginForm').addEventListener('submit', async function(e) {
                 e.preventDefault();
@@ -305,6 +377,8 @@
                 const password = document.getElementById('regPassword').value;
                 const confirmPassword = document.getElementById('regConfirmPassword').value;
                 const termsAccepted = document.getElementById('adminTerms').checked;
+                const gradeLevelId = document.getElementById('regGradeLevel').value;
+                const sectionId = document.getElementById('regSection').value;
                 const registerButton = document.getElementById('registerButton');
                 const loadingIndicator = document.getElementById('loadingIndicator');
                 const errorMessage = document.getElementById('errorMessage');
@@ -332,6 +406,14 @@
                     return;
                 }
 
+                if (!gradeLevelId || !sectionId) {
+                    showError('Please assign both grade level and section');
+                    return;
+                }
+
+                const selectedGradeText = document.getElementById('regGradeLevel').options[document.getElementById('regGradeLevel').selectedIndex]?.textContent || null;
+                const selectedSectionText = document.getElementById('regSection').options[document.getElementById('regSection').selectedIndex]?.textContent || null;
+
                 registerButton.disabled = true;
                 registerButton.textContent = 'Submitting request...';
                 loadingIndicator.classList.remove('hidden');
@@ -343,7 +425,11 @@
                         options: {
                             data: {
                                 full_name: fullName,
-                                role: 'admin'
+                                role: 'admin',
+                                grade_level_id: gradeLevelId,
+                                section_id: sectionId,
+                                grade_level_text: selectedGradeText,
+                                section_text: selectedSectionText
                             }
                         }
                     });
@@ -365,6 +451,10 @@
                                 email: email,
                                 full_name: fullName,
                                 role: 'admin',
+                                grade_level_id: gradeLevelId,
+                                section_id: sectionId,
+                                grade_level_text: selectedGradeText,
+                                section_text: selectedSectionText,
                                 created_at: new Date().toISOString(),
                                 updated_at: new Date().toISOString()
                             });

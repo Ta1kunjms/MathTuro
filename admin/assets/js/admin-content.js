@@ -446,12 +446,12 @@ async function getAllLessonPlans() {
     }
 
     const { data, error } = await getSupabase()
-      .from('lesson_plan_files')
+      .from('lesson_plans')
       .select(`
         *,
-        user:user_id (id, full_name)
+        teacher:teacher_id (id, full_name)
       `)
-      .order('uploaded_at', { ascending: false });
+      .order('created_at', { ascending: false });
 
     if (error) {
       console.error('Error loading lesson plans:', error);
@@ -478,11 +478,12 @@ async function createLessonPlan(lessonPlanData) {
     }
 
     const { data, error } = await getSupabase()
-      .from('lesson_plan_files')
+      .from('lesson_plans')
       .insert({
         ...lessonPlanData,
-        user_id: user.id,
-        uploaded_at: new Date().toISOString()
+        teacher_id: user.id,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
       })
       .select()
       .single();
@@ -513,9 +514,10 @@ async function updateLessonPlan(lessonPlanId, updates) {
     }
 
     const { data, error } = await getSupabase()
-      .from('lesson_plan_files')
+      .from('lesson_plans')
       .update({
-        ...updates
+        ...updates,
+        updated_at: new Date().toISOString()
       })
       .eq('id', lessonPlanId)
       .select()
@@ -547,7 +549,7 @@ async function deleteLessonPlan(lessonPlanId) {
     }
 
     const { data: lessonPlan, error: fetchError } = await getSupabase()
-      .from('lesson_plan_files')
+      .from('lesson_plans')
       .select('file_url')
       .eq('id', lessonPlanId)
       .single();
@@ -570,7 +572,7 @@ async function deleteLessonPlan(lessonPlanId) {
     }
 
     const { error: deleteError } = await getSupabase()
-      .from('lesson_plan_files')
+      .from('lesson_plans')
       .delete()
       .eq('id', lessonPlanId);
 
@@ -626,7 +628,7 @@ async function getContentStatistics() {
       getSupabase().from('modules').select('status').then(res => res.data),
       getSupabase().from('videos').select('status').then(res => res.data),
       getSupabase().from('quizzes').select('status').then(res => res.data),
-      getSupabase().from('lesson_plan_files').select('status').then(res => res.data)
+      getSupabase().from('lesson_plans').select('status').then(res => res.data)
     ]);
 
     return {
@@ -694,9 +696,9 @@ async function filterContent(filterOptions) {
       video:video_id (id, title)
     `);
 
-    let queryLessonPlans = getSupabase().from('lesson_plan_files').select(`
+    let queryLessonPlans = getSupabase().from('lesson_plans').select(`
       *,
-      user:user_id (id, full_name)
+      teacher:teacher_id (id, full_name)
     `);
 
     // Apply filters
@@ -711,7 +713,7 @@ async function filterContent(filterOptions) {
       queryModules = queryModules.eq('teacher_id', filterOptions.teacherId);
       queryVideos = queryVideos.eq('teacher_id', filterOptions.teacherId);
       queryQuizzes = queryQuizzes.eq('teacher_id', filterOptions.teacherId);
-      queryLessonPlans = queryLessonPlans.eq('user_id', filterOptions.teacherId);
+      queryLessonPlans = queryLessonPlans.eq('teacher_id', filterOptions.teacherId);
     }
 
     if (filterOptions.status) {
@@ -723,17 +725,17 @@ async function filterContent(filterOptions) {
 
     if (filterOptions.searchTerm) {
       const searchTerm = `%${filterOptions.searchTerm}%`;
-      queryModules = queryModules.ilike('title', searchTerm);
+      queryModules = queryModules.ilike('name', searchTerm);
       queryVideos = queryVideos.ilike('title', searchTerm);
       queryQuizzes = queryQuizzes.ilike('title', searchTerm);
-      queryLessonPlans = queryLessonPlans.ilike('file_name', searchTerm);
+      queryLessonPlans = queryLessonPlans.ilike('title', searchTerm);
     }
 
     const [modules, videos, quizzes, lessonPlans] = await Promise.all([
       queryModules.order('created_at', { ascending: false }).then(res => res.data || []),
       queryVideos.order('created_at', { ascending: false }).then(res => res.data || []),
       queryQuizzes.order('created_at', { ascending: false }).then(res => res.data || []),
-      queryLessonPlans.order('uploaded_at', { ascending: false }).then(res => res.data || [])
+      queryLessonPlans.order('created_at', { ascending: false }).then(res => res.data || [])
     ]);
 
     return {

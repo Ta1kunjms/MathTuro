@@ -327,10 +327,12 @@
         let submissions = {};
         let currentCategory = '';
         let currentTab = 'all';
+        let studentAssignment = null;
 
         // Initialize
         document.addEventListener('DOMContentLoaded', async () => {
-            await checkAuth();
+            const isAuthenticated = await checkAuth();
+            if (!isAuthenticated) return;
             setupEventListeners();
             await loadData();
         });
@@ -339,24 +341,38 @@
             try {
                 currentUser = await checkAuthSession();
                 if (!currentUser || currentUser.role !== 'student') {
-                    window.location.href = '../public/login.html';
-                    return;
+                    redirectToLogin();
+                    return false;
                 }
                 updateUserInfo(currentUser);
+                return true;
             } catch (error) {
                 console.error('Auth error:', error);
-                window.location.href = '../public/login.html';
+                redirectToLogin();
+                return false;
             }
         }
 
         function updateUserInfo(user) {
-            const initials = user.fullName ? user.fullName.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2) : '--';
+            const displayName = user.fullName || user.email || 'Student';
+            const initials = displayName ? displayName.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2) : '--';
             document.getElementById('userInitials').textContent = initials;
-            document.getElementById('sidebarUserName').textContent = user.fullName || 'Student';
+            document.getElementById('sidebarUserName').textContent = displayName;
+        }
+
+        function normalizeGradeValue(value) {
+            if (value === null || value === undefined || value === '') return null;
+            const str = String(value).trim().toLowerCase();
+            return str.startsWith('grade') ? str.replace(/^grade\s*/, '') : str;
         }
 
         async function loadData() {
             try {
+                studentAssignment = await getStudentGradeSection(currentUser.id);
+                const gradeId = studentAssignment?.gradeLevel?.id;
+                const sectionId = studentAssignment?.section?.id;
+                const gradeName = normalizeGradeValue(studentAssignment?.gradeLevel?.name);
+
                 // Load published quizzes
                  const { data: quizData, error: quizError } = await getSupabase()
                     .from('quizzes')
@@ -365,7 +381,29 @@
                     .order('created_at', { ascending: false });
 
                 if (quizError) throw quizError;
-                quizzes = quizData || [];
+                quizzes = (quizData || []).filter(quiz => {
+                    const quizGradeId = quiz.grade_level_id ?? null;
+                    const quizSectionId = quiz.section_id ?? null;
+                    const quizGrade = normalizeGradeValue(quiz.grade_level ?? quiz.grade_level_name ?? null);
+
+                    const gradeMatch =
+                        !gradeId && !gradeName
+                            ? true
+                            : quizGradeId
+                                ? String(quizGradeId) === String(gradeId)
+                                : quizGrade
+                                    ? quizGrade === gradeName
+                                    : true;
+
+                    const sectionMatch =
+                        !sectionId
+                            ? true
+                            : quizSectionId
+                                ? String(quizSectionId) === String(sectionId)
+                                : true;
+
+                    return gradeMatch && sectionMatch;
+                });
                 console.log('Loaded quizzes:', quizzes);
 
                 // Load user's submissions
@@ -557,7 +595,7 @@
             // Logout
             document.getElementById('logoutButton').addEventListener('click', async () => {
                 if (await logout()) {
-                    window.location.href = '../public/login.html';
+                    redirectToLogin();
                 }
             });
         }

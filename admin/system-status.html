@@ -177,12 +177,12 @@
         </div>
     </main>
 
-    <script src="assets/js/sidebar.js"></script>
-    <script src="assets/js/admin.js"></script>
-    <script src="../shared/js/auth.js"></script>
     <script src="../shared/js/config.js"></script>
     <script src="../shared/js/supabase.js"></script>
     <script src="../shared/js/utils.js"></script>
+    <script src="../shared/js/auth.js"></script>
+    <script src="assets/js/sidebar.js"></script>
+    <script src="assets/js/admin.js"></script>
     <script>
         let currentUser = null;
 
@@ -274,11 +274,22 @@
 
         async function loadRecentEvents() {
             try {
-                const { data: events, error } = await getSupabase()
+                let eventsResult = await getSupabase()
                     .from('activity_log')
                     .select('action, created_at')
                     .order('created_at', { ascending: false })
                     .limit(4);
+
+                if (eventsResult.error) {
+                    eventsResult = await getSupabase()
+                        .from('activity_logs')
+                        .select('action, created_at')
+                        .order('created_at', { ascending: false })
+                        .limit(4);
+                }
+
+                const events = eventsResult.data;
+                const error = eventsResult.error;
 
                 if (!error && events) {
                     const eventsContainer = document.querySelector('#recentEvents');

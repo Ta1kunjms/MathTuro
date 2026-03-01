@@ -113,17 +113,17 @@
                 </svg>
                 <span>User Management</span>
             </a>
-            <a href="/teacher/manage-modules.html" class="sidebar-link flex items-center space-x-3 px-4 py-3 rounded-xl text-gray-700">
+            <a href="manage-modules.html" class="sidebar-link flex items-center space-x-3 px-4 py-3 rounded-xl text-gray-700">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
                 </svg>
                 <span>Modules</span>
             </a>
-            <a href="/teacher/submissions.html" class="sidebar-link flex items-center space-x-3 px-4 py-3 rounded-xl text-gray-700">
+            <a href="activity.html" class="sidebar-link flex items-center space-x-3 px-4 py-3 rounded-xl text-gray-700">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/>
                 </svg>
-                <span>Submissions</span>
+                <span>Activity Log</span>
             </a>
         </nav>
         
@@ -216,10 +216,10 @@
                 </div>
             </div>
 
-            <!-- Filter and Search -->
+            <!-- Search -->
             <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 mb-6">
-                <div class="flex flex-col md:flex-row gap-4">
-                    <div class="flex-1">
+                <div class="flex flex-col md:flex-row gap-4 items-end">
+                    <div class="flex-1 w-full">
                         <label class="block text-sm font-medium text-gray-700 mb-2">Search Users</label>
                         <div class="relative">
                             <input type="text" id="searchInput" placeholder="Search by name or email..." class="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-red-500/20 focus:border-red-500">
@@ -228,34 +228,31 @@
                             </svg>
                         </div>
                     </div>
-                    <div class="md:w-48">
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Filter by Role</label>
-                        <select id="roleFilter" class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-red-500/20 focus:border-red-500">
-                            <option value="all">All Roles</option>
-                            <option value="student">Students</option>
-                            <option value="teacher">Teachers</option>
-                            <option value="admin">Admins</option>
-                        </select>
-                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-2 mb-6">
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                    <button id="studentsTab" onclick="setActiveTab('student')" class="px-4 py-3 rounded-xl text-sm font-semibold bg-red-600 text-white">Students</button>
+                    <button id="teachersTab" onclick="setActiveTab('teacher')" class="px-4 py-3 rounded-xl text-sm font-semibold text-gray-700 hover:bg-gray-100">Teachers</button>
+                    <button id="adminsTab" onclick="setActiveTab('admin')" class="px-4 py-3 rounded-xl text-sm font-semibold text-gray-700 hover:bg-gray-100">Admin</button>
                 </div>
             </div>
 
             <!-- Users Table -->
             <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
                 <div class="p-6 border-b border-gray-100 flex items-center justify-between">
-                    <h3 class="text-lg font-bold text-gray-800">All Users</h3>
+                    <h3 id="usersTableTitle" class="text-lg font-bold text-gray-800">Students</h3>
                     <span id="userCount" class="text-sm text-gray-500">0 users</span>
                 </div>
                 <div class="overflow-x-auto">
                     <table class="w-full">
-                        <thead class="bg-gray-50">
+                        <thead id="usersTableHead" class="bg-gray-50">
                             <tr>
                                 <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">User</th>
-                                <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Email</th>
-                                <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Role</th>
-                                <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Grade</th>
+                                <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Grade Level</th>
                                 <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Section</th>
-                                <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Joined</th>
+                                <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Email</th>
                                 <th class="px-6 py-4 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">Actions</th>
                             </tr>
                         </thead>
@@ -377,6 +374,8 @@
         let currentUser = null;
         let allUsers = [];
         let deleteUserId = null;
+        let activeTab = 'student';
+        let adminStatusField = null;
 
         const loadingOverlay = document.getElementById('loadingOverlay');
         const mobileMenuBtn = document.getElementById('mobileMenuBtn');
@@ -386,7 +385,7 @@
         document.addEventListener('DOMContentLoaded', async function() {
             try {
                 currentUser = await checkAuthSession();
-                
+
                 if (!currentUser || currentUser.role !== 'admin') {
                     redirectToLogin();
                     return;
@@ -408,126 +407,166 @@
             document.getElementById('sidebarUserName').textContent = user.fullName;
             document.getElementById('userInitials').textContent = initials;
         }
-        
-        function updateRoleSpecificFields() {
-            const role = document.getElementById('userRole').value;
-            const gradeLevelField = document.getElementById('gradeLevelField');
-            const sectionField = document.getElementById('sectionField');
-            
-            if (role === 'student') {
-                gradeLevelField.classList.remove('hidden');
-                sectionField.classList.remove('hidden');
-                loadGradeLevels();
-            } else {
-                gradeLevelField.classList.add('hidden');
-                sectionField.classList.add('hidden');
-                document.getElementById('userGradeLevel').value = '';
-                document.getElementById('userSection').value = '';
-            }
-        }
-        
-        async function loadGradeLevels() {
-            const gradeLevels = await getGradeLevels();
-            const gradeLevelSelect = document.getElementById('userGradeLevel');
-            
-            // Clear existing options
-            gradeLevelSelect.innerHTML = '<option value="">Select grade level</option>';
-            
-            // Add grade levels
-            gradeLevels.forEach(gradeLevel => {
-                const option = document.createElement('option');
-                option.value = gradeLevel.id;
-                option.textContent = gradeLevel.name;
-                gradeLevelSelect.appendChild(option);
-            });
-            
-            // Load sections when grade level changes
-            gradeLevelSelect.addEventListener('change', loadSections);
-        }
-        
-        async function loadSections() {
-            const gradeLevelId = document.getElementById('userGradeLevel').value;
-            const sections = await getSectionsByGradeLevel(gradeLevelId);
-            const sectionSelect = document.getElementById('userSection');
-            
-            // Clear existing options
-            sectionSelect.innerHTML = '<option value="">Select section</option>';
-            
-            // Add sections
-            sections.forEach(section => {
-                const option = document.createElement('option');
-                option.value = section.id;
-                option.textContent = section.name;
-                sectionSelect.appendChild(option);
-            });
-        }
 
         function getInitials(name) {
-            return name.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2);
+            return (name || 'User').split(' ').map(part => part[0]).join('').toUpperCase().substring(0, 2);
+        }
+
+        function detectAdminStatusField(rows) {
+            const candidates = ['status', 'approval_status', 'admin_status'];
+            for (const candidate of candidates) {
+                if ((rows || []).some(row => Object.prototype.hasOwnProperty.call(row, candidate))) {
+                    adminStatusField = candidate;
+                    return;
+                }
+            }
+            adminStatusField = null;
+        }
+
+        function normalizeAdminStatus(user) {
+            if (user.role !== 'admin') return null;
+
+            const candidateKeys = ['status', 'approval_status', 'admin_status'];
+            for (const key of candidateKeys) {
+                const value = user[key];
+                if (typeof value === 'string') {
+                    const normalized = value.toLowerCase();
+                    if (['approved', 'pending', 'rejected'].includes(normalized)) {
+                        return normalized;
+                    }
+                }
+            }
+
+            return user.is_active ? 'approved' : 'pending';
         }
 
         async function loadUsers() {
             try {
-                const { data, error } = await getSupabase()
-                    .from('users')
-                    .select(`
-                        *,
-                        grade_levels (
-                            id,
-                            name
-                        ),
-                        sections (
-                            id,
-                            name
-                        )
-                    `)
-                    .order('created_at', { ascending: false });
+                const supabase = getSupabase();
+                const [usersResult, gradeResult, sectionResult] = await Promise.all([
+                    supabase.from('users').select('*').order('created_at', { ascending: false }),
+                    supabase.from('grade_levels').select('id,name'),
+                    supabase.from('sections').select('id,name')
+                ]);
 
-                if (error) throw error;
-                
-                // Process data to include grade and section names
-                allUsers = (data || []).map(user => ({
+                if (usersResult.error) throw usersResult.error;
+                if (gradeResult.error) throw gradeResult.error;
+                if (sectionResult.error) throw sectionResult.error;
+
+                const users = usersResult.data || [];
+                const gradeMap = new Map((gradeResult.data || []).map(item => [item.id, item.name]));
+                const sectionMap = new Map((sectionResult.data || []).map(item => [item.id, item.name]));
+
+                detectAdminStatusField(users);
+
+                allUsers = users.map(user => ({
                     ...user,
-                    grade_level: user.grade_levels?.name || 'N/A',
-                    section: user.sections?.name || 'N/A'
+                    grade_level: user.grade_level_text || gradeMap.get(user.grade_level_id) || 'N/A',
+                    section: user.section_text || sectionMap.get(user.section_id) || 'N/A',
+                    admin_review_status: normalizeAdminStatus(user)
                 }));
-                
+
                 updateStats();
                 renderUsers();
             } catch (error) {
                 console.error('Error loading users:', error);
                 document.getElementById('usersTableBody').innerHTML = `
-                    <tr><td colspan="7" class="px-6 py-12 text-center text-red-500">Failed to load users.</td></tr>
+                    <tr><td colspan="5" class="px-6 py-12 text-center text-red-500">Failed to load users.</td></tr>
                 `;
             }
         }
 
         function updateStats() {
             document.getElementById('totalUsersStat').textContent = allUsers.length;
-            document.getElementById('studentsStat').textContent = allUsers.filter(u => u.role === 'student').length;
-            document.getElementById('teachersStat').textContent = allUsers.filter(u => u.role === 'teacher').length;
-            document.getElementById('adminsStat').textContent = allUsers.filter(u => u.role === 'admin').length;
+            document.getElementById('studentsStat').textContent = allUsers.filter(user => user.role === 'student').length;
+            document.getElementById('teachersStat').textContent = allUsers.filter(user => user.role === 'teacher').length;
+            document.getElementById('adminsStat').textContent = allUsers.filter(user => user.role === 'admin').length;
+        }
+
+        function setActiveTab(tab) {
+            activeTab = tab;
+
+            const tabs = {
+                student: document.getElementById('studentsTab'),
+                teacher: document.getElementById('teachersTab'),
+                admin: document.getElementById('adminsTab')
+            };
+
+            Object.entries(tabs).forEach(([key, button]) => {
+                if (!button) return;
+                if (key === tab) {
+                    button.classList.add('bg-red-600', 'text-white');
+                    button.classList.remove('text-gray-700', 'hover:bg-gray-100');
+                } else {
+                    button.classList.remove('bg-red-600', 'text-white');
+                    button.classList.add('text-gray-700', 'hover:bg-gray-100');
+                }
+            });
+
+            renderUsers();
+        }
+
+        function renderTableHead() {
+            const head = document.getElementById('usersTableHead');
+
+            if (activeTab === 'admin') {
+                head.innerHTML = `
+                    <tr>
+                        <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Name</th>
+                        <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Status</th>
+                        <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Email</th>
+                        <th class="px-6 py-4 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">Actions</th>
+                    </tr>
+                `;
+                return;
+            }
+
+            head.innerHTML = `
+                <tr>
+                    <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Name</th>
+                    <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Grade Level</th>
+                    <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Section</th>
+                    <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Email</th>
+                    <th class="px-6 py-4 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">Actions</th>
+                </tr>
+            `;
+        }
+
+        function getStatusBadge(status) {
+            const map = {
+                approved: 'bg-green-100 text-green-700',
+                pending: 'bg-yellow-100 text-yellow-700',
+                rejected: 'bg-red-100 text-red-700'
+            };
+            const normalized = (status || 'pending').toLowerCase();
+            const classes = map[normalized] || map.pending;
+            return `<span class="px-3 py-1 rounded-full text-xs font-medium ${classes} capitalize">${escapeHtml(normalized)}</span>`;
         }
 
         function renderUsers() {
+            renderTableHead();
+
             const tbody = document.getElementById('usersTableBody');
-            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
-            const roleFilter = document.getElementById('roleFilter').value;
-            
-            let filtered = allUsers;
-            
-            if (roleFilter !== 'all') {
-                filtered = filtered.filter(u => u.role === roleFilter);
-            }
-            
+            const searchTerm = document.getElementById('searchInput').value.trim().toLowerCase();
+
+            const tabLabelMap = {
+                student: 'Students',
+                teacher: 'Teachers',
+                admin: 'Admin'
+            };
+
+            document.getElementById('usersTableTitle').textContent = tabLabelMap[activeTab] || 'Users';
+
+            let filtered = allUsers.filter(user => user.role === activeTab);
+
             if (searchTerm) {
-                filtered = filtered.filter(u => 
-                    u.full_name?.toLowerCase().includes(searchTerm) ||
-                    u.email?.toLowerCase().includes(searchTerm)
+                filtered = filtered.filter(user =>
+                    (user.full_name || '').toLowerCase().includes(searchTerm) ||
+                    (user.email || '').toLowerCase().includes(searchTerm)
                 );
             }
 
-            document.getElementById('userCount').textContent = `${filtered.length} users`;
+            document.getElementById('userCount').textContent = `${filtered.length} ${tabLabelMap[activeTab].toLowerCase()}`;
 
             if (filtered.length === 0) {
                 tbody.innerHTML = `
@@ -535,7 +574,7 @@
                         <svg class="w-12 h-12 mx-auto text-gray-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/>
                         </svg>
-                        <p>No users found</p>
+                        <p>No ${tabLabelMap[activeTab].toLowerCase()} found</p>
                     </td></tr>
                 `;
                 return;
@@ -546,6 +585,50 @@
                 teacher: { bg: 'bg-purple-100', text: 'text-purple-700' },
                 admin: { bg: 'bg-red-100', text: 'text-red-700' }
             };
+
+            if (activeTab === 'admin') {
+                tbody.innerHTML = filtered.map(user => {
+                    const colors = roleColors.admin;
+                    const status = user.admin_review_status || 'pending';
+                    const pendingActions = status === 'pending'
+                        ? `
+                            <button onclick="approveAdmin('${user.id}')" class="px-3 py-1.5 text-xs bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors">Approve</button>
+                            <button onclick="rejectAdmin('${user.id}')" class="px-3 py-1.5 text-xs bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors">Reject</button>
+                        `
+                        : '';
+
+                    return `
+                        <tr class="user-row">
+                            <td class="px-6 py-4">
+                                <div class="flex items-center space-x-3">
+                                    <div class="w-10 h-10 ${colors.bg} rounded-full flex items-center justify-center">
+                                        <span class="${colors.text} font-semibold text-sm">${getInitials(user.full_name || 'Admin')}</span>
+                                    </div>
+                                    <span class="font-medium text-gray-800">${escapeHtml(user.full_name || 'Unknown')}</span>
+                                </div>
+                            </td>
+                            <td class="px-6 py-4">${getStatusBadge(status)}</td>
+                            <td class="px-6 py-4 text-gray-600">${escapeHtml(user.email || 'N/A')}</td>
+                            <td class="px-6 py-4 text-right">
+                                <div class="flex items-center justify-end gap-2">
+                                    ${pendingActions}
+                                    <button onclick="openEditModal('${user.id}')" class="p-2 text-blue-600 hover:bg-blue-50 rounded-lg" title="Edit">
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                                        </svg>
+                                    </button>
+                                    <button onclick="confirmDelete('${user.id}')" class="p-2 text-red-600 hover:bg-red-50 rounded-lg" title="Delete">
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                                        </svg>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    `;
+                }).join('');
+                return;
+            }
 
             tbody.innerHTML = filtered.map(user => {
                 const colors = roleColors[user.role] || roleColors.student;
@@ -559,13 +642,9 @@
                                 <span class="font-medium text-gray-800">${escapeHtml(user.full_name || 'Unknown')}</span>
                             </div>
                         </td>
-                        <td class="px-6 py-4 text-gray-600">${escapeHtml(user.email)}</td>
-                        <td class="px-6 py-4">
-                            <span class="px-3 py-1 rounded-full text-xs font-medium ${colors.bg} ${colors.text} capitalize">${user.role}</span>
-                        </td>
-                        <td class="px-6 py-4 text-gray-500 text-sm">${user.grade_level || 'N/A'}</td>
-                        <td class="px-6 py-4 text-gray-500 text-sm">${user.section || 'N/A'}</td>
-                        <td class="px-6 py-4 text-gray-500 text-sm">${formatDate(user.created_at)}</td>
+                        <td class="px-6 py-4 text-gray-500 text-sm">${escapeHtml(user.grade_level || 'N/A')}</td>
+                        <td class="px-6 py-4 text-gray-500 text-sm">${escapeHtml(user.section || 'N/A')}</td>
+                        <td class="px-6 py-4 text-gray-600">${escapeHtml(user.email || 'N/A')}</td>
                         <td class="px-6 py-4 text-right">
                             <div class="flex items-center justify-end space-x-2">
                                 <button onclick="openEditModal('${user.id}')" class="p-2 text-blue-600 hover:bg-blue-50 rounded-lg" title="Edit">
@@ -585,17 +664,98 @@
             }).join('');
         }
 
+        async function updateAdminReviewStatus(userId, newStatus) {
+            try {
+                const updateData = {
+                    is_active: newStatus === 'approved'
+                };
+
+                if (adminStatusField) {
+                    updateData[adminStatusField] = newStatus;
+                }
+
+                const { error } = await getSupabase()
+                    .from('users')
+                    .update(updateData)
+                    .eq('id', userId)
+                    .eq('role', 'admin');
+
+                if (error) throw error;
+
+                showToast(`Admin ${newStatus} successfully`, 'success');
+                await loadUsers();
+            } catch (error) {
+                console.error(`Error updating admin status to ${newStatus}:`, error);
+                showToast(`Failed to ${newStatus === 'approved' ? 'approve' : 'reject'} admin`, 'error');
+            }
+        }
+
+        async function approveAdmin(userId) {
+            await updateAdminReviewStatus(userId, 'approved');
+        }
+
+        async function rejectAdmin(userId) {
+            await updateAdminReviewStatus(userId, 'rejected');
+        }
+
+        function updateRoleSpecificFields() {
+            const role = document.getElementById('userRole').value;
+            const gradeLevelField = document.getElementById('gradeLevelField');
+            const sectionField = document.getElementById('sectionField');
+
+            if (role === 'student' || role === 'teacher') {
+                gradeLevelField.classList.remove('hidden');
+                sectionField.classList.remove('hidden');
+                loadGradeLevelsForForm();
+            } else {
+                gradeLevelField.classList.add('hidden');
+                sectionField.classList.add('hidden');
+                document.getElementById('userGradeLevel').value = '';
+                document.getElementById('userSection').value = '';
+            }
+        }
+
+        async function loadGradeLevelsForForm() {
+            const gradeLevels = await getGradeLevels();
+            const gradeLevelSelect = document.getElementById('userGradeLevel');
+
+            gradeLevelSelect.innerHTML = '<option value="">Select grade level</option>';
+
+            gradeLevels.forEach(gradeLevel => {
+                const option = document.createElement('option');
+                option.value = gradeLevel.id;
+                option.textContent = gradeLevel.name;
+                gradeLevelSelect.appendChild(option);
+            });
+        }
+
+        async function loadSectionsForForm() {
+            const gradeLevelId = document.getElementById('userGradeLevel').value;
+            const sections = await getSectionsByGradeLevel(gradeLevelId);
+            const sectionSelect = document.getElementById('userSection');
+
+            sectionSelect.innerHTML = '<option value="">Select section</option>';
+
+            sections.forEach(section => {
+                const option = document.createElement('option');
+                option.value = section.id;
+                option.textContent = section.name;
+                sectionSelect.appendChild(option);
+            });
+        }
+
         function openCreateModal() {
             document.getElementById('modalTitle').textContent = 'Create New User';
             document.getElementById('userForm').reset();
             document.getElementById('userId').value = '';
             document.getElementById('passwordField').style.display = 'block';
             document.getElementById('userPassword').required = true;
+            updateRoleSpecificFields();
             document.getElementById('userModal').classList.remove('hidden');
         }
 
-        function openEditModal(id) {
-            const user = allUsers.find(u => u.id === id);
+        async function openEditModal(id) {
+            const user = allUsers.find(item => item.id === id);
             if (!user) return;
 
             document.getElementById('modalTitle').textContent = 'Edit User';
@@ -606,28 +766,22 @@
             document.getElementById('userPassword').value = '';
             document.getElementById('passwordField').style.display = 'block';
             document.getElementById('userPassword').required = false;
-            
-            // Update role-specific fields
+
             updateRoleSpecificFields();
-            
-            // Load user's grade and section if student
-            if (user.role === 'student') {
-                // Need to load grade levels first, then select the user's grade
-                setTimeout(async () => {
-                    const gradeLevelSelect = document.getElementById('userGradeLevel');
-                    if (user.grade_level_id) {
-                        gradeLevelSelect.value = user.grade_level_id;
-                        await loadSections();
-                        
-                        // Now select the user's section
-                        const sectionSelect = document.getElementById('userSection');
-                        if (user.section_id) {
-                            sectionSelect.value = user.section_id;
-                        }
+
+            if (user.role === 'student' || user.role === 'teacher') {
+                await loadGradeLevelsForForm();
+                const gradeLevelSelect = document.getElementById('userGradeLevel');
+                if (user.grade_level_id) {
+                    gradeLevelSelect.value = user.grade_level_id;
+                    await loadSectionsForForm();
+                    const sectionSelect = document.getElementById('userSection');
+                    if (user.section_id) {
+                        sectionSelect.value = user.section_id;
                     }
-                }, 100);
+                }
             }
-            
+
             document.getElementById('userModal').classList.remove('hidden');
         }
 
@@ -667,7 +821,7 @@
 
         document.getElementById('userForm').addEventListener('submit', async function(e) {
             e.preventDefault();
-            
+
             const userId = document.getElementById('userId').value;
             const fullName = document.getElementById('userFullName').value.trim();
             const email = document.getElementById('userEmail').value.trim();
@@ -678,18 +832,16 @@
 
             try {
                 if (userId) {
-                    // Update existing user
                     const updateData = { full_name: fullName, email, role };
-                    
-                    // Add grade and section if student
-                    if (role === 'student') {
+
+                    if (role === 'student' || role === 'teacher') {
                         updateData.grade_level_id = gradeLevelId || null;
                         updateData.section_id = sectionId || null;
                     } else {
                         updateData.grade_level_id = null;
                         updateData.section_id = null;
                     }
-                    
+
                     const { error } = await getSupabase()
                         .from('users')
                         .update(updateData)
@@ -698,13 +850,11 @@
                     if (error) throw error;
                     showToast('User updated successfully', 'success');
                 } else {
-                    // Create new user
                     if (!password || password.length < 6) {
                         showToast('Password must be at least 6 characters', 'error');
                         return;
                     }
 
-                    // First create auth user
                     const { data: authData, error: authError } = await getSupabase().auth.signUp({
                         email,
                         password,
@@ -715,16 +865,14 @@
 
                     if (authError) throw authError;
 
-                    // Then create user record
                     const userData = {
                         id: authData.user.id,
                         email,
                         full_name: fullName,
                         role
                     };
-                    
-                    // Add grade and section if student
-                    if (role === 'student') {
+
+                    if (role === 'student' || role === 'teacher') {
                         userData.grade_level_id = gradeLevelId || null;
                         userData.section_id = sectionId || null;
                     }
@@ -746,11 +894,6 @@
         });
 
         document.getElementById('confirmDeleteBtn').addEventListener('click', deleteUser);
-
-        function formatDate(dateString) {
-            if (!dateString) return 'N/A';
-            return new Date(dateString).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
-        }
 
         function escapeHtml(text) {
             if (!text) return '';
@@ -775,7 +918,8 @@
             });
 
             document.getElementById('searchInput').addEventListener('input', renderUsers);
-            document.getElementById('roleFilter').addEventListener('change', renderUsers);
+
+            document.getElementById('userGradeLevel').addEventListener('change', loadSectionsForForm);
 
             document.getElementById('userModal').addEventListener('click', (e) => {
                 if (e.target === document.getElementById('userModal')) closeUserModal();

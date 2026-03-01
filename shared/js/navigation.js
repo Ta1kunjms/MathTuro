@@ -57,119 +57,119 @@ class NavigationManager {
         this.addRoute('/tutorial-videos', 'tutorial-videos', { title: 'Tutorial Videos', public: true });
 
         // Student routes
-        this.addRoute('/student/dashboard', 'student-dashboard', { 
+        this.addRoute('/student/dashboard.html', 'student-dashboard', { 
             title: 'Student Dashboard', 
             role: 'student',
             icon: 'dashboard'
         });
-        this.addRoute('/student/modules', 'student-modules', { 
+        this.addRoute('/student/modules.html', 'student-modules', { 
             title: 'Modules', 
             role: 'student',
-            parent: '/student/dashboard'
+            parent: '/student/dashboard.html'
         });
-        this.addRoute('/student/module-view/:id', 'student-module-view', { 
+        this.addRoute('/student/module-view.html', 'student-module-view', { 
             title: 'Module View', 
             role: 'student',
-            parent: '/student/modules'
+            parent: '/student/modules.html'
         });
-        this.addRoute('/student/quizzes', 'student-quizzes', { 
+        this.addRoute('/student/quizzes.html', 'student-quizzes', { 
             title: 'Quizzes', 
             role: 'student',
-            parent: '/student/dashboard'
+            parent: '/student/dashboard.html'
         });
 
         // Teacher routes
-        this.addRoute('/teacher/dashboard', 'teacher-dashboard', { 
+        this.addRoute('/teacher/dashboard.html', 'teacher-dashboard', { 
             title: 'Teacher Dashboard', 
             role: 'teacher',
             icon: 'dashboard'
         });
-        this.addRoute('/teacher/manage-modules', 'teacher-manage-modules', { 
+        this.addRoute('/teacher/manage-modules.html', 'teacher-manage-modules', { 
             title: 'Manage Modules', 
             role: 'teacher',
-            parent: '/teacher/dashboard'
+            parent: '/teacher/dashboard.html'
         });
-        this.addRoute('/teacher/manage-quizzes', 'teacher-manage-quizzes', { 
+        this.addRoute('/teacher/manage-quizzes.html', 'teacher-manage-quizzes', { 
             title: 'Manage Quizzes', 
             role: 'teacher',
-            parent: '/teacher/dashboard'
+            parent: '/teacher/dashboard.html'
         });
-        this.addRoute('/teacher/manage-videos', 'teacher-manage-videos', { 
+        this.addRoute('/teacher/manage-videos.html', 'teacher-manage-videos', { 
             title: 'Manage Videos', 
             role: 'teacher',
-            parent: '/teacher/dashboard'
+            parent: '/teacher/dashboard.html'
         });
-        this.addRoute('/teacher/student-progress', 'teacher-student-progress', { 
+        this.addRoute('/teacher/student-progress.html', 'teacher-student-progress', { 
             title: 'Student Progress', 
             role: 'teacher',
-            parent: '/teacher/dashboard'
+            parent: '/teacher/dashboard.html'
         });
-        this.addRoute('/teacher/reports', 'teacher-reports', { 
+        this.addRoute('/teacher/reports.html', 'teacher-reports', { 
             title: 'Reports', 
             role: 'teacher',
-            parent: '/teacher/dashboard'
+            parent: '/teacher/dashboard.html'
         });
-        this.addRoute('/teacher/submissions', 'teacher-submissions', { 
+        this.addRoute('/teacher/submissions.html', 'teacher-submissions', { 
             title: 'Submissions', 
             role: 'teacher',
-            parent: '/teacher/dashboard'
+            parent: '/teacher/dashboard.html'
         });
 
         // Admin routes
-        this.addRoute('/admin/dashboard', 'admin-dashboard', { 
+        this.addRoute('/admin/dashboard.html', 'admin-dashboard', { 
             title: 'Admin Dashboard', 
             role: 'admin',
             icon: 'dashboard'
         });
-        this.addRoute('/admin/users', 'admin-users', { 
+        this.addRoute('/admin/users.html', 'admin-users', { 
             title: 'Users', 
             role: 'admin',
-            parent: '/admin/dashboard'
+            parent: '/admin/dashboard.html'
         });
-        this.addRoute('/admin/grade-levels', 'admin-grade-levels', { 
+        this.addRoute('/admin/grade-levels.html', 'admin-grade-levels', { 
             title: 'Grade Levels & Sections', 
             role: 'admin',
-            parent: '/admin/dashboard'
+            parent: '/admin/dashboard.html'
         });
-        this.addRoute('/admin/lesson-plan', 'admin-lesson-plan', { 
+        this.addRoute('/admin/lesson-plan.html', 'admin-lesson-plan', { 
             title: 'Lesson Plans', 
             role: 'admin',
-            parent: '/admin/dashboard'
+            parent: '/admin/dashboard.html'
         });
-        this.addRoute('/admin/manage-modules', 'admin-manage-modules', { 
+        this.addRoute('/admin/manage-modules.html', 'admin-manage-modules', { 
             title: 'Manage Modules', 
             role: 'admin',
-            parent: '/admin/dashboard'
+            parent: '/admin/dashboard.html'
         });
-        this.addRoute('/admin/manage-videos', 'admin-manage-videos', { 
+        this.addRoute('/admin/manage-videos.html', 'admin-manage-videos', { 
             title: 'Manage Videos', 
             role: 'admin',
-            parent: '/admin/dashboard'
+            parent: '/admin/dashboard.html'
         });
-        this.addRoute('/admin/manage-quizzes', 'admin-manage-quizzes', { 
+        this.addRoute('/admin/manage-quizzes.html', 'admin-manage-quizzes', { 
             title: 'Manage Quizzes', 
             role: 'admin',
-            parent: '/admin/dashboard'
+            parent: '/admin/dashboard.html'
         });
-        this.addRoute('/admin/activity', 'admin-activity', { 
+        this.addRoute('/admin/activity.html', 'admin-activity', { 
             title: 'Activity Log', 
             role: 'admin',
-            parent: '/admin/dashboard'
+            parent: '/admin/dashboard.html'
         });
-        this.addRoute('/admin/analytics', 'admin-analytics', { 
+        this.addRoute('/admin/analytics.html', 'admin-analytics', { 
             title: 'Analytics', 
             role: 'admin',
-            parent: '/admin/dashboard'
+            parent: '/admin/dashboard.html'
         });
-        this.addRoute('/admin/system-status', 'admin-system-status', { 
+        this.addRoute('/admin/system-status.html', 'admin-system-status', { 
             title: 'System Status', 
             role: 'admin',
-            parent: '/admin/dashboard'
+            parent: '/admin/dashboard.html'
         });
-        this.addRoute('/admin/settings', 'admin-settings', { 
+        this.addRoute('/admin/settings.html', 'admin-settings', { 
             title: 'Settings', 
             role: 'admin',
-            parent: '/admin/dashboard'
+            parent: '/admin/dashboard.html'
         });
     }
 
@@ -511,7 +511,7 @@ class NavigationManager {
 
     navigateHome() {
         const userRole = this.getCurrentUserRole();
-        const homePath = userRole ? `/${userRole}/dashboard` : '/';
+        const homePath = userRole ? `/${userRole}/dashboard.html` : '/';
         this.navigateTo(homePath);
     }
 
@@ -522,7 +522,7 @@ class NavigationManager {
     redirectToDefault() {
         const userRole = this.getCurrentUserRole();
         if (userRole) {
-            this.navigateTo(`/${userRole}/dashboard`);
+            this.navigateTo(`/${userRole}/dashboard.html`);
         } else {
             this.navigateTo('/');
         }

@@ -1,4 +1,3 @@
-    <script src="assets/js/sidebar.js"></script>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -352,6 +351,7 @@
     <!-- Scripts -->
     <script src="../shared/js/config.js"></script>
     <script src="../shared/js/supabase.js"></script>
+    <script src="assets/js/sidebar.js"></script>
     
     <script>
         // Global variables
@@ -377,16 +377,17 @@
         // Setup mobile menu
         function setupMobileMenu() {
             const mobileMenuBtn = document.getElementById('mobileMenuBtn');
-            const sidebar = document.getElementById('sidebar');
+            const sidebarContainer = document.getElementById('sidebar');
+            const sidebarEl = sidebarContainer?.querySelector('aside') || sidebarContainer;
             const mobileOverlay = document.getElementById('mobileOverlay');
 
             mobileMenuBtn.addEventListener('click', () => {
-                sidebar.classList.toggle('-translate-x-full');
+                sidebarEl.classList.toggle('-translate-x-full');
                 mobileOverlay.classList.toggle('hidden');
             });
 
             mobileOverlay.addEventListener('click', () => {
-                sidebar.classList.add('-translate-x-full');
+                sidebarEl.classList.add('-translate-x-full');
                 mobileOverlay.classList.add('hidden');
             });
         }
@@ -394,7 +395,7 @@
         async function checkAuth() {
             const { data: { session } } = await getSupabase().auth.getSession();
             if (!session) {
-                window.location.href = '../login.html';
+                window.location.href = '../public/login.html';
                 return;
             }
             
@@ -405,7 +406,7 @@
                 .single();
             
             if (!user || (user.role !== 'teacher' && user.role !== 'admin')) {
-                window.location.href = '../login.html';
+                window.location.href = '../public/login.html';
                 return;
             }
             
@@ -419,7 +420,7 @@
 
         async function logout() {
             await getSupabase().auth.signOut();
-            window.location.href = '../login.html';
+            window.location.href = '../public/login.html';
         }
 
         function showStudentsPage() {
@@ -762,7 +763,11 @@
         async function deleteModule(moduleId) {
             if (!confirm('Delete this module and all its content?')) return;
             try {
-                const { error } = await getSupabase().from('modules').delete().eq('id', moduleId);
+                let deleteQuery = getSupabase().from('modules').delete().eq('id', moduleId);
+                if (currentUser?.role === 'teacher') {
+                    deleteQuery = deleteQuery.eq('teacher_id', currentUser.id);
+                }
+                const { error } = await deleteQuery;
                 if (error) throw error;
                 showToast('Module deleted', 'success');
                 closeModuleDetailModal();
@@ -776,7 +781,11 @@
             const module = modules.find(m => m.id === moduleId);
             const newStatus = module.status === 'published' ? 'draft' : 'published';
             try {
-                const { error } = await getSupabase().from('modules').update({ status: newStatus }).eq('id', moduleId);
+                let updateQuery = getSupabase().from('modules').update({ status: newStatus }).eq('id', moduleId);
+                if (currentUser?.role === 'teacher') {
+                    updateQuery = updateQuery.eq('teacher_id', currentUser.id);
+                }
+                const { error } = await updateQuery;
                 if (error) throw error;
                 showToast(`Module ${newStatus}`, 'success');
                 await loadModules();

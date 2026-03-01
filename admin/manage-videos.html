@@ -179,9 +179,12 @@
     <script src="../shared/js/config.js"></script>
     <script src="../shared/js/supabase.js"></script>
     <script src="../shared/js/utils.js"></script>
+    <script src="../shared/js/auth.js"></script>
     <script src="assets/js/sidebar.js"></script>
     <script src="assets/js/admin.js"></script>
     <script>
+        let currentUser = null;
+
         // Video management functions
         async function loadAllVideos() {
             try {
@@ -193,12 +196,26 @@
                     </div>
                 `;
 
-                const { data: videos, error } = await getSupabase().from('videos').select(`
-                    id, title, description, url, grade_level, status, created_at,
-                    teacher:teacher_id (full_name)
-                `).order('created_at', { ascending: false });
+                const { data: videos, error } = await getSupabase()
+                    .from('videos')
+                    .select('*')
+                    .order('created_at', { ascending: false });
 
                 if (error) throw error;
+
+                const teacherIds = [...new Set((videos || []).map(video => video.teacher_id).filter(Boolean))];
+                const teacherMap = {};
+
+                if (teacherIds.length > 0) {
+                    const { data: teachers } = await getSupabase()
+                        .from('users')
+                        .select('id, full_name')
+                        .in('id', teacherIds);
+
+                    (teachers || []).forEach(teacher => {
+                        teacherMap[teacher.id] = teacher;
+                    });
+                }
 
                 if (videos.length === 0) {
                     videosList.innerHTML = `
@@ -219,8 +236,8 @@
                         <div class="flex justify-between items-start mb-4">
                             <h3 class="text-lg font-bold text-maroon">${video.title}</h3>
                             <span class="px-3 py-1 text-xs font-semibold rounded-full ${
-                                video.status === 'active' ? 'bg-maroon text-white' : 'bg-gray-100 text-gray-600'
-                            }">${video.status}</span>
+                                (video.status === 'active' || video.status === 'published' || video.is_published) ? 'bg-maroon text-white' : 'bg-gray-100 text-gray-600'
+                            }">${video.status || (video.is_published ? 'published' : 'draft')}</span>
                         </div>
                         
                         <p class="text-gray-700 text-sm mb-4 leading-relaxed">${video.description || 'No description'}</p>
@@ -232,7 +249,7 @@
                             </div>
                             <div class="flex items-center">
                                 <i class="fas fa-user mr-2 text-maroon"></i>
-                                <span>Created by: ${video.teacher?.full_name || 'Unknown'}</span>
+                                <span>Created by: ${teacherMap[video.teacher_id]?.full_name || 'Unknown'}</span>
                             </div>
                             <div class="flex items-center">
                                 <i class="fas fa-calendar mr-2 text-maroon"></i>
@@ -252,7 +269,7 @@
                 `).join('');
             } catch (error) {
                 console.error('Error loading videos:', error);
-                showNotification('Failed to load videos', 'error');
+                showToast('Failed to load videos', 'error');
             }
         }
 
@@ -280,14 +297,14 @@
                 document.getElementById('submitIcon').className = 'fas fa-edit mr-2';
                 document.getElementById('videoId').value = video.id;
                 document.getElementById('videoTitle').value = video.title;
-                document.getElementById('videoUrl').value = video.url;
+                document.getElementById('videoUrl').value = video.video_url || video.url || '';
                 document.getElementById('videoDescription').value = video.description;
                 document.getElementById('videoGradeLevel').value = video.grade_level;
-                document.getElementById('videoStatus').value = video.status;
+                document.getElementById('videoStatus').value = video.status || (video.is_published ? 'active' : 'draft');
                 document.getElementById('videoModal').classList.remove('hidden');
             } catch (error) {
                 console.error('Error fetching video:', error);
-                showNotification('Failed to load video details', 'error');
+                showToast('Failed to load video details', 'error');
             }
         }
 
@@ -301,11 +318,11 @@
                 
                 if (error) throw error;
 
-                showNotification('Video deleted successfully', 'success');
+                showToast('Video deleted successfully', 'success');
                 loadAllVideos();
             } catch (error) {
                 console.error('Error deleting video:', error);
-                showNotification('Failed to delete video', 'error');
+                showToast('Failed to delete video', 'error');
             }
         }
 
@@ -318,40 +335,43 @@
             const description = document.getElementById('videoDescription').value;
             const gradeLevel = document.getElementById('videoGradeLevel').value;
             const status = document.getElementById('videoStatus').value;
+            const isPublished = status === 'active' || status === 'published';
 
             try {
                 if (videoId) {
                     const updates = {
                         title,
-                        url,
+                        video_url: url,
                         description,
                         grade_level: gradeLevel,
                         status,
+                        is_published: isPublished,
                         updated_at: new Date().toISOString()
                     };
 
                     const { error } = await getSupabase().from('videos').update(updates).eq('id', videoId);
                     if (error) throw error;
-                    showNotification('Video updated successfully', 'success');
+                    showToast('Video updated successfully', 'success');
                 } else {
                     const { error } = await getSupabase().from('videos').insert({
                         title,
-                        url,
+                        video_url: url,
                         description,
                         grade_level: gradeLevel,
                         status,
+                        is_published: isPublished,
                         created_at: new Date().toISOString(),
                         updated_at: new Date().toISOString()
                     });
                     if (error) throw error;
-                    showNotification('Video created successfully', 'success');
+                    showToast('Video created successfully', 'success');
                 }
 
                 closeVideoModal();
                 loadAllVideos();
             } catch (error) {
                 console.error('Error saving video:', error);
-                showNotification('Failed to save video', 'error');
+                showToast('Failed to save video', 'error');
             }
         }
 
@@ -361,7 +381,13 @@
             }
         });
 
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', async function() {
+            currentUser = await checkAuthSession();
+            if (!currentUser || currentUser.role !== 'admin') {
+                redirectToLogin();
+                return;
+            }
+
             loadAllVideos();
         });
     </script>

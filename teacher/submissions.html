@@ -273,7 +273,7 @@
             try {
                 currentUser = await checkAuthSession();
                 
-                if (!currentUser) {
+                if (!currentUser || (currentUser.role !== 'teacher' && currentUser.role !== 'admin')) {
                     redirectToLogin();
                     return;
                 }

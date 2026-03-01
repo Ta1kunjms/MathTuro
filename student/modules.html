@@ -168,12 +168,13 @@
     <script>
         let currentUser = null;
         let modules = [];
+        let studentAssignment = null;
 
         document.addEventListener('DOMContentLoaded', async function() {
             try {
                 currentUser = await checkAuthSession();
                 if (!currentUser || currentUser.role !== 'student') {
-                    window.location.href = '../login.html';
+                    redirectToLogin();
                     return;
                 }
                 
@@ -188,16 +189,25 @@
         });
 
         function updateUserDisplay(user) {
-            const initials = user.fullName.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
-            document.getElementById('sidebarUserName').textContent = user.fullName;
-            document.getElementById('userInitials').textContent = initials;
+            const displayName = user.fullName || user.email || 'Student';
+            const initials = displayName.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+            const userNameEl = document.getElementById('sidebarUserName');
+            const userInitialsEl = document.getElementById('userInitials');
+            if (userNameEl) userNameEl.textContent = displayName;
+            if (userInitialsEl) userInitialsEl.textContent = initials;
+        }
+
+        function normalizeGradeValue(value) {
+            if (value === null || value === undefined || value === '') return null;
+            const str = String(value).trim().toLowerCase();
+            return str.startsWith('grade') ? str.replace(/^grade\s*/, '') : str;
         }
 
         function setupEventListeners() {
             // Logout
             document.getElementById('logoutButton').addEventListener('click', async () => {
                 await logout();
-                window.location.href = '../login.html';
+                redirectToLogin();
             });
 
             // Mobile menu
@@ -230,6 +240,8 @@
 
         async function loadModules() {
             try {
+                studentAssignment = await getStudentGradeSection(currentUser.id);
+
                 const { data, error } = await getSupabase()
                     .from('modules')
                     .select('*')
@@ -237,8 +249,34 @@
                     .order('created_at', { ascending: false });
 
                 if (error) throw error;
-                
-                modules = data || [];
+
+                const gradeId = studentAssignment?.gradeLevel?.id;
+                const sectionId = studentAssignment?.section?.id;
+                const gradeName = normalizeGradeValue(studentAssignment?.gradeLevel?.name);
+
+                modules = (data || []).filter(module => {
+                    const moduleGradeId = module.grade_level_id ?? null;
+                    const moduleSectionId = module.section_id ?? null;
+                    const moduleGrade = normalizeGradeValue(module.grade_level ?? module.grade_level_name ?? null);
+
+                    const gradeMatch =
+                        !gradeId && !gradeName
+                            ? true
+                            : moduleGradeId
+                                ? String(moduleGradeId) === String(gradeId)
+                                : moduleGrade
+                                    ? moduleGrade === gradeName
+                                    : true;
+
+                    const sectionMatch =
+                        !sectionId
+                            ? true
+                            : moduleSectionId
+                                ? String(moduleSectionId) === String(sectionId)
+                                : true;
+
+                    return gradeMatch && sectionMatch;
+                });
                 
                 // Hide loading state
                 document.getElementById('loadingState').classList.add('hidden');
@@ -297,8 +335,13 @@
                                 <span>${new Date(module.created_at).toLocaleDateString()}</span>
                             </span>
                         </div>
-                        <div class="w-full py-3 bg-brand text-white rounded-xl text-center text-sm font-semibold hover:bg-brand-dark transition-colors">
-                            Start Learning →
+                        <div class="grid grid-cols-2 gap-2">
+                            <div class="py-3 bg-brand text-white rounded-xl text-center text-sm font-semibold hover:bg-brand-dark transition-colors">
+                                Start Learning →
+                            </div>
+                            <a href="lesson-view.html?moduleId=${module.id}" class="py-3 bg-brand/10 text-brand rounded-xl text-center text-sm font-semibold hover:bg-brand/20 transition-colors">
+                                Quick Lesson
+                            </a>
                         </div>
                     </div>
                 </a>

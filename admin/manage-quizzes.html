@@ -186,9 +186,12 @@
     <script src="../shared/js/config.js"></script>
     <script src="../shared/js/supabase.js"></script>
     <script src="../shared/js/utils.js"></script>
+    <script src="../shared/js/auth.js"></script>
     <script src="assets/js/sidebar.js"></script>
     <script src="assets/js/admin.js"></script>
     <script>
+        let currentUser = null;
+
         // Quiz management functions
         async function loadAllQuizzes() {
             try {
@@ -200,12 +203,26 @@
                     </div>
                 `;
 
-                const { data: quizzes, error } = await getSupabase().from('quizzes').select(`
-                    id, title, description, grade_level, status, time_limit, passing_score, created_at,
-                    teacher:teacher_id (full_name)
-                `).order('created_at', { ascending: false });
+                const { data: quizzes, error } = await getSupabase()
+                    .from('quizzes')
+                    .select('*')
+                    .order('created_at', { ascending: false });
 
                 if (error) throw error;
+
+                const teacherIds = [...new Set((quizzes || []).map(quiz => quiz.teacher_id).filter(Boolean))];
+                const teacherMap = {};
+
+                if (teacherIds.length > 0) {
+                    const { data: teachers } = await getSupabase()
+                        .from('users')
+                        .select('id, full_name')
+                        .in('id', teacherIds);
+
+                    (teachers || []).forEach(teacher => {
+                        teacherMap[teacher.id] = teacher;
+                    });
+                }
 
                 if (quizzes.length === 0) {
                     quizzesList.innerHTML = `
@@ -226,8 +243,8 @@
                         <div class="flex justify-between items-start mb-4">
                             <h3 class="text-lg font-bold text-maroon">${quiz.title}</h3>
                             <span class="px-3 py-1 text-xs font-semibold rounded-full ${
-                                quiz.status === 'active' ? 'bg-maroon text-white' : 'bg-gray-100 text-gray-600'
-                            }">${quiz.status}</span>
+                                (quiz.status === 'active' || quiz.status === 'published' || quiz.is_published) ? 'bg-maroon text-white' : 'bg-gray-100 text-gray-600'
+                            }">${quiz.status || (quiz.is_published ? 'published' : 'draft')}</span>
                         </div>
                         
                         <p class="text-gray-700 text-sm mb-4 leading-relaxed">${quiz.description || 'No description'}</p>
@@ -239,11 +256,11 @@
                             </div>
                             <div class="flex items-center">
                                 <i class="fas fa-user mr-2 text-maroon"></i>
-                                <span>Created by: ${quiz.teacher?.full_name || 'Unknown'}</span>
+                                <span>Created by: ${teacherMap[quiz.teacher_id]?.full_name || 'Unknown'}</span>
                             </div>
                             <div class="flex items-center">
                                 <i class="fas fa-clock mr-2 text-maroon"></i>
-                                <span>${quiz.time_limit} minutes</span>
+                                <span>${quiz.time_limit_minutes ?? quiz.time_limit ?? 0} minutes</span>
                             </div>
                             <div class="flex items-center">
                                 <i class="fas fa-trophy mr-2 text-maroon"></i>
@@ -267,7 +284,7 @@
                 `).join('');
             } catch (error) {
                 console.error('Error loading quizzes:', error);
-                showNotification('Failed to load quizzes', 'error');
+                showToast('Failed to load quizzes', 'error');
             }
         }
 
@@ -297,13 +314,13 @@
                 document.getElementById('quizTitle').value = quiz.title;
                 document.getElementById('quizDescription').value = quiz.description;
                 document.getElementById('quizGradeLevel').value = quiz.grade_level;
-                document.getElementById('quizStatus').value = quiz.status;
-                document.getElementById('quizTimeLimit').value = quiz.time_limit;
+                document.getElementById('quizStatus').value = quiz.status || (quiz.is_published ? 'active' : 'draft');
+                document.getElementById('quizTimeLimit').value = quiz.time_limit_minutes ?? quiz.time_limit ?? 0;
                 document.getElementById('quizPassingScore').value = quiz.passing_score;
                 document.getElementById('quizModal').classList.remove('hidden');
             } catch (error) {
                 console.error('Error fetching quiz:', error);
-                showNotification('Failed to load quiz details', 'error');
+                showToast('Failed to load quiz details', 'error');
             }
         }
 
@@ -317,11 +334,11 @@
                 
                 if (error) throw error;
 
-                showNotification('Quiz deleted successfully', 'success');
+                showToast('Quiz deleted successfully', 'success');
                 loadAllQuizzes();
             } catch (error) {
                 console.error('Error deleting quiz:', error);
-                showNotification('Failed to delete quiz', 'error');
+                showToast('Failed to delete quiz', 'error');
             }
         }
 
@@ -335,6 +352,7 @@
             const status = document.getElementById('quizStatus').value;
             const timeLimit = document.getElementById('quizTimeLimit').value;
             const passingScore = document.getElementById('quizPassingScore').value;
+            const isPublished = status === 'active' || status === 'published';
 
             try {
                 if (quizId) {
@@ -343,34 +361,36 @@
                         description,
                         grade_level: gradeLevel,
                         status,
-                        time_limit: timeLimit,
+                        is_published: isPublished,
+                        time_limit_minutes: parseInt(timeLimit, 10) || 0,
                         passing_score: passingScore,
                         updated_at: new Date().toISOString()
                     };
 
                     const { error } = await getSupabase().from('quizzes').update(updates).eq('id', quizId);
                     if (error) throw error;
-                    showNotification('Quiz updated successfully', 'success');
+                    showToast('Quiz updated successfully', 'success');
                 } else {
                     const { error } = await getSupabase().from('quizzes').insert({
                         title,
                         description,
                         grade_level: gradeLevel,
                         status,
-                        time_limit: timeLimit,
+                        is_published: isPublished,
+                        time_limit_minutes: parseInt(timeLimit, 10) || 0,
                         passing_score: passingScore,
                         created_at: new Date().toISOString(),
                         updated_at: new Date().toISOString()
                     });
                     if (error) throw error;
-                    showNotification('Quiz created successfully', 'success');
+                    showToast('Quiz created successfully', 'success');
                 }
 
                 closeQuizModal();
                 loadAllQuizzes();
             } catch (error) {
                 console.error('Error saving quiz:', error);
-                showNotification('Failed to save quiz', 'error');
+                showToast('Failed to save quiz', 'error');
             }
         }
 
@@ -380,7 +400,13 @@
             }
         });
 
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', async function() {
+            currentUser = await checkAuthSession();
+            if (!currentUser || currentUser.role !== 'admin') {
+                redirectToLogin();
+                return;
+            }
+
             loadAllQuizzes();
         });
     </script>

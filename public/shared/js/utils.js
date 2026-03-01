@@ -789,3 +789,80 @@ srOnlyStyle.textContent = `
   }
 `;
 document.head.appendChild(srOnlyStyle);
+
+// ============================================
+// Grade and Section Management Functions
+// ============================================
+
+/*
+  Function Name: getGradeLevels
+  Purpose:
+  - Fetches all active grade levels from the database
+  - Returns an array of grade level objects
+*/
+async function getGradeLevels() {
+  try {
+    const supabase = getSupabase();
+    const { data, error } = await supabase
+      .from('grade_levels')
+      .select('*')
+      .eq('is_active', true);
+
+    if (error) {
+      console.error('Error fetching grade levels:', error);
+      return [];
+    }
+
+    return (data || []).sort((firstGrade, secondGrade) => {
+      const firstName = (firstGrade?.name || '').trim();
+      const secondName = (secondGrade?.name || '').trim();
+
+      const firstMatch = firstName.match(/\d+/);
+      const secondMatch = secondName.match(/\d+/);
+
+      if (firstMatch && secondMatch) {
+        const firstNumber = Number(firstMatch[0]);
+        const secondNumber = Number(secondMatch[0]);
+        if (firstNumber !== secondNumber) {
+          return firstNumber - secondNumber;
+        }
+      }
+
+      return firstName.localeCompare(secondName, undefined, { numeric: true, sensitivity: 'base' });
+    });
+  } catch (error) {
+    console.error('Error fetching grade levels:', error);
+    return [];
+  }
+}
+
+/*
+  Function Name: getSectionsByGradeLevel
+  Purpose:
+  - Fetches all active sections for a specific grade level
+  - Returns an array of section objects
+*/
+async function getSectionsByGradeLevel(gradeLevelId) {
+  try {
+    const supabase = getSupabase();
+    const { data, error } = await supabase
+      .from('sections')
+      .select('*')
+      .eq('grade_level_id', gradeLevelId)
+      .eq('is_active', true);
+
+    if (error) {
+      console.error('Error fetching sections:', error);
+      return [];
+    }
+
+    return (data || []).sort((firstSection, secondSection) => {
+      const firstName = (firstSection?.name || '').trim();
+      const secondName = (secondSection?.name || '').trim();
+      return firstName.localeCompare(secondName, undefined, { numeric: true, sensitivity: 'base' });
+    });
+  } catch (error) {
+    console.error('Error fetching sections:', error);
+    return [];
+  }
+}

@@ -817,15 +817,30 @@ async function getGradeLevels() {
     const { data, error } = await supabase
       .from('grade_levels')
       .select('*')
-      .eq('is_active', true)
-      .order('name');
+      .eq('is_active', true);
 
     if (error) {
       console.error('Error fetching grade levels:', error);
       return [];
     }
 
-    return data || [];
+    return (data || []).sort((firstGrade, secondGrade) => {
+      const firstName = (firstGrade?.name || '').trim();
+      const secondName = (secondGrade?.name || '').trim();
+
+      const firstMatch = firstName.match(/\d+/);
+      const secondMatch = secondName.match(/\d+/);
+
+      if (firstMatch && secondMatch) {
+        const firstNumber = Number(firstMatch[0]);
+        const secondNumber = Number(secondMatch[0]);
+        if (firstNumber !== secondNumber) {
+          return firstNumber - secondNumber;
+        }
+      }
+
+      return firstName.localeCompare(secondName, undefined, { numeric: true, sensitivity: 'base' });
+    });
   } catch (error) {
     console.error('Error fetching grade levels:', error);
     return [];
@@ -856,15 +871,18 @@ async function getSectionsByGradeLevel(gradeLevelId) {
       .from('sections')
       .select('*')
       .eq('grade_level_id', gradeLevelId)
-      .eq('is_active', true)
-      .order('name');
+      .eq('is_active', true);
 
     if (error) {
       console.error('Error fetching sections:', error);
       return [];
     }
 
-    return data || [];
+    return (data || []).sort((firstSection, secondSection) => {
+      const firstName = (firstSection?.name || '').trim();
+      const secondName = (secondSection?.name || '').trim();
+      return firstName.localeCompare(secondName, undefined, { numeric: true, sensitivity: 'base' });
+    });
   } catch (error) {
     console.error('Error fetching sections:', error);
     return [];
@@ -975,45 +993,58 @@ async function getStudentsBySection(sectionId) {
 async function getStudentGradeSection(studentId) {
   try {
     const supabase = getSupabase();
-    const { data, error } = await supabase
+    const { data: userData, error: userError } = await supabase
       .from('users')
-      .select(`
-        id,
-        full_name,
-        email,
-        grade_level_id,
-        section_id,
-        grade_levels (
-          id,
-          name
-        ),
-        sections (
-          id,
-          name
-        )
-      `)
+      .select('id, full_name, email, grade_level_id, section_id')
       .eq('id', studentId)
       .single();
 
-    if (error) {
-      console.error('Error fetching student grade/section:', error);
+    if (userError) {
+      console.error('Error fetching student grade/section:', userError);
       return null;
+    }
+
+    let gradeLevel = null;
+    let section = null;
+
+    if (userData.grade_level_id) {
+      const { data: gradeData, error: gradeError } = await supabase
+        .from('grade_levels')
+        .select('id, name')
+        .eq('id', userData.grade_level_id)
+        .maybeSingle();
+
+      if (!gradeError && gradeData) {
+        gradeLevel = {
+          id: gradeData.id,
+          name: gradeData.name
+        };
+      }
+    }
+
+    if (userData.section_id) {
+      const { data: sectionData, error: sectionError } = await supabase
+        .from('sections')
+        .select('id, name')
+        .eq('id', userData.section_id)
+        .maybeSingle();
+
+      if (!sectionError && sectionData) {
+        section = {
+          id: sectionData.id,
+          name: sectionData.name
+        };
+      }
     }
 
     return {
       student: {
-        id: data.id,
-        full_name: data.full_name,
-        email: data.email
+        id: userData.id,
+        full_name: userData.full_name,
+        email: userData.email
       },
-      gradeLevel: data.grade_levels ? {
-        id: data.grade_levels.id,
-        name: data.grade_levels.name
-      } : null,
-      section: data.sections ? {
-        id: data.sections.id,
-        name: data.sections.name
-      } : null
+      gradeLevel,
+      section
     };
   } catch (error) {
     console.error('Error fetching student grade/section:', error);

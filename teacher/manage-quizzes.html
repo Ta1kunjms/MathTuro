@@ -1,4 +1,3 @@
-    <script src="assets/js/sidebar.js"></script>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -367,6 +366,7 @@
     <!-- Scripts -->
     <script src="../shared/js/config.js"></script>
     <script src="../shared/js/supabase.js"></script>
+    <script src="assets/js/sidebar.js"></script>
     <script>
         let currentUser = null;
         let quizzes = [];
@@ -384,16 +384,17 @@
         // Setup mobile menu
         function setupMobileMenu() {
             const mobileMenuBtn = document.getElementById('mobileMenuBtn');
-            const sidebar = document.getElementById('sidebar');
+            const sidebarContainer = document.getElementById('sidebar');
+            const sidebarEl = sidebarContainer?.querySelector('aside') || sidebarContainer;
             const mobileOverlay = document.getElementById('mobileOverlay');
 
             mobileMenuBtn.addEventListener('click', () => {
-                sidebar.classList.toggle('-translate-x-full');
+                sidebarEl.classList.toggle('-translate-x-full');
                 mobileOverlay.classList.toggle('hidden');
             });
 
             mobileOverlay.addEventListener('click', () => {
-                sidebar.classList.add('-translate-x-full');
+                sidebarEl.classList.add('-translate-x-full');
                 mobileOverlay.classList.add('hidden');
             });
         }
@@ -401,7 +402,7 @@
         async function checkAuth() {
             const { data: { session } } = await getSupabase().auth.getSession();
             if (!session) {
-                window.location.href = '../login.html';
+                window.location.href = '../public/login.html';
                 return;
             }
             
@@ -411,8 +412,8 @@
                 .eq('id', session.user.id)
                 .single();
             
-            if (!user || user.role !== 'teacher') {
-                window.location.href = '../login.html';
+            if (!user || (user.role !== 'teacher' && user.role !== 'admin')) {
+                window.location.href = '../public/login.html';
                 return;
             }
             
@@ -426,7 +427,7 @@
 
         async function logout() {
             await getSupabase().auth.signOut();
-            window.location.href = '../login.html';
+            window.location.href = '../public/login.html';
         }
 
         function showStudentsPage() {
@@ -440,21 +441,31 @@
         async function loadData() {
             try {
                 // Load quizzes
-                const { data: quizData, error: quizError } = await getSupabase()
+                let quizzesQuery = getSupabase()
                     .from('quizzes')
                     .select('*')
-                    .eq('teacher_id', currentUser.id)
                     .order('created_at', { ascending: false });
+
+                if (currentUser.role === 'teacher') {
+                    quizzesQuery = quizzesQuery.eq('teacher_id', currentUser.id);
+                }
+
+                const { data: quizData, error: quizError } = await quizzesQuery;
 
                 if (quizError) throw quizError;
                 quizzes = quizData || [];
 
                 // Load videos for linking
-                const { data: videoData } = await getSupabase()
+                let videosQuery = getSupabase()
                     .from('videos')
                     .select('id, title')
-                    .eq('teacher_id', currentUser.id)
                     .eq('is_published', true);
+
+                if (currentUser.role === 'teacher') {
+                    videosQuery = videosQuery.eq('teacher_id', currentUser.id);
+                }
+
+                const { data: videoData } = await videosQuery;
                 
                 videos = videoData || [];
                 populateVideoDropdown();
@@ -647,10 +658,16 @@
 
                 let result;
                 if (editingQuizId) {
-                    result = await getSupabase()
+                    let updateQuery = getSupabase()
                         .from('quizzes')
                         .update(quizData)
                         .eq('id', editingQuizId);
+
+                    if (currentUser.role === 'teacher') {
+                        updateQuery = updateQuery.eq('teacher_id', currentUser.id);
+                    }
+
+                    result = await updateQuery;
                 } else {
                     quizData.created_at = now;
                     result = await getSupabase()
@@ -761,10 +778,16 @@
             if (!confirm('Are you sure you want to delete this quiz? All submissions will be lost.')) return;
             
             try {
-                const { error } = await getSupabase()
+                let deleteQuery = getSupabase()
                     .from('quizzes')
                     .delete()
                     .eq('id', id);
+
+                if (currentUser.role === 'teacher') {
+                    deleteQuery = deleteQuery.eq('teacher_id', currentUser.id);
+                }
+
+                const { error } = await deleteQuery;
 
                 if (error) throw error;
                 showToast('Quiz deleted', 'success');

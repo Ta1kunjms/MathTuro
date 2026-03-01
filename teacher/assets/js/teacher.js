@@ -250,7 +250,7 @@ async function getStudentProgress(studentId) {
     }
 
     // Get lesson progress
-    const { data: progress, error: progressError } = await getSupabase()
+    const { data: progressData, error: progressError } = await getSupabase()
       .from('lesson_progress')
       .select('*')
       .eq('user_id', studentId);
@@ -260,7 +260,7 @@ async function getStudentProgress(studentId) {
     }
 
     // Get quiz submissions
-    const { data: submissions, error: submissionsError } = await getSupabase()
+    const { data: submissionsData, error: submissionsError } = await getSupabase()
       .from('quiz_submissions')
       .select('*')
       .eq('user_id', studentId);
@@ -268,6 +268,9 @@ async function getStudentProgress(studentId) {
     if (submissionsError) {
       console.error('Error loading quiz submissions:', submissionsError);
     }
+
+    const progress = progressData || [];
+    const submissions = submissionsData || [];
 
     // Process module progress
     const moduleProgress = modules.map(module => {
@@ -394,7 +397,7 @@ async function getStudentsByModule(moduleId) {
     }
 
     // Get lesson progress for all students
-    const { data: progress, error: progressError } = await getSupabase()
+    const { data: progressData, error: progressError } = await getSupabase()
       .from('lesson_progress')
       .select('*')
       .in('lesson_id', lessons.map(lesson => lesson.id));
@@ -404,7 +407,7 @@ async function getStudentsByModule(moduleId) {
     }
 
     // Get quiz submissions for all students
-    const { data: submissions, error: submissionsError } = await getSupabase()
+    const { data: submissionsData, error: submissionsError } = await getSupabase()
       .from('quiz_submissions')
       .select('*')
       .in('lesson_id', lessons.map(lesson => lesson.id));
@@ -412,6 +415,9 @@ async function getStudentsByModule(moduleId) {
     if (submissionsError) {
       console.error('Error loading quiz submissions:', submissionsError);
     }
+
+    const progress = progressData || [];
+    const submissions = submissionsData || [];
 
     // Process student progress
     return students.map(student => {

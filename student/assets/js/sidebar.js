@@ -3,8 +3,7 @@
 
 document.addEventListener('DOMContentLoaded', function () {
   const sidebarHTML = `
-    <aside id="sidebar" class="fixed left-0 top-0 h-full w-72 glass-sidebar border-r border-gray-200 z-50 transform -translate-x-full lg:translate-x-0 transition-transform duration-300 flex flex-col">
-        <div class="sidebar-scrollable flex-1 overflow-y-auto">
+  <div class="sidebar-scrollable flex-1 overflow-y-auto">
             <!-- Logo -->
             <div class="p-6 border-b border-gray-100">
                 <a href="dashboard.html" class="flex items-center space-x-3">
@@ -66,24 +65,23 @@ document.addEventListener('DOMContentLoaded', function () {
                     <span>Quizzes</span>
                 </a>
                 <p class="text-xs text-gray-400 uppercase tracking-wider px-4 mb-2 mt-6">My Learning</p>
-                <a href="#" onclick="showMyProgress(); return false;" class="sidebar-link flex items-center space-x-3 px-4 py-3 rounded-xl text-gray-700">
+                <a href="module-view.html" class="sidebar-link flex items-center space-x-3 px-4 py-3 rounded-xl text-gray-700">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
                     </svg>
-                    <span>My Progress</span>
+                  <span>Module View</span>
                 </a>
-                <a href="#" onclick="showAchievements(); return false;" class="sidebar-link flex items-center space-x-3 px-4 py-3 rounded-xl text-gray-700">
+                <a href="lesson-view.html" class="sidebar-link flex items-center space-x-3 px-4 py-3 rounded-xl text-gray-700">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"/>
                     </svg>
-                    <span>Achievements</span>
-                    <span id="achievementCount" class="ml-auto px-2 py-0.5 bg-yellow-100 text-yellow-700 text-xs rounded-full">0</span>
+                  <span>Lesson View</span>
                 </a>
-                <a href="#" onclick="showLeaderboard(); return false;" class="sidebar-link flex items-center space-x-3 px-4 py-3 rounded-xl text-gray-700">
+                <a href="dashboard.html#progress" class="sidebar-link flex items-center space-x-3 px-4 py-3 rounded-xl text-gray-700">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"/>
                     </svg>
-                    <span>Leaderboard</span>
+                  <span>My Progress</span>
                 </a>
             </nav>
         </div>
@@ -97,7 +95,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 <span>Logout</span>
             </button>
         </div>
-    </aside>
+    </div>
   `;
 
   const sidebarContainer = document.getElementById('sidebar');
@@ -106,12 +104,17 @@ document.addEventListener('DOMContentLoaded', function () {
   }
 
   // Set active link based on current page
-  const currentPage = window.location.pathname.split('/').pop();
+  const currentPage = window.location.pathname.split('/').pop().toLowerCase();
   const sidebarLinks = document.querySelectorAll('.sidebar-link');
   sidebarLinks.forEach(link => {
-    const linkPage = link.getAttribute('href');
-    // Check if link is active based on current page
-    if (currentPage === linkPage || (currentPage === '' && linkPage === 'dashboard.html')) {
+    const href = (link.getAttribute('href') || '').toLowerCase();
+    const linkPage = href.split('#')[0].split('?')[0];
+    const isActive =
+      currentPage === linkPage ||
+      (currentPage === '' && linkPage === 'dashboard.html') ||
+      ((currentPage === 'module-view.html' || currentPage === 'lesson-view.html') && linkPage === 'modules.html');
+
+    if (isActive) {
       link.classList.add('active');
       link.style.background = 'linear-gradient(135deg, #005801 0%, #006B01 100%)';
       link.style.color = 'white';
@@ -119,7 +122,7 @@ document.addEventListener('DOMContentLoaded', function () {
       // Remove active class from other links
       link.classList.remove('active');
       link.style.background = '';
-      link.style.color = 'text-gray-700';
+      link.style.color = '';
     }
   });
 
@@ -128,9 +131,6 @@ document.addEventListener('DOMContentLoaded', function () {
 
   // Load streak count
   loadStreakCount();
-
-  // Load achievement count
-  loadAchievementCount();
 
   // Setup logout handler
   const logoutButton = document.getElementById('logoutButton');
@@ -203,29 +203,28 @@ async function loadStreakCount() {
   }
 }
 
-// Load and display the student's achievement count
-async function loadAchievementCount() {
-  try {
-    // This function would typically fetch the achievement count from the database
-    // For now, we'll use a placeholder value
-    const achievementCount = 0;
-    const achievementCountEl = document.getElementById('achievementCount');
-    if (achievementCountEl) {
-      achievementCountEl.textContent = achievementCount;
-    }
-  } catch (error) {
-    console.error('Error loading achievement count:', error);
-  }
-}
-
 // Handle logout
 async function handleLogout() {
   try {
-    const supabase = getSupabase();
-    if (supabase) await supabase.auth.signOut();
-    window.location.href = '../login.html';
+    if (typeof logout === 'function') {
+      await logout();
+    } else {
+      const supabase = getSupabase();
+      if (supabase) await supabase.auth.signOut();
+    }
+
+    if (typeof redirectToLogin === 'function') {
+      redirectToLogin();
+      return;
+    }
+
+    window.location.href = '../public/login.html';
   } catch (error) {
     console.error('Logout error:', error);
-    window.location.href = '../login.html';
+    if (typeof redirectToLogin === 'function') {
+      redirectToLogin();
+      return;
+    }
+    window.location.href = '../public/login.html';
   }
 }

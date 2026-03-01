@@ -575,7 +575,7 @@ class TestRunner {
         try {
             // Navigate to dashboard
             if (window.navigationManager) {
-                await window.navigationManager.navigateTo('/student/dashboard');
+                await window.navigationManager.navigateTo('/student/dashboard.html');
                 await this.delay(100);
                 
                 const currentRoute = window.navigationManager.getCurrentRoute();

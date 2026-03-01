@@ -157,8 +157,8 @@ async function createUser(email, password, fullName, role = 'student') {
 
     if (userError) {
       console.error('Database error:', userError);
-      // Try to delete the Auth user if database creation failed
-      await getSupabase().auth.admin.deleteUser(authData.user.id);
+      // Cannot safely call auth.admin APIs from client-side code.
+      // Keep the failure transparent and let server-side cleanup handle orphaned auth users.
       if (typeof showToast === 'function') showToast('Failed to create user record: ' + userError.message, 'error');
       return null;
     }
@@ -297,13 +297,8 @@ async function deleteUser(userId) {
       return false;
     }
 
-    // Delete user from Supabase Auth
-    const { error: authError } = await getSupabase().auth.admin.deleteUser(userId);
-
-    if (authError) {
-      console.error('Auth error:', authError);
-      if (typeof showToast === 'function') showToast('Failed to delete user from authentication system: ' + authError.message, 'error');
-      return false;
+    if (typeof showToast === 'function') {
+      showToast('User record removed. If authentication cleanup is needed, perform it from a secure server process.', 'info');
     }
 
     return true;
@@ -348,7 +343,7 @@ async function resetUserPassword(email) {
     }
 
     const { error } = await getSupabase().auth.resetPasswordForEmail(email, {
-      redirectTo: window.location.origin + '/reset-password.html'
+      redirectTo: window.location.origin + '/public/reset-password.html'
     });
 
     if (error) {
@@ -497,11 +492,21 @@ async function getActivityLog(limit = 50) {
       return [];
     }
 
-    const { data, error } = await getSupabase()
+    let result = await getSupabase()
       .from('activity_log')
       .select('*, users(full_name, role)')
       .order('created_at', { ascending: false })
       .limit(limit);
+
+    if (result.error) {
+      result = await getSupabase()
+        .from('activity_logs')
+        .select('*, users(full_name, role)')
+        .order('created_at', { ascending: false })
+        .limit(limit);
+    }
+
+    const { data, error } = result;
 
     if (error) {
       console.error('Error loading activity log:', error);
@@ -545,7 +550,7 @@ async function logActivity(action, details = null) {
       return;
     }
 
-    const { error } = await getSupabase()
+    let result = await getSupabase()
       .from('activity_log')
       .insert({
         user_id: user.id,
@@ -553,6 +558,19 @@ async function logActivity(action, details = null) {
         details: details,
         created_at: new Date().toISOString()
       });
+
+    if (result.error) {
+      result = await getSupabase()
+        .from('activity_logs')
+        .insert({
+          user_id: user.id,
+          action: action,
+          details: details,
+          created_at: new Date().toISOString()
+        });
+    }
+
+    const { error } = result;
 
     if (error) {
       console.error('Error logging activity:', error);

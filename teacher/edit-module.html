@@ -155,7 +155,7 @@
                 </svg>
                 <span>Manage Quizzes</span>
             </a>
-            <a href="lesson-plan.html" class="sidebar-link flex items-center space-x-3 px-4 py-3 rounded-xl text-gray-700">
+            <a href="lessonplan.html" class="sidebar-link flex items-center space-x-3 px-4 py-3 rounded-xl text-gray-700">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 20h9"/>
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16.5 3.5a2.121 2.121 0 113 3L7 19.5 3 21l1.5-4L16.5 3.5z"/>
@@ -534,6 +534,7 @@
     <script src="../shared/js/supabase.js"></script>
     <script src="../shared/js/auth.js"></script>
     <script src="../shared/js/modules.js"></script>
+    <script src="assets/js/sidebar.js"></script>
     <script>
         let currentModule = null;
         let isEditMode = false;
@@ -583,7 +584,8 @@
             const initials = getInitials(user.fullName);
             
             document.getElementById('sidebarUserName').textContent = user.fullName;
-            document.getElementById('userRole').textContent = user.role;
+            const userRoleEl = document.getElementById('userRole');
+            if (userRoleEl) userRoleEl.textContent = user.role;
             document.getElementById('userInitials').textContent = initials;
             document.getElementById('headerUserInitials').textContent = initials;
             document.getElementById('dropdownUserName').textContent = user.fullName;
@@ -596,6 +598,7 @@
 
         function setupDashboardLink(role) {
             const dashboardLink = document.getElementById('dashboardLink');
+            if (!dashboardLink) return;
             const dashboardUrl = role === 'admin' ? '../admin/dashboard.html' : 'dashboard.html';
             dashboardLink.innerHTML = `
                 <a href="${dashboardUrl}" class="sidebar-link flex items-center space-x-3 px-4 py-3 rounded-xl text-gray-700">

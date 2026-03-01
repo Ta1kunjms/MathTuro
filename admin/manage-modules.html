@@ -189,9 +189,12 @@
     <script src="../shared/js/config.js"></script>
     <script src="../shared/js/supabase.js"></script>
     <script src="../shared/js/utils.js"></script>
+    <script src="../shared/js/auth.js"></script>
     <script src="assets/js/sidebar.js"></script>
     <script src="assets/js/admin.js"></script>
     <script>
+        let currentUser = null;
+
         // Module management functions
         async function loadAllModules() {
             try {
@@ -204,12 +207,26 @@
                 `;
 
                 // Fetch all modules (admin sees all)
-                const { data: modules, error } = await getSupabase().from('modules').select(`
-                    id, name, description, grade_level, status, created_at,
-                    teacher:teacher_id (full_name)
-                `).order('created_at', { ascending: false });
+                const { data: modules, error } = await getSupabase()
+                    .from('modules')
+                    .select('*')
+                    .order('created_at', { ascending: false });
 
                 if (error) throw error;
+
+                const teacherIds = [...new Set((modules || []).map(module => module.teacher_id).filter(Boolean))];
+                const teacherMap = {};
+
+                if (teacherIds.length > 0) {
+                    const { data: teachers } = await getSupabase()
+                        .from('users')
+                        .select('id, full_name')
+                        .in('id', teacherIds);
+
+                    (teachers || []).forEach(teacher => {
+                        teacherMap[teacher.id] = teacher;
+                    });
+                }
 
                 if (modules.length === 0) {
                     modulesList.innerHTML = `
@@ -228,10 +245,10 @@
                 modulesList.innerHTML = modules.map(module => `
                     <div class="module-card bg-white border-2 border-maroon/20 rounded-xl p-6 hover:shadow-xl hover:border-maroon/40 transition-all duration-300">
                         <div class="flex justify-between items-start mb-4">
-                            <h3 class="text-lg font-bold text-maroon">${module.name}</h3>
+                            <h3 class="text-lg font-bold text-maroon">${module.title || module.name || 'Untitled Module'}</h3>
                             <span class="px-3 py-1 text-xs font-semibold rounded-full ${
-                                module.status === 'active' ? 'bg-maroon text-white' : 'bg-gray-100 text-gray-600'
-                            }">${module.status}</span>
+                                (module.status === 'active' || module.status === 'published') ? 'bg-maroon text-white' : 'bg-gray-100 text-gray-600'
+                            }">${module.status || 'draft'}</span>
                         </div>
                         
                         <p class="text-gray-700 text-sm mb-4 leading-relaxed">${module.description || 'No description'}</p>
@@ -243,7 +260,7 @@
                             </div>
                             <div class="flex items-center">
                                 <i class="fas fa-user mr-2 text-maroon"></i>
-                                <span>Created by: ${module.teacher?.full_name || 'Unknown'}</span>
+                                <span>Created by: ${teacherMap[module.teacher_id]?.full_name || 'Unknown'}</span>
                             </div>
                             <div class="flex items-center">
                                 <i class="fas fa-calendar mr-2 text-maroon"></i>
@@ -263,7 +280,7 @@
                 `).join('');
             } catch (error) {
                 console.error('Error loading modules:', error);
-                showNotification('Failed to load modules', 'error');
+                showToast('Failed to load modules', 'error');
             }
         }
 
@@ -290,14 +307,14 @@
                 document.getElementById('submitText').textContent = 'Update Module';
                 document.getElementById('submitIcon').className = 'fas fa-edit mr-2';
                 document.getElementById('moduleId').value = module.id;
-                document.getElementById('moduleName').value = module.name;
+                document.getElementById('moduleName').value = module.title || module.name || '';
                 document.getElementById('moduleDescription').value = module.description;
                 document.getElementById('moduleGradeLevel').value = module.grade_level;
                 document.getElementById('moduleStatus').value = module.status;
                 document.getElementById('moduleModal').classList.remove('hidden');
             } catch (error) {
                 console.error('Error fetching module:', error);
-                showNotification('Failed to load module details', 'error');
+                showToast('Failed to load module details', 'error');
             }
         }
 
@@ -311,11 +328,11 @@
                 
                 if (error) throw error;
 
-                showNotification('Module deleted successfully', 'success');
+                showToast('Module deleted successfully', 'success');
                 loadAllModules();
             } catch (error) {
                 console.error('Error deleting module:', error);
-                showNotification('Failed to delete module', 'error');
+                showToast('Failed to delete module', 'error');
             }
         }
 
@@ -323,7 +340,7 @@
             event.preventDefault();
             
             const moduleId = document.getElementById('moduleId').value;
-            const name = document.getElementById('moduleName').value;
+            const title = document.getElementById('moduleName').value;
             const description = document.getElementById('moduleDescription').value;
             const gradeLevel = document.getElementById('moduleGradeLevel').value;
             const status = document.getElementById('moduleStatus').value;
@@ -339,7 +356,7 @@
                 if (moduleId) {
                     // Update existing module
                     const updates = {
-                        name,
+                        title,
                         description,
                         grade_level: gradeLevel,
                         status,
@@ -351,11 +368,11 @@
 
                     const { error } = await getSupabase().from('modules').update(updates).eq('id', moduleId);
                     if (error) throw error;
-                    showNotification('Module updated successfully', 'success');
+                    showToast('Module updated successfully', 'success');
                 } else {
                     // Create new module
                     const { error } = await getSupabase().from('modules').insert({
-                        name,
+                        title,
                         description,
                         grade_level: gradeLevel,
                         status,
@@ -364,14 +381,14 @@
                         image_url: imageUrl
                     });
                     if (error) throw error;
-                    showNotification('Module created successfully', 'success');
+                    showToast('Module created successfully', 'success');
                 }
 
                 closeModuleModal();
                 loadAllModules();
             } catch (error) {
                 console.error('Error saving module:', error);
-                showNotification('Failed to save module', 'error');
+                showToast('Failed to save module', 'error');
             }
         }
 
@@ -383,7 +400,13 @@
         });
 
         // Initialize page
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', async function() {
+            currentUser = await checkAuthSession();
+            if (!currentUser || currentUser.role !== 'admin') {
+                redirectToLogin();
+                return;
+            }
+
             loadAllModules();
         });
     </script>

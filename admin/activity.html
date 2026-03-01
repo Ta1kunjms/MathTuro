@@ -113,17 +113,17 @@
                 </svg>
                 <span>User Management</span>
             </a>
-            <a href="/teacher/manage-modules.html" class="sidebar-link flex items-center space-x-3 px-4 py-3 rounded-xl text-gray-700">
+            <a href="manage-modules.html" class="sidebar-link flex items-center space-x-3 px-4 py-3 rounded-xl text-gray-700">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
                 </svg>
                 <span>Modules</span>
             </a>
-            <a href="/teacher/submissions.html" class="sidebar-link flex items-center space-x-3 px-4 py-3 rounded-xl text-gray-700">
+            <a href="activity.html" class="sidebar-link flex items-center space-x-3 px-4 py-3 rounded-xl text-gray-700">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/>
                 </svg>
-                <span>Submissions</span>
+                <span>Activity Log</span>
             </a>
             <a href="activity.html" class="sidebar-link active flex items-center space-x-3 px-4 py-3 rounded-xl text-gray-700">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -328,26 +328,78 @@
 
         async function loadActivity() {
             try {
-                // Fetch quiz submissions as activity
-                const { data: submissions, error: subError } = await getSupabase()
+                let submissionsResult = await getSupabase()
                     .from('quiz_submissions')
-                    .select('*, users(full_name, email), lessons(title)')
+                    .select('id, user_id, quiz_id, module_id, status, submitted_at, created_at, student_score, total_items')
                     .order('submitted_at', { ascending: false })
                     .limit(100);
 
-                if (subError) throw subError;
+                if (submissionsResult.error) {
+                    submissionsResult = await getSupabase()
+                        .from('quiz_submissions')
+                        .select('id, user_id, quiz_id, module_id, status, submitted_at, created_at, student_score, total_items')
+                        .order('created_at', { ascending: false })
+                        .limit(100);
+                }
 
-                // Transform to activity format
-                allActivities = (submissions || []).map(sub => ({
-                    id: sub.id,
-                    type: 'submission',
-                    action: sub.status === 'pending' ? 'submitted quiz' : `quiz ${sub.status}`,
-                    user: sub.users?.full_name || 'Unknown User',
-                    email: sub.users?.email || '',
-                    details: sub.lessons?.title || 'Unknown Lesson',
-                    status: sub.status,
-                    timestamp: sub.submitted_at
-                }));
+                if (submissionsResult.error) throw submissionsResult.error;
+
+                const submissions = submissionsResult.data || [];
+                const userIds = [...new Set(submissions.map(s => s.user_id).filter(Boolean))];
+                const quizIds = [...new Set(submissions.map(s => s.quiz_id).filter(Boolean))];
+                const moduleIds = [...new Set(submissions.map(s => s.module_id).filter(Boolean))];
+
+                const usersMap = {};
+                const quizzesMap = {};
+                const modulesMap = {};
+
+                if (userIds.length > 0) {
+                    const { data: users } = await getSupabase()
+                        .from('users')
+                        .select('id, full_name, email')
+                        .in('id', userIds);
+                    (users || []).forEach(user => {
+                        usersMap[user.id] = user;
+                    });
+                }
+
+                if (quizIds.length > 0) {
+                    const { data: quizzes } = await getSupabase()
+                        .from('quizzes')
+                        .select('id, title')
+                        .in('id', quizIds);
+                    (quizzes || []).forEach(quiz => {
+                        quizzesMap[quiz.id] = quiz;
+                    });
+                }
+
+                if (moduleIds.length > 0) {
+                    const { data: modules } = await getSupabase()
+                        .from('modules')
+                        .select('*')
+                        .in('id', moduleIds);
+                    (modules || []).forEach(module => {
+                        modulesMap[module.id] = module;
+                    });
+                }
+
+                allActivities = submissions.map(sub => {
+                    const user = usersMap[sub.user_id];
+                    const quiz = quizzesMap[sub.quiz_id];
+                    const module = modulesMap[sub.module_id];
+                    const details = quiz?.title || module?.title || module?.name || 'Quiz submission';
+
+                    return {
+                        id: sub.id,
+                        type: 'submission',
+                        action: sub.status === 'pending' ? 'submitted quiz' : `quiz ${sub.status}`,
+                        user: user?.full_name || 'Unknown User',
+                        email: user?.email || '',
+                        details,
+                        status: sub.status || 'pending',
+                        timestamp: sub.submitted_at || sub.created_at || new Date().toISOString()
+                    };
+                });
 
                 updateStats();
                 renderActivities();

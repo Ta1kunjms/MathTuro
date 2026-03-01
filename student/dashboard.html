@@ -119,7 +119,7 @@
         .video-card:hover {
             transform: scale(1.02);
         }
-        
+
         ::-webkit-scrollbar { width: 6px; }
         ::-webkit-scrollbar-track { background: #f1f1f1; }
         ::-webkit-scrollbar-thumb { background: #005801; border-radius: 3px; }
@@ -133,7 +133,7 @@
     <div id="mobileOverlay" class="fixed inset-0 bg-black bg-opacity-50 z-40 hidden lg:hidden"></div>
     
     <!-- Sidebar -->
-    <div id="sidebar"></div>
+    <aside id="sidebar" class="fixed left-0 top-0 h-full w-72 glass-sidebar border-r border-gray-200 z-50 transform -translate-x-full lg:translate-x-0 transition-transform duration-300 overflow-y-auto"></aside>
 
     <!-- Main Content -->
     <main class="lg:ml-72 min-h-screen">
@@ -257,7 +257,7 @@
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/>
                             </svg>
                         </a>
-                        <a href="../tutorial-videos.html" class="inline-flex items-center justify-center space-x-2 bg-white/20 text-white px-6 py-3 rounded-xl font-semibold hover:bg-white/30 transition-colors border border-white/30">
+                        <a href="../public/tutorial-videos.html" class="inline-flex items-center justify-center space-x-2 bg-white/20 text-white px-6 py-3 rounded-xl font-semibold hover:bg-white/30 transition-colors border border-white/30">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/>
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
@@ -363,7 +363,7 @@
                                     <h3 class="text-lg font-bold text-gray-800">Featured Tutorials</h3>
                                     <p class="text-sm text-gray-500">Learn with video guides</p>
                                 </div>
-                                <a href="../tutorial-videos.html" class="text-brand hover:text-brand-dark text-sm font-medium flex items-center space-x-1">
+                                <a href="../public/tutorial-videos.html" class="text-brand hover:text-brand-dark text-sm font-medium flex items-center space-x-1">
                                     <span>View All</span>
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
@@ -523,16 +523,8 @@
         </div>
     </div>
 
-    <!-- Loading Overlay -->
-    <div id="loadingOverlay" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-        <div class="bg-white rounded-2xl p-8 text-center shadow-2xl">
-            <div class="relative w-16 h-16 mx-auto mb-4">
-                <div class="absolute inset-0 border-4 border-brand/20 rounded-full"></div>
-                <div class="absolute inset-0 border-4 border-brand border-t-transparent rounded-full animate-spin"></div>
-            </div>
-            <p class="text-gray-600 font-medium">Loading your dashboard...</p>
-        </div>
-    </div>
+    <!-- Loading Overlay (disabled for debug) -->
+    <div id="loadingOverlay" class="hidden"></div>
 
     <!-- Modal Container -->
     <div id="modalContainer" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
@@ -546,6 +538,7 @@
     <script src="../shared/js/utils.js"></script>
     <script src="../shared/js/supabase.js"></script>
     <script src="../shared/js/auth.js"></script>
+    <script src="assets/js/sidebar.js"></script>
     <script src="assets/js/student.js"></script>
     <script src="../shared/js/modules.js"></script>
     
@@ -635,13 +628,16 @@
         function updateUserInfo(user) {
             const initials = getInitials(user.fullName);
             const firstName = user.fullName.split(' ')[0];
-            
-            document.getElementById('sidebarUserName').textContent = user.fullName;
-            document.getElementById('userInitials').textContent = initials;
-            document.getElementById('headerUserInitials').textContent = initials;
-            document.getElementById('welcomeName').textContent = firstName;
-            document.getElementById('dropdownUserName').textContent = user.fullName;
-            document.getElementById('dropdownUserEmail').textContent = user.email;
+
+            const headerInitialsEl = document.getElementById('headerUserInitials');
+            const welcomeNameEl = document.getElementById('welcomeName');
+            const dropdownUserNameEl = document.getElementById('dropdownUserName');
+            const dropdownUserEmailEl = document.getElementById('dropdownUserEmail');
+
+            if (headerInitialsEl) headerInitialsEl.textContent = initials;
+            if (welcomeNameEl) welcomeNameEl.textContent = firstName;
+            if (dropdownUserNameEl) dropdownUserNameEl.textContent = user.fullName;
+            if (dropdownUserEmailEl) dropdownUserEmailEl.textContent = user.email;
         }
 
         function getInitials(name) {
@@ -651,23 +647,55 @@
         // Load streak data
         async function loadStreak() {
             try {
-                const { data: streakData } = await getSupabase()
-                    .from('student_streaks')
-                    .select('*')
-                    .eq('student_id', currentUser.id)
-                    .single();
+                const { data: progressData, error } = await getSupabase()
+                    .from('lesson_progress')
+                    .select('completed_at, updated_at')
+                    .eq('user_id', currentUser.id)
+                    .not('completed_at', 'is', null)
+                    .order('updated_at', { ascending: false });
 
-                const streak = streakData?.current_streak || 0;
+                if (error) throw error;
+
+                const activeDays = new Set(
+                    (progressData || [])
+                        .map(item => item.completed_at || item.updated_at)
+                        .filter(Boolean)
+                        .map(date => {
+                            const normalized = new Date(date);
+                            normalized.setHours(0, 0, 0, 0);
+                            return normalized.toISOString().slice(0, 10);
+                        })
+                );
+
+                let streak = 0;
+                const cursor = new Date();
+                cursor.setHours(0, 0, 0, 0);
+
+                const todayKey = cursor.toISOString().slice(0, 10);
+                if (!activeDays.has(todayKey)) {
+                    cursor.setDate(cursor.getDate() - 1);
+                }
+
+                while (activeDays.has(cursor.toISOString().slice(0, 10))) {
+                    streak += 1;
+                    cursor.setDate(cursor.getDate() - 1);
+                }
+
                 dashboardData.streak = streak;
-                
-                document.getElementById('dailyStreak').textContent = streak;
-                document.getElementById('streakCount').textContent = `${streak} day streak`;
+
+                const dailyStreakEl = document.getElementById('dailyStreak');
+                const streakCountEl = document.getElementById('streakCount');
+                const streakBadge = document.getElementById('streakBadge');
+
+                if (dailyStreakEl) dailyStreakEl.textContent = streak;
+                if (streakCountEl) streakCountEl.textContent = `${streak} day streak`;
                 
                 // Update streak badge color based on streak length
-                const streakBadge = document.getElementById('streakBadge');
-                if (streak >= 7) streakBadge.textContent = '🔥';
-                else if (streak >= 3) streakBadge.textContent = '🔥';
-                else streakBadge.textContent = '🔥';
+                if (streakBadge) {
+                    if (streak >= 7) streakBadge.textContent = '🔥';
+                    else if (streak >= 3) streakBadge.textContent = '🔥';
+                    else streakBadge.textContent = '🔥';
+                }
 
             } catch (error) {
                 console.log('No streak data yet');
@@ -677,20 +705,30 @@
         // Load dashboard statistics
         async function loadDashboardStats() {
             try {
+                console.log('Loading dashboard stats...');
                 // Get all modules
-                const { data: modules } = await getSupabase()
+                const { data: modules, error: modulesError } = await getSupabase()
                     .from('modules')
                     .select('*, lessons(id)')
                     .eq('status', 'published');
-
+                
+                if (modulesError) {
+                    console.error('Error loading modules:', modulesError);
+                }
+                console.log('Modules:', modules);
                 dashboardData.modules = modules || [];
 
                 // Get lesson progress
-                const { data: lessonProgress } = await getSupabase()
+                const { data: lessonProgress, error: progressError } = await getSupabase()
                     .from('lesson_progress')
                     .select('*, lessons(module_id)')
                     .eq('user_id', currentUser.id)
-                    .eq('status', 'completed');
+                    .not('completed_at', 'is', null);
+                
+                if (progressError) {
+                    console.error('Error loading lesson progress:', progressError);
+                }
+                console.log('Lesson progress:', lessonProgress);
 
                 dashboardData.progress = lessonProgress || [];
 
@@ -809,12 +847,16 @@
                 const moduleCards = await Promise.all(modules.slice(0, 4).map(async (module) => {
                     const lessonIds = module.lessons?.map(l => l.id) || [];
 
-                    const { data: progress } = await getSupabase()
-                        .from('lesson_progress')
-                        .select('lesson_id')
-                        .eq('user_id', currentUser.id)
-                        .eq('status', 'completed')
-                        .in('lesson_id', lessonIds.length > 0 ? lessonIds : [0]);
+                    let progress = [];
+                    if (lessonIds.length > 0) {
+                        const { data } = await getSupabase()
+                            .from('lesson_progress')
+                            .select('lesson_id')
+                            .eq('user_id', currentUser.id)
+                            .not('completed_at', 'is', null)
+                            .in('lesson_id', lessonIds);
+                        progress = data || [];
+                    }
 
                     const totalLessons = lessonIds.length;
                     const completedLessons = progress?.length || 0;
@@ -874,7 +916,7 @@
                     // Show placeholder videos
                     container.innerHTML = `
                         <div class="grid sm:grid-cols-2 gap-4">
-                            <a href="../tutorial-videos.html" class="video-card group block bg-gray-50 rounded-xl overflow-hidden border border-gray-100">
+                            <a href="../public/tutorial-videos.html" class="video-card group block bg-gray-50 rounded-xl overflow-hidden border border-gray-100">
                                 <div class="aspect-video bg-gradient-to-br from-brand/10 to-green-500/10 flex items-center justify-center">
                                     <div class="w-12 h-12 bg-white rounded-full flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
                                         <svg class="w-6 h-6 text-brand ml-1" fill="currentColor" viewBox="0 0 24 24">
@@ -887,7 +929,7 @@
                                     <p class="text-sm text-gray-500">Learn the basics • 5 min</p>
                                 </div>
                             </a>
-                            <a href="../tutorial-videos.html" class="video-card group block bg-gray-50 rounded-xl overflow-hidden border border-gray-100">
+                            <a href="../public/tutorial-videos.html" class="video-card group block bg-gray-50 rounded-xl overflow-hidden border border-gray-100">
                                 <div class="aspect-video bg-gradient-to-br from-purple-500/10 to-pink-500/10 flex items-center justify-center">
                                     <div class="w-12 h-12 bg-white rounded-full flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
                                         <svg class="w-6 h-6 text-purple-600 ml-1" fill="currentColor" viewBox="0 0 24 24">
@@ -908,7 +950,7 @@
                 container.innerHTML = `
                     <div class="grid sm:grid-cols-2 gap-4">
                         ${videos.map(video => `
-                            <a href="../tutorial-videos.html?video=${video.id}" class="video-card group block bg-gray-50 rounded-xl overflow-hidden border border-gray-100">
+                            <a href="../public/tutorial-videos.html?video=${video.id}" class="video-card group block bg-gray-50 rounded-xl overflow-hidden border border-gray-100">
                                 <div class="aspect-video bg-gray-200 relative">
                                     ${video.thumbnail_url ? 
                                         `<img src="${video.thumbnail_url}" alt="${escapeHtml(video.title)}" class="w-full h-full object-cover">` :
@@ -1095,7 +1137,8 @@
             ];
 
             const earned = allAchievements.filter(a => a.condition());
-            document.getElementById('achievementCount').textContent = earned.length;
+            const achievementCountEl = document.getElementById('achievementCount');
+            if (achievementCountEl) achievementCountEl.textContent = earned.length;
             dashboardData.achievements = earned;
 
             container.innerHTML = allAchievements.slice(0, 4).map(a => {
@@ -1213,7 +1256,10 @@
             });
 
             // Logout
-            document.getElementById('logoutButton').addEventListener('click', handleLogout);
+            const logoutButton = document.getElementById('logoutButton');
+            if (logoutButton) {
+                logoutButton.addEventListener('click', handleLogout);
+            }
 
             // Search modal close on click outside
             document.getElementById('searchModal').addEventListener('click', (e) => {

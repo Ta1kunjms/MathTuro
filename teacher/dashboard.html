@@ -513,7 +513,7 @@
                 // Check authentication
                 currentUser = await checkAuthSession();
                 
-                if (!currentUser || currentUser.role !== 'teacher') {
+                if (!currentUser || (currentUser.role !== 'teacher' && currentUser.role !== 'admin')) {
                     redirectToLogin();
                     return;
                 }
@@ -857,11 +857,11 @@
                     
                     <div class="grid grid-cols-2 gap-4">
                         <div class="bg-blue-50 rounded-xl p-4 text-center">
-                            <p class="text-3xl font-bold text-blue-600">${submission.score}/${submission.total_items}</p>
+                            <p class="text-3xl font-bold text-blue-600">${submission.student_score ?? 0}/${submission.total_items}</p>
                             <p class="text-sm text-blue-700">Score</p>
                         </div>
                         <div class="bg-green-50 rounded-xl p-4 text-center">
-                            <p class="text-3xl font-bold text-green-600">${Math.round((submission.score / submission.total_items) * 100)}%</p>
+                            <p class="text-3xl font-bold text-green-600">${submission.total_items > 0 ? Math.round(((submission.student_score ?? 0) / submission.total_items) * 100) : 0}%</p>
                             <p class="text-sm text-green-700">Percentage</p>
                         </div>
                     </div>
@@ -951,13 +951,15 @@
 
         // Setup event listeners
         function setupEventListeners() {
+            const sidebarElement = document.getElementById('sidebar')?.querySelector('aside') || document.getElementById('sidebar');
+
             mobileMenuBtn.addEventListener('click', () => {
-                sidebar.classList.toggle('-translate-x-full');
+                sidebarElement.classList.toggle('-translate-x-full');
                 mobileOverlay.classList.toggle('hidden');
             });
 
             mobileOverlay.addEventListener('click', () => {
-                sidebar.classList.add('-translate-x-full');
+                sidebarElement.classList.add('-translate-x-full');
                 mobileOverlay.classList.add('hidden');
             });
 

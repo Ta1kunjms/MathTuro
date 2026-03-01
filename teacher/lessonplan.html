@@ -245,25 +245,34 @@
       try {
         const supabase = getSupabase();
         const { data: { session } } = await supabase.auth.getSession();
-        if (session && session.user) {
-          const { data: userData } = await supabase
-            .from('users')
-            .select('full_name, email')
-            .eq('id', session.user.id)
-            .single();
-          if (userData) {
-            const name = userData.full_name || session.user.email;
-            const initials = name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
-            const headerInitials = document.getElementById('headerUserInitials');
-            const dropdownName = document.getElementById('dropdownUserName');
-            const dropdownEmail = document.getElementById('dropdownUserEmail');
-            if (headerInitials) headerInitials.textContent = initials;
-            if (dropdownName) dropdownName.textContent = name;
-            if (dropdownEmail) dropdownEmail.textContent = userData.email || session.user.email;
-          }
+        if (!session || !session.user) {
+          redirectToLogin();
+          return;
+        }
+
+        const { data: userData } = await supabase
+          .from('users')
+          .select('full_name, email, role')
+          .eq('id', session.user.id)
+          .single();
+
+        if (!userData || (userData.role !== 'teacher' && userData.role !== 'admin')) {
+          redirectToLogin();
+          return;
+        }
+
+        const name = userData.full_name || session.user.email;
+        const initials = name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+        const headerInitials = document.getElementById('headerUserInitials');
+        const dropdownName = document.getElementById('dropdownUserName');
+        const dropdownEmail = document.getElementById('dropdownUserEmail');
+        if (headerInitials) headerInitials.textContent = initials;
+        if (dropdownName) dropdownName.textContent = name;
+        if (dropdownEmail) dropdownEmail.textContent = userData.email || session.user.email;
         }
       } catch (err) {
         console.error('Error loading user info:', err);
+        redirectToLogin();
       }
     });
   </script>

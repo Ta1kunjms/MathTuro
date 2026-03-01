@@ -1,5 +1,27 @@
 // Admin Sidebar Component
+const ADMIN_ICON_STYLESHEET_ID = 'admin-fontawesome-css';
+const ADMIN_ICON_STYLESHEET_HREF = 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css';
+
+function ensureAdminIconStylesheet() {
+    const existingById = document.getElementById(ADMIN_ICON_STYLESHEET_ID);
+    const existingByHref = Array.from(document.querySelectorAll('link[rel="stylesheet"]')).some(
+        (link) => (link.getAttribute('href') || '').includes('font-awesome')
+    );
+
+    if (existingById || existingByHref) {
+        return;
+    }
+
+    const iconStylesheet = document.createElement('link');
+    iconStylesheet.id = ADMIN_ICON_STYLESHEET_ID;
+    iconStylesheet.rel = 'stylesheet';
+    iconStylesheet.href = ADMIN_ICON_STYLESHEET_HREF;
+    document.head.appendChild(iconStylesheet);
+}
+
 function createAdminSidebar() {
+    ensureAdminIconStylesheet();
+
     const sidebarHTML = `
         <aside class="w-64 bg-gray-900 text-white h-screen fixed left-0 top-0 z-50 transform -translate-x-full lg:transform-none transition-transform duration-300 ease-in-out flex flex-col">
             <div class="p-6 border-b border-gray-800">
@@ -39,6 +61,11 @@ function createAdminSidebar() {
                 <a href="grade-levels.html" class="nav-link flex items-center space-x-3 px-3 py-2 rounded-lg text-gray-300 hover:bg-gray-800 hover:text-white transition-colors" data-section="grade-levels">
                     <i class="fas fa-graduation-cap"></i>
                     <span>Grade Levels & Sections</span>
+                </a>
+
+                <a href="sections.html" class="nav-link flex items-center space-x-3 px-3 py-2 rounded-lg text-gray-300 hover:bg-gray-800 hover:text-white transition-colors" data-section="sections">
+                    <i class="fas fa-layer-group"></i>
+                    <span>Sections</span>
                 </a>
 
                 <div class="pt-4 border-t border-gray-800">
@@ -109,20 +136,28 @@ function createAdminSidebar() {
     }
     
     if (sidebarContainer) {
-        sidebarContainer.innerHTML = sidebarHTML;
+        if (sidebarContainer.tagName === 'ASIDE') {
+            const wrapper = document.createElement('div');
+            wrapper.innerHTML = sidebarHTML.trim();
+            const generatedSidebar = wrapper.firstElementChild;
+
+            sidebarContainer.className = generatedSidebar.className;
+            sidebarContainer.innerHTML = generatedSidebar.innerHTML;
+        } else {
+            sidebarContainer.innerHTML = sidebarHTML;
+        }
     }
 
-     const currentPath = window.location.href;
-     console.log('Current path:', currentPath);
+     const currentPath = window.location.pathname.toLowerCase();
      
      const navLinks = document.querySelectorAll('.nav-link');
      
      navLinks.forEach(link => {
-         const section = link.getAttribute('data-section');
-         console.log('Checking section:', section);
-         
-         if (currentPath.includes(section)) {
-             console.log('Match found for section:', section);
+         const section = (link.getAttribute('data-section') || '').toLowerCase();
+         const isSectionMatch = section && currentPath.includes(section);
+         const isGradeSectionPair = section === 'grade-levels' && currentPath.includes('sections.html');
+
+         if (isSectionMatch || isGradeSectionPair) {
              link.classList.remove('text-gray-300', 'hover:bg-gray-800', 'hover:text-white');
              link.classList.add('bg-maroon', 'text-white');
          }
@@ -132,10 +167,14 @@ function createAdminSidebar() {
     if (logoutButton) {
         logoutButton.addEventListener('click', async () => {
             try {
-                localStorage.removeItem('admin_session');
-                const supabase = getSupabase();
-                if (supabase) {
-                    await supabase.auth.signOut();
+                if (typeof logout === 'function') {
+                    await logout();
+                } else {
+                    localStorage.removeItem('user');
+                    const supabase = getSupabase();
+                    if (supabase) {
+                        await supabase.auth.signOut();
+                    }
                 }
                 window.location.href = 'login.html';
             } catch (error) {
@@ -180,7 +219,10 @@ document.addEventListener('click', function(event) {
     if (dropdown && !dropdown.contains(event.target) && 
         dropdownButton && !dropdownButton.contains(event.target)) {
         dropdown.classList.add('hidden');
-        document.getElementById('filesDropdownIcon').classList.remove('rotate-180');
+        const filesDropdownIcon = document.getElementById('filesDropdownIcon');
+        if (filesDropdownIcon) {
+            filesDropdownIcon.classList.remove('rotate-180');
+        }
     }
 });
 

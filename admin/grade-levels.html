@@ -172,7 +172,13 @@
                     <p class="text-sm text-gray-500 hidden sm:block">Manage grade levels for your school</p>
                 </div>
                 
-                <div class="flex items-center space-x-4">
+                <div class="flex items-center space-x-3">
+                    <button onclick="openCreateSectionModal(selectedGradeId)" class="inline-flex items-center space-x-2 bg-white text-red-600 border border-red-200 px-4 py-2 rounded-xl font-medium hover:bg-red-50 transition-colors">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                        </svg>
+                        <span class="hidden sm:inline">Add Section</span>
+                    </button>
                     <button onclick="openCreateModal()" class="inline-flex items-center space-x-2 bg-red-600 text-white px-4 py-2 rounded-xl font-medium hover:bg-red-700 transition-colors">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"/>
@@ -257,6 +263,61 @@
                     </table>
                 </div>
             </div>
+
+            <div id="sectionsExplorer" class="mt-8 bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden hidden">
+                <div class="p-6 border-b border-gray-100 flex items-center justify-between">
+                    <h3 id="sectionsExplorerTitle" class="text-lg font-bold text-gray-800">Sections</h3>
+                    <span id="sectionCountBadge" class="text-sm text-gray-500">0 sections</span>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Section</th>
+                                <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Teacher</th>
+                                <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Students</th>
+                                <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Status</th>
+                                <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Created</th>
+                                <th class="px-6 py-4 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="sectionsTableBody" class="divide-y divide-gray-100"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div id="sectionDetailsPanel" class="mt-8 bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden hidden">
+                <div class="p-6 border-b border-gray-100 flex items-center justify-between">
+                    <h3 id="sectionDetailsTitle" class="text-lg font-bold text-gray-800">Section Details</h3>
+                    <span id="sectionStudentsCount" class="text-sm text-gray-500">0 students</span>
+                </div>
+                <div class="p-6 grid grid-cols-1 lg:grid-cols-3 gap-4 border-b border-gray-100 bg-gray-50">
+                    <div>
+                        <p class="text-xs uppercase tracking-wider text-gray-500">Grade Level</p>
+                        <p id="detailGradeName" class="text-sm font-semibold text-gray-800">-</p>
+                    </div>
+                    <div>
+                        <p class="text-xs uppercase tracking-wider text-gray-500">Teacher</p>
+                        <p id="detailTeacherName" class="text-sm font-semibold text-gray-800">-</p>
+                    </div>
+                    <div>
+                        <p class="text-xs uppercase tracking-wider text-gray-500">Teacher Email</p>
+                        <p id="detailTeacherEmail" class="text-sm font-semibold text-gray-800">-</p>
+                    </div>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Student Name</th>
+                                <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Email</th>
+                                <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Joined</th>
+                            </tr>
+                        </thead>
+                        <tbody id="sectionStudentsTableBody" class="divide-y divide-gray-100"></tbody>
+                    </table>
+                </div>
+            </div>
         </div>
     </main>
 
@@ -304,6 +365,55 @@
         </div>
     </div>
 
+    <div id="sectionModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div class="bg-white rounded-2xl max-w-lg w-full mx-4 max-h-[90vh] overflow-y-auto">
+            <div class="p-6 border-b border-gray-100 flex items-center justify-between">
+                <h3 id="sectionModalTitle" class="text-xl font-bold text-gray-800">Create Section</h3>
+                <button onclick="closeSectionModal()" class="p-2 text-gray-500 hover:text-gray-700 rounded-lg hover:bg-gray-100">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                </button>
+            </div>
+            <form id="sectionForm" class="p-6 space-y-5">
+                <input type="hidden" id="sectionId" name="sectionId">
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Section Name</label>
+                    <input type="text" id="sectionName" required class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-red-500/20 focus:border-red-500" placeholder="e.g., Section A">
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Grade Level</label>
+                    <select id="sectionGradeLevel" required class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-red-500/20 focus:border-red-500"></select>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Teacher</label>
+                    <select id="sectionTeacher" class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-red-500/20 focus:border-red-500"></select>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Description</label>
+                    <textarea id="sectionDescription" rows="3" class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-red-500/20 focus:border-red-500" placeholder="Enter section description"></textarea>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Status</label>
+                    <select id="sectionStatus" class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-red-500/20 focus:border-red-500">
+                        <option value="true">Active</option>
+                        <option value="false">Inactive</option>
+                    </select>
+                </div>
+
+                <div class="flex space-x-3 pt-4">
+                    <button type="button" onclick="closeSectionModal()" class="flex-1 py-3 border border-gray-200 text-gray-700 rounded-xl font-semibold hover:bg-gray-50 transition-colors">Cancel</button>
+                    <button type="submit" class="flex-1 py-3 bg-red-600 text-white rounded-xl font-semibold hover:bg-red-700 transition-colors">Save</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <!-- Confirm Delete Modal -->
     <div id="deleteModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
         <div class="bg-white rounded-2xl max-w-md w-full mx-4 p-6">
@@ -342,6 +452,12 @@
     <script>
         let currentUser = null;
         let allGradeLevels = [];
+        let allTeachers = [];
+        let allSections = [];
+        let sectionStudentCountMap = new Map();
+        let selectedGradeId = null;
+        let selectedGradeName = '';
+        let selectedSectionId = null;
         let deleteGradeId = null;
 
         const loadingOverlay = document.getElementById('loadingOverlay');
@@ -352,13 +468,14 @@
         document.addEventListener('DOMContentLoaded', async function() {
             try {
                 currentUser = await checkAuthSession();
-                
+
                 if (!currentUser || currentUser.role !== 'admin') {
                     redirectToLogin();
                     return;
                 }
 
                 updateUserInfo(currentUser);
+                await loadTeachers();
                 await loadGradeLevels();
                 setupEventListeners();
             } catch (error) {
@@ -379,6 +496,10 @@
             return name.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2);
         }
 
+        async function loadTeachers() {
+            allTeachers = await getTeachers();
+        }
+
         async function loadGradeLevels() {
             try {
                 const { data, error } = await getSupabase()
@@ -390,9 +511,14 @@
                     .order('name');
 
                 if (error) throw error;
-                allGradeLevels = data || [];
+                                allGradeLevels = (data || []).sort((a, b) => {
+                                    const numA = parseInt(a.name.replace(/\D/g, ''), 10);
+                                    const numB = parseInt(b.name.replace(/\D/g, ''), 10);
+                                    return numB - numA;
+                                });
                 updateStats();
                 renderGradeLevels();
+                populateSectionGradeLevelOptions();
             } catch (error) {
                 console.error('Error loading grade levels:', error);
                 document.getElementById('gradeLevelsTableBody').innerHTML = `
@@ -403,15 +529,15 @@
 
         function updateStats() {
             document.getElementById('totalGradeLevelsStat').textContent = allGradeLevels.length;
-            document.getElementById('activeGradeLevelsStat').textContent = allGradeLevels.filter(g => g.is_active).length;
-            document.getElementById('inactiveGradeLevelsStat').textContent = allGradeLevels.filter(g => !g.is_active).length;
-            document.getElementById('totalSectionsStat').textContent = allGradeLevels.reduce((sum, g) => sum + (g.sections || []).length, 0);
+            document.getElementById('activeGradeLevelsStat').textContent = allGradeLevels.filter(item => item.is_active).length;
+            document.getElementById('inactiveGradeLevelsStat').textContent = allGradeLevels.filter(item => !item.is_active).length;
+            document.getElementById('totalSectionsStat').textContent = allGradeLevels.reduce((sum, item) => sum + (item.sections || []).length, 0);
             document.getElementById('gradeCount').textContent = `${allGradeLevels.length} grade levels`;
         }
 
         function renderGradeLevels() {
             const tbody = document.getElementById('gradeLevelsTableBody');
-            
+
             if (allGradeLevels.length === 0) {
                 tbody.innerHTML = `
                     <tr><td colspan="6" class="px-6 py-12 text-center text-gray-500">
@@ -424,35 +550,234 @@
                 return;
             }
 
-            tbody.innerHTML = allGradeLevels.map(grade => `
-                <tr class="grade-row">
-                    <td class="px-6 py-4">
-                        <div class="font-medium text-gray-800">${escapeHtml(grade.name)}</div>
-                    </td>
-                    <td class="px-6 py-4 text-gray-600 text-sm">${escapeHtml(grade.description || 'No description')}</td>
-                    <td class="px-6 py-4">
-                        <span class="px-3 py-1 rounded-full text-xs font-medium ${grade.is_active ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}">
-                            ${grade.is_active ? 'Active' : 'Inactive'}
-                        </span>
-                    </td>
-                    <td class="px-6 py-4 text-gray-500 text-sm">${(grade.sections || []).length} sections</td>
-                    <td class="px-6 py-4 text-gray-500 text-sm">${formatDate(grade.created_at)}</td>
-                    <td class="px-6 py-4 text-right">
-                        <div class="flex items-center justify-end space-x-2">
-                            <button onclick="openEditModal('${grade.id}')" class="p-2 text-blue-600 hover:bg-blue-50 rounded-lg" title="Edit">
-                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+            const explorerVisible = !document.getElementById('sectionsExplorer').classList.contains('hidden');
+
+            tbody.innerHTML = allGradeLevels.map(grade => {
+                const isExpanded = selectedGradeId === grade.id && explorerVisible;
+
+                return `
+                    <tr class="grade-row ${isExpanded ? 'bg-red-50' : ''}" onclick="toggleGradeSections('${grade.id}')">
+                        <td class="px-6 py-4">
+                            <div class="font-medium text-red-600">${escapeHtml(grade.name)}</div>
+                        </td>
+                        <td class="px-6 py-4 text-gray-600 text-sm">${escapeHtml(grade.description || 'No description')}</td>
+                        <td class="px-6 py-4">
+                            <span class="px-3 py-1 rounded-full text-xs font-medium ${grade.is_active ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}">
+                                ${grade.is_active ? 'Active' : 'Inactive'}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 text-gray-500 text-sm">${(grade.sections || []).length} sections</td>
+                        <td class="px-6 py-4 text-gray-500 text-sm">${formatDate(grade.created_at)}</td>
+                        <td class="px-6 py-4 text-right">
+                            <div class="flex items-center justify-end space-x-2">
+                                <button onclick="event.stopPropagation(); toggleGradeSections('${grade.id}')" class="p-2 text-gray-600 hover:bg-gray-100 rounded-lg" title="${isExpanded ? 'Collapse' : 'Expand'}">
+                                    <svg class="w-5 h-5 transition-transform ${isExpanded ? 'rotate-180' : ''}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                                    </svg>
+                                </button>
+                                <button onclick="event.stopPropagation(); openEditModal('${grade.id}')" class="p-2 text-blue-600 hover:bg-blue-50 rounded-lg" title="Edit">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                                    </svg>
+                                </button>
+                                <button onclick="event.stopPropagation(); confirmDelete('${grade.id}')" class="p-2 text-red-600 hover:bg-red-50 rounded-lg" title="Delete">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                                    </svg>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function getTeacherMap() {
+            return new Map((allTeachers || []).map(item => [item.id, item]));
+        }
+
+        function populateSectionGradeLevelOptions() {
+            const gradeSelect = document.getElementById('sectionGradeLevel');
+            if (!gradeSelect) return;
+            // Already sorted descending
+            gradeSelect.innerHTML = allGradeLevels.map(grade => `<option value="${grade.id}">${escapeHtml(grade.name)}</option>`).join('');
+        }
+
+        function populateSectionTeacherOptions() {
+            const teacherSelect = document.getElementById('sectionTeacher');
+            if (!teacherSelect) return;
+            teacherSelect.innerHTML = `<option value="">Unassigned</option>` + (allTeachers || []).map(teacher => `<option value="${teacher.id}">${escapeHtml(teacher.full_name)}</option>`).join('');
+        }
+
+        async function viewGradeSections(gradeId) {
+            selectedGradeId = gradeId;
+            selectedSectionId = null;
+
+            const selectedGrade = allGradeLevels.find(grade => grade.id === gradeId);
+            if (!selectedGrade) {
+                showToast('Grade level not found.', 'error');
+                return;
+            }
+
+            selectedGradeName = selectedGrade.name;
+
+            try {
+                const { data: sectionsData, error: sectionsError } = await getSupabase()
+                    .from('sections')
+                    .select('id, name, grade_level_id, teacher_id, description, is_active, created_at')
+                    .eq('grade_level_id', gradeId)
+                    .order('name');
+
+                if (sectionsError) throw sectionsError;
+
+                allSections = sectionsData || [];
+                const sectionIds = allSections.map(section => section.id);
+                sectionStudentCountMap = new Map();
+
+                if (sectionIds.length > 0) {
+                    const { data: studentRows, error: studentsError } = await getSupabase()
+                        .from('users')
+                        .select('section_id')
+                        .eq('role', 'student')
+                        .in('section_id', sectionIds);
+
+                    if (!studentsError) {
+                        (studentRows || []).forEach(row => {
+                            if (!row.section_id) return;
+                            sectionStudentCountMap.set(row.section_id, (sectionStudentCountMap.get(row.section_id) || 0) + 1);
+                        });
+                    }
+                }
+
+                renderSectionsForGrade(selectedGradeName);
+            } catch (error) {
+                console.error('Error loading sections:', error);
+                showToast('Failed to load sections for this grade level.', 'error');
+            }
+        }
+
+        function renderSectionsForGrade(gradeName) {
+            const explorer = document.getElementById('sectionsExplorer');
+            const detailsPanel = document.getElementById('sectionDetailsPanel');
+            const title = document.getElementById('sectionsExplorerTitle');
+            const count = document.getElementById('sectionCountBadge');
+            const tbody = document.getElementById('sectionsTableBody');
+            const teacherMap = getTeacherMap();
+            const detailsVisible = !detailsPanel.classList.contains('hidden');
+
+            explorer.classList.remove('hidden');
+            title.textContent = `Sections in ${gradeName}`;
+            count.textContent = `${allSections.length} section${allSections.length === 1 ? '' : 's'}`;
+
+            if (allSections.length === 0) {
+                detailsPanel.classList.add('hidden');
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="6" class="px-6 py-10 text-center text-gray-500">
+                            <p class="mb-4">No sections yet for ${escapeHtml(gradeName)}.</p>
+                            <button onclick="openCreateSectionModal('${selectedGradeId}')" class="inline-flex items-center space-x-2 bg-red-600 text-white px-4 py-2 rounded-xl font-medium hover:bg-red-700 transition-colors">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
                                 </svg>
+                                <span>Add First Section</span>
                             </button>
-                            <button onclick="confirmDelete('${grade.id}')" class="p-2 text-red-600 hover:bg-red-50 rounded-lg" title="Delete">
-                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
-                                </svg>
-                            </button>
-                        </div>
-                    </td>
-                </tr>
-            `).join('');
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            tbody.innerHTML = allSections.map(section => {
+                const teacher = section.teacher_id ? teacherMap.get(section.teacher_id) : null;
+                const studentCount = sectionStudentCountMap.get(section.id) || 0;
+                const isExpanded = selectedSectionId === section.id && detailsVisible;
+
+                return `
+                    <tr class="grade-row ${isExpanded ? 'bg-red-50' : ''}" onclick="toggleSectionDetails('${section.id}')">
+                        <td class="px-6 py-4">
+                            <div class="font-medium text-red-600">${escapeHtml(section.name)}</div>
+                        </td>
+                        <td class="px-6 py-4 text-gray-600 text-sm">${teacher ? escapeHtml(teacher.full_name) : '<span class="text-gray-400">Unassigned</span>'}</td>
+                        <td class="px-6 py-4 text-gray-600 text-sm">${studentCount} student${studentCount === 1 ? '' : 's'}</td>
+                        <td class="px-6 py-4">
+                            <span class="px-3 py-1 rounded-full text-xs font-medium ${section.is_active ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}">
+                                ${section.is_active ? 'Active' : 'Inactive'}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 text-gray-500 text-sm">${formatDate(section.created_at)}</td>
+                        <td class="px-6 py-4 text-right">
+                            <div class="flex items-center justify-end space-x-2">
+                                <button onclick="event.stopPropagation(); toggleSectionDetails('${section.id}')" class="p-2 text-gray-600 hover:bg-gray-100 rounded-lg" title="${isExpanded ? 'Collapse' : 'Expand'}">
+                                    <svg class="w-5 h-5 transition-transform ${isExpanded ? 'rotate-180' : ''}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                                    </svg>
+                                </button>
+                                <button onclick="event.stopPropagation(); openEditSectionModal('${section.id}')" class="p-2 text-blue-600 hover:bg-blue-50 rounded-lg" title="Edit Section">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                                    </svg>
+                                </button>
+                                <button onclick="event.stopPropagation(); removeSection('${section.id}')" class="p-2 text-red-600 hover:bg-red-50 rounded-lg" title="Delete Section">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                                    </svg>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+
+            explorer.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+
+        function collapseGradeSections() {
+            selectedGradeId = null;
+            selectedGradeName = '';
+            selectedSectionId = null;
+            allSections = [];
+            sectionStudentCountMap = new Map();
+            document.getElementById('sectionsExplorer').classList.add('hidden');
+            document.getElementById('sectionDetailsPanel').classList.add('hidden');
+            renderGradeLevels();
+        }
+
+        function collapseSectionDetails() {
+            selectedSectionId = null;
+            document.getElementById('sectionDetailsPanel').classList.add('hidden');
+            if (selectedGradeName) {
+                renderSectionsForGrade(selectedGradeName);
+            }
+        }
+
+        async function toggleGradeSections(gradeId) {
+            const explorer = document.getElementById('sectionsExplorer');
+            const isVisible = !explorer.classList.contains('hidden');
+            const isSameGrade = selectedGradeId === gradeId;
+
+            if (isVisible && isSameGrade) {
+                collapseGradeSections();
+                return;
+            }
+
+            await viewGradeSections(gradeId);
+            renderGradeLevels();
+        }
+
+        async function toggleSectionDetails(sectionId) {
+            const detailsPanel = document.getElementById('sectionDetailsPanel');
+            const isVisible = !detailsPanel.classList.contains('hidden');
+            const isSameSection = selectedSectionId === sectionId;
+
+            if (isVisible && isSameSection) {
+                collapseSectionDetails();
+                return;
+            }
+
+            await viewSectionDetails(sectionId);
+            if (selectedGradeName) {
+                renderSectionsForGrade(selectedGradeName);
+            }
         }
 
         function openCreateModal() {
@@ -464,7 +789,7 @@
         }
 
         function openEditModal(id) {
-            const grade = allGradeLevels.find(g => g.id === id);
+            const grade = allGradeLevels.find(item => item.id === id);
             if (!grade) return;
 
             document.getElementById('modalTitle').textContent = 'Edit Grade Level';
@@ -475,8 +800,48 @@
             document.getElementById('gradeModal').classList.remove('hidden');
         }
 
+        function openCreateSectionModal(gradeId = null) {
+            document.getElementById('sectionModalTitle').textContent = 'Create Section';
+            document.getElementById('sectionForm').reset();
+            document.getElementById('sectionId').value = '';
+            document.getElementById('sectionStatus').value = 'true';
+            populateSectionGradeLevelOptions();
+            populateSectionTeacherOptions();
+
+            if (gradeId) {
+                document.getElementById('sectionGradeLevel').value = gradeId;
+            } else if (selectedGradeId) {
+                document.getElementById('sectionGradeLevel').value = selectedGradeId;
+            }
+
+            document.getElementById('sectionModal').classList.remove('hidden');
+        }
+
+        function openEditSectionModal(sectionId) {
+            const section = allSections.find(item => item.id === sectionId);
+            if (!section) {
+                showToast('Section not found in current list.', 'error');
+                return;
+            }
+
+            document.getElementById('sectionModalTitle').textContent = 'Edit Section';
+            document.getElementById('sectionId').value = section.id;
+            document.getElementById('sectionName').value = section.name || '';
+            document.getElementById('sectionDescription').value = section.description || '';
+            document.getElementById('sectionStatus').value = section.is_active ? 'true' : 'false';
+            populateSectionGradeLevelOptions();
+            populateSectionTeacherOptions();
+            document.getElementById('sectionGradeLevel').value = section.grade_level_id;
+            document.getElementById('sectionTeacher').value = section.teacher_id || '';
+            document.getElementById('sectionModal').classList.remove('hidden');
+        }
+
         function closeGradeModal() {
             document.getElementById('gradeModal').classList.add('hidden');
+        }
+
+        function closeSectionModal() {
+            document.getElementById('sectionModal').classList.add('hidden');
         }
 
         function confirmDelete(id) {
@@ -489,14 +854,17 @@
             document.getElementById('deleteModal').classList.add('hidden');
         }
 
-        async function deleteGradeLevel() {
+        async function handleDeleteGradeLevel() {
             if (!deleteGradeId) return;
 
             try {
-                const success = await deleteGradeLevel(deleteGradeId);
+                const success = await window.deleteGradeLevel(deleteGradeId);
                 if (success) {
                     showToast('Grade level deleted successfully', 'success');
                     closeDeleteModal();
+                    if (selectedGradeId === deleteGradeId) {
+                        collapseGradeSections();
+                    }
                     await loadGradeLevels();
                 } else {
                     showToast('Failed to delete grade level', 'error');
@@ -507,9 +875,79 @@
             }
         }
 
+        async function viewSectionDetails(sectionId) {
+            selectedSectionId = sectionId;
+            const section = allSections.find(item => item.id === sectionId);
+            if (!section) {
+                showToast('Section not found.', 'error');
+                return;
+            }
+
+            try {
+                const students = await getStudentsBySection(sectionId);
+                const teacher = section.teacher_id ? (allTeachers.find(item => item.id === section.teacher_id) || null) : null;
+                const grade = allGradeLevels.find(item => item.id === section.grade_level_id);
+
+                document.getElementById('sectionDetailsTitle').textContent = `Section: ${section.name}`;
+                document.getElementById('sectionStudentsCount').textContent = `${students.length} student${students.length === 1 ? '' : 's'}`;
+                document.getElementById('detailGradeName').textContent = grade ? grade.name : 'N/A';
+                document.getElementById('detailTeacherName').textContent = teacher ? teacher.full_name : 'Unassigned';
+                document.getElementById('detailTeacherEmail').textContent = teacher ? (teacher.email || 'N/A') : 'N/A';
+
+                const studentsBody = document.getElementById('sectionStudentsTableBody');
+                if (students.length === 0) {
+                    studentsBody.innerHTML = `
+                        <tr>
+                            <td colspan="3" class="px-4 py-8 text-center text-gray-500">No students are currently assigned to this section.</td>
+                        </tr>
+                    `;
+                } else {
+                    studentsBody.innerHTML = students.map(student => `
+                        <tr>
+                            <td class="px-4 py-3 text-sm font-medium text-gray-800">${escapeHtml(student.full_name || 'No Name')}</td>
+                            <td class="px-4 py-3 text-sm text-gray-600">${escapeHtml(student.email || 'N/A')}</td>
+                            <td class="px-4 py-3 text-sm text-gray-500">${formatDate(student.created_at)}</td>
+                        </tr>
+                    `).join('');
+                }
+
+                document.getElementById('sectionDetailsPanel').classList.remove('hidden');
+                document.getElementById('sectionDetailsPanel').scrollIntoView({ behavior: 'smooth', block: 'start' });
+            } catch (error) {
+                console.error('Error loading section details:', error);
+                showToast('Failed to load section details.', 'error');
+            }
+        }
+
+        async function removeSection(sectionId) {
+            const confirmed = confirm('Are you sure you want to delete this section?');
+            if (!confirmed) return;
+
+            try {
+                const success = await window.deleteSection(sectionId);
+                if (!success) {
+                    showToast('Failed to delete section.', 'error');
+                    return;
+                }
+
+                showToast('Section deleted successfully.', 'success');
+                if (selectedSectionId === sectionId) {
+                    collapseSectionDetails();
+                }
+                if (selectedGradeId) {
+                    await loadGradeLevels();
+                    await viewGradeSections(selectedGradeId);
+                    renderGradeLevels();
+                }
+            } catch (error) {
+                console.error('Error deleting section:', error);
+                showToast('Failed to delete section.', 'error');
+            }
+        }
+
         document.getElementById('gradeForm').addEventListener('submit', async function(e) {
             e.preventDefault();
-            
+
             const gradeId = document.getElementById('gradeId').value;
             const name = document.getElementById('gradeName').value.trim();
             const description = document.getElementById('gradeDescription').value.trim();
@@ -517,34 +955,77 @@
 
             try {
                 if (gradeId) {
-                    // Update existing grade level
                     const updatedGrade = await updateGradeLevel(gradeId, name, description, isActive);
-                    if (updatedGrade) {
-                        showToast('Grade level updated successfully', 'success');
-                    } else {
+                    if (!updatedGrade) {
                         showToast('Failed to update grade level', 'error');
                         return;
                     }
+                    showToast('Grade level updated successfully', 'success');
                 } else {
-                    // Create new grade level
                     const newGrade = await createGradeLevel(name, description);
-                    if (newGrade) {
-                        showToast('Grade level created successfully', 'success');
-                    } else {
+                    if (!newGrade) {
                         showToast('Failed to create grade level', 'error');
                         return;
                     }
+                    showToast('Grade level created successfully', 'success');
                 }
 
                 closeGradeModal();
                 await loadGradeLevels();
+                if (selectedGradeId) {
+                    await viewGradeSections(selectedGradeId);
+                    renderGradeLevels();
+                }
             } catch (error) {
                 console.error('Error saving grade level:', error);
                 showToast(error.message || 'Failed to save grade level', 'error');
             }
         });
 
-        document.getElementById('confirmDeleteBtn').addEventListener('click', deleteGradeLevel);
+        document.getElementById('sectionForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            const sectionId = document.getElementById('sectionId').value;
+            const name = document.getElementById('sectionName').value.trim();
+            const gradeLevelId = document.getElementById('sectionGradeLevel').value;
+            const teacherId = document.getElementById('sectionTeacher').value || null;
+            const description = document.getElementById('sectionDescription').value.trim();
+            const isActive = document.getElementById('sectionStatus').value === 'true';
+
+            try {
+                if (sectionId) {
+                    const updatedSection = await updateSection(sectionId, name, gradeLevelId, teacherId, description, isActive);
+                    if (!updatedSection) {
+                        showToast('Failed to update section.', 'error');
+                        return;
+                    }
+                    showToast('Section updated successfully.', 'success');
+                } else {
+                    const createdSection = await createSection(name, gradeLevelId, teacherId, description);
+                    if (!createdSection) {
+                        showToast('Failed to create section.', 'error');
+                        return;
+                    }
+                    if (!isActive) {
+                        await updateSection(createdSection.id, name, gradeLevelId, teacherId, description, isActive);
+                    }
+                    showToast('Section created successfully.', 'success');
+                }
+
+                closeSectionModal();
+                await loadGradeLevels();
+                const targetGradeId = gradeLevelId || selectedGradeId;
+                if (targetGradeId) {
+                    await viewGradeSections(targetGradeId);
+                    renderGradeLevels();
+                }
+            } catch (error) {
+                console.error('Error saving section:', error);
+                showToast('Failed to save section.', 'error');
+            }
+        });
+
+        document.getElementById('confirmDeleteBtn').addEventListener('click', handleDeleteGradeLevel);
 
         function formatDate(dateString) {
             if (!dateString) return 'N/A';
@@ -575,6 +1056,10 @@
 
             document.getElementById('gradeModal').addEventListener('click', (e) => {
                 if (e.target === document.getElementById('gradeModal')) closeGradeModal();
+            });
+
+            document.getElementById('sectionModal').addEventListener('click', (e) => {
+                if (e.target === document.getElementById('sectionModal')) closeSectionModal();
             });
 
             document.getElementById('deleteModal').addEventListener('click', (e) => {

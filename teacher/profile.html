@@ -415,7 +415,7 @@
                 const { data: { session } } = await supabase.auth.getSession();
                 
                 if (!session) {
-                    window.location.href = '../login.html';
+                    redirectToLogin();
                     return;
                 }
 
@@ -426,6 +426,11 @@
                     .single();
 
                 if (user) {
+                    if (user.role !== 'teacher' && user.role !== 'admin') {
+                        redirectToLogin();
+                        return;
+                    }
+
                     const displayName = user.full_name && user.full_name.trim() ? user.full_name : '';
                     const initials = displayName
                         ? displayName.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
@@ -474,7 +479,7 @@
                 const { data: { session } } = await supabase.auth.getSession();
                 
                 if (!session) {
-                    window.location.href = '../login.html';
+                    redirectToLogin();
                     return;
                 }
 
@@ -555,10 +560,10 @@
             try {
                 const supabase = getSupabase();
                 if (supabase) await supabase.auth.signOut();
-                window.location.href = '../login.html';
+                redirectToLogin();
             } catch (error) {
                 console.error('Logout error:', error);
-                window.location.href = '../login.html';
+                redirectToLogin();
             }
         }
     </script>

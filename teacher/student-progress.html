@@ -291,17 +291,18 @@
         // Mobile menu setup
         document.addEventListener('DOMContentLoaded', function() {
             const mobileMenuBtn = document.getElementById('mobileMenuBtn');
-            const sidebar = document.getElementById('sidebar');
+            const sidebarContainer = document.getElementById('sidebar');
+            const sidebarEl = sidebarContainer?.querySelector('aside') || sidebarContainer;
             const mobileOverlay = document.getElementById('mobileOverlay');
 
-            if (mobileMenuBtn && sidebar && mobileOverlay) {
+            if (mobileMenuBtn && sidebarEl && mobileOverlay) {
                 mobileMenuBtn.addEventListener('click', () => {
-                    sidebar.classList.toggle('-translate-x-full');
+                    sidebarEl.classList.toggle('-translate-x-full');
                     mobileOverlay.classList.toggle('hidden');
                 });
 
                 mobileOverlay.addEventListener('click', () => {
-                    sidebar.classList.add('-translate-x-full');
+                    sidebarEl.classList.add('-translate-x-full');
                     mobileOverlay.classList.add('hidden');
                 });
             }
@@ -345,7 +346,7 @@
                 const { data: { session } } = await supabase.auth.getSession();
                 
                 if (!session) {
-                    window.location.href = '../login.html';
+                    redirectToLogin();
                     return;
                 }
 
@@ -356,6 +357,11 @@
                     .single();
 
                 if (user) {
+                    if (user.role !== 'teacher' && user.role !== 'admin') {
+                        redirectToLogin();
+                        return;
+                    }
+
                     const initials = user.full_name ? user.full_name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) : '--';
                     const headerEl = document.getElementById('headerUserInitials');
                     const nameEl = document.getElementById('dropdownUserName');
@@ -682,10 +688,10 @@
                     throw new Error('Supabase client not initialized');
                 }
                 await supabase.auth.signOut();
-                window.location.href = '../login.html';
+                redirectToLogin();
             } catch (error) {
                 console.error('Logout error:', error);
-                window.location.href = '../login.html';
+                redirectToLogin();
             }
         }
     </script>

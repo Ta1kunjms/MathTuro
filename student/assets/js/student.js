@@ -35,7 +35,16 @@
   - Shows alert if marking lesson complete fails
   - Logs error to console
 */
-()
+async function markLessonComplete(lessonId) {
+  try {
+    const user = JSON.parse(localStorage.getItem('user'));
+
+    if (!user || user.role !== 'student') {
+      alert('You must be logged in as a student to mark lessons complete');
+      return false;
+    }
+
+    const { data: existingProgress, error: checkError } = await getSupabase()
       .from('lesson_progress')
       .select('*')
       .eq('user_id', user.id)
@@ -228,26 +237,37 @@ async function getStudentProgressByModule(moduleId) {
       return null;
     }
 
-    // Get lesson progress
-    const { data: progress, error: progressError } = await getSupabase()
-      .from('lesson_progress')
-      .select('*')
-      .eq('user_id', user.id)
-      .in('lesson_id', lessons.map(lesson => lesson.id));
 
-    if (progressError) {
-      console.error('Error loading lesson progress:', progressError);
+    // Get lesson progress
+    let progress = [];
+    let progressError = null;
+    if (lessons.length > 0) {
+      const result = await getSupabase()
+        .from('lesson_progress')
+        .select('*')
+        .eq('user_id', user.id)
+        .in('lesson_id', lessons.map(lesson => lesson.id));
+      progress = result.data || [];
+      progressError = result.error;
+      if (progressError) {
+        console.error('Error loading lesson progress:', progressError);
+      }
     }
 
     // Get quiz submissions
-    const { data: submissions, error: submissionsError } = await getSupabase()
-      .from('quiz_submissions')
-      .select('*')
-      .eq('user_id', user.id)
-      .in('lesson_id', lessons.map(lesson => lesson.id));
-
-    if (submissionsError) {
-      console.error('Error loading quiz submissions:', submissionsError);
+    let submissions = [];
+    let submissionsError = null;
+    if (lessons.length > 0) {
+      const result = await getSupabase()
+        .from('quiz_submissions')
+        .select('*')
+        .eq('user_id', user.id)
+        .in('lesson_id', lessons.map(lesson => lesson.id));
+      submissions = result.data || [];
+      submissionsError = result.error;
+      if (submissionsError) {
+        console.error('Error loading quiz submissions:', submissionsError);
+      }
     }
 
     // Calculate progress
@@ -322,7 +342,7 @@ async function getQuizSubmissions(status = null) {
     // Build query
     let query = getSupabase()
       .from('quiz_submissions')
-      .select('*, lessons(title, module_id), modules(title)')
+      .select('*, lessons(title, module_id, modules(title))')
       .eq('user_id', user.id)
       .order('submitted_at', { ascending: false });
 
@@ -552,7 +572,7 @@ async function getStudentDashboardStats() {
       .from('lesson_progress')
       .select('*, lessons(module_id)')
       .eq('user_id', user.id)
-      .eq('completed', true);
+      .not('completed_at', 'is', null);
 
     // Get quiz submissions
     const { data: submissions } = await getSupabase()

@@ -3,11 +3,11 @@
 
 document.addEventListener('DOMContentLoaded', function () {
   const sidebarHTML = `
-    <aside id="sidebar" class="fixed left-0 top-0 h-screen w-72 glass-sidebar border-r border-gray-200 z-50 transform -translate-x-full lg:translate-x-0 transition-transform duration-300 flex flex-col">
+    <aside id="teacherSidebar" class="fixed left-0 top-0 h-screen w-72 glass-sidebar border-r border-gray-200 z-50 transform -translate-x-full lg:translate-x-0 transition-transform duration-300 flex flex-col">
         <div class="sidebar-scrollable flex-1 overflow-y-auto">
             <!-- Logo -->
             <div class="p-6 border-b border-gray-100">
-                <a href="../index.html" class="flex items-center space-x-3">
+                <a href="dashboard.html" class="flex items-center space-x-3">
                     <div class="w-12 h-12 bg-white rounded-xl flex items-center justify-center shadow-lg">
                         <img src="../Logo/MATHURO-LOGO.png" alt="MathTuro" class="w-10 h-10 object-contain">
                     </div>
@@ -51,6 +51,12 @@ document.addEventListener('DOMContentLoaded', function () {
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
                     </svg>
                     <span>Manage Modules</span>
+                </a>
+                <a href="edit-module.html" class="sidebar-link flex items-center space-x-3 px-4 py-3 rounded-xl text-gray-700">
+                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5M18.586 2.586a2 2 0 112.828 2.828L12 14l-4 1 1-4 9.586-9.414z"/>
+                  </svg>
+                  <span>Edit Module</span>
                 </a>
                 <a href="manage-videos.html" class="sidebar-link flex items-center space-x-3 px-4 py-3 rounded-xl text-gray-700">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -104,11 +110,16 @@ document.addEventListener('DOMContentLoaded', function () {
   }
 
   // Set active link based on current page
-  const currentPage = window.location.pathname.split('/').pop();
+  const currentPage = window.location.pathname.split('/').pop().toLowerCase();
   const sidebarLinks = document.querySelectorAll('.sidebar-link');
   sidebarLinks.forEach(link => {
-    const linkPage = link.getAttribute('href');
-    if (currentPage === linkPage) {
+    const href = (link.getAttribute('href') || '').toLowerCase();
+    const linkPage = href.split('#')[0].split('?')[0];
+    const isActive =
+      currentPage === linkPage ||
+      (currentPage === 'edit-module.html' && linkPage === 'manage-modules.html');
+
+    if (isActive) {
       link.classList.add('active');
       link.style.background = 'linear-gradient(135deg, #005801 0%, #006B01 100%)';
       link.style.color = 'white';
@@ -165,17 +176,21 @@ async function loadPendingSubmissionsCount() {
     const supabase = getSupabase();
     if (!supabase) return;
 
-    const { data, error } = await supabase
+    const { count, error } = await supabase
       .from('quiz_submissions')
-      .select('*', { count: 'exact' })
+      .select('id', { count: 'exact', head: true })
       .eq('status', 'pending');
     
     if (error) throw error;
     
     const pendingBadge = document.getElementById('pendingBadge');
-    if (pendingBadge && data > 0) {
-      pendingBadge.textContent = data;
+    if (!pendingBadge) return;
+
+    if (typeof count === 'number' && count > 0) {
+      pendingBadge.textContent = String(count);
       pendingBadge.classList.remove('hidden');
+    } else {
+      pendingBadge.classList.add('hidden');
     }
   } catch (error) {
     console.error('Error loading pending submissions count:', error);
@@ -185,11 +200,22 @@ async function loadPendingSubmissionsCount() {
 // Handle logout
 async function handleLogout() {
   try {
-    const supabase = getSupabase();
-    if (supabase) await supabase.auth.signOut();
-    window.location.href = '../login.html';
+    if (typeof logout === 'function') {
+      await logout();
+    } else {
+      const supabase = getSupabase();
+      if (supabase) await supabase.auth.signOut();
+      localStorage.removeItem('user');
+    }
+
+    if (typeof redirectToLogin === 'function') {
+      redirectToLogin();
+      return;
+    }
+
+    window.location.href = '../public/login.html';
   } catch (error) {
     console.error('Logout error:', error);
-    window.location.href = '../login.html';
+    window.location.href = '../public/login.html';
   }
 }

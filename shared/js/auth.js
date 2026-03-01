@@ -310,6 +310,13 @@ function getBasePath() {
   - N/A - just a redirect
 */
 function redirectToLogin() {
+  const path = window.location.pathname;
+
+  if (path.includes('/admin/')) {
+    window.location.href = getBasePath() + 'admin/login.html';
+    return;
+  }
+
   const basePath = getBasePath();
   window.location.href = basePath + 'public/login.html';
 }
@@ -342,7 +349,7 @@ function redirectToDashboard() {
         window.location.href = '/teacher/dashboard.html';
         break;
       case 'admin':
-        window.location.href = basePath + 'admin/dashboard.html';
+        window.location.href = '/admin/dashboard.html';
         break;
       default:
         // If role is unknown, sign out and redirect to login

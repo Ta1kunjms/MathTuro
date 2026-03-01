@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Grade Levels</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+</head>
+<body class="bg-gray-100 p-8">
+    <div class="max-w-4xl mx-auto bg-white rounded-lg shadow-lg p-6">
+        <h1 class="text-2xl font-bold mb-4">Grade Levels & Sections Test</h1>
+        
+        <div id="results" class="space-y-4">
+            <div class="p-4 bg-blue-50 rounded-md">
+                <h2 class="font-semibold mb-2">Testing Supabase Connection...</h2>
+                <pre id="connectionResult" class="text-sm"></pre>
+            </div>
+            
+            <div class="p-4 bg-green-50 rounded-md">
+                <h2 class="font-semibold mb-2">Grade Levels:</h2>
+                <pre id="gradeLevelsResult" class="text-sm"></pre>
+            </div>
+            
+            <div class="p-4 bg-yellow-50 rounded-md">
+                <h2 class="font-semibold mb-2">Sections:</h2>
+                <pre id="sectionsResult" class="text-sm"></pre>
+            </div>
+        </div>
+    </div>
+
+    <script src="shared/js/config.js"></script>
+    <script src="shared/js/supabase.js"></script>
+    <script>
+        async function test() {
+            try {
+                // Test connection
+                const supabase = getSupabase();
+                if (!supabase) {
+                    throw new Error('Failed to initialize Supabase client');
+                }
+                document.getElementById('connectionResult').textContent = '✅ Supabase client initialized successfully';
+
+                // Test grade levels
+                const { data: gradeData, error: gradeError } = await supabase
+                    .from('grade_levels')
+                    .select('*');
+                
+                if (gradeError) {
+                    document.getElementById('gradeLevelsResult').textContent = `❌ Error loading grade levels: ${gradeError.message}`;
+                } else {
+                    document.getElementById('gradeLevelsResult').textContent = `✅ ${gradeData.length} grade levels loaded:\n${JSON.stringify(gradeData, null, 2)}`;
+                }
+
+                // Test sections
+                const { data: sectionData, error: sectionError } = await supabase
+                    .from('sections')
+                    .select(`
+                        *,
+                        grade_levels!sections_grade_level_id_fkey (
+                            id,
+                            name
+                        )
+                    `);
+                
+                if (sectionError) {
+                    document.getElementById('sectionsResult').textContent = `❌ Error loading sections: ${sectionError.message}`;
+                } else {
+                    document.getElementById('sectionsResult').textContent = `✅ ${sectionData.length} sections loaded:\n${JSON.stringify(sectionData, null, 2)}`;
+                }
+
+            } catch (error) {
+                document.getElementById('results').innerHTML = `
+                    <div class="p-4 bg-red-50 rounded-md">
+                        <h2 class="font-semibold mb-2">Error:</h2>
+                        <pre class="text-sm">${error.message}</pre>
+                    </div>
+                `;
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', test);
+    </script>
+</body>
+</html>

@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/png" href="../Logo/MATHURO-LOGO.png">
+    <title>Manage Videos - Admin Portal</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        maroon: '#800000',
+                        'maroon-dark': '#600000',
+                        'maroon-light': '#990000',
+                        gold: '#FFD700',
+                        'gold-light': '#FFED4E',
+                        'gold-dark': '#B8860B',
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', 'sans-serif'],
+                    },
+                },
+            },
+        }
+    </script>
+    <style>
+        body { font-family: 'Inter', system-ui, sans-serif; }
+        
+        .gradient-text {
+            background: linear-gradient(135deg, #800000 0%, #990000 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .glass-sidebar {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+        }
+        
+        .sidebar-link {
+            transition: all 0.2s ease;
+        }
+        
+        .sidebar-link:hover, .sidebar-link.active {
+            background: linear-gradient(135deg, #800000 0%, #990000 100%);
+            color: white;
+        }
+        
+        .sidebar-link.active {
+            box-shadow: 0 4px 15px rgba(128, 0, 0, 0.3);
+        }
+        
+        .video-card {
+            transition: all 0.3s ease;
+        }
+        
+        .video-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+        }
+        
+        /* Custom scrollbar */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; }
+        ::-webkit-scrollbar-thumb { background: #800000; border-radius: 3px; }
+    </style>
+    <link rel="stylesheet" href="../shared/css/base.css">
+    <link rel="stylesheet" href="assets/css/admin.css">
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <!-- Mobile Menu Overlay -->
+    <div id="mobileOverlay" class="fixed inset-0 bg-black bg-opacity-50 z-40 hidden lg:hidden"></div>
+    
+    <!-- Sidebar -->
+    <div id="sidebar"></div>
+
+    <!-- Main Content -->
+    <main class="lg:ml-72 min-h-screen">
+        <!-- Header -->
+        <header class="bg-white border-b border-gray-200 sticky top-0 z-30">
+            <div class="flex items-center justify-between px-6 py-4">
+                <!-- Mobile Menu Button -->
+                <button id="mobileMenuBtn" class="lg:hidden p-2 text-gray-600 hover:text-gray-900">
+                    <i class="fas fa-bars text-xl"></i>
+                </button>
+                
+                <!-- Page Title -->
+                <h1 class="text-2xl font-bold gradient-text">Manage Videos</h1>
+                
+                <!-- Header Actions -->
+                <div class="flex items-center space-x-4">
+                    <button onclick="openAddVideoModal()" class="bg-maroon text-white px-4 py-2 rounded-lg hover:bg-maroon-dark transition-colors">
+                        <i class="fas fa-plus mr-2"></i>Add Video
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Content -->
+        <div class="p-6">
+            <!-- Videos List -->
+            <div class="bg-white rounded-lg shadow">
+                <div class="p-6">
+                    <h2 class="text-lg font-semibold mb-4">All Videos</h2>
+                    <div id="videosList" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        <!-- Videos will be dynamically loaded here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Add/Edit Video Modal -->
+    <div id="videoModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center">
+        <div class="bg-white rounded-lg shadow-xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+            <div class="p-6 border-b border-gray-200">
+                <h3 id="modalTitle" class="text-xl font-semibold">Add New Video</h3>
+            </div>
+            <form id="videoForm" onsubmit="handleVideoSubmit(event)">
+                <div class="p-6 space-y-4">
+                    <input type="hidden" id="videoId">
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Video Title</label>
+                        <input type="text" id="videoTitle" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-maroon focus:border-transparent" placeholder="Enter video title">
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Video URL</label>
+                        <input type="url" id="videoUrl" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-maroon focus:border-transparent" placeholder="https://example.com/video">
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Description</label>
+                        <textarea id="videoDescription" rows="3" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-maroon focus:border-transparent" placeholder="Enter video description"></textarea>
+                    </div>
+                    
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Grade Level</label>
+                            <select id="videoGradeLevel" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-maroon focus:border-transparent">
+                                <option value="">Select grade level</option>
+                                <option value="1">Grade 1</option>
+                                <option value="2">Grade 2</option>
+                                <option value="3">Grade 3</option>
+                                <option value="4">Grade 4</option>
+                                <option value="5">Grade 5</option>
+                                <option value="6">Grade 6</option>
+                            </select>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Status</label>
+                            <select id="videoStatus" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-maroon focus:border-transparent">
+                                <option value="active">Active</option>
+                                <option value="archived">Archived</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="p-6 border-t border-gray-200 flex justify-end space-x-3">
+                    <button type="button" onclick="closeVideoModal()" class="px-4 py-2 text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50">Cancel</button>
+                    <button type="submit" class="px-4 py-2 bg-maroon text-white rounded-lg hover:bg-maroon-dark">
+                        <i id="submitIcon" class="fas fa-save mr-2"></i>
+                        <span id="submitText">Save Video</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="../shared/js/config.js"></script>
+    <script src="../shared/js/supabase.js"></script>
+    <script src="../shared/js/utils.js"></script>
+    <script src="assets/js/sidebar.js"></script>
+    <script src="assets/js/admin.js"></script>
+    <script>
+        // Video management functions
+        async function loadAllVideos() {
+            try {
+                const videosList = document.getElementById('videosList');
+                videosList.innerHTML = `
+                    <div class="col-span-full text-center py-12">
+                        <div class="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-maroon"></div>
+                        <p class="mt-4 text-gray-600">Loading videos...</p>
+                    </div>
+                `;
+
+                const { data: videos, error } = await getSupabase().from('videos').select(`
+                    id, title, description, url, grade_level, status, created_at,
+                    teacher:teacher_id (full_name)
+                `).order('created_at', { ascending: false });
+
+                if (error) throw error;
+
+                if (videos.length === 0) {
+                    videosList.innerHTML = `
+                        <div class="col-span-full text-center py-12">
+                            <i class="fas fa-video text-6xl text-gray-300 mb-4"></i>
+                            <h3 class="text-lg font-medium text-gray-900 mb-2">No Videos Found</h3>
+                            <p class="text-gray-500 mb-6">Get started by adding your first video</p>
+                            <button onclick="openAddVideoModal()" class="bg-maroon text-white px-4 py-2 rounded-lg hover:bg-maroon-dark">
+                                <i class="fas fa-plus mr-2"></i>Add First Video
+                            </button>
+                        </div>
+                    `;
+                    return;
+                }
+
+                videosList.innerHTML = videos.map(video => `
+                    <div class="video-card bg-white border-2 border-maroon/20 rounded-xl p-6 hover:shadow-xl hover:border-maroon/40 transition-all duration-300">
+                        <div class="flex justify-between items-start mb-4">
+                            <h3 class="text-lg font-bold text-maroon">${video.title}</h3>
+                            <span class="px-3 py-1 text-xs font-semibold rounded-full ${
+                                video.status === 'active' ? 'bg-maroon text-white' : 'bg-gray-100 text-gray-600'
+                            }">${video.status}</span>
+                        </div>
+                        
+                        <p class="text-gray-700 text-sm mb-4 leading-relaxed">${video.description || 'No description'}</p>
+                        
+                        <div class="space-y-2 text-sm text-gray-600 mb-6">
+                            <div class="flex items-center">
+                                <i class="fas fa-graduation-cap mr-2 text-maroon"></i>
+                                <span>Grade ${video.grade_level}</span>
+                            </div>
+                            <div class="flex items-center">
+                                <i class="fas fa-user mr-2 text-maroon"></i>
+                                <span>Created by: ${video.teacher?.full_name || 'Unknown'}</span>
+                            </div>
+                            <div class="flex items-center">
+                                <i class="fas fa-calendar mr-2 text-maroon"></i>
+                                <span>${new Date(video.created_at).toLocaleDateString()}</span>
+                            </div>
+                        </div>
+                        
+                        <div class="flex space-x-3">
+                            <button onclick="editVideo('${video.id}')" class="flex-1 px-3 py-2 text-sm bg-maroon text-white rounded-lg hover:bg-maroon-dark transition-colors">
+                                <i class="fas fa-edit mr-1"></i>Edit
+                            </button>
+                            <button onclick="deleteVideo('${video.id}')" class="flex-1 px-3 py-2 text-sm bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors">
+                                <i class="fas fa-trash mr-1"></i>Delete
+                            </button>
+                        </div>
+                    </div>
+                `).join('');
+            } catch (error) {
+                console.error('Error loading videos:', error);
+                showNotification('Failed to load videos', 'error');
+            }
+        }
+
+        function openAddVideoModal() {
+            document.getElementById('modalTitle').textContent = 'Add New Video';
+            document.getElementById('submitText').textContent = 'Save Video';
+            document.getElementById('submitIcon').className = 'fas fa-save mr-2';
+            document.getElementById('videoForm').reset();
+            document.getElementById('videoId').value = '';
+            document.getElementById('videoModal').classList.remove('hidden');
+        }
+
+        function closeVideoModal() {
+            document.getElementById('videoModal').classList.add('hidden');
+        }
+
+        async function editVideo(videoId) {
+            try {
+                const { data: video, error } = await getSupabase().from('videos').select('*').eq('id', videoId).single();
+                
+                if (error) throw error;
+
+                document.getElementById('modalTitle').textContent = 'Edit Video';
+                document.getElementById('submitText').textContent = 'Update Video';
+                document.getElementById('submitIcon').className = 'fas fa-edit mr-2';
+                document.getElementById('videoId').value = video.id;
+                document.getElementById('videoTitle').value = video.title;
+                document.getElementById('videoUrl').value = video.url;
+                document.getElementById('videoDescription').value = video.description;
+                document.getElementById('videoGradeLevel').value = video.grade_level;
+                document.getElementById('videoStatus').value = video.status;
+                document.getElementById('videoModal').classList.remove('hidden');
+            } catch (error) {
+                console.error('Error fetching video:', error);
+                showNotification('Failed to load video details', 'error');
+            }
+        }
+
+        async function deleteVideo(videoId) {
+            if (!confirm('Are you sure you want to delete this video? This action cannot be undone.')) {
+                return;
+            }
+
+            try {
+                const { error } = await getSupabase().from('videos').delete().eq('id', videoId);
+                
+                if (error) throw error;
+
+                showNotification('Video deleted successfully', 'success');
+                loadAllVideos();
+            } catch (error) {
+                console.error('Error deleting video:', error);
+                showNotification('Failed to delete video', 'error');
+            }
+        }
+
+        async function handleVideoSubmit(event) {
+            event.preventDefault();
+            
+            const videoId = document.getElementById('videoId').value;
+            const title = document.getElementById('videoTitle').value;
+            const url = document.getElementById('videoUrl').value;
+            const description = document.getElementById('videoDescription').value;
+            const gradeLevel = document.getElementById('videoGradeLevel').value;
+            const status = document.getElementById('videoStatus').value;
+
+            try {
+                if (videoId) {
+                    const updates = {
+                        title,
+                        url,
+                        description,
+                        grade_level: gradeLevel,
+                        status,
+                        updated_at: new Date().toISOString()
+                    };
+
+                    const { error } = await getSupabase().from('videos').update(updates).eq('id', videoId);
+                    if (error) throw error;
+                    showNotification('Video updated successfully', 'success');
+                } else {
+                    const { error } = await getSupabase().from('videos').insert({
+                        title,
+                        url,
+                        description,
+                        grade_level: gradeLevel,
+                        status,
+                        created_at: new Date().toISOString(),
+                        updated_at: new Date().toISOString()
+                    });
+                    if (error) throw error;
+                    showNotification('Video created successfully', 'success');
+                }
+
+                closeVideoModal();
+                loadAllVideos();
+            } catch (error) {
+                console.error('Error saving video:', error);
+                showNotification('Failed to save video', 'error');
+            }
+        }
+
+        document.getElementById('videoModal').addEventListener('click', function(event) {
+            if (event.target === this) {
+                closeVideoModal();
+            }
+        });
+
+        document.addEventListener('DOMContentLoaded', function() {
+            loadAllVideos();
+        });
+    </script>
+
+</body>
+</html>

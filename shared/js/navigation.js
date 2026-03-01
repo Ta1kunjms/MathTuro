@@ -126,8 +126,48 @@ class NavigationManager {
             role: 'admin',
             parent: '/admin/dashboard'
         });
+        this.addRoute('/admin/grade-levels', 'admin-grade-levels', { 
+            title: 'Grade Levels & Sections', 
+            role: 'admin',
+            parent: '/admin/dashboard'
+        });
+        this.addRoute('/admin/lesson-plan', 'admin-lesson-plan', { 
+            title: 'Lesson Plans', 
+            role: 'admin',
+            parent: '/admin/dashboard'
+        });
+        this.addRoute('/admin/manage-modules', 'admin-manage-modules', { 
+            title: 'Manage Modules', 
+            role: 'admin',
+            parent: '/admin/dashboard'
+        });
+        this.addRoute('/admin/manage-videos', 'admin-manage-videos', { 
+            title: 'Manage Videos', 
+            role: 'admin',
+            parent: '/admin/dashboard'
+        });
+        this.addRoute('/admin/manage-quizzes', 'admin-manage-quizzes', { 
+            title: 'Manage Quizzes', 
+            role: 'admin',
+            parent: '/admin/dashboard'
+        });
         this.addRoute('/admin/activity', 'admin-activity', { 
-            title: 'Activity', 
+            title: 'Activity Log', 
+            role: 'admin',
+            parent: '/admin/dashboard'
+        });
+        this.addRoute('/admin/analytics', 'admin-analytics', { 
+            title: 'Analytics', 
+            role: 'admin',
+            parent: '/admin/dashboard'
+        });
+        this.addRoute('/admin/system-status', 'admin-system-status', { 
+            title: 'System Status', 
+            role: 'admin',
+            parent: '/admin/dashboard'
+        });
+        this.addRoute('/admin/settings', 'admin-settings', { 
+            title: 'Settings', 
             role: 'admin',
             parent: '/admin/dashboard'
         });

@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Supabase Connection Test</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="min-h-screen bg-gray-50 flex items-center justify-center">
+    <div class="bg-white rounded-xl shadow-lg p-8 max-w-2xl w-full mx-auto">
+        <h1 class="text-2xl font-bold text-gray-800 mb-4">Supabase Connection Test</h1>
+        <p class="text-gray-600 mb-6">This page tests the connection to your Supabase database and checks if the tables are accessible.</p>
+        
+        <div id="testResult" class="mb-6 p-4 rounded-lg"></div>
+        
+        <button id="runTestBtn" class="w-full bg-red-600 text-white py-3 px-6 rounded-lg font-semibold hover:bg-red-700 transition-colors">
+            Run Connection Test
+        </button>
+    </div>
+
+    <!-- Supabase JS library -->
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+    
+    <!-- Application scripts -->
+    <script src="public/shared/js/config.js"></script>
+    <script src="public/shared/js/supabase.js"></script>
+    <script src="public/shared/js/utils.js"></script>
+    
+    <!-- Test script -->
+    <script src="test-supabase-connection.js"></script>
+
+    <script>
+        document.getElementById('runTestBtn').addEventListener('click', async function() {
+            const btn = this;
+            const resultDiv = document.getElementById('testResult');
+            
+            // Disable button and show loading
+            btn.disabled = true;
+            btn.textContent = 'Testing connection...';
+            resultDiv.innerHTML = `
+                <div class="bg-blue-50 text-blue-700 p-4 rounded-lg">
+                    <p>Running tests... Please wait.</p>
+                </div>
+            `;
+            
+            // Clear previous console logs
+            console.clear();
+            
+            // Create a log element to display console output
+            const logElement = document.createElement('pre');
+            logElement.className = 'bg-gray-100 p-4 rounded-lg text-sm font-mono mt-4';
+            resultDiv.appendChild(logElement);
+            
+            // Override console.log to also output to page
+            const originalLog = console.log;
+            const originalError = console.error;
+            
+            console.log = function(...args) {
+                originalLog.apply(console, args);
+                const message = args.join(' ');
+                logElement.textContent += message + '\n';
+                logElement.scrollTop = logElement.scrollHeight;
+            };
+            
+            console.error = function(...args) {
+                originalError.apply(console, args);
+                const message = args.join(' ');
+                logElement.textContent += message + '\n';
+                logElement.scrollTop = logElement.scrollHeight;
+            };
+            
+            try {
+                await testSupabaseConnection();
+                
+                btn.textContent = 'Test Complete';
+                btn.classList.remove('bg-red-600', 'hover:bg-red-700');
+                btn.classList.add('bg-green-600', 'hover:bg-green-700');
+            } catch (error) {
+                console.error('Test failed:', error);
+                btn.textContent = 'Run Test Again';
+                btn.disabled = false;
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/png" href="../Logo/MATHURO-LOGO.png">
+    <title>Settings - Admin Portal</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', system-ui, sans-serif; }
+        .gradient-text {
+            background: linear-gradient(135deg, #800000 0%, #FFD700 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .sidebar-link:hover, .sidebar-link.active {
+            background: linear-gradient(135deg, #800000 0%, #990000 100%);
+            color: white;
+        }
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; }
+        ::-webkit-scrollbar-thumb { background: #800000; border-radius: 3px; }
+    </style>
+    <link rel="stylesheet" href="../shared/css/base.css">
+    <link rel="stylesheet" href="assets/css/admin.css">
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <div id="mobileOverlay" class="fixed inset-0 bg-black bg-opacity-50 z-40 hidden lg:hidden"></div>
+    <div id="sidebar"></div>
+
+    <main class="lg:ml-72 min-h-screen">
+        <header class="bg-white border-b border-gray-200 sticky top-0 z-30">
+            <div class="flex items-center justify-between px-4 lg:px-8 py-4">
+                <button id="mobileMenuBtn" class="lg:hidden p-2 text-gray-600 hover:text-maroon rounded-lg">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
+                    </svg>
+                </button>
+                
+                <div class="flex-1 lg:flex-none">
+                    <h1 class="text-xl lg:text-2xl font-bold text-gray-800">Settings</h1>
+                    <p class="text-sm text-gray-500 hidden sm:block">Manage system settings and configurations.</p>
+                </div>
+                
+                <div class="flex items-center space-x-4">
+                    <div class="relative">
+                        <button id="userMenuBtn" class="flex items-center space-x-2 p-2 rounded-lg hover:bg-gray-100">
+                            <div class="w-8 h-8 bg-maroon/10 rounded-full flex items-center justify-center">
+                                <span id="headerUserInitials" class="text-maroon font-semibold text-sm">--</span>
+                            </div>
+                            <svg class="w-4 h-4 text-gray-500 hidden sm:block" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                            </svg>
+                        </button>
+                        
+                        <div id="userDropdown" class="hidden absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-lg border border-gray-100 py-2">
+                            <div class="px-4 py-2 border-b border-gray-100">
+                                <p id="dropdownUserName" class="font-semibold text-gray-800">User</p>
+                                <p id="dropdownUserEmail" class="text-sm text-gray-500">email@example.com</p>
+                            </div>
+                            <button onclick="handleLogout()" class="w-full text-left px-4 py-2 text-maroon hover:bg-maroon/10">Logout</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <div class="p-4 lg:p-8">
+            <div class="bg-white rounded-2xl border border-gray-200 p-8">
+                <h2 class="text-2xl font-bold text-gray-800 mb-8">System Settings</h2>
+                
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                    <!-- Left sidebar for settings categories -->
+                    <div class="lg:col-span-1">
+                        <nav class="space-y-2">
+                            <button onclick="showSettings('general')" 
+                                    class="settings-nav-btn w-full text-left px-4 py-3 rounded-lg bg-maroon text-white font-medium transition-colors"
+                                    data-category="general">
+                                <div class="flex items-center justify-between">
+                                    <span>General</span>
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                                    </svg>
+                                </div>
+                            </button>
+                            <button onclick="showSettings('security')" 
+                                    class="settings-nav-btn w-full text-left px-4 py-3 rounded-lg text-gray-600 hover:bg-gray-50 transition-colors"
+                                    data-category="security">
+                                <div class="flex items-center justify-between">
+                                    <span>Security</span>
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                                    </svg>
+                                </div>
+                            </button>
+                            <button onclick="showSettings('email')" 
+                                    class="settings-nav-btn w-full text-left px-4 py-3 rounded-lg text-gray-600 hover:bg-gray-50 transition-colors"
+                                    data-category="email">
+                                <div class="flex items-center justify-between">
+                                    <span>Email</span>
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                                    </svg>
+                                </div>
+                            </button>
+                        </nav>
+                    </div>
+
+                    <!-- Right content area -->
+                    <div class="lg:col-span-2">
+                        <!-- General Settings -->
+                        <div id="generalSettings" class="settings-content">
+                            <h3 class="text-xl font-bold text-gray-800 mb-6">General Settings</h3>
+                            
+                            <div class="space-y-6">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">System Name</label>
+                                    <input type="text" id="systemName" value="MathTuro" 
+                                           class="w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-maroon/20 focus:border-maroon transition-all">
+                                </div>
+                                
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">System Version</label>
+                                    <input type="text" id="systemVersion" value="2.0.0" disabled 
+                                           class="w-full px-4 py-2 border border-gray-200 rounded-xl bg-gray-50 text-gray-500">
+                                </div>
+                                
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">Language</label>
+                                    <select id="systemLanguage" class="w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-maroon/20 focus:border-maroon transition-all">
+                                        <option value="en">English</option>
+                                        <option value="es">Spanish</option>
+                                        <option value="fr">French</option>
+                                        <option value="de">German</option>
+                                        <option value="ja">Japanese</option>
+                                    </select>
+                                </div>
+                                
+                                <div class="flex justify-end space-x-3 pt-6 border-t border-gray-200">
+                                    <button type="button" onclick="resetGeneralSettings()" 
+                                            class="px-6 py-2 border border-gray-200 text-gray-700 rounded-xl hover:bg-gray-50 transition-colors">
+                                        Reset
+                                    </button>
+                                    <button type="button" onclick="saveGeneralSettings()" 
+                                            class="px-6 py-2 bg-maroon text-white rounded-xl hover:bg-maroon-dark transition-colors">
+                                        Save Changes
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Security Settings -->
+                        <div id="securitySettings" class="settings-content hidden">
+                            <h3 class="text-xl font-bold text-gray-800 mb-6">Security Settings</h3>
+                            
+                            <div class="space-y-6">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">Minimum Password Length</label>
+                                    <input type="number" id="minPasswordLength" value="8" min="6" max="32" 
+                                           class="w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-maroon/20 focus:border-maroon transition-all">
+                                </div>
+                                
+                                <div class="flex items-center justify-between">
+                                    <div>
+                                        <p class="font-medium text-gray-800">Require Special Characters</p>
+                                        <p class="text-sm text-gray-500">Force passwords to include special characters</p>
+                                    </div>
+                                    <label class="relative inline-flex items-center cursor-pointer">
+                                        <input type="checkbox" id="requireSpecialChars" checked class="sr-only peer">
+                                        <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-maroon/20 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[4px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-maroon"></div>
+                                    </label>
+                                </div>
+                                
+                                <div class="flex justify-end space-x-3 pt-6 border-t border-gray-200">
+                                    <button type="button" onclick="resetSecuritySettings()" 
+                                            class="px-6 py-2 border border-gray-200 text-gray-700 rounded-xl hover:bg-gray-50 transition-colors">
+                                        Reset
+                                    </button>
+                                    <button type="button" onclick="saveSecuritySettings()" 
+                                            class="px-6 py-2 bg-maroon text-white rounded-xl hover:bg-maroon-dark transition-colors">
+                                        Save Changes
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Email Settings -->
+                        <div id="emailSettings" class="settings-content hidden">
+                            <h3 class="text-xl font-bold text-gray-800 mb-6">Email Settings</h3>
+                            
+                            <div class="space-y-6">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">SMTP Host</label>
+                                    <input type="text" id="smtpHost" value="smtp.gmail.com" 
+                                           class="w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-maroon/20 focus:border-maroon transition-all">
+                                </div>
+                                
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">SMTP Port</label>
+                                    <input type="number" id="smtpPort" value="587" 
+                                           class="w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-maroon/20 focus:border-maroon transition-all">
+                                </div>
+                                
+                                <div class="flex justify-end space-x-3 pt-6 border-t border-gray-200">
+                                    <button type="button" onclick="resetEmailSettings()" 
+                                            class="px-6 py-2 border border-gray-200 text-gray-700 rounded-xl hover:bg-gray-50 transition-colors">
+                                        Reset
+                                    </button>
+                                    <button type="button" onclick="saveEmailSettings()" 
+                                            class="px-6 py-2 bg-maroon text-white rounded-xl hover:bg-maroon-dark transition-colors">
+                                        Save Changes
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script src="assets/js/sidebar.js"></script>
+    <script src="assets/js/admin.js"></script>
+    <script src="../shared/js/auth.js"></script>
+    <script src="../shared/js/config.js"></script>
+    <script src="../shared/js/supabase.js"></script>
+    <script src="../shared/js/utils.js"></script>
+    <script>
+        function showSettings(category) {
+            document.querySelectorAll('.settings-content').forEach(el => el.classList.add('hidden'));
+            document.querySelectorAll('.settings-nav-btn').forEach(el => {
+                el.classList.remove('bg-maroon', 'text-white');
+                el.classList.add('text-gray-600', 'hover:bg-gray-50');
+            });
+            
+            document.getElementById(`${category}Settings`).classList.remove('hidden');
+            const navBtn = document.querySelector(`.settings-nav-btn[data-category="${category}"]`);
+            if (navBtn) {
+                navBtn.classList.remove('text-gray-600', 'hover:bg-gray-50');
+                navBtn.classList.add('bg-maroon', 'text-white');
+            }
+        }
+
+        async function saveGeneralSettings() {
+            try {
+                const settings = {
+                    system_name: document.getElementById('systemName').value,
+                    language: document.getElementById('systemLanguage').value,
+                    updated_at: new Date().toISOString()
+                };
+
+                // Check if settings table exists and create if necessary
+                const { data: existingSettings, error: checkError } = await getSupabase()
+                    .from('settings')
+                    .select('id')
+                    .limit(1);
+
+                if (checkError) {
+                    console.error('Error checking settings:', checkError);
+                    showToast('Failed to check settings', 'error');
+                    return;
+                }
+
+                if (existingSettings && existingSettings.length > 0) {
+                    // Update existing settings
+                    const { error: updateError } = await getSupabase()
+                        .from('settings')
+                        .update(settings)
+                        .eq('id', existingSettings[0].id);
+                    
+                    if (updateError) throw updateError;
+                } else {
+                    // Create new settings
+                    const { error: insertError } = await getSupabase()
+                        .from('settings')
+                        .insert({
+                            ...settings,
+                            created_at: new Date().toISOString()
+                        });
+                    
+                    if (insertError) throw insertError;
+                }
+
+                showToast('General settings saved successfully', 'success');
+            } catch (error) {
+                console.error('Error saving general settings:', error);
+                showToast('Failed to save general settings', 'error');
+            }
+        }
+
+        async function resetGeneralSettings() {
+            if (confirm('Are you sure you want to reset general settings to default?')) {
+                try {
+                    document.getElementById('systemName').value = 'MathTuro';
+                    document.getElementById('systemLanguage').value = 'en';
+                    
+                    await saveGeneralSettings();
+                    showToast('General settings reset to default', 'info');
+                } catch (error) {
+                    console.error('Error resetting general settings:', error);
+                    showToast('Failed to reset general settings', 'error');
+                }
+            }
+        }
+
+        async function saveSecuritySettings() {
+            try {
+                const settings = {
+                    min_password_length: parseInt(document.getElementById('minPasswordLength').value),
+                    require_special_chars: document.getElementById('requireSpecialChars').checked,
+                    updated_at: new Date().toISOString()
+                };
+
+                // Check if settings table exists and create if necessary
+                const { data: existingSettings, error: checkError } = await getSupabase()
+                    .from('settings')
+                    .select('id')
+                    .limit(1);
+
+                if (checkError) {
+                    console.error('Error checking settings:', checkError);
+                    showToast('Failed to check settings', 'error');
+                    return;
+                }
+
+                if (existingSettings && existingSettings.length > 0) {
+                    const { error: updateError } = await getSupabase()
+                        .from('settings')
+                        .update(settings)
+                        .eq('id', existingSettings[0].id);
+                    
+                    if (updateError) throw updateError;
+                } else {
+                    const { error: insertError } = await getSupabase()
+                        .from('settings')
+                        .insert({
+                            ...settings,
+                            created_at: new Date().toISOString()
+                        });
+                    
+                    if (insertError) throw insertError;
+                }
+
+                showToast('Security settings saved successfully', 'success');
+            } catch (error) {
+                console.error('Error saving security settings:', error);
+                showToast('Failed to save security settings', 'error');
+            }
+        }
+
+        async function resetSecuritySettings() {
+            if (confirm('Are you sure you want to reset security settings to default?')) {
+                try {
+                    document.getElementById('minPasswordLength').value = '8';
+                    document.getElementById('requireSpecialChars').checked = true;
+                    
+                    await saveSecuritySettings();
+                    showToast('Security settings reset to default', 'info');
+                } catch (error) {
+                    console.error('Error resetting security settings:', error);
+                    showToast('Failed to reset security settings', 'error');
+                }
+            }
+        }
+
+        async function saveEmailSettings() {
+            try {
+                const settings = {
+                    smtp_host: document.getElementById('smtpHost').value,
+                    smtp_port: parseInt(document.getElementById('smtpPort').value),
+                    updated_at: new Date().toISOString()
+                };
+
+                // Check if settings table exists and create if necessary
+                const { data: existingSettings, error: checkError } = await getSupabase()
+                    .from('settings')
+                    .select('id')
+                    .limit(1);
+
+                if (checkError) {
+                    console.error('Error checking settings:', checkError);
+                    showToast('Failed to check settings', 'error');
+                    return;
+                }
+
+                if (existingSettings && existingSettings.length > 0) {
+                    const { error: updateError } = await getSupabase()
+                        .from('settings')
+                        .update(settings)
+                        .eq('id', existingSettings[0].id);
+                    
+                    if (updateError) throw updateError;
+                } else {
+                    const { error: insertError } = await getSupabase()
+                        .from('settings')
+                        .insert({
+                            ...settings,
+                            created_at: new Date().toISOString()
+                        });
+                    
+                    if (insertError) throw insertError;
+                }
+
+                showToast('Email settings saved successfully', 'success');
+            } catch (error) {
+                console.error('Error saving email settings:', error);
+                showToast('Failed to save email settings', 'error');
+            }
+        }
+
+        async function resetEmailSettings() {
+            if (confirm('Are you sure you want to reset email settings to default?')) {
+                try {
+                    document.getElementById('smtpHost').value = 'smtp.gmail.com';
+                    document.getElementById('smtpPort').value = '587';
+                    
+                    await saveEmailSettings();
+                    showToast('Email settings reset to default', 'info');
+                } catch (error) {
+                    console.error('Error resetting email settings:', error);
+                    showToast('Failed to reset email settings', 'error');
+                }
+            }
+        }
+
+        async function loadSettings() {
+            try {
+                const { data: settings, error } = await getSupabase()
+                    .from('settings')
+                    .select('*')
+                    .limit(1);
+
+                if (!error && settings && settings.length > 0) {
+                    const config = settings[0];
+                    
+                    // Load general settings
+                    if (config.system_name) document.getElementById('systemName').value = config.system_name;
+                    if (config.language) document.getElementById('systemLanguage').value = config.language;
+                    
+                    // Load security settings
+                    if (config.min_password_length) document.getElementById('minPasswordLength').value = config.min_password_length;
+                    if (config.require_special_chars !== undefined) document.getElementById('requireSpecialChars').checked = config.require_special_chars;
+                    
+                    // Load email settings
+                    if (config.smtp_host) document.getElementById('smtpHost').value = config.smtp_host;
+                    if (config.smtp_port) document.getElementById('smtpPort').value = config.smtp_port;
+                }
+            } catch (error) {
+                console.error('Error loading settings:', error);
+                // Settings table might not exist, use default values
+            }
+        }
+
+        // Update user information across the UI
+        function updateUserInfo(user) {
+            const initials = getInitials(user.fullName);
+            const firstName = user.fullName.split(' ')[0];
+            
+            document.getElementById('sidebarUserName').textContent = user.fullName;
+            document.getElementById('userInitials').textContent = initials;
+            document.getElementById('headerUserInitials').textContent = initials;
+        }
+
+        function getInitials(name) {
+            return name.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2);
+        }
+
+        let currentUser = null;
+
+        document.addEventListener('DOMContentLoaded', async function() {
+            try {
+                currentUser = await checkAuthSession();
+                
+                if (!currentUser || currentUser.role !== 'admin') {
+                    redirectToLogin();
+                    return;
+                }
+
+                updateUserInfo(currentUser);
+                await loadSettings();
+            } catch (error) {
+                console.error('Page initialization error:', error);
+                showToast('Failed to load settings.', 'error');
+            }
+        });
+    </script>
+
+</body>
+</html>

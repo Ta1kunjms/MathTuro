@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/png" href="../Logo/MATHURO-LOGO.png">
+    <title>Manage Quizzes - Admin Portal</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        maroon: '#800000',
+                        'maroon-dark': '#600000',
+                        'maroon-light': '#990000',
+                        gold: '#FFD700',
+                        'gold-light': '#FFED4E',
+                        'gold-dark': '#B8860B',
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', 'sans-serif'],
+                    },
+                },
+            },
+        }
+    </script>
+    <style>
+        body { font-family: 'Inter', system-ui, sans-serif; }
+        
+        .gradient-text {
+            background: linear-gradient(135deg, #800000 0%, #990000 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .glass-sidebar {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+        }
+        
+        .sidebar-link {
+            transition: all 0.2s ease;
+        }
+        
+        .sidebar-link:hover, .sidebar-link.active {
+            background: linear-gradient(135deg, #800000 0%, #990000 100%);
+            color: white;
+        }
+        
+        .sidebar-link.active {
+            box-shadow: 0 4px 15px rgba(128, 0, 0, 0.3);
+        }
+        
+        .quiz-card {
+            transition: all 0.3s ease;
+        }
+        
+        .quiz-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+        }
+        
+        /* Custom scrollbar */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; }
+        ::-webkit-scrollbar-thumb { background: #800000; border-radius: 3px; }
+    </style>
+    <link rel="stylesheet" href="../shared/css/base.css">
+    <link rel="stylesheet" href="assets/css/admin.css">
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <!-- Mobile Menu Overlay -->
+    <div id="mobileOverlay" class="fixed inset-0 bg-black bg-opacity-50 z-40 hidden lg:hidden"></div>
+    
+    <!-- Sidebar -->
+    <div id="sidebar"></div>
+
+    <!-- Main Content -->
+    <main class="lg:ml-72 min-h-screen">
+        <!-- Header -->
+        <header class="bg-white border-b border-gray-200 sticky top-0 z-30">
+            <div class="flex items-center justify-between px-6 py-4">
+                <!-- Mobile Menu Button -->
+                <button id="mobileMenuBtn" class="lg:hidden p-2 text-gray-600 hover:text-gray-900">
+                    <i class="fas fa-bars text-xl"></i>
+                </button>
+                
+                <!-- Page Title -->
+                <h1 class="text-2xl font-bold gradient-text">Manage Quizzes</h1>
+                
+                <!-- Header Actions -->
+                <div class="flex items-center space-x-4">
+                    <button onclick="openAddQuizModal()" class="bg-maroon text-white px-4 py-2 rounded-lg hover:bg-maroon-dark transition-colors">
+                        <i class="fas fa-plus mr-2"></i>Add Quiz
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Content -->
+        <div class="p-6">
+            <!-- Quizzes List -->
+            <div class="bg-white rounded-lg shadow">
+                <div class="p-6">
+                    <h2 class="text-lg font-semibold mb-4">All Quizzes</h2>
+                    <div id="quizzesList" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        <!-- Quizzes will be dynamically loaded here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Add/Edit Quiz Modal -->
+    <div id="quizModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center">
+        <div class="bg-white rounded-lg shadow-xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+            <div class="p-6 border-b border-gray-200">
+                <h3 id="modalTitle" class="text-xl font-semibold">Add New Quiz</h3>
+            </div>
+            <form id="quizForm" onsubmit="handleQuizSubmit(event)">
+                <div class="p-6 space-y-4">
+                    <input type="hidden" id="quizId">
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Quiz Title</label>
+                        <input type="text" id="quizTitle" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-maroon focus:border-transparent" placeholder="Enter quiz title">
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Description</label>
+                        <textarea id="quizDescription" rows="3" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-maroon focus:border-transparent" placeholder="Enter quiz description"></textarea>
+                    </div>
+                    
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Grade Level</label>
+                            <select id="quizGradeLevel" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-maroon focus:border-transparent">
+                                <option value="">Select grade level</option>
+                                <option value="1">Grade 1</option>
+                                <option value="2">Grade 2</option>
+                                <option value="3">Grade 3</option>
+                                <option value="4">Grade 4</option>
+                                <option value="5">Grade 5</option>
+                                <option value="6">Grade 6</option>
+                            </select>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Status</label>
+                            <select id="quizStatus" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-maroon focus:border-transparent">
+                                <option value="active">Active</option>
+                                <option value="archived">Archived</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Time Limit (minutes)</label>
+                            <input type="number" id="quizTimeLimit" min="5" max="120" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-maroon focus:border-transparent" placeholder="30">
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Passing Score (%)</label>
+                            <input type="number" id="quizPassingScore" min="0" max="100" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-maroon focus:border-transparent" placeholder="75">
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="p-6 border-t border-gray-200 flex justify-end space-x-3">
+                    <button type="button" onclick="closeQuizModal()" class="px-4 py-2 text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50">Cancel</button>
+                    <button type="submit" class="px-4 py-2 bg-maroon text-white rounded-lg hover:bg-maroon-dark">
+                        <i id="submitIcon" class="fas fa-save mr-2"></i>
+                        <span id="submitText">Save Quiz</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="../shared/js/config.js"></script>
+    <script src="../shared/js/supabase.js"></script>
+    <script src="../shared/js/utils.js"></script>
+    <script src="assets/js/sidebar.js"></script>
+    <script src="assets/js/admin.js"></script>
+    <script>
+        // Quiz management functions
+        async function loadAllQuizzes() {
+            try {
+                const quizzesList = document.getElementById('quizzesList');
+                quizzesList.innerHTML = `
+                    <div class="col-span-full text-center py-12">
+                        <div class="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-maroon"></div>
+                        <p class="mt-4 text-gray-600">Loading quizzes...</p>
+                    </div>
+                `;
+
+                const { data: quizzes, error } = await getSupabase().from('quizzes').select(`
+                    id, title, description, grade_level, status, time_limit, passing_score, created_at,
+                    teacher:teacher_id (full_name)
+                `).order('created_at', { ascending: false });
+
+                if (error) throw error;
+
+                if (quizzes.length === 0) {
+                    quizzesList.innerHTML = `
+                        <div class="col-span-full text-center py-12">
+                            <i class="fas fa-question-circle text-6xl text-gray-300 mb-4"></i>
+                            <h3 class="text-lg font-medium text-gray-900 mb-2">No Quizzes Found</h3>
+                            <p class="text-gray-500 mb-6">Get started by creating your first quiz</p>
+                            <button onclick="openAddQuizModal()" class="bg-maroon text-white px-4 py-2 rounded-lg hover:bg-maroon-dark">
+                                <i class="fas fa-plus mr-2"></i>Add First Quiz
+                            </button>
+                        </div>
+                    `;
+                    return;
+                }
+
+                quizzesList.innerHTML = quizzes.map(quiz => `
+                    <div class="quiz-card bg-white border-2 border-maroon/20 rounded-xl p-6 hover:shadow-xl hover:border-maroon/40 transition-all duration-300">
+                        <div class="flex justify-between items-start mb-4">
+                            <h3 class="text-lg font-bold text-maroon">${quiz.title}</h3>
+                            <span class="px-3 py-1 text-xs font-semibold rounded-full ${
+                                quiz.status === 'active' ? 'bg-maroon text-white' : 'bg-gray-100 text-gray-600'
+                            }">${quiz.status}</span>
+                        </div>
+                        
+                        <p class="text-gray-700 text-sm mb-4 leading-relaxed">${quiz.description || 'No description'}</p>
+                        
+                        <div class="space-y-2 text-sm text-gray-600 mb-6">
+                            <div class="flex items-center">
+                                <i class="fas fa-graduation-cap mr-2 text-maroon"></i>
+                                <span>Grade ${quiz.grade_level}</span>
+                            </div>
+                            <div class="flex items-center">
+                                <i class="fas fa-user mr-2 text-maroon"></i>
+                                <span>Created by: ${quiz.teacher?.full_name || 'Unknown'}</span>
+                            </div>
+                            <div class="flex items-center">
+                                <i class="fas fa-clock mr-2 text-maroon"></i>
+                                <span>${quiz.time_limit} minutes</span>
+                            </div>
+                            <div class="flex items-center">
+                                <i class="fas fa-trophy mr-2 text-maroon"></i>
+                                <span>Pass: ${quiz.passing_score}%</span>
+                            </div>
+                            <div class="flex items-center">
+                                <i class="fas fa-calendar mr-2 text-maroon"></i>
+                                <span>${new Date(quiz.created_at).toLocaleDateString()}</span>
+                            </div>
+                        </div>
+                        
+                        <div class="flex space-x-3">
+                            <button onclick="editQuiz('${quiz.id}')" class="flex-1 px-3 py-2 text-sm bg-maroon text-white rounded-lg hover:bg-maroon-dark transition-colors">
+                                <i class="fas fa-edit mr-1"></i>Edit
+                            </button>
+                            <button onclick="deleteQuiz('${quiz.id}')" class="flex-1 px-3 py-2 text-sm bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors">
+                                <i class="fas fa-trash mr-1"></i>Delete
+                            </button>
+                        </div>
+                    </div>
+                `).join('');
+            } catch (error) {
+                console.error('Error loading quizzes:', error);
+                showNotification('Failed to load quizzes', 'error');
+            }
+        }
+
+        function openAddQuizModal() {
+            document.getElementById('modalTitle').textContent = 'Add New Quiz';
+            document.getElementById('submitText').textContent = 'Save Quiz';
+            document.getElementById('submitIcon').className = 'fas fa-save mr-2';
+            document.getElementById('quizForm').reset();
+            document.getElementById('quizId').value = '';
+            document.getElementById('quizModal').classList.remove('hidden');
+        }
+
+        function closeQuizModal() {
+            document.getElementById('quizModal').classList.add('hidden');
+        }
+
+        async function editQuiz(quizId) {
+            try {
+                const { data: quiz, error } = await getSupabase().from('quizzes').select('*').eq('id', quizId).single();
+                
+                if (error) throw error;
+
+                document.getElementById('modalTitle').textContent = 'Edit Quiz';
+                document.getElementById('submitText').textContent = 'Update Quiz';
+                document.getElementById('submitIcon').className = 'fas fa-edit mr-2';
+                document.getElementById('quizId').value = quiz.id;
+                document.getElementById('quizTitle').value = quiz.title;
+                document.getElementById('quizDescription').value = quiz.description;
+                document.getElementById('quizGradeLevel').value = quiz.grade_level;
+                document.getElementById('quizStatus').value = quiz.status;
+                document.getElementById('quizTimeLimit').value = quiz.time_limit;
+                document.getElementById('quizPassingScore').value = quiz.passing_score;
+                document.getElementById('quizModal').classList.remove('hidden');
+            } catch (error) {
+                console.error('Error fetching quiz:', error);
+                showNotification('Failed to load quiz details', 'error');
+            }
+        }
+
+        async function deleteQuiz(quizId) {
+            if (!confirm('Are you sure you want to delete this quiz? This action cannot be undone.')) {
+                return;
+            }
+
+            try {
+                const { error } = await getSupabase().from('quizzes').delete().eq('id', quizId);
+                
+                if (error) throw error;
+
+                showNotification('Quiz deleted successfully', 'success');
+                loadAllQuizzes();
+            } catch (error) {
+                console.error('Error deleting quiz:', error);
+                showNotification('Failed to delete quiz', 'error');
+            }
+        }
+
+        async function handleQuizSubmit(event) {
+            event.preventDefault();
+            
+            const quizId = document.getElementById('quizId').value;
+            const title = document.getElementById('quizTitle').value;
+            const description = document.getElementById('quizDescription').value;
+            const gradeLevel = document.getElementById('quizGradeLevel').value;
+            const status = document.getElementById('quizStatus').value;
+            const timeLimit = document.getElementById('quizTimeLimit').value;
+            const passingScore = document.getElementById('quizPassingScore').value;
+
+            try {
+                if (quizId) {
+                    const updates = {
+                        title,
+                        description,
+                        grade_level: gradeLevel,
+                        status,
+                        time_limit: timeLimit,
+                        passing_score: passingScore,
+                        updated_at: new Date().toISOString()
+                    };
+
+                    const { error } = await getSupabase().from('quizzes').update(updates).eq('id', quizId);
+                    if (error) throw error;
+                    showNotification('Quiz updated successfully', 'success');
+                } else {
+                    const { error } = await getSupabase().from('quizzes').insert({
+                        title,
+                        description,
+                        grade_level: gradeLevel,
+                        status,
+                        time_limit: timeLimit,
+                        passing_score: passingScore,
+                        created_at: new Date().toISOString(),
+                        updated_at: new Date().toISOString()
+                    });
+                    if (error) throw error;
+                    showNotification('Quiz created successfully', 'success');
+                }
+
+                closeQuizModal();
+                loadAllQuizzes();
+            } catch (error) {
+                console.error('Error saving quiz:', error);
+                showNotification('Failed to save quiz', 'error');
+            }
+        }
+
+        document.getElementById('quizModal').addEventListener('click', function(event) {
+            if (event.target === this) {
+                closeQuizModal();
+            }
+        });
+
+        document.addEventListener('DOMContentLoaded', function() {
+            loadAllQuizzes();
+        });
+    </script>
+
+</body>
+</html>

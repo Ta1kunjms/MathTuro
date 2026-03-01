@@ -312,7 +312,7 @@
 
         function setupNavigation(role) {
             const navContainer = document.getElementById('navigationLinks');
-            const dashboardLink = role === 'admin' ? 'admin/dashboard.html' : role === 'teacher' ? '/teacher/dashboard.html' : '/student/dashboard.html';
+            const dashboardLink = role === 'admin' ? '/admin/dashboard.html' : role === 'teacher' ? '/teacher/dashboard.html' : '/student/dashboard.html';
             
             let navHTML = `
                 <p class="text-xs text-gray-400 uppercase tracking-wider px-4 mb-2">Main Menu</p>

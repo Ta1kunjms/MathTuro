@@ -338,6 +338,48 @@
         </div>
     </div>
 
+    <!-- Section Details Modal -->
+    <div id="sectionDetailsModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div class="bg-white rounded-2xl max-w-4xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+            <div class="p-6 border-b border-gray-100 flex items-center justify-between">
+                <h3 id="sectionDetailsTitle" class="text-xl font-bold text-gray-800">Section Details</h3>
+                <button onclick="closeSectionDetailsModal()" class="p-2 text-gray-500 hover:text-gray-700 rounded-lg hover:bg-gray-100">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                </button>
+            </div>
+            <div class="p-6 space-y-6">
+                <!-- Section Info -->
+                <div id="sectionInfo" class="space-y-4"></div>
+                
+                <!-- Teacher Info -->
+                <div id="teacherInfo" class="space-y-4"></div>
+                
+                <!-- Students List -->
+                <div class="space-y-4">
+                    <h4 class="text-lg font-semibold text-gray-800">Students</h4>
+                    <div id="studentsList" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Student Profile Modal -->
+    <div id="studentProfileModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div class="bg-white rounded-2xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+            <div class="p-6 border-b border-gray-100 flex items-center justify-between">
+                <h3 id="studentProfileTitle" class="text-xl font-bold text-gray-800">Student Profile</h3>
+                <button onclick="closeStudentProfileModal()" class="p-2 text-gray-500 hover:text-gray-700 rounded-lg hover:bg-gray-100">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                </button>
+            </div>
+            <div id="studentProfileContent" class="p-6 space-y-6"></div>
+        </div>
+    </div>
+
     <!-- Loading Overlay -->
     <div id="loadingOverlay" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
         <div class="bg-white rounded-2xl p-8 text-center">
@@ -347,6 +389,7 @@
     </div>
 
     <!-- Scripts -->
+    <script src="assets/js/sidebar.js"></script>
     <script src="../shared/js/config.js"></script>
     <script src="../shared/js/utils.js"></script>
     <script src="../shared/js/supabase.js"></script>
@@ -493,11 +536,14 @@
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
                                 </svg>
                             </button>
-                            <button onclick="confirmDelete('${section.id}')" class="p-2 text-red-600 hover:bg-red-50 rounded-lg" title="Delete">
-                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
-                                </svg>
-                            </button>
+                            <button onclick="viewSectionDetails('${section.id}')" class="p-2 text-green-600 hover:bg-green-50 rounded-lg" title="View Details">
+                                 View
+                             </button>
+                             <button onclick="confirmDelete('${section.id}')" class="p-2 text-red-600 hover:bg-red-50 rounded-lg" title="Delete">
+                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                                 </svg>
+                             </button>
                         </div>
                     </td>
                 </tr>
@@ -657,6 +703,236 @@
             document.getElementById('deleteModal').addEventListener('click', (e) => {
                 if (e.target === document.getElementById('deleteModal')) closeDeleteModal();
             });
+
+            document.getElementById('sectionDetailsModal').addEventListener('click', (e) => {
+                if (e.target === document.getElementById('sectionDetailsModal')) closeSectionDetailsModal();
+            });
+
+            document.getElementById('studentProfileModal').addEventListener('click', (e) => {
+                if (e.target === document.getElementById('studentProfileModal')) closeStudentProfileModal();
+            });
+        }
+
+        async function viewSectionDetails(sectionId) {
+            try {
+                // Get section details
+                const section = allSections.find(s => s.id === sectionId);
+                if (!section) {
+                    showToast('Section not found', 'error');
+                    return;
+                }
+
+                // Render section info
+                const sectionInfo = document.getElementById('sectionInfo');
+                sectionInfo.innerHTML = `
+                    <div class="bg-gray-50 rounded-xl p-6">
+                        <h4 class="text-lg font-semibold text-gray-800 mb-4">Section Information</h4>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <p class="text-sm text-gray-500">Section Name</p>
+                                <p class="font-medium">${escapeHtml(section.name)}</p>
+                            </div>
+                            <div>
+                                <p class="text-sm text-gray-500">Grade Level</p>
+                                <p class="font-medium">${section.grade_levels?.name || 'N/A'}</p>
+                            </div>
+                            <div>
+                                <p class="text-sm text-gray-500">Status</p>
+                                <p class="font-medium">${section.is_active ? 'Active' : 'Inactive'}</p>
+                            </div>
+                            <div>
+                                <p class="text-sm text-gray-500">Created At</p>
+                                <p class="font-medium">${formatDate(section.created_at)}</p>
+                            </div>
+                        </div>
+                        ${section.description ? `
+                            <div class="mt-4">
+                                <p class="text-sm text-gray-500">Description</p>
+                                <p class="font-medium">${escapeHtml(section.description)}</p>
+                            </div>
+                        ` : ''}
+                    </div>
+                `;
+
+                // Render teacher info
+                const teacherInfo = document.getElementById('teacherInfo');
+                if (section.teacher_id) {
+                    const teacher = allTeachers.find(t => t.id === section.teacher_id);
+                    if (teacher) {
+                        teacherInfo.innerHTML = `
+                            <div class="bg-blue-50 rounded-xl p-6">
+                                <h4 class="text-lg font-semibold text-blue-800 mb-4">Teacher</h4>
+                                <div class="flex items-center space-x-4">
+                                    <div class="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
+                                        <span class="text-blue-600 font-bold">${getInitials(teacher.full_name)}</span>
+                                    </div>
+                                    <div>
+                                        <p class="font-medium text-blue-800">${escapeHtml(teacher.full_name)}</p>
+                                        <p class="text-sm text-blue-600">${teacher.email}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    }
+                } else {
+                    teacherInfo.innerHTML = `
+                        <div class="bg-gray-50 rounded-xl p-6">
+                            <h4 class="text-lg font-semibold text-gray-800 mb-4">Teacher</h4>
+                            <p class="text-gray-500">No teacher assigned</p>
+                        </div>
+                    `;
+                }
+
+                // Load and render students
+                const studentsList = document.getElementById('studentsList');
+                studentsList.innerHTML = `
+                    <div class="col-span-full text-center py-8">
+                        <div class="inline-block animate-spin rounded-full h-8 w-8 border-4 border-blue-600 border-t-transparent mb-4"></div>
+                        <p class="text-gray-600">Loading students...</p>
+                    </div>
+                `;
+
+                try {
+                    const students = await getSectionStudents(sectionId);
+                    if (students.length > 0) {
+                        studentsList.innerHTML = students.map(student => `
+                            <div class="bg-white rounded-xl border border-gray-200 p-4 cursor-pointer hover:bg-gray-50 transition-colors" onclick="viewStudentProfile('${student.id}')">
+                                <div class="flex items-center space-x-3">
+                                    <div class="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center">
+                                        <span class="text-purple-600 font-bold">${getInitials(student.full_name)}</span>
+                                    </div>
+                                    <div class="flex-1">
+                                        <p class="font-medium text-gray-800">${escapeHtml(student.full_name)}</p>
+                                        <p class="text-sm text-gray-500">${student.email}</p>
+                                    </div>
+                                    <div class="text-gray-400">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                                        </svg>
+                                    </div>
+                                </div>
+                            </div>
+                        `).join('');
+                    } else {
+                        studentsList.innerHTML = `
+                            <div class="col-span-full text-center py-8">
+                                <svg class="w-12 h-12 mx-auto text-gray-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
+                                </svg>
+                                <p class="text-gray-500">No students in this section</p>
+                            </div>
+                        `;
+                    }
+                } catch (error) {
+                    console.error('Error loading students:', error);
+                    studentsList.innerHTML = `
+                        <div class="col-span-full text-center py-8 text-red-500">
+                            <p>Failed to load students</p>
+                        </div>
+                    `;
+                }
+
+                // Show the modal
+                document.getElementById('sectionDetailsModal').classList.remove('hidden');
+            } catch (error) {
+                console.error('Error loading section details:', error);
+                showToast('Failed to load section details', 'error');
+            }
+        }
+
+        async function viewStudentProfile(studentId) {
+            try {
+                const { data: student, error } = await getSupabase()
+                    .from('users')
+                    .select(`
+                        *,
+                        grade_levels (name),
+                        sections (name)
+                    `)
+                    .eq('id', studentId)
+                    .single();
+
+                if (error) throw error;
+
+                const studentProfileContent = document.getElementById('studentProfileContent');
+                studentProfileContent.innerHTML = `
+                    <div class="bg-gray-50 rounded-xl p-6">
+                        <h4 class="text-lg font-semibold text-gray-800 mb-4">Student Information</h4>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <p class="text-sm text-gray-500">Full Name</p>
+                                <p class="font-medium">${escapeHtml(student.full_name)}</p>
+                            </div>
+                            <div>
+                                <p class="text-sm text-gray-500">Email</p>
+                                <p class="font-medium">${student.email}</p>
+                            </div>
+                            <div>
+                                <p class="text-sm text-gray-500">Student ID</p>
+                                <p class="font-medium">${escapeHtml(student.student_id || 'N/A')}</p>
+                            </div>
+                            <div>
+                                <p class="text-sm text-gray-500">Status</p>
+                                <p class="font-medium">${student.is_active ? 'Active' : 'Inactive'}</p>
+                            </div>
+                            <div>
+                                <p class="text-sm text-gray-500">Grade Level</p>
+                                <p class="font-medium">${student.grade_levels?.name || 'N/A'}</p>
+                            </div>
+                            <div>
+                                <p class="text-sm text-gray-500">Section</p>
+                                <p class="font-medium">${student.sections?.name || 'N/A'}</p>
+                            </div>
+                        </div>
+                        ${student.bio ? `
+                            <div class="mt-4">
+                                <p class="text-sm text-gray-500">Bio</p>
+                                <p class="font-medium">${escapeHtml(student.bio)}</p>
+                            </div>
+                        ` : ''}
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="bg-green-50 rounded-xl p-6">
+                            <h5 class="font-semibold text-green-800 mb-2">Registration Date</h5>
+                            <p class="text-green-600">${formatDate(student.created_at)}</p>
+                        </div>
+                        <div class="bg-blue-50 rounded-xl p-6">
+                            <h5 class="font-semibold text-blue-800 mb-2">Last Login</h5>
+                            <p class="text-blue-600">${student.last_login ? formatDate(student.last_login) : 'Never'}</p>
+                        </div>
+                    </div>
+                `;
+
+                document.getElementById('studentProfileModal').classList.remove('hidden');
+            } catch (error) {
+                console.error('Error loading student profile:', error);
+                showToast('Failed to load student profile', 'error');
+            }
+        }
+
+        function closeSectionDetailsModal() {
+            document.getElementById('sectionDetailsModal').classList.add('hidden');
+        }
+
+        function closeStudentProfileModal() {
+            document.getElementById('studentProfileModal').classList.add('hidden');
+        }
+
+        async function getSectionStudents(sectionId) {
+            const { data: students, error } = await getSupabase()
+                .from('users')
+                .select('*')
+                .eq('role', 'student')
+                .eq('section_id', sectionId)
+                .order('full_name');
+
+            if (error) {
+                console.error('Error getting section students:', error);
+                return [];
+            }
+
+            return students || [];
         }
     </script>
 </body>

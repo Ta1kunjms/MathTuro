@@ -195,6 +195,24 @@
     <script>
         let currentUser = null;
 
+        function formatGradeLabel(gradeLevel) {
+            if (gradeLevel === null || gradeLevel === undefined) return 'N/A';
+            const gradeText = String(gradeLevel).trim();
+            if (!gradeText) return 'N/A';
+            return /^grade\s+/i.test(gradeText) ? gradeText : `Grade ${gradeText}`;
+        }
+
+        function resolveModuleGradeLabel(module, gradeLevelMap) {
+            const formatted = formatGradeLabel(module.grade_level);
+            if (formatted !== 'N/A') return formatted;
+
+            if (module.grade_level_id && gradeLevelMap[module.grade_level_id]) {
+                return gradeLevelMap[module.grade_level_id];
+            }
+
+            return 'N/A';
+        }
+
         // Module management functions
         async function loadAllModules() {
             try {
@@ -215,7 +233,9 @@
                 if (error) throw error;
 
                 const teacherIds = [...new Set((modules || []).map(module => module.teacher_id).filter(Boolean))];
+                const gradeLevelIds = [...new Set((modules || []).map(module => module.grade_level_id).filter(Boolean))];
                 const teacherMap = {};
+                const gradeLevelMap = {};
 
                 if (teacherIds.length > 0) {
                     const { data: teachers } = await getSupabase()
@@ -225,6 +245,17 @@
 
                     (teachers || []).forEach(teacher => {
                         teacherMap[teacher.id] = teacher;
+                    });
+                }
+
+                if (gradeLevelIds.length > 0) {
+                    const { data: gradeLevels } = await getSupabase()
+                        .from('grade_levels')
+                        .select('id, name')
+                        .in('id', gradeLevelIds);
+
+                    (gradeLevels || []).forEach(gradeLevel => {
+                        gradeLevelMap[gradeLevel.id] = gradeLevel.name;
                     });
                 }
 
@@ -256,7 +287,7 @@
                         <div class="space-y-2 text-sm text-gray-600 mb-6">
                             <div class="flex items-center">
                                 <i class="fas fa-graduation-cap mr-2 text-maroon"></i>
-                                <span>Grade ${module.grade_level}</span>
+                                <span>${resolveModuleGradeLabel(module, gradeLevelMap)}</span>
                             </div>
                             <div class="flex items-center">
                                 <i class="fas fa-user mr-2 text-maroon"></i>

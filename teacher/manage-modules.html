@@ -309,6 +309,22 @@
                 </div>
 
                 <!-- Status -->
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Grade Level</label>
+                        <select id="moduleGradeLevel" class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-brand focus:border-transparent">
+                            <option value="">All Grade Levels</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Section</label>
+                        <select id="moduleSection" class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-brand focus:border-transparent">
+                            <option value="">All Sections</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Status -->
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-2">Status</label>
                     <select id="moduleStatus" class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-brand focus:border-transparent">
@@ -360,11 +376,15 @@
         let selectedPdf = null;
         let selectedImages = [];
         let currentModuleId = null;
+        let gradeLevels = [];
+        let sections = [];
+        const unsupportedModuleColumns = new Set(JSON.parse(localStorage.getItem('unsupported_modules_columns') || '[]'));
 
         // Initialize
         document.addEventListener('DOMContentLoaded', async function() {
             try {
                 await checkAuth();
+                await loadGradeSectionOptions();
                 await loadModules();
                 setupEventListeners();
                 setupMobileMenu();
@@ -423,6 +443,204 @@
             window.location.href = '../public/login.html';
         }
 
+        function normalizeGradeValue(value) {
+            if (value === null || value === undefined || value === '') return null;
+            const str = String(value).trim().toLowerCase();
+            return str.startsWith('grade') ? str.replace(/^grade\s*/, '') : str;
+        }
+
+        function resolveGradeLevelId(record) {
+            if (record?.grade_level_id) return String(record.grade_level_id);
+            const normalized = normalizeGradeValue(record?.grade_level);
+            if (!normalized) return '';
+            const matched = gradeLevels.find(g => normalizeGradeValue(g.name) === normalized);
+            return matched ? String(matched.id) : '';
+        }
+
+        function getGradeLevelNameById(gradeLevelId) {
+            if (!gradeLevelId) return null;
+            const found = gradeLevels.find(g => String(g.id) === String(gradeLevelId));
+            return found?.name || null;
+        }
+
+        function getSectionNameById(sectionId) {
+            if (!sectionId) return null;
+            const found = sections.find(s => String(s.id) === String(sectionId));
+            return found?.name || null;
+        }
+
+        function getModuleScopeLabels(module) {
+            const gradeLevelId = resolveGradeLevelId(module);
+            const gradeLabel = getGradeLevelNameById(gradeLevelId) || module.grade_level || 'All Grade Levels';
+            const sectionLabel = module.section_id
+                ? (getSectionNameById(module.section_id) || 'Specific Section')
+                : 'All Sections';
+
+            return { gradeLabel, sectionLabel };
+        }
+
+        function getMissingColumnName(error) {
+            const message = `${error?.message || ''} ${error?.details || ''} ${error?.hint || ''}`;
+            const patterns = [
+                /Could not find the '([^']+)' column/i,
+                /column '([^']+)'/i,
+                /'([^']+)' column/i
+            ];
+
+            for (const pattern of patterns) {
+                const match = message.match(pattern);
+                if (match?.[1]) return match[1];
+            }
+
+            return null;
+        }
+
+        function rememberUnsupportedModuleColumn(columnName) {
+            if (!columnName) return;
+            unsupportedModuleColumns.add(columnName);
+            localStorage.setItem('unsupported_modules_columns', JSON.stringify(Array.from(unsupportedModuleColumns)));
+        }
+
+        function stripUnsupportedModuleColumns(payload) {
+            const sanitized = { ...payload };
+            unsupportedModuleColumns.forEach(column => {
+                if (column in sanitized) delete sanitized[column];
+            });
+            return sanitized;
+        }
+
+        async function insertModuleWithFallback(payload) {
+            const workingPayload = stripUnsupportedModuleColumns(payload);
+            let lastError = null;
+
+            for (let attempt = 0; attempt < 4; attempt++) {
+                const result = await getSupabase()
+                    .from('modules')
+                    .insert(workingPayload)
+                    .select()
+                    .single();
+
+                if (!result.error) return result;
+
+                const missingColumn = getMissingColumnName(result.error);
+                if (!missingColumn || !(missingColumn in workingPayload)) {
+                    lastError = result.error;
+                    break;
+                }
+
+                rememberUnsupportedModuleColumn(missingColumn);
+                delete workingPayload[missingColumn];
+                lastError = result.error;
+            }
+
+            throw lastError || new Error('Failed to create module');
+        }
+
+        async function updateModuleWithFallback(moduleId, payload) {
+            const workingPayload = stripUnsupportedModuleColumns(payload);
+            let lastError = null;
+
+            for (let attempt = 0; attempt < 4; attempt++) {
+                let updateQuery = getSupabase()
+                    .from('modules')
+                    .update(workingPayload)
+                    .eq('id', moduleId);
+
+                if (currentUser?.role === 'teacher') {
+                    updateQuery = updateQuery.eq('teacher_id', currentUser.id);
+                }
+
+                const result = await updateQuery;
+                if (!result.error) return result;
+
+                const missingColumn = getMissingColumnName(result.error);
+                if (!missingColumn || !(missingColumn in workingPayload)) {
+                    lastError = result.error;
+                    break;
+                }
+
+                rememberUnsupportedModuleColumn(missingColumn);
+                delete workingPayload[missingColumn];
+                lastError = result.error;
+            }
+
+            throw lastError || new Error('Failed to update module');
+        }
+
+        async function loadGradeSectionOptions() {
+            try {
+                const { data: gradeData, error: gradeError } = await getSupabase()
+                    .from('grade_levels')
+                    .select('id, name')
+                    .eq('is_active', true)
+                    .order('name', { ascending: true });
+
+                if (gradeError) throw gradeError;
+                gradeLevels = gradeData || [];
+
+                const { data: sectionData, error: sectionError } = await getSupabase()
+                    .from('sections')
+                    .select('id, name, grade_level_id')
+                    .eq('is_active', true)
+                    .order('name', { ascending: true });
+
+                if (sectionError) throw sectionError;
+                sections = sectionData || [];
+
+                populateModuleGradeLevelOptions();
+                populateModuleSectionOptions('', '');
+            } catch (error) {
+                console.error('Error loading grade/section options:', error);
+                showToast('Failed to load grade levels and sections', 'error');
+            }
+        }
+
+        function populateModuleGradeLevelOptions(selectedValue = '') {
+            const gradeSelect = document.getElementById('moduleGradeLevel');
+            gradeSelect.innerHTML = '<option value="">All Grade Levels</option>' +
+                gradeLevels.map(g => `<option value="${g.id}">${g.name}</option>`).join('');
+            gradeSelect.value = selectedValue || '';
+        }
+
+        function populateModuleSectionOptions(gradeLevelId = '', selectedSectionId = '') {
+            const sectionSelect = document.getElementById('moduleSection');
+            const filteredSections = gradeLevelId
+                ? sections.filter(s => String(s.grade_level_id) === String(gradeLevelId))
+                : sections;
+
+            sectionSelect.innerHTML = '<option value="">All Sections</option>' +
+                filteredSections.map(s => `<option value="${s.id}">${s.name}</option>`).join('');
+
+            if (selectedSectionId && filteredSections.some(s => String(s.id) === String(selectedSectionId))) {
+                sectionSelect.value = selectedSectionId;
+            } else {
+                sectionSelect.value = '';
+            }
+        }
+
+        function populateDetailModuleSectionOptions(gradeLevelId = '', selectedSectionId = '') {
+            const sectionSelect = document.getElementById('detailModuleSection');
+            if (!sectionSelect) return;
+
+            const filteredSections = gradeLevelId
+                ? sections.filter(s => String(s.grade_level_id) === String(gradeLevelId))
+                : sections;
+
+            sectionSelect.innerHTML = '<option value="">All Sections</option>' +
+                filteredSections.map(s => `<option value="${s.id}">${s.name}</option>`).join('');
+
+            if (selectedSectionId && filteredSections.some(s => String(s.id) === String(selectedSectionId))) {
+                sectionSelect.value = selectedSectionId;
+            } else {
+                sectionSelect.value = '';
+            }
+        }
+
+        function handleDetailModuleGradeChange() {
+            const gradeSelect = document.getElementById('detailModuleGradeLevel');
+            populateDetailModuleSectionOptions(gradeSelect?.value || '', '');
+        }
+
         function showStudentsPage() {
             showToast('Student progress page coming soon!', 'info');
         }
@@ -471,6 +689,9 @@
 
             // Create module form
             document.getElementById('createModuleForm').addEventListener('submit', handleCreateModule);
+            document.getElementById('moduleGradeLevel').addEventListener('change', function() {
+                populateModuleSectionOptions(this.value, '');
+            });
         }
 
         // Load modules
@@ -512,6 +733,9 @@
 
             emptyState.classList.add('hidden');
             grid.innerHTML = modules.map(module => `
+                ${(() => {
+                    const scope = getModuleScopeLabels(module);
+                    return `
                 <div class="module-card bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden transition-all cursor-pointer" onclick="openModuleDetail('${module.id}')">
                     <div class="h-32 bg-gradient-to-br from-brand to-brand-light flex items-center justify-center">
                         ${module.content_type === 'pdf' ? `
@@ -525,7 +749,15 @@
                             <h3 class="font-bold text-gray-800 line-clamp-2">${module.title}</h3>
                             <span class="px-2 py-1 text-xs rounded-full ${module.status === 'published' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'}">${module.status}</span>
                         </div>
-                        <p class="text-sm text-gray-600 line-clamp-2 mb-4">${module.description || 'No description'}</p>
+                        <p class="text-sm text-gray-600 line-clamp-2 mb-3">${module.description || 'No description'}</p>
+                        <div class="flex flex-wrap gap-2 mb-4">
+                            <span class="px-2 py-1 text-xs rounded-full bg-blue-50 text-blue-700 border border-blue-100">
+                                <i class="fas fa-layer-group mr-1"></i>${scope.gradeLabel}
+                            </span>
+                            <span class="px-2 py-1 text-xs rounded-full bg-purple-50 text-purple-700 border border-purple-100">
+                                <i class="fas fa-users mr-1"></i>${scope.sectionLabel}
+                            </span>
+                        </div>
                         <div class="flex items-center space-x-4 text-sm text-gray-500">
                             <span class="flex items-center space-x-1">
                                 <i class="fas fa-file text-xs"></i>
@@ -538,6 +770,8 @@
                         </div>
                     </div>
                 </div>
+            `;
+                })()}
             `).join('');
         }
 
@@ -607,6 +841,8 @@
 
             try {
                 const contentType = document.querySelector('input[name="contentType"]:checked').value;
+                const selectedGradeLevelId = document.getElementById('moduleGradeLevel').value || null;
+                const selectedSectionId = document.getElementById('moduleSection').value || null;
                 let pdfUrl = null;
                 let imageUrls = [];
 
@@ -623,19 +859,18 @@
                 }
 
                 // Create module
-                const { data, error } = await getSupabase()
-                    .from('modules')
-                    .insert({
-                        title: document.getElementById('moduleTitle').value,
-                        description: document.getElementById('moduleDescription').value,
-                        content_type: contentType,
-                        pdf_url: pdfUrl,
-                        image_urls: imageUrls.length > 0 ? imageUrls : null,
-                        status: document.getElementById('moduleStatus').value,
-                        teacher_id: currentUser.id
-                    })
-                    .select()
-                    .single();
+                const { data, error } = await insertModuleWithFallback({
+                    title: document.getElementById('moduleTitle').value,
+                    description: document.getElementById('moduleDescription').value,
+                    content_type: contentType,
+                    pdf_url: pdfUrl,
+                    image_urls: imageUrls.length > 0 ? imageUrls : null,
+                    grade_level: getGradeLevelNameById(selectedGradeLevelId),
+                    grade_level_id: selectedGradeLevelId,
+                    section_id: selectedSectionId,
+                    status: document.getElementById('moduleStatus').value,
+                    teacher_id: currentUser.id
+                });
 
                 if (error) throw error;
 
@@ -665,6 +900,15 @@
             currentModuleId = moduleId;
             const module = modules.find(m => m.id === moduleId);
             if (!module) return;
+
+            const selectedGradeLevelId = resolveGradeLevelId(module);
+            const filteredSections = selectedGradeLevelId
+                ? sections.filter(s => String(s.grade_level_id) === String(selectedGradeLevelId))
+                : sections;
+            const gradeOptions = '<option value="">All Grade Levels</option>' +
+                gradeLevels.map(g => `<option value="${g.id}" ${String(g.id) === String(selectedGradeLevelId) ? 'selected' : ''}>${g.name}</option>`).join('');
+            const sectionOptions = '<option value="">All Sections</option>' +
+                filteredSections.map(s => `<option value="${s.id}" ${String(s.id) === String(module.section_id || '') ? 'selected' : ''}>${s.name}</option>`).join('');
 
             document.getElementById('detailModuleTitle').textContent = module.title;
             
@@ -712,6 +956,27 @@
                         ` : '<p class="text-gray-500">No content uploaded</p>'}
                     </div>
 
+                    <div class="border-t pt-6">
+                        <h4 class="font-semibold text-gray-800 mb-4">Access Scope</h4>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Grade Level</label>
+                                <select id="detailModuleGradeLevel" onchange="handleDetailModuleGradeChange()" class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-brand focus:border-transparent">
+                                    ${gradeOptions}
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Section</label>
+                                <select id="detailModuleSection" class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-brand focus:border-transparent">
+                                    ${sectionOptions}
+                                </select>
+                            </div>
+                        </div>
+                        <div class="mt-4 flex justify-end">
+                            <button onclick="saveModuleAccess('${module.id}')" class="px-4 py-2 bg-brand text-white rounded-lg text-sm hover:bg-brand-dark transition-colors">Save Access Scope</button>
+                        </div>
+                    </div>
+
                     <!-- Quick Links to Videos & Quizzes -->
                     <div class="border-t pt-6">
                         <h4 class="font-semibold text-gray-800 mb-4">Related Content</h4>
@@ -742,10 +1007,33 @@
             document.getElementById('moduleDetailModal').classList.remove('hidden');
         }
 
+        async function saveModuleAccess(moduleId) {
+            const gradeLevelId = document.getElementById('detailModuleGradeLevel')?.value || null;
+            const sectionId = document.getElementById('detailModuleSection')?.value || null;
+
+            try {
+                const { error } = await updateModuleWithFallback(moduleId, {
+                    grade_level: getGradeLevelNameById(gradeLevelId),
+                    grade_level_id: gradeLevelId,
+                    section_id: sectionId
+                });
+                if (error) throw error;
+
+                showToast('Module access scope updated', 'success');
+                await loadModules();
+                await openModuleDetail(moduleId);
+            } catch (error) {
+                console.error('Error updating module access scope:', error);
+                showToast('Failed to update module access scope', 'error');
+            }
+        }
+
         // Modal functions
         function openCreateModuleModal() {
             document.getElementById('createModuleModal').classList.remove('hidden');
             document.getElementById('createModuleForm').reset();
+            populateModuleGradeLevelOptions('');
+            populateModuleSectionOptions('', '');
             selectedPdf = null;
             selectedImages = [];
             removePdf();

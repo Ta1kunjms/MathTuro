@@ -795,6 +795,13 @@
                 try {
                     const students = await getSectionStudents(sectionId);
                     if (students.length > 0) {
+                        // Sort students alphabetically by full_name (case-insensitive)
+                        students.sort((a, b) => {
+                            const nameA = (a.full_name || '').toLowerCase();
+                            const nameB = (b.full_name || '').toLowerCase();
+                            // Use localeCompare with numeric option for natural sorting
+                            return nameA.localeCompare(nameB, undefined, { numeric: true, sensitivity: 'base' });
+                        });
                         studentsList.innerHTML = students.map(student => `
                             <div class="bg-white rounded-xl border border-gray-200 p-4 cursor-pointer hover:bg-gray-50 transition-colors" onclick="viewStudentProfile('${student.id}')">
                                 <div class="flex items-center space-x-3">

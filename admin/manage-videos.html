@@ -185,6 +185,13 @@
     <script>
         let currentUser = null;
 
+        function formatGradeLabel(gradeLevel) {
+            if (gradeLevel === null || gradeLevel === undefined) return 'N/A';
+            const gradeText = String(gradeLevel).trim();
+            if (!gradeText) return 'N/A';
+            return /^grade\s+/i.test(gradeText) ? gradeText : `Grade ${gradeText}`;
+        }
+
         // Video management functions
         async function loadAllVideos() {
             try {
@@ -245,7 +252,7 @@
                         <div class="space-y-2 text-sm text-gray-600 mb-6">
                             <div class="flex items-center">
                                 <i class="fas fa-graduation-cap mr-2 text-maroon"></i>
-                                <span>Grade ${video.grade_level}</span>
+                                <span>${formatGradeLabel(video.grade_level)}</span>
                             </div>
                             <div class="flex items-center">
                                 <i class="fas fa-user mr-2 text-maroon"></i>

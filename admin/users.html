@@ -832,6 +832,42 @@
             }
         }
 
+        async function syncTeacherSectionAssignment(userId, role, sectionId) {
+            const supabase = getSupabase();
+
+            if (role === 'teacher') {
+                let clearQuery = supabase
+                    .from('sections')
+                    .update({ teacher_id: null })
+                    .eq('teacher_id', userId);
+
+                if (sectionId) {
+                    clearQuery = clearQuery.neq('id', sectionId);
+                }
+
+                const { error: clearError } = await clearQuery;
+                if (clearError) throw clearError;
+
+                if (sectionId) {
+                    const { error: setError } = await supabase
+                        .from('sections')
+                        .update({ teacher_id: userId })
+                        .eq('id', sectionId);
+
+                    if (setError) throw setError;
+                }
+
+                return;
+            }
+
+            const { error } = await supabase
+                .from('sections')
+                .update({ teacher_id: null })
+                .eq('teacher_id', userId);
+
+            if (error) throw error;
+        }
+
         document.getElementById('userForm').addEventListener('submit', async function(e) {
             e.preventDefault();
 
@@ -861,6 +897,7 @@
                         .eq('id', userId);
 
                     if (error) throw error;
+                    await syncTeacherSectionAssignment(userId, role, sectionId || null);
                     showToast('User updated successfully', 'success');
                 } else {
                     if (!password || password.length < 6) {
@@ -895,6 +932,7 @@
                         .insert(userData);
 
                     if (userError) throw userError;
+                    await syncTeacherSectionAssignment(authData.user.id, role, sectionId || null);
                     showToast('User created successfully', 'success');
                 }
 

@@ -293,16 +293,24 @@
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">Grade Level</label>
                         <select id="quizGradeLevel" class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-brand">
-                            <option value="">All Levels</option>
-                            <option value="grade-7">Grade 7</option>
-                            <option value="grade-8">Grade 8</option>
-                            <option value="grade-9">Grade 9</option>
-                            <option value="grade-10">Grade 10</option>
-                            <option value="grade-11">Grade 11</option>
-                            <option value="grade-12">Grade 12</option>
-                            <option value="college">College</option>
+                            <option value="">All Grade Levels</option>
                         </select>
                     </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Section</label>
+                        <select id="quizSection" class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-brand">
+                            <option value="">All Sections</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div id="quizScopePreview" class="flex flex-wrap gap-2">
+                    <span class="px-2 py-1 text-xs rounded-full bg-blue-50 text-blue-700 border border-blue-100">
+                        <i class="fas fa-layer-group mr-1"></i>All Grade Levels
+                    </span>
+                    <span class="px-2 py-1 text-xs rounded-full bg-purple-50 text-purple-700 border border-purple-100">
+                        <i class="fas fa-users mr-1"></i>All Sections
+                    </span>
                 </div>
 
                 <div class="grid grid-cols-3 gap-4">
@@ -372,14 +380,199 @@
         let quizzes = [];
         let videos = [];
         let editingQuizId = null;
+        let gradeLevels = [];
+        let sections = [];
+        const unsupportedQuizColumns = new Set(JSON.parse(localStorage.getItem('unsupported_quizzes_columns') || '[]'));
 
         // Initialize
         document.addEventListener('DOMContentLoaded', async () => {
             await checkAuth();
+            await loadGradeSectionOptions();
             await loadData();
             setupEventListeners();
             setupMobileMenu();
         });
+
+        function normalizeGradeValue(value) {
+            if (value === null || value === undefined || value === '') return null;
+            const str = String(value).trim().toLowerCase();
+            return str.startsWith('grade') ? str.replace(/^grade\s*/, '') : str;
+        }
+
+        function resolveGradeLevelId(record) {
+            if (record?.grade_level_id) return String(record.grade_level_id);
+            const normalized = normalizeGradeValue(record?.grade_level);
+            if (!normalized) return '';
+            const matched = gradeLevels.find(g => normalizeGradeValue(g.name) === normalized);
+            return matched ? String(matched.id) : '';
+        }
+
+        function getGradeLevelNameById(gradeLevelId) {
+            if (!gradeLevelId) return null;
+            const found = gradeLevels.find(g => String(g.id) === String(gradeLevelId));
+            return found?.name || null;
+        }
+
+        function getSectionNameById(sectionId) {
+            if (!sectionId) return null;
+            const found = sections.find(s => String(s.id) === String(sectionId));
+            return found?.name || null;
+        }
+
+        function getQuizScopeLabels(quiz) {
+            const gradeLevelId = resolveGradeLevelId(quiz);
+            const gradeLabel = getGradeLevelNameById(gradeLevelId) || quiz.grade_level || 'All Grade Levels';
+            const sectionLabel = quiz.section_id
+                ? (getSectionNameById(quiz.section_id) || 'Specific Section')
+                : 'All Sections';
+
+            return { gradeLabel, sectionLabel };
+        }
+
+        function getMissingColumnName(error) {
+            const message = `${error?.message || ''} ${error?.details || ''} ${error?.hint || ''}`;
+            const patterns = [
+                /Could not find the '([^']+)' column/i,
+                /column '([^']+)'/i,
+                /'([^']+)' column/i
+            ];
+
+            for (const pattern of patterns) {
+                const match = message.match(pattern);
+                if (match?.[1]) return match[1];
+            }
+
+            return null;
+        }
+
+        function rememberUnsupportedQuizColumn(columnName) {
+            if (!columnName) return;
+            unsupportedQuizColumns.add(columnName);
+            localStorage.setItem('unsupported_quizzes_columns', JSON.stringify(Array.from(unsupportedQuizColumns)));
+        }
+
+        function stripUnsupportedQuizColumns(payload) {
+            const sanitized = { ...payload };
+            unsupportedQuizColumns.forEach(column => {
+                if (column in sanitized) delete sanitized[column];
+            });
+            return sanitized;
+        }
+
+        async function saveQuizWithFallback(quizPayload, quizId = null) {
+            const workingPayload = stripUnsupportedQuizColumns(quizPayload);
+            let lastError = null;
+
+            for (let attempt = 0; attempt < 4; attempt++) {
+                let result;
+
+                if (quizId) {
+                    let updateQuery = getSupabase()
+                        .from('quizzes')
+                        .update(workingPayload)
+                        .eq('id', quizId);
+
+                    if (currentUser.role === 'teacher') {
+                        updateQuery = updateQuery.eq('teacher_id', currentUser.id);
+                    }
+
+                    result = await updateQuery;
+                } else {
+                    result = await getSupabase()
+                        .from('quizzes')
+                        .insert(workingPayload);
+                }
+
+                if (!result.error) return result;
+
+                const missingColumn = getMissingColumnName(result.error);
+                if (!missingColumn || !(missingColumn in workingPayload)) {
+                    lastError = result.error;
+                    break;
+                }
+
+                rememberUnsupportedQuizColumn(missingColumn);
+                delete workingPayload[missingColumn];
+                lastError = result.error;
+            }
+
+            throw lastError || new Error('Failed to save quiz');
+        }
+
+        function updateQuizScopePreview(gradeLevelId = '', sectionId = '') {
+            const preview = document.getElementById('quizScopePreview');
+            if (!preview) return;
+
+            const gradeLabel = getGradeLevelNameById(gradeLevelId) || 'All Grade Levels';
+            const sectionLabel = sectionId
+                ? (getSectionNameById(sectionId) || 'Specific Section')
+                : 'All Sections';
+
+            preview.innerHTML = `
+                <span class="px-2 py-1 text-xs rounded-full bg-blue-50 text-blue-700 border border-blue-100">
+                    <i class="fas fa-layer-group mr-1"></i>${gradeLabel}
+                </span>
+                <span class="px-2 py-1 text-xs rounded-full bg-purple-50 text-purple-700 border border-purple-100">
+                    <i class="fas fa-users mr-1"></i>${sectionLabel}
+                </span>
+            `;
+        }
+
+        async function loadGradeSectionOptions() {
+            try {
+                const { data: gradeData, error: gradeError } = await getSupabase()
+                    .from('grade_levels')
+                    .select('id, name')
+                    .eq('is_active', true)
+                    .order('name', { ascending: true });
+
+                if (gradeError) throw gradeError;
+                gradeLevels = gradeData || [];
+
+                const { data: sectionData, error: sectionError } = await getSupabase()
+                    .from('sections')
+                    .select('id, name, grade_level_id')
+                    .eq('is_active', true)
+                    .order('name', { ascending: true });
+
+                if (sectionError) throw sectionError;
+                sections = sectionData || [];
+
+                populateQuizGradeLevelOptions();
+                populateQuizSectionOptions('', '');
+            } catch (error) {
+                console.error('Error loading grade/section options:', error);
+                showToast('Failed to load grade levels and sections', 'error');
+            }
+        }
+
+        function populateQuizGradeLevelOptions(selectedValue = '') {
+            const gradeSelect = document.getElementById('quizGradeLevel');
+            gradeSelect.innerHTML = '<option value="">All Grade Levels</option>' +
+                gradeLevels.map(g => `<option value="${g.id}">${g.name}</option>`).join('');
+
+            if (selectedValue) {
+                gradeSelect.value = selectedValue;
+            }
+        }
+
+        function populateQuizSectionOptions(gradeLevelId = '', selectedSectionId = '') {
+            const sectionSelect = document.getElementById('quizSection');
+            const filteredSections = gradeLevelId
+                ? sections.filter(s => String(s.grade_level_id) === String(gradeLevelId))
+                : sections;
+
+            sectionSelect.innerHTML = '<option value="">All Sections</option>' +
+                filteredSections.map(s => `<option value="${s.id}">${s.name}</option>`).join('');
+
+            if (selectedSectionId && filteredSections.some(s => String(s.id) === String(selectedSectionId))) {
+                sectionSelect.value = selectedSectionId;
+            } else {
+                sectionSelect.value = '';
+            }
+
+            updateQuizScopePreview(gradeLevelId, sectionSelect.value);
+        }
 
         // Setup mobile menu
         function setupMobileMenu() {
@@ -538,6 +731,9 @@
 
             emptyState.classList.add('hidden');
             grid.innerHTML = filtered.map(quiz => `
+                ${(() => {
+                    const scope = getQuizScopeLabels(quiz);
+                    return `
                 <div class="quiz-card bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden transition-all duration-200">
                     <div class="p-5">
                         <div class="flex items-start justify-between mb-3">
@@ -550,6 +746,14 @@
                         </div>
                         <h3 class="font-semibold text-gray-900 mb-1 line-clamp-2">${quiz.title}</h3>
                         <p class="text-sm text-gray-500 mb-3 line-clamp-2">${quiz.description || 'No description'}</p>
+                        <div class="flex flex-wrap gap-2 mb-4">
+                            <span class="px-2 py-1 text-xs rounded-full bg-blue-50 text-blue-700 border border-blue-100">
+                                <i class="fas fa-layer-group mr-1"></i>${scope.gradeLabel}
+                            </span>
+                            <span class="px-2 py-1 text-xs rounded-full bg-purple-50 text-purple-700 border border-purple-100">
+                                <i class="fas fa-users mr-1"></i>${scope.sectionLabel}
+                            </span>
+                        </div>
                         
                         <div class="grid grid-cols-3 gap-2 text-xs text-gray-500 mb-4">
                             <div class="bg-gray-50 rounded-lg p-2 text-center">
@@ -587,6 +791,8 @@
                         </div>
                     </div>
                 </div>
+            `;
+                })()}
             `).join('');
         }
 
@@ -598,12 +804,21 @@
             document.getElementById('searchInput').addEventListener('input', renderQuizzes);
             document.getElementById('categoryFilter').addEventListener('change', renderQuizzes);
             document.getElementById('statusFilter').addEventListener('change', renderQuizzes);
+            document.getElementById('quizGradeLevel').addEventListener('change', function() {
+                populateQuizSectionOptions(this.value, '');
+            });
+            document.getElementById('quizSection').addEventListener('change', function() {
+                updateQuizScopePreview(document.getElementById('quizGradeLevel').value, this.value);
+            });
         }
 
         function openAddQuizModal() {
             editingQuizId = null;
             document.getElementById('modalTitle').textContent = 'Add Quiz';
             document.getElementById('quizForm').reset();
+            populateQuizGradeLevelOptions('');
+            populateQuizSectionOptions('', '');
+            updateQuizScopePreview('', '');
             document.getElementById('quizModal').classList.remove('hidden');
         }
 
@@ -624,7 +839,10 @@
             document.getElementById('quizUrl').value = quiz.quiz_url;
             document.getElementById('quizVideoId').value = quiz.video_id || '';
             document.getElementById('quizCategory').value = quiz.category || '';
-            document.getElementById('quizGradeLevel').value = quiz.grade_level || '';
+            const selectedGradeLevelId = resolveGradeLevelId(quiz);
+            populateQuizGradeLevelOptions(selectedGradeLevelId);
+            populateQuizSectionOptions(selectedGradeLevelId, quiz.section_id || '');
+            updateQuizScopePreview(selectedGradeLevelId, quiz.section_id || '');
             document.getElementById('quizTotalItems').value = quiz.total_items;
             document.getElementById('quizPassingScore').value = quiz.passing_score || '';
             document.getElementById('quizTimeLimit').value = quiz.time_limit_minutes || '';
@@ -641,13 +859,17 @@
 
             try {
                 const now = new Date().toISOString();
+                const selectedGradeLevelId = document.getElementById('quizGradeLevel').value || null;
+                const selectedSectionId = document.getElementById('quizSection').value || null;
                 const quizData = {
                     title: document.getElementById('quizTitle').value,
                     description: document.getElementById('quizDescription').value,
                     quiz_url: document.getElementById('quizUrl').value,
                     video_id: document.getElementById('quizVideoId').value || null,
                     category: document.getElementById('quizCategory').value,
-                    grade_level: document.getElementById('quizGradeLevel').value || null,
+                    grade_level: getGradeLevelNameById(selectedGradeLevelId),
+                    grade_level_id: selectedGradeLevelId,
+                    section_id: selectedSectionId,
                     total_items: parseInt(document.getElementById('quizTotalItems').value),
                     passing_score: parseInt(document.getElementById('quizPassingScore').value) || 0,
                     time_limit_minutes: parseInt(document.getElementById('quizTimeLimit').value) || 0,
@@ -658,21 +880,10 @@
 
                 let result;
                 if (editingQuizId) {
-                    let updateQuery = getSupabase()
-                        .from('quizzes')
-                        .update(quizData)
-                        .eq('id', editingQuizId);
-
-                    if (currentUser.role === 'teacher') {
-                        updateQuery = updateQuery.eq('teacher_id', currentUser.id);
-                    }
-
-                    result = await updateQuery;
+                    result = await saveQuizWithFallback(quizData, editingQuizId);
                 } else {
                     quizData.created_at = now;
-                    result = await getSupabase()
-                        .from('quizzes')
-                        .insert(quizData);
+                    result = await saveQuizWithFallback(quizData);
                 }
 
                 if (result.error) throw result.error;

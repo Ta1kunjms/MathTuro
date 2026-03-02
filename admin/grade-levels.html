@@ -631,6 +631,48 @@
                 if (sectionsError) throw sectionsError;
 
                 allSections = sectionsData || [];
+                const teachersById = new Map((allTeachers || []).map(teacher => [teacher.id, teacher]));
+                const teacherIds = [...new Set(allSections.map(section => section.teacher_id).filter(Boolean))];
+                const missingTeacherIds = teacherIds.filter(id => !teachersById.has(id));
+                const sectionIdsWithoutTeacher = allSections.filter(section => !section.teacher_id).map(section => section.id);
+                const teachersBySectionId = new Map();
+
+                if (missingTeacherIds.length > 0) {
+                    const { data: fallbackTeachers, error: fallbackTeachersError } = await getSupabase()
+                        .from('users')
+                        .select('id, full_name, email')
+                        .in('id', missingTeacherIds);
+
+                    if (!fallbackTeachersError) {
+                        (fallbackTeachers || []).forEach(teacher => {
+                            teachersById.set(teacher.id, teacher);
+                        });
+                    }
+                }
+
+                if (sectionIdsWithoutTeacher.length > 0) {
+                    const { data: sectionTeachers, error: sectionTeachersError } = await getSupabase()
+                        .from('users')
+                        .select('id, full_name, email, section_id')
+                        .eq('role', 'teacher')
+                        .in('section_id', sectionIdsWithoutTeacher);
+
+                    if (!sectionTeachersError) {
+                        (sectionTeachers || []).forEach(teacher => {
+                            if (teacher.section_id && !teachersBySectionId.has(teacher.section_id)) {
+                                teachersBySectionId.set(teacher.section_id, teacher);
+                            }
+                            teachersById.set(teacher.id, teacher);
+                        });
+                    }
+                }
+
+                allSections = allSections.map(section => ({
+                    ...section,
+                    teacher: section.teacher_id
+                        ? (teachersById.get(section.teacher_id) || null)
+                        : (teachersBySectionId.get(section.id) || null)
+                }));
                 const sectionIds = allSections.map(section => section.id);
                 sectionStudentCountMap = new Map();
 
@@ -688,7 +730,7 @@
             }
 
             tbody.innerHTML = allSections.map(section => {
-                const teacher = section.teacher_id ? teacherMap.get(section.teacher_id) : null;
+                const teacher = section.teacher || (section.teacher_id ? teacherMap.get(section.teacher_id) : null);
                 const studentCount = sectionStudentCountMap.get(section.id) || 0;
                 const isExpanded = selectedSectionId === section.id && detailsVisible;
 
@@ -885,7 +927,7 @@
 
             try {
                 const students = await getStudentsBySection(sectionId);
-                const teacher = section.teacher_id ? (allTeachers.find(item => item.id === section.teacher_id) || null) : null;
+                const teacher = section.teacher || (section.teacher_id ? (allTeachers.find(item => item.id === section.teacher_id) || null) : null);
                 const grade = allGradeLevels.find(item => item.id === section.grade_level_id);
 
                 document.getElementById('sectionDetailsTitle').textContent = `Section: ${section.name}`;

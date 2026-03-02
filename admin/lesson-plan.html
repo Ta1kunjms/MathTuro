@@ -120,15 +120,15 @@
     <div id="lessonModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center">
         <div class="bg-white rounded-lg shadow-xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
             <div class="p-6 border-b border-gray-200">
-                <h3 id="modalTitle" class="text-xl font-semibold">Add New Lesson Plan</h3>
+                <h3 id="modalTitle" class="text-xl font-semibold">Add New Lesson Plan File</h3>
             </div>
             <form id="lessonForm" onsubmit="handleLessonSubmit(event)">
                 <div class="p-6 space-y-4">
                     <input type="hidden" id="lessonId">
                     
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Lesson Title</label>
-                        <input type="text" id="lessonTitle" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-maroon focus:border-transparent" placeholder="Enter lesson title">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">File Name</label>
+                        <input type="text" id="lessonTitle" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-maroon focus:border-transparent" placeholder="Enter file name">
                     </div>
                     
                     <div>
@@ -138,24 +138,30 @@
                     
                     <div class="grid grid-cols-2 gap-4">
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Grade Level</label>
-                            <select id="lessonGradeLevel" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-maroon focus:border-transparent">
-                                <option value="">Select grade level</option>
-                                <option value="1">Grade 1</option>
-                                <option value="2">Grade 2</option>
-                                <option value="3">Grade 3</option>
-                                <option value="4">Grade 4</option>
-                                <option value="5">Grade 5</option>
-                                <option value="6">Grade 6</option>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Module</label>
+                            <input type="text" id="lessonModule" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-maroon focus:border-transparent" placeholder="e.g. Module 1">
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Lesson (optional)</label>
+                            <input type="text" id="lessonName" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-maroon focus:border-transparent" placeholder="e.g. Lesson 1">
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Period Type</label>
+                            <select id="lessonPeriodType" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-maroon focus:border-transparent">
+                                <option value="">Select type</option>
+                                <option value="week">Week</option>
+                                <option value="month">Month</option>
+                                <option value="quarter">Quarter</option>
                             </select>
                         </div>
-                        
+
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Status</label>
-                            <select id="lessonStatus" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-maroon focus:border-transparent">
-                                <option value="active">Active</option>
-                                <option value="archived">Archived</option>
-                            </select>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Period Value</label>
+                            <input type="text" id="lessonPeriodValue" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-maroon focus:border-transparent" placeholder="e.g. 1, Jan, Q1">
                         </div>
                     </div>
                     
@@ -169,7 +175,7 @@
                     <button type="button" onclick="closeLessonModal()" class="px-4 py-2 text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50">Cancel</button>
                     <button type="submit" class="px-4 py-2 bg-maroon text-white rounded-lg hover:bg-maroon-dark">
                         <i id="submitIcon" class="fas fa-save mr-2"></i>
-                        <span id="submitText">Save Lesson Plan</span>
+                        <span id="submitText">Save Lesson Plan File</span>
                     </button>
                 </div>
             </form>
@@ -185,6 +191,47 @@
     <script>
         let currentUser = null;
 
+        const LESSON_PLAN_BUCKET = 'lesson-plans';
+        const LESSON_PLAN_TABLE = 'lesson_plan_files';
+
+        function formatFileSize(bytes) {
+            if (!bytes || Number.isNaN(Number(bytes))) return 'Unknown size';
+            const kb = 1024;
+            const units = ['B', 'KB', 'MB', 'GB'];
+            const index = Math.floor(Math.log(bytes) / Math.log(kb));
+            return `${(bytes / (kb ** index)).toFixed(index === 0 ? 0 : 2)} ${units[index]}`;
+        }
+
+        function getFileTypeLabel(fileType, fileName) {
+            if (fileType) return fileType;
+            const extension = (fileName || '').split('.').pop();
+            return extension ? `${extension.toUpperCase()} file` : 'Unknown type';
+        }
+
+        async function uploadLessonPlanFile(file, userId) {
+            const supabase = getSupabase();
+            const filePath = `${userId}/${Date.now()}_${file.name}`;
+
+            const { error: uploadError } = await supabase
+                .storage
+                .from(LESSON_PLAN_BUCKET)
+                .upload(filePath, file);
+
+            if (uploadError) throw uploadError;
+
+            const { data: publicUrlData } = supabase
+                .storage
+                .from(LESSON_PLAN_BUCKET)
+                .getPublicUrl(filePath);
+
+            return {
+                filePath,
+                fileUrl: publicUrlData.publicUrl,
+                fileType: file.type || null,
+                fileSize: file.size || null
+            };
+        }
+
         // Lesson plan management functions
         async function loadAllLessons() {
             try {
@@ -196,10 +243,22 @@
                     </div>
                 `;
 
-                const { data: lessons, error } = await getSupabase().from('lesson_plans').select(`
-                    id, title, description, grade_level, status, file_url, created_at,
-                    teacher:teacher_id (full_name)
-                `).order('created_at', { ascending: false });
+                const { data: lessons, error } = await getSupabase().from(LESSON_PLAN_TABLE).select(`
+                    id,
+                    user_id,
+                    file_name,
+                    file_path,
+                    file_url,
+                    file_type,
+                    file_size,
+                    description,
+                    module_name,
+                    lesson_name,
+                    period_type,
+                    period_value,
+                    uploaded_at,
+                    uploader:user_id (full_name, email)
+                `).order('uploaded_at', { ascending: false });
 
                 if (error) throw error;
 
@@ -220,30 +279,36 @@
                 lessonsList.innerHTML = lessons.map(lesson => `
                     <div class="lesson-card bg-white border border-gray-200 rounded-lg p-6 hover:shadow-lg">
                         <div class="flex justify-between items-start mb-4">
-                            <h3 class="text-lg font-semibold text-gray-900">${lesson.title}</h3>
-                            <span class="px-3 py-1 text-xs font-medium rounded-full ${
-                                lesson.status === 'active' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
-                            }">${lesson.status}</span>
+                            <h3 class="text-lg font-semibold text-gray-900">${escapeHtml(lesson.file_name)}</h3>
+                            <span class="px-3 py-1 text-xs font-medium rounded-full bg-maroon/10 text-maroon">Lesson File</span>
                         </div>
                         
-                        <p class="text-gray-600 text-sm mb-4">${lesson.description || 'No description'}</p>
+                        <p class="text-gray-600 text-sm mb-4">${escapeHtml(lesson.description || 'No description')}</p>
                         
                         <div class="space-y-2 text-sm text-gray-500 mb-6">
                             <div class="flex items-center">
-                                <i class="fas fa-graduation-cap mr-2"></i>
-                                <span>Grade ${lesson.grade_level}</span>
+                                <i class="fas fa-book mr-2"></i>
+                                <span>Module: ${escapeHtml(lesson.module_name || '-')}</span>
+                            </div>
+                            <div class="flex items-center">
+                                <i class="fas fa-book-open mr-2"></i>
+                                <span>Lesson: ${escapeHtml(lesson.lesson_name || '-')}</span>
+                            </div>
+                            <div class="flex items-center">
+                                <i class="fas fa-calendar-alt mr-2"></i>
+                                <span>Period: ${escapeHtml(lesson.period_type || '-')} ${escapeHtml(lesson.period_value || '')}</span>
                             </div>
                             <div class="flex items-center">
                                 <i class="fas fa-user mr-2"></i>
-                                <span>Created by: ${lesson.teacher?.full_name || 'Unknown'}</span>
+                                <span>Uploaded by: ${escapeHtml(lesson.uploader?.full_name || lesson.uploader?.email || 'Unknown')}</span>
                             </div>
                             <div class="flex items-center">
                                 <i class="fas fa-file-alt mr-2"></i>
-                                <span>PDF Document</span>
+                                <span>${escapeHtml(getFileTypeLabel(lesson.file_type, lesson.file_name))} • ${formatFileSize(lesson.file_size)}</span>
                             </div>
                             <div class="flex items-center">
                                 <i class="fas fa-calendar mr-2"></i>
-                                <span>${new Date(lesson.created_at).toLocaleDateString()}</span>
+                                <span>${new Date(lesson.uploaded_at).toLocaleDateString()}</span>
                             </div>
                         </div>
                         
@@ -267,8 +332,8 @@
         }
 
         function openAddLessonModal() {
-            document.getElementById('modalTitle').textContent = 'Add New Lesson Plan';
-            document.getElementById('submitText').textContent = 'Save Lesson Plan';
+            document.getElementById('modalTitle').textContent = 'Add New Lesson Plan File';
+            document.getElementById('submitText').textContent = 'Save Lesson Plan File';
             document.getElementById('submitIcon').className = 'fas fa-save mr-2';
             document.getElementById('lessonForm').reset();
             document.getElementById('lessonId').value = '';
@@ -281,18 +346,20 @@
 
         async function editLesson(lessonId) {
             try {
-                const { data: lesson, error } = await getSupabase().from('lesson_plans').select('*').eq('id', lessonId).single();
+                const { data: lesson, error } = await getSupabase().from(LESSON_PLAN_TABLE).select('*').eq('id', lessonId).single();
                 
                 if (error) throw error;
 
-                document.getElementById('modalTitle').textContent = 'Edit Lesson Plan';
-                document.getElementById('submitText').textContent = 'Update Lesson Plan';
+                document.getElementById('modalTitle').textContent = 'Edit Lesson Plan File';
+                document.getElementById('submitText').textContent = 'Update Lesson Plan File';
                 document.getElementById('submitIcon').className = 'fas fa-edit mr-2';
                 document.getElementById('lessonId').value = lesson.id;
-                document.getElementById('lessonTitle').value = lesson.title;
-                document.getElementById('lessonDescription').value = lesson.description;
-                document.getElementById('lessonGradeLevel').value = lesson.grade_level;
-                document.getElementById('lessonStatus').value = lesson.status;
+                document.getElementById('lessonTitle').value = lesson.file_name;
+                document.getElementById('lessonDescription').value = lesson.description || '';
+                document.getElementById('lessonModule').value = lesson.module_name || '';
+                document.getElementById('lessonName').value = lesson.lesson_name || '';
+                document.getElementById('lessonPeriodType').value = lesson.period_type || '';
+                document.getElementById('lessonPeriodValue').value = lesson.period_value || '';
                 document.getElementById('lessonModal').classList.remove('hidden');
             } catch (error) {
                 console.error('Error fetching lesson:', error);
@@ -306,16 +373,15 @@
             }
 
             try {
-                const { data: lesson, error: fetchError } = await getSupabase().from('lesson_plans').select('file_url').eq('id', lessonId).single();
+                const { data: lesson, error: fetchError } = await getSupabase().from(LESSON_PLAN_TABLE).select('file_path').eq('id', lessonId).single();
                 if (fetchError) throw fetchError;
 
-                if (lesson.file_url) {
-                    const fileName = lesson.file_url.split('/').pop();
-                    const { error: storageError } = await getSupabase().storage.from('lesson-plans').remove([fileName]);
+                if (lesson.file_path) {
+                    const { error: storageError } = await getSupabase().storage.from(LESSON_PLAN_BUCKET).remove([lesson.file_path]);
                     if (storageError) console.warn('Failed to delete storage file:', storageError);
                 }
 
-                const { error: deleteError } = await getSupabase().from('lesson_plans').delete().eq('id', lessonId);
+                const { error: deleteError } = await getSupabase().from(LESSON_PLAN_TABLE).delete().eq('id', lessonId);
                 if (deleteError) throw deleteError;
 
                 showNotification('Lesson plan deleted successfully', 'success');
@@ -332,46 +398,77 @@
             const lessonId = document.getElementById('lessonId').value;
             const title = document.getElementById('lessonTitle').value;
             const description = document.getElementById('lessonDescription').value;
-            const gradeLevel = document.getElementById('lessonGradeLevel').value;
-            const status = document.getElementById('lessonStatus').value;
+            const moduleName = document.getElementById('lessonModule').value;
+            const lessonName = document.getElementById('lessonName').value;
+            const periodType = document.getElementById('lessonPeriodType').value;
+            const periodValue = document.getElementById('lessonPeriodValue').value;
             const fileInput = document.getElementById('lessonFile');
 
             try {
-                let fileUrl = null;
+                let uploadedFile = null;
                 if (fileInput.files.length > 0) {
                     const file = fileInput.files[0];
-                    fileUrl = await uploadFile(file, 'lesson-plans');
+                    uploadedFile = await uploadLessonPlanFile(file, currentUser.id);
                 }
 
-                if (!lessonId && !fileUrl) {
+                if (!lessonId && !uploadedFile) {
                     showNotification('Please upload a lesson plan file', 'error');
                     return;
                 }
 
                 if (lessonId) {
+                    const { data: existingLesson, error: existingError } = await getSupabase()
+                        .from(LESSON_PLAN_TABLE)
+                        .select('file_path')
+                        .eq('id', lessonId)
+                        .single();
+
+                    if (existingError) throw existingError;
+
                     const updates = {
-                        title,
+                        file_name: title,
                         description,
-                        grade_level: gradeLevel,
-                        status,
-                        updated_at: new Date().toISOString()
+                        module_name: moduleName || null,
+                        lesson_name: lessonName || null,
+                        period_type: periodType || null,
+                        period_value: periodValue || null
                     };
-                    if (fileUrl) {
-                        updates.file_url = fileUrl;
+
+                    if (uploadedFile) {
+                        updates.file_url = uploadedFile.fileUrl;
+                        updates.file_path = uploadedFile.filePath;
+                        updates.file_type = uploadedFile.fileType;
+                        updates.file_size = uploadedFile.fileSize;
+
+                        if (existingLesson?.file_path) {
+                            const { error: removeError } = await getSupabase()
+                                .storage
+                                .from(LESSON_PLAN_BUCKET)
+                                .remove([existingLesson.file_path]);
+
+                            if (removeError) {
+                                console.warn('Old file removal failed:', removeError);
+                            }
+                        }
                     }
 
-                    const { error } = await getSupabase().from('lesson_plans').update(updates).eq('id', lessonId);
+                    const { error } = await getSupabase().from(LESSON_PLAN_TABLE).update(updates).eq('id', lessonId);
                     if (error) throw error;
                     showNotification('Lesson plan updated successfully', 'success');
                 } else {
-                    const { error } = await getSupabase().from('lesson_plans').insert({
-                        title,
+                    const { error } = await getSupabase().from(LESSON_PLAN_TABLE).insert({
+                        user_id: currentUser.id,
+                        file_name: title,
                         description,
-                        grade_level: gradeLevel,
-                        status,
-                        file_url: fileUrl,
-                        created_at: new Date().toISOString(),
-                        updated_at: new Date().toISOString()
+                        module_name: moduleName || null,
+                        lesson_name: lessonName || null,
+                        period_type: periodType || null,
+                        period_value: periodValue || null,
+                        file_url: uploadedFile.fileUrl,
+                        file_path: uploadedFile.filePath,
+                        file_type: uploadedFile.fileType,
+                        file_size: uploadedFile.fileSize,
+                        uploaded_at: new Date().toISOString()
                     });
                     if (error) throw error;
                     showNotification('Lesson plan created successfully', 'success');

@@ -436,6 +436,24 @@ async function deleteQuiz(quizId) {
 // LESSON PLAN MANAGEMENT
 // ============================================
 
+const LESSON_PLAN_TABLE = 'lesson_plan_files';
+const LESSON_PLAN_BUCKET = 'lesson-plans';
+
+function normalizeLessonPlanRow(row) {
+  if (!row) return null;
+
+  return {
+    ...row,
+    title: row.file_name,
+    teacher_id: row.user_id,
+    teacher: row.teacher || row.uploader || null,
+    status: 'active',
+    created_at: row.uploaded_at,
+    updated_at: row.uploaded_at,
+    grade_level: row.grade_level || null
+  };
+}
+
 async function getAllLessonPlans() {
   try {
     const user = JSON.parse(localStorage.getItem('user'));
@@ -446,12 +464,24 @@ async function getAllLessonPlans() {
     }
 
     const { data, error } = await getSupabase()
-      .from('lesson_plans')
+      .from(LESSON_PLAN_TABLE)
       .select(`
-        *,
-        teacher:teacher_id (id, full_name)
+        id,
+        user_id,
+        file_name,
+        file_path,
+        file_url,
+        file_type,
+        file_size,
+        description,
+        module_name,
+        lesson_name,
+        period_type,
+        period_value,
+        uploaded_at,
+        teacher:user_id (id, full_name, email)
       `)
-      .order('created_at', { ascending: false });
+      .order('uploaded_at', { ascending: false });
 
     if (error) {
       console.error('Error loading lesson plans:', error);
@@ -459,7 +489,7 @@ async function getAllLessonPlans() {
       return [];
     }
 
-    return data;
+    return (data || []).map(normalizeLessonPlanRow);
 
   } catch (error) {
     console.error('Error getting all lesson plans:', error);
@@ -477,14 +507,29 @@ async function createLessonPlan(lessonPlanData) {
       return null;
     }
 
+    const payload = {
+      user_id: lessonPlanData.user_id || lessonPlanData.teacher_id || user.id,
+      file_name: lessonPlanData.file_name || lessonPlanData.title,
+      file_path: lessonPlanData.file_path,
+      file_url: lessonPlanData.file_url,
+      file_type: lessonPlanData.file_type || null,
+      file_size: lessonPlanData.file_size || null,
+      description: lessonPlanData.description || '',
+      module_name: lessonPlanData.module_name || null,
+      lesson_name: lessonPlanData.lesson_name || null,
+      period_type: lessonPlanData.period_type || null,
+      period_value: lessonPlanData.period_value || null,
+      uploaded_at: new Date().toISOString()
+    };
+
+    if (!payload.file_name || !payload.file_path || !payload.file_url) {
+      showNotification('Lesson plan file name, path, and URL are required', 'error');
+      return null;
+    }
+
     const { data, error } = await getSupabase()
-      .from('lesson_plans')
-      .insert({
-        ...lessonPlanData,
-        teacher_id: user.id,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-      })
+      .from(LESSON_PLAN_TABLE)
+      .insert(payload)
       .select()
       .single();
 
@@ -495,7 +540,7 @@ async function createLessonPlan(lessonPlanData) {
     }
 
     showNotification('Lesson plan created successfully', 'success');
-    return data;
+    return normalizeLessonPlanRow(data);
 
   } catch (error) {
     console.error('Error creating lesson plan:', error);
@@ -513,12 +558,30 @@ async function updateLessonPlan(lessonPlanId, updates) {
       return null;
     }
 
+    const mappedUpdates = {};
+
+    if (typeof updates.title !== 'undefined') mappedUpdates.file_name = updates.title;
+    if (typeof updates.file_name !== 'undefined') mappedUpdates.file_name = updates.file_name;
+    if (typeof updates.description !== 'undefined') mappedUpdates.description = updates.description;
+    if (typeof updates.module_name !== 'undefined') mappedUpdates.module_name = updates.module_name;
+    if (typeof updates.lesson_name !== 'undefined') mappedUpdates.lesson_name = updates.lesson_name;
+    if (typeof updates.period_type !== 'undefined') mappedUpdates.period_type = updates.period_type;
+    if (typeof updates.period_value !== 'undefined') mappedUpdates.period_value = updates.period_value;
+    if (typeof updates.file_path !== 'undefined') mappedUpdates.file_path = updates.file_path;
+    if (typeof updates.file_url !== 'undefined') mappedUpdates.file_url = updates.file_url;
+    if (typeof updates.file_type !== 'undefined') mappedUpdates.file_type = updates.file_type;
+    if (typeof updates.file_size !== 'undefined') mappedUpdates.file_size = updates.file_size;
+    if (typeof updates.teacher_id !== 'undefined') mappedUpdates.user_id = updates.teacher_id;
+    if (typeof updates.user_id !== 'undefined') mappedUpdates.user_id = updates.user_id;
+
+    if (Object.keys(mappedUpdates).length === 0) {
+      showNotification('No valid lesson plan fields to update', 'warning');
+      return null;
+    }
+
     const { data, error } = await getSupabase()
-      .from('lesson_plans')
-      .update({
-        ...updates,
-        updated_at: new Date().toISOString()
-      })
+      .from(LESSON_PLAN_TABLE)
+      .update(mappedUpdates)
       .eq('id', lessonPlanId)
       .select()
       .single();
@@ -530,7 +593,7 @@ async function updateLessonPlan(lessonPlanId, updates) {
     }
 
     showNotification('Lesson plan updated successfully', 'success');
-    return data;
+    return normalizeLessonPlanRow(data);
 
   } catch (error) {
     console.error('Error updating lesson plan:', error);
@@ -549,8 +612,8 @@ async function deleteLessonPlan(lessonPlanId) {
     }
 
     const { data: lessonPlan, error: fetchError } = await getSupabase()
-      .from('lesson_plans')
-      .select('file_url')
+      .from(LESSON_PLAN_TABLE)
+      .select('file_path')
       .eq('id', lessonPlanId)
       .single();
 
@@ -559,12 +622,11 @@ async function deleteLessonPlan(lessonPlanId) {
       return false;
     }
 
-    if (lessonPlan.file_url) {
-      const fileName = lessonPlan.file_url.split('/').pop();
+    if (lessonPlan.file_path) {
       const { error: storageError } = await getSupabase()
         .storage
-        .from('lesson-plans')
-        .remove([fileName]);
+        .from(LESSON_PLAN_BUCKET)
+        .remove([lessonPlan.file_path]);
       
       if (storageError) {
         console.warn('Failed to delete storage file:', storageError);
@@ -572,7 +634,7 @@ async function deleteLessonPlan(lessonPlanId) {
     }
 
     const { error: deleteError } = await getSupabase()
-      .from('lesson_plans')
+      .from(LESSON_PLAN_TABLE)
       .delete()
       .eq('id', lessonPlanId);
 
@@ -609,7 +671,8 @@ async function archiveQuiz(quizId) {
 }
 
 async function archiveLessonPlan(lessonPlanId) {
-  return updateLessonPlan(lessonPlanId, { status: 'archived' });
+  showNotification('Lesson plan archive is not supported for file-based lesson plans', 'info');
+  return false;
 }
 
 // ============================================
@@ -628,7 +691,7 @@ async function getContentStatistics() {
       getSupabase().from('modules').select('status').then(res => res.data),
       getSupabase().from('videos').select('status').then(res => res.data),
       getSupabase().from('quizzes').select('status').then(res => res.data),
-      getSupabase().from('lesson_plans').select('status').then(res => res.data)
+      getSupabase().from(LESSON_PLAN_TABLE).select('id').then(res => res.data)
     ]);
 
     return {
@@ -648,8 +711,8 @@ async function getContentStatistics() {
         total: quizzes.length
       },
       lessonPlans: {
-        active: lessonPlans.filter(l => l.status === 'active').length,
-        archived: lessonPlans.filter(l => l.status === 'archived').length,
+        active: lessonPlans.length,
+        archived: 0,
         total: lessonPlans.length
       }
     };
@@ -696,9 +759,21 @@ async function filterContent(filterOptions) {
       video:video_id (id, title)
     `);
 
-    let queryLessonPlans = getSupabase().from('lesson_plans').select(`
-      *,
-      teacher:teacher_id (id, full_name)
+    let queryLessonPlans = getSupabase().from(LESSON_PLAN_TABLE).select(`
+      id,
+      user_id,
+      file_name,
+      file_path,
+      file_url,
+      file_type,
+      file_size,
+      description,
+      module_name,
+      lesson_name,
+      period_type,
+      period_value,
+      uploaded_at,
+      teacher:user_id (id, full_name, email)
     `);
 
     // Apply filters
@@ -706,21 +781,21 @@ async function filterContent(filterOptions) {
       queryModules = queryModules.eq('grade_level', filterOptions.gradeLevel);
       queryVideos = queryVideos.eq('grade_level', filterOptions.gradeLevel);
       queryQuizzes = queryQuizzes.eq('grade_level', filterOptions.gradeLevel);
-      queryLessonPlans = queryLessonPlans.eq('grade_level', filterOptions.gradeLevel);
+      // lesson_plan_files table does not have grade_level
     }
 
     if (filterOptions.teacherId) {
       queryModules = queryModules.eq('teacher_id', filterOptions.teacherId);
       queryVideos = queryVideos.eq('teacher_id', filterOptions.teacherId);
       queryQuizzes = queryQuizzes.eq('teacher_id', filterOptions.teacherId);
-      queryLessonPlans = queryLessonPlans.eq('teacher_id', filterOptions.teacherId);
+      queryLessonPlans = queryLessonPlans.eq('user_id', filterOptions.teacherId);
     }
 
     if (filterOptions.status) {
       queryModules = queryModules.eq('status', filterOptions.status);
       queryVideos = queryVideos.eq('status', filterOptions.status);
       queryQuizzes = queryQuizzes.eq('status', filterOptions.status);
-      queryLessonPlans = queryLessonPlans.eq('status', filterOptions.status);
+      // lesson_plan_files table does not have status
     }
 
     if (filterOptions.searchTerm) {
@@ -728,21 +803,25 @@ async function filterContent(filterOptions) {
       queryModules = queryModules.ilike('name', searchTerm);
       queryVideos = queryVideos.ilike('title', searchTerm);
       queryQuizzes = queryQuizzes.ilike('title', searchTerm);
-      queryLessonPlans = queryLessonPlans.ilike('title', searchTerm);
+      queryLessonPlans = queryLessonPlans.or(`file_name.ilike.${searchTerm},module_name.ilike.${searchTerm},lesson_name.ilike.${searchTerm}`);
     }
 
     const [modules, videos, quizzes, lessonPlans] = await Promise.all([
       queryModules.order('created_at', { ascending: false }).then(res => res.data || []),
       queryVideos.order('created_at', { ascending: false }).then(res => res.data || []),
       queryQuizzes.order('created_at', { ascending: false }).then(res => res.data || []),
-      queryLessonPlans.order('created_at', { ascending: false }).then(res => res.data || [])
+      queryLessonPlans.order('uploaded_at', { ascending: false }).then(res => (res.data || []).map(normalizeLessonPlanRow))
     ]);
+
+    const filteredLessonPlans = filterOptions.status && filterOptions.status !== 'active'
+      ? []
+      : lessonPlans;
 
     return {
       modules,
       videos,
       quizzes,
-      lessonPlans
+      lessonPlans: filteredLessonPlans
     };
 
   } catch (error) {

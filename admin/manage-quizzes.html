@@ -192,6 +192,18 @@
     <script>
         let currentUser = null;
 
+        function formatGradeLabel(gradeLevel) {
+            if (gradeLevel === null || gradeLevel === undefined) return 'N/A';
+            const gradeText = String(gradeLevel).trim();
+            if (!gradeText) return 'N/A';
+            return /^grade\s+/i.test(gradeText) ? gradeText : `Grade ${gradeText}`;
+        }
+
+        function formatSectionLabel(sectionId, sectionMap) {
+            if (!sectionId) return 'All Sections';
+            return sectionMap[sectionId] || `Section ID: ${sectionId}`;
+        }
+
         // Quiz management functions
         async function loadAllQuizzes() {
             try {
@@ -212,6 +224,8 @@
 
                 const teacherIds = [...new Set((quizzes || []).map(quiz => quiz.teacher_id).filter(Boolean))];
                 const teacherMap = {};
+                const sectionIds = [...new Set((quizzes || []).map(quiz => quiz.section_id).filter(Boolean))];
+                const sectionMap = {};
 
                 if (teacherIds.length > 0) {
                     const { data: teachers } = await getSupabase()
@@ -221,6 +235,17 @@
 
                     (teachers || []).forEach(teacher => {
                         teacherMap[teacher.id] = teacher;
+                    });
+                }
+
+                if (sectionIds.length > 0) {
+                    const { data: sections } = await getSupabase()
+                        .from('sections')
+                        .select('id, name')
+                        .in('id', sectionIds);
+
+                    (sections || []).forEach(section => {
+                        sectionMap[section.id] = section.name;
                     });
                 }
 
@@ -252,7 +277,11 @@
                         <div class="space-y-2 text-sm text-gray-600 mb-6">
                             <div class="flex items-center">
                                 <i class="fas fa-graduation-cap mr-2 text-maroon"></i>
-                                <span>Grade ${quiz.grade_level}</span>
+                                <span>${formatGradeLabel(quiz.grade_level)}</span>
+                            </div>
+                            <div class="flex items-center">
+                                <i class="fas fa-users mr-2 text-maroon"></i>
+                                <span>Section: ${formatSectionLabel(quiz.section_id, sectionMap)}</span>
                             </div>
                             <div class="flex items-center">
                                 <i class="fas fa-user mr-2 text-maroon"></i>

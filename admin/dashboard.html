@@ -315,8 +315,8 @@
             <!-- Secondary Stats -->
             <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6 mb-8">
                 <div class="stat-card bg-white rounded-2xl p-6 border border-gray-100 shadow-sm">
-                    <div class="text-2xl font-bold text-teal-600" id="lessonsStat">0</div>
-                    <div class="text-sm text-gray-500">Total Lessons</div>
+                    <div class="text-2xl font-bold text-teal-600" id="lessonPlanFilesStat">0</div>
+                    <div class="text-sm text-gray-500">Lesson Plan Files</div>
                 </div>
                 <div class="stat-card bg-white rounded-2xl p-6 border border-gray-100 shadow-sm">
                     <div class="text-2xl font-bold text-yellow-600" id="pendingStat">0</div>
@@ -599,13 +599,13 @@
                 const admins = users ? users.filter(u => u.role === 'admin').length : 0;
                 const total = users ? users.length : 0;
 
-                // Get module and lesson counts
+                // Get module and lesson plan file counts
                 const { data: modules } = await getSupabase()
                     .from('modules')
                     .select('id');
                 
-                const { data: lessons } = await getSupabase()
-                    .from('lessons')
+                const { data: lessonPlanFiles } = await getSupabase()
+                    .from('lesson_plan_files')
                     .select('id');
 
                 // Get submission counts
@@ -622,7 +622,7 @@
                 document.getElementById('studentsStat').textContent = students;
                 document.getElementById('teachersStat').textContent = teachers;
                 document.getElementById('modulesStat').textContent = modules ? modules.length : 0;
-                document.getElementById('lessonsStat').textContent = lessons ? lessons.length : 0;
+                document.getElementById('lessonPlanFilesStat').textContent = lessonPlanFiles ? lessonPlanFiles.length : 0;
                 document.getElementById('pendingStat').textContent = pending;
                 document.getElementById('approvedStat').textContent = approved;
                 document.getElementById('rejectedStat').textContent = rejected;

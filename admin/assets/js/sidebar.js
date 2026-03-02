@@ -63,11 +63,6 @@ function createAdminSidebar() {
                     <span>Grade Levels & Sections</span>
                 </a>
 
-                <a href="sections.html" class="nav-link flex items-center space-x-3 px-3 py-2 rounded-lg text-gray-300 hover:bg-gray-800 hover:text-white transition-colors" data-section="sections">
-                    <i class="fas fa-layer-group"></i>
-                    <span>Sections</span>
-                </a>
-
                 <div class="pt-4 border-t border-gray-800">
                     <button class="w-full nav-link flex items-center justify-between space-x-3 px-3 py-2 rounded-lg text-gray-300 hover:bg-gray-800 hover:text-white transition-colors" onclick="toggleFilesDropdown()">
                         <div class="flex items-center space-x-3">

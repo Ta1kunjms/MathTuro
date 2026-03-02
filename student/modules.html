@@ -66,11 +66,24 @@
         
         .module-card {
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            max-width: 320px;
+            width: 100%;
         }
         
         .module-card:hover {
-            transform: translateY(-6px);
-            box-shadow: 0 20px 40px -12px rgba(0, 88, 1, 0.15);
+            transform: translateY(-8px) scale(1.02);
+            box-shadow: 0 25px 50px -12px rgba(0, 88, 1, 0.2);
+            border-color: #005801;
+        }
+        
+        .module-card a {
+            text-decoration: none;
+            color: inherit;
+        }
+        
+        .module-card iframe {
+            border: none;
+            background: white;
         }
         
         ::-webkit-scrollbar { width: 6px; }
@@ -135,7 +148,7 @@
             </div>
 
             <!-- Modules Grid -->
-            <div id="modulesGrid" class="hidden grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+            <div id="modulesGrid" class="hidden grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8 justify-items-center">
                 <!-- Modules will be loaded here -->
             </div>
 
@@ -309,42 +322,62 @@
             grid.classList.remove('hidden');
             
             grid.innerHTML = data.map(module => `
-                <a href="module-view.html?id=${module.id}" class="module-card bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden block">
-                    <div class="h-40 bg-gradient-to-br from-brand to-brand-light flex items-center justify-center relative">
-                        ${module.content_type === 'pdf' ? `
-                            <svg class="w-16 h-16 text-white/80" fill="currentColor" viewBox="0 0 24 24">
-                                <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8l-6-6zm-1 2l5 5h-5V4z"/>
-                            </svg>
-                        ` : `
-                            <svg class="w-16 h-16 text-white/80" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
-                            </svg>
-                        `}
-                        <span class="absolute top-3 right-3 px-3 py-1 bg-white/20 backdrop-blur-sm rounded-full text-xs text-white font-medium">
-                            ${module.content_type === 'pdf' ? 'PDF Module' : 'Image Module'}
-                        </span>
-                    </div>
-                    <div class="p-5">
-                        <h3 class="font-bold text-gray-800 mb-2 line-clamp-2 text-lg">${module.title}</h3>
-                        <p class="text-sm text-gray-600 line-clamp-2 mb-4">${module.description || 'No description available'}</p>
-                        <div class="flex items-center text-xs text-gray-500 mb-4">
-                            <span class="flex items-center space-x-1">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
-                                </svg>
-                                <span>${new Date(module.created_at).toLocaleDateString()}</span>
+                <div class="module-card bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden flex flex-col max-w-sm mx-auto">
+                    <a href="module-view.html?id=${module.id}" class="flex flex-col h-full">
+                        <div class="h-48 bg-gradient-to-br from-brand to-brand-light relative overflow-hidden">
+                            ${module.content_type === 'pdf' ? `
+                                <div class="absolute inset-0 flex items-center justify-center">
+                                    ${module.file_path ? `
+                                        <iframe src="${module.file_path}#view=FitH&toolbar=0&navpanes=0" 
+                                                class="w-full h-full" 
+                                                style="min-height: 200px;"
+                                                title="${module.title}">
+                                        </iframe>
+                                    ` : `
+                                        <svg class="w-16 h-16 text-white/80" fill="currentColor" viewBox="0 0 24 24">
+                                            <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8l-6-6zm-1 2l5 5h-5V4z"/>
+                                        </svg>
+                                    `}
+                                </div>
+                            ` : `
+                                <div class="absolute inset-0 flex items-center justify-center">
+                                    ${module.file_path ? `
+                                        <img src="${module.file_path}" 
+                                             class="w-full h-full object-cover" 
+                                             alt="${module.title}">
+                                    ` : `
+                                        <svg class="w-16 h-16 text-white/80" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                                        </svg>
+                                    `}
+                                </div>
+                            `}
+                            <span class="absolute top-3 right-3 px-3 py-1 bg-white/20 backdrop-blur-sm rounded-full text-xs text-white font-medium">
+                                ${module.content_type === 'pdf' ? 'PDF Module' : 'Image Module'}
                             </span>
                         </div>
-                        <div class="grid grid-cols-2 gap-2">
-                            <div class="py-3 bg-brand text-white rounded-xl text-center text-sm font-semibold hover:bg-brand-dark transition-colors">
-                                Start Learning →
+                        <div class="p-5 flex flex-col flex-1">
+                            <h3 class="font-bold text-gray-800 mb-2 line-clamp-2 text-lg">${module.title}</h3>
+                            <p class="text-sm text-gray-600 line-clamp-2 mb-4 flex-1">${module.description || 'No description available'}</p>
+                            <div class="flex items-center text-xs text-gray-500 mb-4">
+                                <span class="flex items-center space-x-1">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                                    </svg>
+                                    <span>${new Date(module.created_at).toLocaleDateString()}</span>
+                                </span>
                             </div>
-                            <a href="lesson-view.html?moduleId=${module.id}" class="py-3 bg-brand/10 text-brand rounded-xl text-center text-sm font-semibold hover:bg-brand/20 transition-colors">
-                                Quick Lesson
-                            </a>
+                            <div class="grid grid-cols-2 gap-2">
+                                <div class="py-3 bg-brand text-white rounded-xl text-center text-sm font-semibold hover:bg-brand-dark transition-colors">
+                                    Start Learning →
+                                </div>
+                                <a href="lesson-view.html?moduleId=${module.id}" class="py-3 bg-brand/10 text-brand rounded-xl text-center text-sm font-semibold hover:bg-brand/20 transition-colors">
+                                    Quick Lesson
+                                </a>
+                            </div>
                         </div>
-                    </div>
-                </a>
+                    </a>
+                </div>
             `).join('');
         }
     </script>

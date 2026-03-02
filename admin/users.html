@@ -461,8 +461,8 @@
 
                 allUsers = users.map(user => ({
                     ...user,
-                    grade_level: user.grade_level_text || gradeMap.get(user.grade_level_id) || 'N/A',
-                    section: user.section_text || sectionMap.get(user.section_id) || 'N/A',
+                    grade_level: user.grade_level_text || user.grade_level || gradeMap.get(user.grade_level_id) || 'N/A',
+                    section: user.section_text || user.section || sectionMap.get(user.section_id) || 'N/A',
                     admin_review_status: normalizeAdminStatus(user)
                 }));
 
@@ -803,19 +803,32 @@
             if (!deleteUserId) return;
 
             try {
-                const { error } = await getSupabase()
-                    .from('users')
-                    .delete()
-                    .eq('id', deleteUserId);
+                const supabase = getSupabase();
+                const { data, error } = await supabase.rpc('admin_delete_user', {
+                    target_user_id: deleteUserId
+                });
 
-                if (error) throw error;
+                if (error) {
+                    throw error;
+                }
 
-                showToast('User deleted successfully', 'success');
+                if (data === true) {
+                    showToast('User deleted from both app data and Supabase Auth.', 'success');
+                } else {
+                    showToast('Delete completed.', 'success');
+                }
+
                 closeDeleteModal();
                 await loadUsers();
             } catch (error) {
                 console.error('Error deleting user:', error);
-                showToast('Failed to delete user', 'error');
+                const message = (error?.message || '').toLowerCase();
+
+                if (message.includes('admin_delete_user') || message.includes('function') || message.includes('rpc')) {
+                    showToast('Delete RPC is not installed yet. Run database/create_admin_delete_user_rpc.sql in Supabase SQL Editor.', 'error');
+                } else {
+                    showToast(error.message || 'Failed to delete user', 'error');
+                }
             }
         }
 

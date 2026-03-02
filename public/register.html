@@ -661,6 +661,14 @@
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"/>
                         </svg>
                     </a>
+
+                    <a href="index.html"
+                        class="w-full mt-3 py-3 px-6 rounded-xl text-gray-700 font-semibold text-base flex items-center justify-center space-x-2 border border-gray-300 hover:bg-gray-50 transition-all">
+                        <span>Back to Home</span>
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
+                        </svg>
+                    </a>
                 </div>
 
                 <!-- Footer -->
@@ -1005,8 +1013,12 @@
                 registerButton.classList.add('opacity-75', 'cursor-not-allowed');
 
                 try {
+                    const supabase = getSupabase();
+                    let resolvedAuthUser = null;
+                    let recoveredExistingAccount = false;
+
                     // Create user in Supabase Auth
-                    const { data: authData, error: authError } = await getSupabase().auth.signUp({
+                    const { data: authData, error: authError } = await supabase.auth.signUp({
                         email: email,
                         password: password,
                         options: {
@@ -1022,34 +1034,103 @@
                     });
 
                     if (authError) {
-                        if (authError.message.includes('already registered')) {
-                            showError('This email is already registered. Please sign in instead.');
+                        const errorMessage = (authError.message || '').toLowerCase();
+                        if (errorMessage.includes('already registered')) {
+                            const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
+                                email,
+                                password
+                            });
+
+                            if (signInError || !signInData?.user) {
+                                showError('This email is already registered. Please sign in instead.');
+                                return;
+                            }
+
+                            resolvedAuthUser = signInData.user;
+                            recoveredExistingAccount = true;
                         } else {
                             showError(authError.message);
+                            return;
                         }
+                    } else {
+                        resolvedAuthUser = authData?.user || null;
+                    }
+
+                    if (!resolvedAuthUser?.id) {
+                        showError('Unable to complete account setup. Please try again.');
                         return;
                     }
 
-                    // Create user record in users table
-                    if (authData.user) {
-                        const { error: userError } = await getSupabase()
+                    // Ensure user record exists in users table (prevents auth-only orphan accounts)
+                    // Some environments may not yet have all optional columns (e.g., grade_level_text).
+                    const schemaFallbackStorageKey = 'users_table_missing_columns';
+                    const cachedMissingColumns = (() => {
+                        try {
+                            const parsed = JSON.parse(localStorage.getItem(schemaFallbackStorageKey) || '[]');
+                            return Array.isArray(parsed) ? parsed : [];
+                        } catch (error) {
+                            return [];
+                        }
+                    })();
+
+                    const profilePayload = {
+                        id: resolvedAuthUser.id,
+                        grade_level_id: resolvedGradeLevelId,
+                        section_id: resolvedSectionId,
+                        grade_level_text: resolvedGradeLevelText,
+                        section_text: resolvedSectionText,
+                        grade_level: resolvedGradeLevelText,
+                        section: resolvedSectionText,
+                        email: email,
+                        full_name: fullName,
+                        role: selectedRole,
+                        created_at: new Date().toISOString(),
+                        updated_at: new Date().toISOString()
+                    };
+
+                    cachedMissingColumns.forEach(columnName => {
+                        if (Object.prototype.hasOwnProperty.call(profilePayload, columnName)) {
+                            delete profilePayload[columnName];
+                        }
+                    });
+
+                    let userError = null;
+                    for (let attempt = 0; attempt < 6; attempt++) {
+                        const upsertResult = await supabase
                             .from('users')
-                            .insert({
-                                id: authData.user.id,
-                                grade_level_id: resolvedGradeLevelId,
-                                section_id: resolvedSectionId,
-                                grade_level_text: resolvedGradeLevelText,
-                                section_text: resolvedSectionText,
-                                email: email,
-                                full_name: fullName,
-                                role: selectedRole,
-                                created_at: new Date().toISOString(),
-                                updated_at: new Date().toISOString()
+                            .upsert(profilePayload, {
+                                onConflict: 'id'
                             });
 
-                        if (userError) {
-                            console.error('Error creating user record:', userError);
+                        userError = upsertResult.error;
+                        if (!userError) {
+                            break;
                         }
+
+                        const missingColumnMatch = (userError.message || '').match(/Could not find the '([^']+)' column/i);
+                        if (userError.code === 'PGRST204' && missingColumnMatch) {
+                            const missingColumn = missingColumnMatch[1];
+                            if (Object.prototype.hasOwnProperty.call(profilePayload, missingColumn)) {
+                                delete profilePayload[missingColumn];
+                                if (!cachedMissingColumns.includes(missingColumn)) {
+                                    cachedMissingColumns.push(missingColumn);
+                                    localStorage.setItem(schemaFallbackStorageKey, JSON.stringify(cachedMissingColumns));
+                                }
+                                continue;
+                            }
+                        }
+
+                        break;
+                    }
+
+                    if (userError) {
+                        console.error('Error syncing user record:', userError);
+                        showError('Account exists in authentication, but profile sync failed. Please contact support/admin to run user sync.');
+                        return;
+                    }
+
+                    if (recoveredExistingAccount) {
+                        await supabase.auth.signOut();
                     }
 
                     // Show success message

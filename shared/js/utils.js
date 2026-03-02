@@ -993,11 +993,39 @@ async function getStudentsBySection(sectionId) {
 async function getStudentGradeSection(studentId) {
   try {
     const supabase = getSupabase();
-    const { data: userData, error: userError } = await supabase
-      .from('users')
-      .select('id, full_name, email, grade_level_id, section_id')
-      .eq('id', studentId)
-      .single();
+    const baseFields = ['id', 'full_name', 'email'];
+    const optionalFields = ['grade_level_id', 'section_id', 'grade_level_text', 'section_text', 'grade_level', 'section'];
+    const selectedFields = [...baseFields, ...optionalFields];
+
+    let userData = null;
+    let userError = null;
+
+    for (let attempt = 0; attempt < optionalFields.length + 1; attempt++) {
+      const { data, error } = await supabase
+        .from('users')
+        .select(selectedFields.join(', '))
+        .eq('id', studentId)
+        .single();
+
+      if (!error) {
+        userData = data;
+        userError = null;
+        break;
+      }
+
+      userError = error;
+      const missingColumnMatch = (error.message || '').match(/Could not find the '([^']+)' column/i);
+      if (error.code === 'PGRST204' && missingColumnMatch) {
+        const missingColumn = missingColumnMatch[1];
+        const columnIndex = selectedFields.indexOf(missingColumn);
+        if (columnIndex !== -1) {
+          selectedFields.splice(columnIndex, 1);
+          continue;
+        }
+      }
+
+      break;
+    }
 
     if (userError) {
       console.error('Error fetching student grade/section:', userError);
@@ -1022,6 +1050,16 @@ async function getStudentGradeSection(studentId) {
       }
     }
 
+    if (!gradeLevel) {
+      const fallbackGradeName = userData.grade_level_text || userData.grade_level || null;
+      if (fallbackGradeName) {
+        gradeLevel = {
+          id: userData.grade_level_id || null,
+          name: fallbackGradeName
+        };
+      }
+    }
+
     if (userData.section_id) {
       const { data: sectionData, error: sectionError } = await supabase
         .from('sections')
@@ -1034,6 +1072,50 @@ async function getStudentGradeSection(studentId) {
           id: sectionData.id,
           name: sectionData.name
         };
+      }
+    }
+
+    if (!section) {
+      const fallbackSectionName = userData.section_text || userData.section || null;
+      if (fallbackSectionName) {
+        section = {
+          id: userData.section_id || null,
+          name: fallbackSectionName
+        };
+      }
+    }
+
+    if (!gradeLevel || !section) {
+      const {
+        data: { user: authUser }
+      } = await supabase.auth.getUser();
+
+      if (authUser && authUser.id === studentId) {
+        const metadata = authUser.user_metadata || {};
+
+        if (!gradeLevel) {
+          const metadataGradeName = metadata.grade_level_text || metadata.grade_level || null;
+          const metadataGradeId = metadata.grade_level_id || null;
+
+          if (metadataGradeName || metadataGradeId) {
+            gradeLevel = {
+              id: metadataGradeId,
+              name: metadataGradeName || String(metadataGradeId)
+            };
+          }
+        }
+
+        if (!section) {
+          const metadataSectionName = metadata.section_text || metadata.section || null;
+          const metadataSectionId = metadata.section_id || null;
+
+          if (metadataSectionName || metadataSectionId) {
+            section = {
+              id: metadataSectionId,
+              name: metadataSectionName || String(metadataSectionId)
+            };
+          }
+        }
       }
     }
 

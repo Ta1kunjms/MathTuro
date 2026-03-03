@@ -6,7 +6,7 @@
     <link rel="icon" type="image/png" href="../Logo/MATHURO-LOGO.png">
     <title>Browse Modules - MathTuro LMS</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+    <script src="../shared/js/supabase-lib.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <script>
         tailwind.config = {
@@ -216,6 +216,34 @@
             return str.startsWith('grade') ? str.replace(/^grade\s*/, '') : str;
         }
 
+        function getModuleProgress(module) {
+            const value = Number(module.progress_percentage ?? module.progress ?? 0);
+            if (Number.isNaN(value)) return 0;
+            return Math.max(0, Math.min(100, Math.round(value)));
+        }
+
+        function getProgressStatus(progress) {
+            if (progress >= 100) {
+                return { label: 'Completed', className: 'bg-green-100 text-green-700' };
+            }
+            if (progress > 0) {
+                return { label: 'In Progress', className: 'bg-yellow-100 text-yellow-700' };
+            }
+            return { label: 'Not Started', className: 'bg-gray-100 text-gray-600' };
+        }
+
+        function getEstimatedTime(module) {
+            const minutes = Number(module.estimated_minutes ?? module.duration_minutes ?? module.reading_time_minutes);
+            if (Number.isFinite(minutes) && minutes > 0) return `${Math.round(minutes)} min`;
+            return module.content_type === 'pdf' ? '15 min' : '10 min';
+        }
+
+        function getDifficulty(module) {
+            const difficulty = String(module.difficulty ?? module.level ?? 'Beginner').trim();
+            if (!difficulty) return 'Beginner';
+            return difficulty.charAt(0).toUpperCase() + difficulty.slice(1).toLowerCase();
+        }
+
         function setupEventListeners() {
             // Logout
             document.getElementById('logoutButton').addEventListener('click', async () => {
@@ -321,7 +349,13 @@
             empty.classList.add('hidden');
             grid.classList.remove('hidden');
             
-            grid.innerHTML = data.map(module => `
+            grid.innerHTML = data.map(module => {
+                const progress = getModuleProgress(module);
+                const progressStatus = getProgressStatus(progress);
+                const estimatedTime = getEstimatedTime(module);
+                const difficulty = getDifficulty(module);
+
+                return `
                 <div class="module-card bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden flex flex-col max-w-sm mx-auto">
                     <a href="module-view.html?id=${module.id}" class="flex flex-col h-full">
                         <div class="h-48 bg-gradient-to-br from-brand to-brand-light relative overflow-hidden">
@@ -359,6 +393,11 @@
                         <div class="p-5 flex flex-col flex-1">
                             <h3 class="font-bold text-gray-800 mb-2 line-clamp-2 text-lg">${module.title}</h3>
                             <p class="text-sm text-gray-600 line-clamp-2 mb-4 flex-1">${module.description || 'No description available'}</p>
+                            <div class="flex flex-wrap items-center gap-2 mb-3">
+                                <span class="px-2.5 py-1 rounded-full text-xs font-semibold ${progressStatus.className}">${progressStatus.label}</span>
+                                <span class="px-2.5 py-1 rounded-full text-xs font-semibold bg-brand/10 text-brand">${difficulty}</span>
+                                <span class="px-2.5 py-1 rounded-full text-xs font-semibold bg-gray-100 text-gray-600">${estimatedTime}</span>
+                            </div>
                             <div class="flex items-center text-xs text-gray-500 mb-4">
                                 <span class="flex items-center space-x-1">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -367,18 +406,16 @@
                                     <span>${new Date(module.created_at).toLocaleDateString()}</span>
                                 </span>
                             </div>
-                            <div class="grid grid-cols-2 gap-2">
-                                <div class="py-3 bg-brand text-white rounded-xl text-center text-sm font-semibold hover:bg-brand-dark transition-colors">
+                            <div>
+                                <div class="w-full py-3 bg-brand text-white rounded-xl text-center text-sm font-semibold hover:bg-brand-dark transition-colors">
                                     Start Learning →
                                 </div>
-                                <a href="lesson-view.html?moduleId=${module.id}" class="py-3 bg-brand/10 text-brand rounded-xl text-center text-sm font-semibold hover:bg-brand/20 transition-colors">
-                                    Quick Lesson
-                                </a>
                             </div>
                         </div>
                     </a>
                 </div>
-            `).join('');
+            `;
+            }).join('');
         }
     </script>
 </body>

@@ -6,7 +6,7 @@
     <link rel="icon" type="image/png" href="Logo/MATHURO-LOGO.png">
     <title>Tutorial Videos - MathTuro LMS</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+    <script src="shared/js/supabase-lib.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <script>
         tailwind.config = {
@@ -666,6 +666,50 @@
             return 'https://via.placeholder.com/320x180?text=Video';
         }
 
+        function normalizeVideoUrlForEmbed(rawUrl) {
+            if (!rawUrl) return null;
+
+            const value = String(rawUrl).trim();
+            if (!value) return null;
+
+            let parsed;
+            try {
+                parsed = new URL(value);
+            } catch {
+                return null;
+            }
+
+            const host = parsed.hostname.toLowerCase();
+
+            if (host.includes('youtube.com')) {
+                if (parsed.pathname === '/watch') {
+                    const videoId = parsed.searchParams.get('v');
+                    return videoId ? `https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0` : null;
+                }
+
+                const embedMatch = parsed.pathname.match(/\/embed\/([a-zA-Z0-9_-]+)/);
+                if (embedMatch?.[1]) {
+                    return `https://www.youtube.com/embed/${embedMatch[1]}?autoplay=1&rel=0`;
+                }
+
+                const shortMatch = parsed.pathname.match(/\/shorts\/([a-zA-Z0-9_-]+)/);
+                if (shortMatch?.[1]) {
+                    return `https://www.youtube.com/embed/${shortMatch[1]}?autoplay=1&rel=0`;
+                }
+            }
+
+            if (host === 'youtu.be') {
+                const videoId = parsed.pathname.replace(/^\//, '').split('/')[0];
+                return videoId ? `https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0` : null;
+            }
+
+            if (parsed.protocol === 'http:' || parsed.protocol === 'https:') {
+                return parsed.href;
+            }
+
+            return null;
+        }
+
         // Render videos grid
         function renderVideos() {
             const grid = document.getElementById('videosGrid');
@@ -770,25 +814,14 @@
             document.getElementById('videoDuration').querySelector('span:last-child').textContent = video.duration || 'N/A';
             document.getElementById('videoCategory').textContent = video.category.replace('-', ' ');
 
-            // Set video source
-            let videoUrl = video.video_url;
-            let videoId = null;
-            
-            // Extract YouTube video ID
-            if (videoUrl.includes('youtube.com/watch')) {
-                videoId = new URL(videoUrl).searchParams.get('v');
-            } else if (videoUrl.includes('youtu.be/')) {
-                videoId = videoUrl.split('youtu.be/')[1].split('?')[0].split('&')[0];
-            } else if (videoUrl.includes('youtube.com/embed/')) {
-                videoId = videoUrl.split('youtube.com/embed/')[1].split('?')[0].split('&')[0];
-            }
-            
-            // Convert to embed URL if we have a video ID
-            if (videoId) {
-                videoUrl = `https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0`;
+            // Set video source safely
+            const embedUrl = normalizeVideoUrlForEmbed(video.video_url);
+            if (!embedUrl) {
+                showToast('Invalid or unsupported video URL.', 'error');
+                return;
             }
 
-            player.src = videoUrl;
+            player.src = embedUrl;
             placeholder.classList.add('hidden');
             playerSection.classList.remove('hidden');
 
@@ -804,10 +837,12 @@
             try {
                 await getSupabase()
                     .from('video_views')
-                    .insert({
+                    .upsert({
                         video_id: videoId,
                         student_id: currentUser.id,
                         viewed_at: new Date().toISOString()
+                    }, {
+                        onConflict: 'video_id,student_id'
                     });
             } catch (error) {
                 // Silently fail - not critical

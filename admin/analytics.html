@@ -6,7 +6,7 @@
     <link rel="icon" type="image/png" href="../Logo/MATHURO-LOGO.png">
     <title>Analytics - Admin Portal</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+    <script src="../shared/js/supabase-lib.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
         body { font-family: 'Inter', system-ui, sans-serif; }
@@ -118,15 +118,42 @@
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
                         <h3 class="text-lg font-semibold text-gray-800 mb-4">Daily Active Users</h3>
-                        <div class="h-48 bg-gray-50 rounded-xl flex items-center justify-center">
-                            <p class="text-gray-500">Chart placeholder - would show daily active users over time</p>
-                        </div>
+                        <div id="dailyActivityChart" class="h-48 bg-gray-50 rounded-xl p-4 flex items-end justify-between gap-2"></div>
+                        <p id="dailyActivitySummary" class="text-sm text-gray-500 mt-3">No activity data yet.</p>
                     </div>
 
                     <div>
-                        <h3 class="text-lg font-semibold text-gray-800 mb-4">Module Completion Rate</h3>
-                        <div class="h-48 bg-gray-50 rounded-xl flex items-center justify-center">
-                            <p class="text-gray-500">Chart placeholder - would show module completion statistics</p>
+                        <h3 class="text-lg font-semibold text-gray-800 mb-4">Activity Completion Status</h3>
+                        <div class="h-48 bg-gray-50 rounded-xl p-4 flex flex-col justify-center gap-4">
+                            <div>
+                                <div class="flex items-center justify-between text-sm mb-1">
+                                    <span class="text-gray-700 font-medium">Approved</span>
+                                    <span id="approvedCompletionValue" class="text-gray-500">0 (0%)</span>
+                                </div>
+                                <div class="h-3 bg-gray-200 rounded-full overflow-hidden">
+                                    <div id="approvedCompletionBar" class="h-full bg-green-500 rounded-full" style="width: 0%"></div>
+                                </div>
+                            </div>
+
+                            <div>
+                                <div class="flex items-center justify-between text-sm mb-1">
+                                    <span class="text-gray-700 font-medium">Pending</span>
+                                    <span id="pendingCompletionValue" class="text-gray-500">0 (0%)</span>
+                                </div>
+                                <div class="h-3 bg-gray-200 rounded-full overflow-hidden">
+                                    <div id="pendingCompletionBar" class="h-full bg-yellow-500 rounded-full" style="width: 0%"></div>
+                                </div>
+                            </div>
+
+                            <div>
+                                <div class="flex items-center justify-between text-sm mb-1">
+                                    <span class="text-gray-700 font-medium">Rejected</span>
+                                    <span id="rejectedCompletionValue" class="text-gray-500">0 (0%)</span>
+                                </div>
+                                <div class="h-3 bg-gray-200 rounded-full overflow-hidden">
+                                    <div id="rejectedCompletionBar" class="h-full bg-red-500 rounded-full" style="width: 0%"></div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -168,68 +195,73 @@
     <script>
         let currentUser = null;
 
+        const userMenuBtn = document.getElementById('userMenuBtn');
+        const userDropdown = document.getElementById('userDropdown');
+
         // Update user information across the UI
         function updateUserInfo(user) {
-            const initials = getInitials(user.fullName);
-            const firstName = user.fullName.split(' ')[0];
-            
-            document.getElementById('sidebarUserName').textContent = user.fullName;
-            document.getElementById('userInitials').textContent = initials;
-            document.getElementById('headerUserInitials').textContent = initials;
-            document.getElementById('dropdownUserName').textContent = user.fullName;
-            document.getElementById('dropdownUserEmail').textContent = user.email;
+            const fullName = user?.fullName || user?.full_name || 'Admin User';
+            const email = user?.email || '';
+            const initials = getInitials(fullName);
+
+            const sidebarUserName = document.getElementById('sidebarUserName');
+            const userInitials = document.getElementById('userInitials');
+            const headerUserInitials = document.getElementById('headerUserInitials');
+            const dropdownUserName = document.getElementById('dropdownUserName');
+            const dropdownUserEmail = document.getElementById('dropdownUserEmail');
+
+            if (sidebarUserName) sidebarUserName.textContent = fullName;
+            if (userInitials) userInitials.textContent = initials;
+            if (headerUserInitials) headerUserInitials.textContent = initials;
+            if (dropdownUserName) dropdownUserName.textContent = fullName;
+            if (dropdownUserEmail) dropdownUserEmail.textContent = email;
         }
 
         function getInitials(name) {
-            return name.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2);
+            return (name || 'Admin').split(' ').filter(Boolean).map(part => part[0]).join('').toUpperCase().substring(0, 2);
         }
 
         async function loadAnalytics() {
             try {
-                // Get total users
-                const { data: usersData, error: usersError } = await getSupabase()
-                    .from('users')
-                    .select('id');
-                
-                if (!usersError && usersData) {
-                    document.getElementById('totalUsers').textContent = usersData.length.toLocaleString();
+                const supabase = getSupabase();
+
+                const [usersResult, modulesResult, quizzesResult, submissionsResult] = await Promise.all([
+                    supabase.from('users').select('id'),
+                    supabase.from('modules').select('id, title, name, grade_level, grade_level_text, status'),
+                    supabase.from('quizzes').select('id, status, is_published'),
+                    supabase.from('quiz_submissions').select('module_id, user_id, student_score, total_items, status, submitted_at, created_at')
+                ]);
+
+                if (!usersResult.error && usersResult.data) {
+                    document.getElementById('totalUsers').textContent = usersResult.data.length.toLocaleString();
                 }
 
-                // Get active modules
-                const { data: modulesData, error: modulesError } = await getSupabase()
-                    .from('modules')
-                    .select('id, status');
-                
-                if (!modulesError && modulesData) {
-                    const activeModules = modulesData.filter(module => {
-                        if (typeof module.status === 'string') {
-                            return ['active', 'published'].includes(module.status.toLowerCase());
-                        }
-                        return true;
-                    });
-                    document.getElementById('activeModules').textContent = activeModules.length;
-                }
+                const modulesData = modulesResult.error ? [] : (modulesResult.data || []);
+                const activeModules = modulesData.filter(module => {
+                    if (typeof module.status === 'string') {
+                        return ['active', 'published'].includes(module.status.toLowerCase());
+                    }
+                    return true;
+                });
+                document.getElementById('activeModules').textContent = activeModules.length;
 
-                // Get total quizzes
-                const { data: quizzesData, error: quizzesError } = await getSupabase()
-                    .from('quizzes')
-                    .select('id, status, is_published');
-                
-                if (!quizzesError && quizzesData) {
-                    const activeQuizzes = quizzesData.filter(quiz => {
-                        if (typeof quiz.is_published === 'boolean') {
-                            return quiz.is_published;
-                        }
-                        if (typeof quiz.status === 'string') {
-                            return ['active', 'published'].includes(quiz.status.toLowerCase());
-                        }
-                        return true;
-                    });
-                    document.getElementById('totalQuizzes').textContent = activeQuizzes.length;
-                }
+                const quizzesData = quizzesResult.error ? [] : (quizzesResult.data || []);
+                const activeQuizzes = quizzesData.filter(quiz => {
+                    if (typeof quiz.is_published === 'boolean') {
+                        return quiz.is_published;
+                    }
+                    if (typeof quiz.status === 'string') {
+                        return ['active', 'published'].includes(quiz.status.toLowerCase());
+                    }
+                    return true;
+                });
+                document.getElementById('totalQuizzes').textContent = activeQuizzes.length;
 
-                // Load module performance data
-                await loadModulePerformance();
+                const submissionsData = submissionsResult.error ? [] : (submissionsResult.data || []);
+
+                renderDailyActivityChart(submissionsData);
+                renderCompletionStatus(submissionsData);
+                loadModulePerformance(activeModules, submissionsData);
 
             } catch (error) {
                 console.error('Error loading analytics:', error);
@@ -237,40 +269,109 @@
             }
         }
 
-        async function loadModulePerformance() {
+        function renderDailyActivityChart(submissionsData) {
+            const chart = document.getElementById('dailyActivityChart');
+            const summary = document.getElementById('dailyActivitySummary');
+            if (!chart || !summary) return;
+
+            const today = new Date();
+            const days = [];
+            for (let offset = 6; offset >= 0; offset -= 1) {
+                const date = new Date(today);
+                date.setHours(0, 0, 0, 0);
+                date.setDate(date.getDate() - offset);
+                days.push(date);
+            }
+
+            const dayMap = new Map(days.map(date => [date.toISOString().slice(0, 10), 0]));
+
+            for (const submission of submissionsData) {
+                const timestamp = submission.submitted_at || submission.created_at;
+                if (!timestamp) continue;
+
+                const date = new Date(timestamp);
+                if (Number.isNaN(date.getTime())) continue;
+
+                date.setHours(0, 0, 0, 0);
+                const key = date.toISOString().slice(0, 10);
+                if (dayMap.has(key)) {
+                    dayMap.set(key, dayMap.get(key) + 1);
+                }
+            }
+
+            const points = days.map(date => ({
+                label: date.toLocaleDateString(undefined, { weekday: 'short' }),
+                value: dayMap.get(date.toISOString().slice(0, 10)) || 0
+            }));
+
+            const maxValue = Math.max(...points.map(point => point.value), 1);
+            const weeklyTotal = points.reduce((sum, point) => sum + point.value, 0);
+
+            chart.innerHTML = points.map(point => {
+                const height = Math.max(Math.round((point.value / maxValue) * 100), point.value > 0 ? 18 : 8);
+                return `
+                    <div class="flex-1 min-w-0 flex flex-col items-center gap-2">
+                        <span class="text-xs text-gray-400">${point.value}</span>
+                        <div class="w-full bg-maroon/80 rounded-t-md" style="height: ${height}%; min-height: 8px" title="${point.label}: ${point.value}"></div>
+                        <span class="text-xs text-gray-500">${point.label}</span>
+                    </div>
+                `;
+            }).join('');
+
+            summary.textContent = `Last 7 days: ${weeklyTotal} submissions`;
+        }
+
+        function renderCompletionStatus(submissionsData) {
+            const statuses = { approved: 0, pending: 0, rejected: 0 };
+
+            for (const submission of submissionsData) {
+                const normalizedStatus = typeof submission.status === 'string' ? submission.status.toLowerCase() : '';
+                if (statuses[normalizedStatus] !== undefined) {
+                    statuses[normalizedStatus] += 1;
+                }
+            }
+
+            const total = statuses.approved + statuses.pending + statuses.rejected;
+
+            const updateStatusBar = (key, barId, valueId) => {
+                const count = statuses[key];
+                const percent = total > 0 ? Math.round((count / total) * 100) : 0;
+
+                const bar = document.getElementById(barId);
+                const label = document.getElementById(valueId);
+
+                if (bar) bar.style.width = `${percent}%`;
+                if (label) label.textContent = `${count} (${percent}%)`;
+            };
+
+            updateStatusBar('approved', 'approvedCompletionBar', 'approvedCompletionValue');
+            updateStatusBar('pending', 'pendingCompletionBar', 'pendingCompletionValue');
+            updateStatusBar('rejected', 'rejectedCompletionBar', 'rejectedCompletionValue');
+        }
+
+        function loadModulePerformance(activeModules, submissionsData) {
             try {
-                const { data: modulesData, error: modulesError } = await getSupabase()
-                    .from('modules')
-                    .select('*');
-
-                if (modulesError) throw modulesError;
-
                 const modulePerformance = [];
 
-                const activeModules = (modulesData || []).filter(module => {
-                    if (typeof module.status === 'string') {
-                        return ['active', 'published'].includes(module.status.toLowerCase());
+                const groupedSubmissions = new Map();
+                for (const submission of submissionsData) {
+                    if (!submission.module_id) continue;
+                    if (!groupedSubmissions.has(submission.module_id)) {
+                        groupedSubmissions.set(submission.module_id, []);
                     }
-                    return true;
-                });
+                    groupedSubmissions.get(submission.module_id).push(submission);
+                }
 
                 for (const module of activeModules) {
-                    const { data: submissionsData, error: submissionsError } = await getSupabase()
-                        .from('quiz_submissions')
-                        .select('user_id, student_score, total_items, status')
-                        .eq('module_id', module.id);
+                    const moduleSubmissions = groupedSubmissions.get(module.id) || [];
 
-                    if (submissionsError || !submissionsData) {
-                        continue;
-                    }
-
-                    const attemptedByStudents = new Set(submissionsData.map(sub => sub.user_id).filter(Boolean));
-                    const approvedSubmissions = submissionsData.filter(sub => sub.status === 'approved');
-                    const completionRate = submissionsData.length > 0
-                        ? Math.round((approvedSubmissions.length / submissionsData.length) * 100)
+                    const attemptedByStudents = new Set(moduleSubmissions.map(sub => sub.user_id).filter(Boolean));
+                    const approvedSubmissions = moduleSubmissions.filter(sub => (sub.status || '').toLowerCase() === 'approved');
+                    const completionRate = moduleSubmissions.length > 0
+                        ? Math.round((approvedSubmissions.length / moduleSubmissions.length) * 100)
                         : 0;
 
-                    const scoredSubmissions = submissionsData.filter(sub => sub.total_items && sub.total_items > 0);
+                    const scoredSubmissions = moduleSubmissions.filter(sub => sub.total_items && sub.total_items > 0);
                     const averageScore = scoredSubmissions.length > 0
                         ? Math.round(
                             scoredSubmissions.reduce((sum, sub) => sum + ((sub.student_score / sub.total_items) * 100), 0) /
@@ -280,7 +381,7 @@
 
                     modulePerformance.push({
                         title: module.title || module.name || 'Untitled Module',
-                        gradeLevel: module.grade_level ? `Grade ${module.grade_level}` : 'N/A',
+                        gradeLevel: module.grade_level_text || (module.grade_level ? `Grade ${module.grade_level}` : 'N/A'),
                         completionRate,
                         averageScore,
                         activeUsers: attemptedByStudents.size
@@ -292,10 +393,19 @@
 
                 // Render module performance table
                 const tbody = document.querySelector('#modulePerformance tbody');
-                tbody.innerHTML = modulePerformance.slice(0, 4).map(module => `
+                if (modulePerformance.length === 0) {
+                    tbody.innerHTML = `
+                        <tr>
+                            <td colspan="5" class="py-10 text-center text-gray-500">No module performance data available yet.</td>
+                        </tr>
+                    `;
+                    return;
+                }
+
+                tbody.innerHTML = modulePerformance.slice(0, 6).map(module => `
                     <tr class="border-b border-gray-100 hover:bg-gray-50">
                         <td class="py-4 px-4">${escapeHtml(module.title)}</td>
-                        <td class="py-4 px-4">${module.gradeLevel}</td>
+                        <td class="py-4 px-4">${escapeHtml(module.gradeLevel)}</td>
                         <td class="py-4 px-4">${module.completionRate}%</td>
                         <td class="py-4 px-4">${module.averageScore}%</td>
                         <td class="py-4 px-4">${module.activeUsers}</td>
@@ -314,6 +424,25 @@
             return div.innerHTML;
         }
 
+        function setupEventListeners() {
+            if (userMenuBtn && userDropdown) {
+                userMenuBtn.addEventListener('click', (event) => {
+                    event.stopPropagation();
+                    userDropdown.classList.toggle('hidden');
+                });
+
+                document.addEventListener('click', () => {
+                    userDropdown.classList.add('hidden');
+                });
+            }
+        }
+
+        async function handleLogout() {
+            if (await logout()) {
+                redirectToLogin();
+            }
+        }
+
         document.addEventListener('DOMContentLoaded', async function() {
             try {
                 currentUser = await checkAuthSession();
@@ -325,6 +454,7 @@
 
                 updateUserInfo(currentUser);
                 await loadAnalytics();
+                setupEventListeners();
             } catch (error) {
                 console.error('Page initialization error:', error);
                 showToast('Failed to load analytics.', 'error');

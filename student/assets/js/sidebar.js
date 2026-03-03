@@ -146,14 +146,40 @@ async function loadSidebarUserInfo() {
     if (userInitialsEl) userInitialsEl.textContent = fallbackInitials;
     if (sidebarUserNameEl) sidebarUserNameEl.textContent = fallbackDisplayName;
 
-    const { data: user, error: userError } = await supabase
+    const { data: users, error: userError } = await supabase
       .from('users')
-      .select('full_name, email, grade_level_id, section_id, grade_level_text, section_text, grade_level, section')
+      .select('*')
       .eq('id', session.user.id)
-      .maybeSingle();
+      .limit(1);
+
+    let user = Array.isArray(users) ? users[0] : null;
 
     if (userError) {
       console.warn('Could not load full sidebar user profile, using session fallback:', userError);
+    }
+
+    if (!user) {
+      const metadata = session.user.user_metadata || {};
+      const fallbackFullName = metadata.full_name || metadata.name || (session.user.email || '').split('@')[0] || 'Student';
+      const fallbackRole = metadata.role || 'student';
+
+      const { data: upsertedRows, error: upsertError } = await supabase
+        .from('users')
+        .upsert({
+          id: session.user.id,
+          email: session.user.email,
+          full_name: fallbackFullName,
+          role: fallbackRole,
+          updated_at: new Date().toISOString()
+        }, { onConflict: 'id' })
+        .select('*')
+        .limit(1);
+
+      if (upsertError) {
+        console.warn('Could not auto-create sidebar user profile, using session fallback:', upsertError);
+      } else {
+        user = Array.isArray(upsertedRows) ? upsertedRows[0] : null;
+      }
     }
 
     if (user) {

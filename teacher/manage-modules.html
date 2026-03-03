@@ -6,7 +6,7 @@
     <link rel="icon" type="image/png" href="../Logo/MATHURO-LOGO.png">
     <title>Manage Modules - MathTuro LMS</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+    <script src="../shared/js/supabase-lib.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
     <script>
@@ -888,10 +888,23 @@
 
         // Upload file to Supabase storage
         async function uploadFile(file, bucket) {
-            const fileName = `${currentUser.id}/${Date.now()}_${file.name.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
-            const { data, error } = await getSupabase().storage.from(bucket).upload(fileName, file);
+            const supabase = getSupabase();
+            const { data: { session } } = await supabase.auth.getSession();
+            const ownerId = session?.user?.id || currentUser?.id;
+
+            if (!ownerId) {
+                throw new Error('Your session expired. Please log in again.');
+            }
+
+            const safeFileName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
+            const fileName = `${ownerId}/${Date.now()}_${safeFileName}`;
+
+            const { data, error } = await supabase.storage.from(bucket).upload(fileName, file, {
+                upsert: false,
+                contentType: file.type || undefined
+            });
             if (error) throw error;
-            const { data: urlData } = getSupabase().storage.from(bucket).getPublicUrl(fileName);
+            const { data: urlData } = supabase.storage.from(bucket).getPublicUrl(fileName);
             return urlData.publicUrl;
         }
 

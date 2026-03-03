@@ -6,7 +6,7 @@
     <link rel="icon" type="image/png" href="../Logo/MATHURO-LOGO.png">
     <title>Quiz Submissions - MathTuro LMS</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+    <script src="../shared/js/supabase-lib.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <script>
         tailwind.config = {
@@ -208,6 +208,16 @@
                     <button class="tab-button px-6 py-2.5 rounded-xl font-medium text-gray-600 hover:bg-gray-100" data-filter="approved">Approved</button>
                     <button class="tab-button px-6 py-2.5 rounded-xl font-medium text-gray-600 hover:bg-gray-100" data-filter="rejected">Rejected</button>
                 </div>
+                <div class="px-4 pb-4 grid grid-cols-1 md:grid-cols-3 gap-3">
+                    <select id="gradeScopeFilter" class="px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-brand/20 focus:border-brand text-sm bg-white">
+                        <option value="">All Grade Levels</option>
+                    </select>
+                    <select id="sectionScopeFilter" class="px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-brand/20 focus:border-brand text-sm bg-white">
+                        <option value="">All Sections (General Quizzes Only)</option>
+                    </select>
+                    <button id="resetScopeFilter" class="px-4 py-2.5 border border-gray-200 rounded-xl text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">Reset Scope</button>
+                </div>
+                <p id="scopeNote" class="px-4 pb-4 text-xs text-gray-500">Scope: All Grade Levels • All Sections (General Quizzes Only)</p>
             </div>
 
             <!-- Submissions List -->
@@ -262,6 +272,10 @@
         let currentUser = null;
         let allSubmissions = [];
         let currentFilter = 'all';
+        let gradeLevels = [];
+        let sections = [];
+        let selectedGradeLevelId = '';
+        let selectedSectionId = '';
 
         const loadingOverlay = document.getElementById('loadingOverlay');
         const mobileMenuBtn = document.getElementById('mobileMenuBtn');
@@ -279,6 +293,7 @@
                 }
 
                 updateUserInfo(currentUser);
+                await loadScopeOptions();
                 await loadSubmissions();
                 setupEventListeners();
             } catch (error) {
@@ -337,6 +352,149 @@
             return name.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2);
         }
 
+        function normalizeText(value) {
+            return (value || '').toString().trim().toLowerCase();
+        }
+
+        function normalizeGradeValue(value) {
+            if (value === null || value === undefined || value === '') return null;
+            const str = String(value).trim().toLowerCase();
+            return str.startsWith('grade') ? str.replace(/^grade\s*/, '') : str;
+        }
+
+        function resolveGradeLevelId(record) {
+            if (record?.grade_level_id) return String(record.grade_level_id);
+            const normalized = normalizeGradeValue(record?.grade_level || record?.grade_level_text);
+            if (!normalized) return '';
+            const matched = gradeLevels.find(g => normalizeGradeValue(g.name) === normalized);
+            return matched ? String(matched.id) : '';
+        }
+
+        function getSectionById(sectionId) {
+            if (!sectionId) return null;
+            return sections.find(s => String(s.id) === String(sectionId)) || null;
+        }
+
+        function getGradeLevelNameById(gradeLevelId) {
+            if (!gradeLevelId) return '';
+            const found = gradeLevels.find(g => String(g.id) === String(gradeLevelId));
+            return found?.name || '';
+        }
+
+        async function loadScopeOptions() {
+            const { data: gradeData, error: gradeError } = await getSupabase()
+                .from('grade_levels')
+                .select('id, name')
+                .eq('is_active', true)
+                .order('name', { ascending: true });
+
+            if (gradeError) throw gradeError;
+            gradeLevels = gradeData || [];
+
+            const { data: sectionData, error: sectionError } = await getSupabase()
+                .from('sections')
+                .select('id, name, grade_level_id')
+                .eq('is_active', true)
+                .order('name', { ascending: true });
+
+            if (sectionError) throw sectionError;
+            sections = sectionData || [];
+
+            populateGradeFilterOptions('');
+            populateSectionFilterOptions('', '');
+            renderScopeNote();
+        }
+
+        function populateGradeFilterOptions(selectedValue = '') {
+            const gradeFilter = document.getElementById('gradeScopeFilter');
+            if (!gradeFilter) return;
+
+            gradeFilter.innerHTML = '<option value="">All Grade Levels</option>' +
+                gradeLevels.map(g => `<option value="${g.id}">${g.name}</option>`).join('');
+
+            if (selectedValue) gradeFilter.value = selectedValue;
+        }
+
+        function populateSectionFilterOptions(gradeLevelId = '', selectedValue = '') {
+            const sectionFilter = document.getElementById('sectionScopeFilter');
+            if (!sectionFilter) return;
+
+            const filteredSections = gradeLevelId
+                ? sections.filter(s => String(s.grade_level_id) === String(gradeLevelId))
+                : sections;
+
+            sectionFilter.innerHTML = '<option value="">All Sections (General Quizzes Only)</option>' +
+                filteredSections.map(s => `<option value="${s.id}">${s.name}</option>`).join('');
+
+            if (selectedValue && filteredSections.some(s => String(s.id) === String(selectedValue))) {
+                sectionFilter.value = selectedValue;
+            } else {
+                sectionFilter.value = '';
+            }
+        }
+
+        function renderScopeNote(filteredCount = null) {
+            const scopeNote = document.getElementById('scopeNote');
+            if (!scopeNote) return;
+
+            const gradeName = getGradeLevelNameById(selectedGradeLevelId) || 'All Grade Levels';
+            const sectionName = getSectionById(selectedSectionId)?.name || 'All Sections (General Quizzes Only)';
+            const countText = filteredCount === null ? '' : ` • ${filteredCount} submissions`;
+
+            scopeNote.textContent = `Scope: ${gradeName} • ${sectionName}${countText}`;
+        }
+
+        function studentMatchesScope(student) {
+            if (!student) return false;
+
+            const studentGradeId = resolveGradeLevelId(student);
+            const studentSectionId = student.section_id ? String(student.section_id) : '';
+            const studentGradeText = normalizeGradeValue(student.grade_level_text || student.grade_level);
+            const studentSectionText = normalizeText(student.section_text || student.section);
+
+            if (selectedGradeLevelId) {
+                const targetGradeName = normalizeGradeValue(getGradeLevelNameById(selectedGradeLevelId));
+                const gradeMatches =
+                    (studentGradeId && studentGradeId === String(selectedGradeLevelId)) ||
+                    (!!targetGradeName && studentGradeText === targetGradeName);
+
+                if (!gradeMatches) return false;
+            }
+
+            if (selectedSectionId) {
+                const sectionName = normalizeText(getSectionById(selectedSectionId)?.name);
+                const sectionMatches =
+                    (studentSectionId && studentSectionId === String(selectedSectionId)) ||
+                    (!!sectionName && studentSectionText === sectionName);
+
+                if (!sectionMatches) return false;
+            }
+
+            return true;
+        }
+
+        function quizMatchesScope(quiz) {
+            if (!quiz) return false;
+
+            const quizGradeId = resolveGradeLevelId(quiz);
+            const quizSectionId = quiz.section_id ? String(quiz.section_id) : '';
+
+            if (selectedGradeLevelId && quizGradeId && quizGradeId !== String(selectedGradeLevelId)) {
+                return false;
+            }
+
+            if (selectedSectionId) {
+                if (quizSectionId && quizSectionId !== String(selectedSectionId)) return false;
+                return true;
+            }
+
+            return !quizSectionId;
+        }
+
+        function submissionMatchesScope(submission) {
+            return studentMatchesScope(submission.users) && quizMatchesScope(submission.quizzes);
+        }
+
         async function loadSubmissions() {
             try {
                 // First, get submissions
@@ -391,7 +549,7 @@
                 if (userIds.length > 0) {
                     const { data: users, error: usersError } = await getSupabase()
                         .from('users')
-                        .select('id, full_name, email')
+                        .select('id, full_name, email, grade_level_id, grade_level, grade_level_text, section_id, section, section_text')
                         .in('id', userIds);
                     if (usersError) {
                         document.getElementById('submissionsList').innerHTML = `<div class="p-12 text-center text-red-500">Failed to load user info: ${usersError.message}</div>`;
@@ -407,7 +565,7 @@
                 if (quizIds.length > 0) {
                     const { data: quizzes, error: quizzesError } = await getSupabase()
                         .from('quizzes')
-                        .select('id, title, total_items, passing_score')
+                        .select('id, title, total_items, passing_score, grade_level_id, grade_level, section_id')
                         .in('id', quizIds);
                     if (quizzesError) {
                         document.getElementById('submissionsList').innerHTML = `<div class="p-12 text-center text-red-500">Failed to load quiz info: ${quizzesError.message}</div>`;
@@ -466,6 +624,7 @@
             const searchTerm = document.getElementById('searchInput')?.value?.toLowerCase() || '';
             
             let filtered = allSubmissions;
+            filtered = filtered.filter(submissionMatchesScope);
             if (currentFilter !== 'all') filtered = filtered.filter(s => s.status === currentFilter);
             if (searchTerm) {
                 filtered = filtered.filter(s => 
@@ -476,6 +635,7 @@
             }
 
             document.getElementById('submissionCount').textContent = `${filtered.length} submissions`;
+            renderScopeNote(filtered.length);
 
             if (filtered.length === 0) {
                 container.innerHTML = `
@@ -744,6 +904,38 @@
                     currentFilter = btn.dataset.filter;
                     renderSubmissions();
                 });
+            });
+
+            document.getElementById('gradeScopeFilter')?.addEventListener('change', function() {
+                selectedGradeLevelId = this.value || '';
+                selectedSectionId = '';
+                populateSectionFilterOptions(selectedGradeLevelId, '');
+                renderSubmissions();
+            });
+
+            document.getElementById('sectionScopeFilter')?.addEventListener('change', function() {
+                selectedSectionId = this.value || '';
+
+                if (selectedSectionId && !selectedGradeLevelId) {
+                    const section = getSectionById(selectedSectionId);
+                    if (section?.grade_level_id) {
+                        selectedGradeLevelId = String(section.grade_level_id);
+                        const gradeFilter = document.getElementById('gradeScopeFilter');
+                        if (gradeFilter) gradeFilter.value = selectedGradeLevelId;
+                        populateSectionFilterOptions(selectedGradeLevelId, selectedSectionId);
+                    }
+                }
+
+                renderSubmissions();
+            });
+
+            document.getElementById('resetScopeFilter')?.addEventListener('click', function() {
+                selectedGradeLevelId = '';
+                selectedSectionId = '';
+                const gradeFilter = document.getElementById('gradeScopeFilter');
+                if (gradeFilter) gradeFilter.value = '';
+                populateSectionFilterOptions('', '');
+                renderSubmissions();
             });
 
             document.getElementById('searchInput')?.addEventListener('input', renderSubmissions);

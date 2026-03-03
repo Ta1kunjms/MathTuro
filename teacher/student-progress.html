@@ -6,7 +6,7 @@
     <title>Student Progress - MathTuro LMS</title>
     <link rel="icon" type="image/png" href="../Logo/MATHURO-LOGO.png">
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+    <script src="../shared/js/supabase-lib.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <script>
         tailwind.config = {
@@ -204,11 +204,26 @@
             <div id="studentView" class="space-y-4 hidden">
                 <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
                     <div class="flex items-center justify-between mb-6">
-                        <h2 class="text-lg font-semibold text-gray-800">Select Student</h2>
+                        <h2 class="text-lg font-semibold text-gray-800">Students</h2>
                         <span id="studentCount" class="text-sm text-gray-500">0 students</span>
                     </div>
-                    <div id="studentGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                        <div class="col-span-full text-center py-8 text-gray-400">Loading students...</div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Name</th>
+                                    <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Grade Level</th>
+                                    <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Section</th>
+                                    <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Email</th>
+                                    <th class="px-4 py-3 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="studentTableBody" class="divide-y divide-gray-100">
+                                <tr>
+                                    <td colspan="5" class="text-center py-8 text-gray-400">Loading students...</td>
+                                </tr>
+                            </tbody>
+                        </table>
                     </div>
                 </div>
             </div>
@@ -287,6 +302,7 @@
             section: null,
             student: null
         };
+        let currentUserProfile = null;
 
         // Mobile menu setup
         document.addEventListener('DOMContentLoaded', function() {
@@ -354,13 +370,15 @@
                     .from('users')
                     .select('*')
                     .eq('id', session.user.id)
-                    .single();
+                    .maybeSingle();
 
                 if (user) {
                     if (user.role !== 'teacher' && user.role !== 'admin') {
                         redirectToLogin();
                         return;
                     }
+
+                    currentUserProfile = user;
 
                     const initials = user.full_name ? user.full_name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) : '--';
                     const headerEl = document.getElementById('headerUserInitials');
@@ -494,7 +512,11 @@
             }
         }
 
-        async function loadStudents(gradeLevelId, sectionId, sectionName) {
+        function normalizeText(value) {
+            return (value || '').toString().trim().toLowerCase();
+        }
+
+        async function loadStudents(gradeLevelId, sectionId, sectionName, gradeLevelName) {
             try {
                 const supabase = getSupabase();
                 if (!supabase) {
@@ -505,52 +527,82 @@
                     .from('users')
                     .select('*')
                     .eq('role', 'student')
-                    .eq('grade_level_id', gradeLevelId)
-                    .eq('section_id', sectionId)
                     .order('full_name');
                 
                 if (error) {
                     console.error('Error loading students:', error);
                     throw error;
                 }
+
+                const targetSectionName = normalizeText(sectionName);
+                const targetGradeName = normalizeText(gradeLevelName);
+                const targetSectionId = String(sectionId || '');
+                const targetGradeId = String(gradeLevelId || '');
+
+                const filteredStudents = (data || []).filter(student => {
+                    const sectionMatches =
+                        (student.section_id && String(student.section_id) === targetSectionId) ||
+                        normalizeText(student.section_text) === targetSectionName ||
+                        normalizeText(student.section) === targetSectionName;
+
+                    const gradeMatches =
+                        (student.grade_level_id && String(student.grade_level_id) === targetGradeId) ||
+                        normalizeText(student.grade_level_text) === targetGradeName ||
+                        normalizeText(student.grade_level) === targetGradeName;
+
+                    return sectionMatches && gradeMatches;
+                });
                 
-                document.getElementById('studentCount').textContent = `${data.length} student${data.length !== 1 ? 's' : ''}`;
+                document.getElementById('studentCount').textContent = `${filteredStudents.length} student${filteredStudents.length !== 1 ? 's' : ''}`;
                 
-                const studentGrid = document.getElementById('studentGrid');
-                if (data.length === 0) {
-                    studentGrid.innerHTML = `
-                        <div class="col-span-full text-center py-8 text-gray-400">
-                            <svg class="w-16 h-16 mx-auto mb-3 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
-                            </svg>
-                            <p>No students available</p>
-                            <p class="text-sm text-gray-500 mt-1">No students found in ${sectionName}</p>
-                        </div>
+                const studentTableBody = document.getElementById('studentTableBody');
+                if (filteredStudents.length === 0) {
+                    studentTableBody.innerHTML = `
+                        <tr>
+                            <td colspan="5" class="text-center py-8 text-gray-400">
+                                No students found in ${sectionName}
+                            </td>
+                        </tr>
                     `;
                 } else {
-                    studentGrid.innerHTML = data.map(student => `
-                        <div class="bg-white rounded-xl border border-gray-200 p-6 card-hover cursor-pointer" 
-                             onclick="selectStudent('${student.id}', '${student.full_name}')">
-                            <div class="flex items-center justify-between">
-                                <div>
-                                    <h3 class="font-semibold text-gray-900 text-lg">${student.full_name}</h3>
-                                    <p class="text-sm text-gray-500 mt-1">${student.email}</p>
-                                </div>
-                                <div class="w-10 h-10 bg-primary-100 rounded-full flex items-center justify-center">
-                                    <svg class="w-5 h-5 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
-                                    </svg>
-                                </div>
-                            </div>
-                        </div>
-                    `).join('');
+                    studentTableBody.innerHTML = filteredStudents.map(student => {
+                        const displayName = student.full_name || student.email || 'Student';
+                        const initials = displayName.trim().charAt(0).toUpperCase() || 'S';
+                        const gradeLabel = student.grade_level_text || student.grade_level || gradeLevelName || '-';
+                        const sectionLabel = student.section_text || student.section || sectionName || '-';
+                        const safeName = displayName.replace(/'/g, "\\'");
+
+                        return `
+                            <tr class="hover:bg-gray-50">
+                                <td class="px-4 py-4">
+                                    <div class="flex items-center gap-3">
+                                        <div class="w-10 h-10 rounded-full bg-green-100 text-green-700 font-semibold flex items-center justify-center">${initials}</div>
+                                        <span class="font-medium text-gray-900">${displayName}</span>
+                                    </div>
+                                </td>
+                                <td class="px-4 py-4 text-gray-600">${gradeLabel}</td>
+                                <td class="px-4 py-4 text-gray-600">${sectionLabel}</td>
+                                <td class="px-4 py-4 text-gray-700">${student.email || '-'}</td>
+                                <td class="px-4 py-4 text-right">
+                                    <button
+                                        class="inline-flex items-center justify-center w-9 h-9 rounded-lg text-primary-600 hover:bg-primary-50"
+                                        title="View Student Quizzes"
+                                        onclick="selectStudent('${student.id}', '${safeName}')">
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                                        </svg>
+                                    </button>
+                                </td>
+                            </tr>
+                        `;
+                    }).join('');
                 }
             } catch (err) {
                 console.error('Error loading students:', err);
-                document.getElementById('studentGrid').innerHTML = `
-                    <div class="col-span-full text-center py-8 text-red-400">
-                        <p>Failed to load students: ${err.message}</p>
-                    </div>
+                document.getElementById('studentTableBody').innerHTML = `
+                    <tr>
+                        <td colspan="5" class="text-center py-8 text-red-400">Failed to load students: ${err.message}</td>
+                    </tr>
                 `;
             }
         }
@@ -636,7 +688,7 @@
             currentState.student = null;
             
             navigateToStep('student');
-            loadStudents(currentState.gradeLevel.id, sectionId, sectionName);
+            loadStudents(currentState.gradeLevel.id, sectionId, sectionName, currentState.gradeLevel.name);
         }
 
         function selectStudent(studentId, studentName) {

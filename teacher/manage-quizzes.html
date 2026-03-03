@@ -6,7 +6,7 @@
     <link rel="icon" type="image/png" href="../Logo/MATHURO-LOGO.png">
     <title>Manage Quizzes - MathTuro LMS</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+    <script src="../shared/js/supabase-lib.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
     <script>
@@ -419,8 +419,14 @@
             return found?.name || null;
         }
 
+        function getSectionById(sectionId) {
+            if (!sectionId) return null;
+            return sections.find(s => String(s.id) === String(sectionId)) || null;
+        }
+
         function getQuizScopeLabels(quiz) {
-            const gradeLevelId = resolveGradeLevelId(quiz);
+            const sectionRecord = getSectionById(quiz.section_id);
+            const gradeLevelId = resolveGradeLevelId(quiz) || (sectionRecord?.grade_level_id ? String(sectionRecord.grade_level_id) : '');
             const gradeLabel = getGradeLevelNameById(gradeLevelId) || quiz.grade_level || 'All Grade Levels';
             const sectionLabel = quiz.section_id
                 ? (getSectionNameById(quiz.section_id) || 'Specific Section')
@@ -808,7 +814,19 @@
                 populateQuizSectionOptions(this.value, '');
             });
             document.getElementById('quizSection').addEventListener('change', function() {
-                updateQuizScopePreview(document.getElementById('quizGradeLevel').value, this.value);
+                const sectionId = this.value;
+                const gradeSelect = document.getElementById('quizGradeLevel');
+                const selectedSection = getSectionById(sectionId);
+
+                if (sectionId && selectedSection?.grade_level_id) {
+                    const sectionGradeLevelId = String(selectedSection.grade_level_id);
+                    if (gradeSelect.value !== sectionGradeLevelId) {
+                        gradeSelect.value = sectionGradeLevelId;
+                        populateQuizSectionOptions(sectionGradeLevelId, sectionId);
+                    }
+                }
+
+                updateQuizScopePreview(gradeSelect.value, sectionId);
             });
         }
 
@@ -859,8 +877,13 @@
 
             try {
                 const now = new Date().toISOString();
-                const selectedGradeLevelId = document.getElementById('quizGradeLevel').value || null;
                 const selectedSectionId = document.getElementById('quizSection').value || null;
+                const selectedSection = getSectionById(selectedSectionId);
+                const selectedGradeLevelId =
+                    document.getElementById('quizGradeLevel').value ||
+                    (selectedSection?.grade_level_id ? String(selectedSection.grade_level_id) : '') ||
+                    null;
+
                 const quizData = {
                     title: document.getElementById('quizTitle').value,
                     description: document.getElementById('quizDescription').value,

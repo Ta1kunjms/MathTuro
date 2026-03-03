@@ -211,11 +211,35 @@ async function checkAuthSession() {
     
     // If no user data in localStorage, try to fetch from database
     if (!user) {
-      const { data: userData, error: userError } = await supabase
+      const { data: userRows, error: userError } = await supabase
         .from('users')
         .select('id, email, role, full_name')
         .eq('id', session.user.id)
-        .single();
+        .limit(1);
+
+      let userData = Array.isArray(userRows) ? userRows[0] : null;
+
+      if (!userData) {
+        const metadata = session.user.user_metadata || {};
+        const fallbackRole = metadata.role || 'student';
+        const fallbackFullName = metadata.full_name || metadata.name || (session.user.email || '').split('@')[0] || 'User';
+
+        const { data: createdRows, error: createError } = await supabase
+          .from('users')
+          .upsert({
+            id: session.user.id,
+            email: session.user.email,
+            role: fallbackRole,
+            full_name: fallbackFullName,
+            updated_at: new Date().toISOString()
+          }, { onConflict: 'id' })
+          .select('id, email, role, full_name')
+          .limit(1);
+
+        if (!createError) {
+          userData = Array.isArray(createdRows) ? createdRows[0] : null;
+        }
+      }
 
       if (userError || !userData) {
         return null;
@@ -227,7 +251,7 @@ async function checkAuthSession() {
         role: userData.role,
         fullName: userData.full_name
       };
-      
+
       localStorage.setItem('user', JSON.stringify(newUser));
       return newUser;
     }

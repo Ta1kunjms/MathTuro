@@ -6,7 +6,7 @@
     <title>Reports - MathTuro LMS</title>
     <link rel="icon" type="image/png" href="../Logo/MATHURO-LOGO.png">
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+    <script src="../shared/js/supabase-lib.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <!-- Export Libraries -->
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
@@ -140,7 +140,7 @@
                 <div class="p-6 border-b border-gray-100 flex flex-col sm:flex-row justify-between items-start sm:items-center space-y-4 sm:space-y-0">
                     <div>
                         <h2 class="text-lg font-semibold text-gray-800">Student Performance Report</h2>
-                        <p class="text-sm text-gray-500">Detailed quiz scores and performance metrics</p>
+                        <p class="text-sm text-gray-500">Detailed quiz scores and performance metrics by grade and section</p>
                     </div>
                     <div id="exportButtons" class="flex space-x-3">
                         <button onclick="exportToExcel()" class="flex items-center space-x-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors">
@@ -156,6 +156,24 @@
                             <span>Export PDF</span>
                         </button>
                     </div>
+                </div>
+
+                <!-- Scope Filters -->
+                <div class="px-6 py-4 border-b border-gray-100 bg-gray-50/70">
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                        <select id="reportGradeFilter" class="px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-brand bg-white text-sm">
+                            <option value="">All Grade Levels</option>
+                        </select>
+                        <select id="reportSectionFilter" class="px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-brand bg-white text-sm">
+                            <option value="">All Sections (General Quizzes Only)</option>
+                        </select>
+                        <button id="resetScopeBtn" type="button" class="px-4 py-2.5 border border-gray-200 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-100 transition-colors">
+                            Reset Filters
+                        </button>
+                    </div>
+                    <p id="reportScopeNote" class="text-xs text-gray-500 mt-3">
+                        Tip: choose a specific section to include section-specific quizzes.
+                    </p>
                 </div>
                 
                 <!-- Table Container -->
@@ -186,15 +204,26 @@
     <script src="../shared/js/auth.js"></script>
     <script src="assets/js/sidebar.js"></script>
     <script>
+        let currentUser = null;
         let reportData = {
             students: [],
             quizzes: [],
             submissions: [],
-            studentScores: []
+            studentScores: [],
+            gradeLevels: [],
+            sections: []
+        };
+
+        let reportState = {
+            selectedGradeLevelId: '',
+            selectedSectionId: '',
+            filteredStudents: [],
+            filteredQuizzes: [],
+            filteredStudentScores: []
         };
 
         // Mobile menu setup
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', async function() {
             const mobileMenuBtn = document.getElementById('mobileMenuBtn');
             const sidebarContainer = document.getElementById('sidebar');
             const sidebarEl = sidebarContainer?.querySelector('aside') || sidebarContainer;
@@ -227,9 +256,289 @@
                 });
             }
 
-            loadUserInfo();
-            loadReportData();
+            await loadUserInfo();
+            await loadReportData();
+            setupReportFilters();
         });
+
+        function normalizeText(value) {
+            return (value || '').toString().trim().toLowerCase();
+        }
+
+        function normalizeGradeValue(value) {
+            if (value === null || value === undefined || value === '') return null;
+            const str = String(value).trim().toLowerCase();
+            return str.startsWith('grade') ? str.replace(/^grade\s*/, '') : str;
+        }
+
+        function resolveGradeLevelId(record) {
+            if (record?.grade_level_id) return String(record.grade_level_id);
+            const normalized = normalizeGradeValue(record?.grade_level || record?.grade_level_text);
+            if (!normalized) return '';
+            const matched = reportData.gradeLevels.find(g => normalizeGradeValue(g.name) === normalized);
+            return matched ? String(matched.id) : '';
+        }
+
+        function getGradeLevelNameById(gradeLevelId) {
+            if (!gradeLevelId) return '';
+            const found = reportData.gradeLevels.find(g => String(g.id) === String(gradeLevelId));
+            return found?.name || '';
+        }
+
+        function getSectionById(sectionId) {
+            if (!sectionId) return null;
+            return reportData.sections.find(s => String(s.id) === String(sectionId)) || null;
+        }
+
+        function populateGradeFilterOptions(selectedValue = '') {
+            const gradeFilter = document.getElementById('reportGradeFilter');
+            if (!gradeFilter) return;
+
+            gradeFilter.innerHTML = '<option value="">All Grade Levels</option>' +
+                reportData.gradeLevels.map(grade => `<option value="${grade.id}">${grade.name}</option>`).join('');
+
+            if (selectedValue) {
+                gradeFilter.value = selectedValue;
+            }
+        }
+
+        function populateSectionFilterOptions(gradeLevelId = '', selectedSectionId = '') {
+            const sectionFilter = document.getElementById('reportSectionFilter');
+            if (!sectionFilter) return;
+
+            const availableSections = gradeLevelId
+                ? reportData.sections.filter(section => String(section.grade_level_id) === String(gradeLevelId))
+                : reportData.sections;
+
+            sectionFilter.innerHTML = '<option value="">All Sections (General Quizzes Only)</option>' +
+                availableSections.map(section => `<option value="${section.id}">${section.name}</option>`).join('');
+
+            if (selectedSectionId && availableSections.some(section => String(section.id) === String(selectedSectionId))) {
+                sectionFilter.value = selectedSectionId;
+            } else {
+                sectionFilter.value = '';
+            }
+        }
+
+        function setupReportFilters() {
+            const gradeFilter = document.getElementById('reportGradeFilter');
+            const sectionFilter = document.getElementById('reportSectionFilter');
+            const resetScopeBtn = document.getElementById('resetScopeBtn');
+
+            if (!gradeFilter || !sectionFilter || !resetScopeBtn) return;
+
+            gradeFilter.addEventListener('change', () => {
+                reportState.selectedGradeLevelId = gradeFilter.value || '';
+                reportState.selectedSectionId = '';
+                populateSectionFilterOptions(reportState.selectedGradeLevelId, '');
+                applyReportFilters();
+            });
+
+            sectionFilter.addEventListener('change', () => {
+                reportState.selectedSectionId = sectionFilter.value || '';
+
+                if (reportState.selectedSectionId && !reportState.selectedGradeLevelId) {
+                    const selectedSection = getSectionById(reportState.selectedSectionId);
+                    if (selectedSection?.grade_level_id) {
+                        reportState.selectedGradeLevelId = String(selectedSection.grade_level_id);
+                        gradeFilter.value = reportState.selectedGradeLevelId;
+                        populateSectionFilterOptions(reportState.selectedGradeLevelId, reportState.selectedSectionId);
+                    }
+                }
+
+                applyReportFilters();
+            });
+
+            resetScopeBtn.addEventListener('click', () => {
+                reportState.selectedGradeLevelId = '';
+                reportState.selectedSectionId = '';
+                gradeFilter.value = '';
+                populateSectionFilterOptions('', '');
+                applyReportFilters();
+            });
+        }
+
+        function studentMatchesScope(student, selectedGradeLevelId, selectedSectionId) {
+            const studentSectionId = student.section_id ? String(student.section_id) : '';
+            const studentGradeLevelId = resolveGradeLevelId(student);
+            const studentSectionText = normalizeText(student.section_text || student.section);
+            const studentGradeText = normalizeGradeValue(student.grade_level_text || student.grade_level);
+
+            if (selectedGradeLevelId) {
+                const gradeName = normalizeGradeValue(getGradeLevelNameById(selectedGradeLevelId));
+                const gradeMatches =
+                    (studentGradeLevelId && studentGradeLevelId === String(selectedGradeLevelId)) ||
+                    (!!gradeName && studentGradeText === gradeName);
+
+                if (!gradeMatches) return false;
+            }
+
+            if (selectedSectionId) {
+                const sectionRecord = getSectionById(selectedSectionId);
+                const sectionName = normalizeText(sectionRecord?.name);
+                const sectionMatches =
+                    (studentSectionId && studentSectionId === String(selectedSectionId)) ||
+                    (!!sectionName && studentSectionText === sectionName);
+
+                if (!sectionMatches) return false;
+            }
+
+            return true;
+        }
+
+        function quizMatchesScope(quiz, selectedGradeLevelId, selectedSectionId) {
+            const quizGradeLevelId = resolveGradeLevelId(quiz);
+            const quizSectionId = quiz.section_id ? String(quiz.section_id) : '';
+
+            if (selectedGradeLevelId && quizGradeLevelId && quizGradeLevelId !== String(selectedGradeLevelId)) {
+                return false;
+            }
+
+            if (selectedSectionId) {
+                if (quizSectionId && quizSectionId !== String(selectedSectionId)) {
+                    return false;
+                }
+                return true;
+            }
+
+            return !quizSectionId;
+        }
+
+        function renderTableHeader(quizzes) {
+            const tableHeader = document.getElementById('reportTableHeader');
+            if (!tableHeader) return;
+
+            const dynamicHeaders = quizzes.map((quiz, index) => `
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Quiz ${index + 1} (${quiz.total_items || 0} items)</th>
+            `).join('');
+
+            tableHeader.innerHTML = `
+                <tr>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Student Name</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Student Email</th>
+                    ${dynamicHeaders}
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Total Average</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Pass/Fail</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Total Quizzes</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Completed Quizzes</th>
+                </tr>
+            `;
+        }
+
+        function buildStudentScores(students, quizzes, submissions) {
+            return students.map(student => {
+                const scores = {};
+
+                quizzes.forEach(quiz => {
+                    const studentSubmissions = submissions.filter(
+                        sub => sub.user_id === student.id && sub.quiz_id === quiz.id
+                    );
+
+                    if (studentSubmissions.length > 0) {
+                        const latestSubmission = studentSubmissions.reduce((latest, current) => {
+                            return new Date(current.submitted_at || current.created_at) > new Date(latest.submitted_at || latest.created_at)
+                                ? current
+                                : latest;
+                        });
+
+                        scores[quiz.id] = {
+                            score: latestSubmission.student_score,
+                            totalItems: latestSubmission.total_items
+                        };
+                    } else {
+                        scores[quiz.id] = null;
+                    }
+                });
+
+                return {
+                    id: student.id,
+                    name: student.full_name,
+                    email: student.email,
+                    scores
+                };
+            });
+        }
+
+        function applyReportFilters() {
+            const selectedGradeLevelId = reportState.selectedGradeLevelId;
+            const selectedSectionId = reportState.selectedSectionId;
+
+            const filteredStudents = reportData.students.filter(student =>
+                studentMatchesScope(student, selectedGradeLevelId, selectedSectionId)
+            );
+
+            const filteredQuizzes = reportData.quizzes.filter(quiz =>
+                quizMatchesScope(quiz, selectedGradeLevelId, selectedSectionId)
+            );
+
+            const filteredStudentScores = buildStudentScores(filteredStudents, filteredQuizzes, reportData.submissions);
+
+            reportState.filteredStudents = filteredStudents;
+            reportState.filteredQuizzes = filteredQuizzes;
+            reportState.filteredStudentScores = filteredStudentScores;
+
+            renderReportTable(filteredStudentScores, filteredQuizzes);
+            renderScopeNote(filteredStudents.length, filteredQuizzes.length);
+        }
+
+        function renderScopeNote(studentCount, quizCount) {
+            const note = document.getElementById('reportScopeNote');
+            if (!note) return;
+
+            const gradeName = getGradeLevelNameById(reportState.selectedGradeLevelId) || 'All Grade Levels';
+            const sectionName = getSectionById(reportState.selectedSectionId)?.name || 'All Sections (General Quizzes Only)';
+            note.textContent = `Scope: ${gradeName} • ${sectionName} • ${studentCount} students • ${quizCount} quizzes`;
+        }
+
+        function renderReportTable(studentScores, quizzes) {
+            const tableBody = document.getElementById('reportTableBody');
+            renderTableHeader(quizzes);
+
+            if (!tableBody) return;
+
+            if (studentScores.length === 0) {
+                tableBody.innerHTML = '<tr><td colspan="10" class="text-center py-8 text-gray-400">No students found for the selected scope.</td></tr>';
+                return;
+            }
+
+            let rows = '';
+            studentScores.forEach(student => {
+                const quizScores = quizzes.map(quiz => student.scores[quiz.id]);
+                const validScores = quizScores.filter(score => score !== null);
+                const averageScore = validScores.length > 0
+                    ? (validScores.reduce((sum, score) => sum + (score.score / score.totalItems * 100), 0) / validScores.length)
+                    : 0;
+
+                const passRate = averageScore >= 70;
+
+                rows += `<tr class="hover:bg-gray-50">
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${student.name || 'Student'}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${student.email || '-'}</td>`;
+
+                quizzes.forEach(quiz => {
+                    const score = student.scores[quiz.id];
+                    if (score) {
+                        const percentage = (score.score / score.totalItems * 100).toFixed(1);
+                        const isPass = percentage >= 70;
+                        rows += `<td class="px-6 py-4 whitespace-nowrap text-sm ${isPass ? 'text-green-600' : 'text-red-600'}">${score.score}/${score.totalItems} (${percentage}%)</td>`;
+                    } else {
+                        rows += `<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-400">-</td>`;
+                    }
+                });
+
+                rows += `<td class="px-6 py-4 whitespace-nowrap text-sm ${averageScore >= 70 ? 'text-green-600' : 'text-red-600'} font-medium">${averageScore.toFixed(1)}%</td>`;
+                rows += `<td class="px-6 py-4 whitespace-nowrap">
+                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${passRate ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}">
+                        ${passRate ? 'Pass' : 'Fail'}
+                    </span>
+                </td>`;
+                rows += `<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${quizzes.length}</td>`;
+                rows += `<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${validScores.length}</td>`;
+                rows += `</tr>`;
+            });
+
+            tableBody.innerHTML = rows;
+        }
 
         async function loadUserInfo() {
             try {
@@ -251,6 +560,7 @@
                     .single();
 
                 if (user) {
+                    currentUser = user;
                     if (user.role !== 'teacher' && user.role !== 'admin') {
                         redirectToLogin();
                         return;
@@ -271,7 +581,6 @@
 
         async function loadReportData() {
             const tableBody = document.getElementById('reportTableBody');
-            const tableHeader = document.getElementById('reportTableHeader');
             
             try {
                 const supabase = getSupabase();
@@ -282,21 +591,50 @@
                 const { data: students, error: studentsError } = await supabase
                     .from('users')
                     .select('*')
-                    .eq('role', 'student');
+                    .eq('role', 'student')
+                    .order('full_name', { ascending: true });
                 
                 if (studentsError) {
                     console.error('Error loading students:', studentsError);
                     throw studentsError;
                 }
 
-                const { data: quizzes, error: quizzesError } = await supabase
+                let quizzesQuery = supabase
                     .from('quizzes')
                     .select('*')
                     .order('created_at', { ascending: true });
+
+                if (currentUser?.role === 'teacher') {
+                    quizzesQuery = quizzesQuery.eq('teacher_id', currentUser.id);
+                }
+
+                const { data: quizzes, error: quizzesError } = await quizzesQuery;
                 
                 if (quizzesError) {
                     console.error('Error loading quizzes:', quizzesError);
                     throw quizzesError;
+                }
+
+                const { data: gradeLevels, error: gradeLevelsError } = await supabase
+                    .from('grade_levels')
+                    .select('id, name')
+                    .eq('is_active', true)
+                    .order('name', { ascending: true });
+
+                if (gradeLevelsError) {
+                    console.error('Error loading grade levels:', gradeLevelsError);
+                    throw gradeLevelsError;
+                }
+
+                const { data: sections, error: sectionsError } = await supabase
+                    .from('sections')
+                    .select('id, name, grade_level_id')
+                    .eq('is_active', true)
+                    .order('name', { ascending: true });
+
+                if (sectionsError) {
+                    console.error('Error loading sections:', sectionsError);
+                    throw sectionsError;
                 }
 
                 const { data: submissions, error: submissionsError } = await supabase
@@ -311,83 +649,12 @@
                 reportData.students = students;
                 reportData.quizzes = quizzes;
                 reportData.submissions = submissions;
+                reportData.gradeLevels = gradeLevels || [];
+                reportData.sections = sections || [];
 
-                const studentScores = students.map(student => ({
-                    id: student.id,
-                    name: student.full_name,
-                    email: student.email,
-                    scores: {}
-                }));
-
-                studentScores.forEach(student => {
-                    quizzes.forEach(quiz => {
-                        const studentSubmissions = submissions.filter(
-                            sub => sub.user_id === student.id && sub.quiz_id === quiz.id
-                        );
-                        
-                        if (studentSubmissions.length > 0) {
-                            const latestSubmission = studentSubmissions.reduce((latest, current) => {
-                                return new Date(current.submitted_at) > new Date(latest.submitted_at) ? current : latest;
-                            });
-                            
-                            student.scores[quiz.id] = {
-                                score: latestSubmission.student_score,
-                                totalItems: latestSubmission.total_items
-                            };
-                        } else {
-                            student.scores[quiz.id] = null;
-                        }
-                    });
-                });
-
-                reportData.studentScores = studentScores;
-
-                const quizHeaderRow = tableHeader.querySelector('tr');
-                const averageColumn = quizHeaderRow.children[2];
-                quizzes.forEach((quiz, index) => {
-                    const th = document.createElement('th');
-                    th.className = 'px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase';
-                    th.textContent = `Quiz ${index + 1} (${quiz.total_items} items)`;
-                    quizHeaderRow.insertBefore(th, averageColumn);
-                });
-
-                let rows = '';
-                studentScores.forEach(student => {
-                    const quizScores = quizzes.map(quiz => student.scores[quiz.id]);
-                    const validScores = quizScores.filter(score => score !== null);
-                    const averageScore = validScores.length > 0 
-                        ? (validScores.reduce((sum, score) => sum + (score.score / score.totalItems * 100), 0) / validScores.length) 
-                        : 0;
-
-                    const passRate = averageScore >= 70;
-
-                    rows += `<tr class="hover:bg-gray-50">
-                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${student.name}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${student.email}</td>`;
-
-                    quizzes.forEach(quiz => {
-                        const score = student.scores[quiz.id];
-                        if (score) {
-                            const percentage = (score.score / score.totalItems * 100).toFixed(1);
-                            const isPass = percentage >= 70;
-                            rows += `<td class="px-6 py-4 whitespace-nowrap text-sm ${isPass ? 'text-green-600' : 'text-red-600'}">${score.score}/${score.totalItems} (${percentage}%)</td>`;
-                        } else {
-                            rows += `<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-400">-</td>`;
-                        }
-                    });
-
-                    rows += `<td class="px-6 py-4 whitespace-nowrap text-sm ${averageScore >= 70 ? 'text-green-600' : 'text-red-600'} font-medium">${averageScore.toFixed(1)}%</td>`;
-                    rows += `<td class="px-6 py-4 whitespace-nowrap">
-                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${passRate ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}">
-                            ${passRate ? 'Pass' : 'Fail'}
-                        </span>
-                    </td>`;
-                    rows += `<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${quizzes.length}</td>`;
-                    rows += `<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${validScores.length}</td>`;
-                    rows += `</tr>`;
-                });
-
-                tableBody.innerHTML = rows || '<tr><td colspan="10" class="text-center py-8 text-gray-400">No data found.</td></tr>';
+                populateGradeFilterOptions(reportState.selectedGradeLevelId);
+                populateSectionFilterOptions(reportState.selectedGradeLevelId, reportState.selectedSectionId);
+                applyReportFilters();
 
             } catch (err) {
                 console.error('Error loading report data:', err);
@@ -396,7 +663,11 @@
         }
 
         function exportToExcel() {
-            const { students, quizzes, studentScores } = reportData;
+            const students = reportState.filteredStudents;
+            const quizzes = reportState.filteredQuizzes;
+            const studentScores = reportState.filteredStudentScores;
+
+            if (!students.length) return;
             
             const worksheetData = [];
             
@@ -413,7 +684,7 @@
                 quizzes.forEach(quiz => {
                     const score = student.scores[quiz.id];
                     if (score) {
-                        row.push(`${score.score}/${score.total_items} (${(score.score / score.total_items * 100).toFixed(1)}%)`);
+                        row.push(`${score.score}/${score.totalItems} (${(score.score / score.totalItems * 100).toFixed(1)}%)`);
                     } else {
                         row.push('-');
                     }
@@ -427,7 +698,7 @@
                     
                 row.push(`${averageScore.toFixed(1)}%`);
                 row.push(averageScore >= 70 ? 'Pass' : 'Fail');
-                row.push(reportData.quizzes.length);
+                row.push(quizzes.length);
                 row.push(validScores.length);
                 
                 worksheetData.push(row);
@@ -441,6 +712,12 @@
         }
 
         function exportToPDF() {
+            const students = reportState.filteredStudents;
+            const quizzes = reportState.filteredQuizzes;
+            const studentScores = reportState.filteredStudentScores;
+
+            if (!students.length) return;
+
             const { jsPDF } = window.jspdf;
             const doc = new jsPDF();
             
@@ -449,30 +726,29 @@
             
             doc.setFontSize(12);
             doc.text(`Generated on: ${new Date().toLocaleDateString()}`, 14, 30);
-            doc.text(`Total Students: ${reportData.students.length}`, 14, 38);
-            doc.text(`Total Quizzes: ${reportData.quizzes.length}`, 14, 46);
+            doc.text(`Total Students: ${students.length}`, 14, 38);
+            doc.text(`Total Quizzes: ${quizzes.length}`, 14, 46);
             
             const tableData = [];
             const headers = ['Student Name', 'Student Email'];
-            reportData.quizzes.forEach((quiz, index) => {
+            quizzes.forEach((quiz, index) => {
                 headers.push(`Quiz ${index + 1}`);
             });
             headers.push('Avg', 'Pass/Fail', 'Total', 'Completed');
             
-            reportData.studentScores.forEach(student => {
+            studentScores.forEach(student => {
                 const row = [student.name, student.email];
                 
-                reportData.quizzes.forEach(quiz => {
+                quizzes.forEach(quiz => {
                     const score = student.scores[quiz.id];
                     if (score) {
-                        const percentage = (score.score / score.totalItems * 100).toFixed(0);
                         row.push(`${score.score}/${score.totalItems}`);
                     } else {
                         row.push('-');
                     }
                 });
                 
-                const quizScores = reportData.quizzes.map(quiz => student.scores[quiz.id]);
+                const quizScores = quizzes.map(quiz => student.scores[quiz.id]);
                 const validScores = quizScores.filter(score => score !== null);
                 const averageScore = validScores.length > 0 
                     ? (validScores.reduce((sum, score) => sum + (score.score / score.totalItems * 100), 0) / validScores.length) 
@@ -480,7 +756,7 @@
                     
                 row.push(`${averageScore.toFixed(0)}%`);
                 row.push(averageScore >= 70 ? 'Pass' : 'Fail');
-                row.push(reportData.quizzes.length);
+                row.push(quizzes.length);
                 row.push(validScores.length);
                 
                 tableData.push(row);

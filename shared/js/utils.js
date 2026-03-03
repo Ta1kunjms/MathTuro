@@ -1005,7 +1005,7 @@ async function getStudentGradeSection(studentId) {
         .from('users')
         .select(selectedFields.join(', '))
         .eq('id', studentId)
-        .single();
+        .maybeSingle();
 
       if (!error) {
         userData = data;
@@ -1014,8 +1014,11 @@ async function getStudentGradeSection(studentId) {
       }
 
       userError = error;
-      const missingColumnMatch = (error.message || '').match(/Could not find the '([^']+)' column/i);
-      if (error.code === 'PGRST204' && missingColumnMatch) {
+      const missingColumnMatch =
+        (error.message || '').match(/Could not find the '([^']+)' column/i) ||
+        (error.message || '').match(/column\s+users\.([a-zA-Z0-9_]+)\s+does not exist/i);
+
+      if ((error.code === 'PGRST204' || error.code === '42703') && missingColumnMatch) {
         const missingColumn = missingColumnMatch[1];
         const columnIndex = selectedFields.indexOf(missingColumn);
         if (columnIndex !== -1) {
@@ -1029,6 +1032,10 @@ async function getStudentGradeSection(studentId) {
 
     if (userError) {
       console.error('Error fetching student grade/section:', userError);
+      return null;
+    }
+
+    if (!userData) {
       return null;
     }
 
@@ -1087,8 +1094,9 @@ async function getStudentGradeSection(studentId) {
 
     if (!gradeLevel || !section) {
       const {
-        data: { user: authUser }
-      } = await supabase.auth.getUser();
+        data: { session }
+      } = await supabase.auth.getSession();
+      const authUser = session?.user || null;
 
       if (authUser && authUser.id === studentId) {
         const metadata = authUser.user_metadata || {};

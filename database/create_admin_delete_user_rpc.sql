@@ -3,6 +3,8 @@
 
 BEGIN;
 
+DROP FUNCTION IF EXISTS public.admin_delete_user(uuid);
+
 CREATE OR REPLACE FUNCTION public.admin_delete_user(target_user_id uuid)
 RETURNS boolean
 LANGUAGE plpgsql
@@ -43,5 +45,8 @@ $$;
 
 REVOKE ALL ON FUNCTION public.admin_delete_user(uuid) FROM PUBLIC;
 GRANT EXECUTE ON FUNCTION public.admin_delete_user(uuid) TO authenticated;
+
+-- Ensure PostgREST sees the new RPC immediately
+NOTIFY pgrst, 'reload schema';
 
 COMMIT;

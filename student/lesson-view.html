@@ -468,6 +468,7 @@
         let currentLesson = null;
         let lessons = [];
         let currentUser = null;
+        let studentAssignment = null;
 
         // Wait for DOM to be fully loaded
         document.addEventListener('DOMContentLoaded', async function() {
@@ -485,6 +486,10 @@
                 }
 
                 currentUser = user;
+
+                if (currentUser.role === 'student') {
+                    studentAssignment = await getStudentGradeSection(currentUser.id);
+                }
                 
                 // Update user info displays
                 updateUserDisplay(user);
@@ -579,10 +584,14 @@
 
         async function loadModuleAndLessons(moduleId) {
             try {
-                currentModule = await getModuleById(moduleId);
+                const moduleOptions = currentUser.role === 'student'
+                    ? { requirePublished: true, studentAssignment }
+                    : {};
+
+                currentModule = await getModuleById(moduleId, moduleOptions);
                 
                 if (!currentModule) {
-                    alert('Module not found');
+                    alert(currentUser.role === 'student' ? 'Module not found or not assigned to your section' : 'Module not found');
                     redirectToDashboard();
                     return;
                 }

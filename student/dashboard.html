@@ -545,6 +545,7 @@
     <script>
         // Global variables
         let currentUser = null;
+        let studentAssignment = null;
         let dashboardData = {
             modules: [],
             lessons: [],
@@ -575,6 +576,12 @@
                     redirectToLogin();
                     return;
                 }
+
+                if (typeof syncStudentScopeFromAuth === 'function') {
+                    await syncStudentScopeFromAuth(currentUser.id);
+                }
+
+                studentAssignment = await getStudentGradeSection(currentUser.id);
 
                 // Update greeting based on time
                 updateGreeting();
@@ -653,6 +660,42 @@
                 .substring(0, 2);
         }
 
+        function normalizeGradeValue(value) {
+            if (value === null || value === undefined || value === '') return null;
+            const str = String(value).trim().toLowerCase();
+            return str.startsWith('grade') ? str.replace(/^grade\s*/, '') : str;
+        }
+
+        function isInStudentScope(content, assignment) {
+            if (!assignment) return true;
+
+            const gradeId = assignment?.gradeLevel?.id || null;
+            const sectionId = assignment?.section?.id || null;
+            const gradeName = normalizeGradeValue(assignment?.gradeLevel?.name || null);
+
+            const contentGradeId = content?.grade_level_id || null;
+            const contentSectionId = content?.section_id || null;
+            const contentGradeName = normalizeGradeValue(content?.grade_level ?? content?.grade_level_name ?? null);
+
+            const gradeMatch =
+                !gradeId && !gradeName
+                    ? !contentGradeId && !contentGradeName
+                    : contentGradeId
+                        ? String(contentGradeId) === String(gradeId)
+                        : contentGradeName
+                            ? contentGradeName === gradeName
+                            : true;
+
+            const sectionMatch =
+                !sectionId
+                    ? !contentSectionId
+                    : contentSectionId
+                        ? String(contentSectionId) === String(sectionId)
+                        : true;
+
+            return gradeMatch && sectionMatch;
+        }
+
         // Load streak data
         async function loadStreak() {
             try {
@@ -724,8 +767,9 @@
                 if (modulesError) {
                     console.error('Error loading modules:', modulesError);
                 }
-                console.log('Modules:', modules);
-                dashboardData.modules = modules || [];
+                const scopedModules = (modules || []).filter(module => isInStudentScope(module, studentAssignment));
+                console.log('Modules:', scopedModules);
+                dashboardData.modules = scopedModules;
 
                 // Get lesson progress
                 const { data: lessonProgress, error: progressError } = await getSupabase()
@@ -754,7 +798,7 @@
                 
                 // Get total lessons
                 let totalLessons = 0;
-                modules?.forEach(m => totalLessons += (m.lessons?.length || 0));
+                scopedModules.forEach(m => totalLessons += (m.lessons?.length || 0));
 
                 // Calculate completed modules
                 const moduleProgress = {};
@@ -836,8 +880,10 @@
                     .select('*, lessons(id)')
                     .eq('status', 'published')
                     .order('created_at', { ascending: false });
+
+                const scopedModules = (modules || []).filter(module => isInStudentScope(module, studentAssignment));
                 
-                if (!modules || modules.length === 0) {
+                if (!scopedModules || scopedModules.length === 0) {
                     container.innerHTML = `
                         <div class="text-center py-8">
                             <div class="w-16 h-16 mx-auto bg-gray-100 rounded-full flex items-center justify-center mb-4">
@@ -853,7 +899,7 @@
                 }
 
                 // Get progress for each module
-                const moduleCards = await Promise.all(modules.slice(0, 4).map(async (module) => {
+                const moduleCards = await Promise.all(scopedModules.slice(0, 4).map(async (module) => {
                     const lessonIds = module.lessons?.map(l => l.id) || [];
 
                     let progress = [];
@@ -921,36 +967,38 @@
                     .order('created_at', { ascending: false })
                     .limit(4);
 
-                if (!videos || videos.length === 0) {
-                    // Show placeholder videos
+                let scopedVideos = videos || [];
+
+                if (scopedVideos.length === 0) {
+                    const { data: tutorialVideos } = await getSupabase()
+                        .from('tutorial_videos')
+                        .select('*')
+                        .eq('is_active', true)
+                        .order('is_featured', { ascending: false })
+                        .order('order', { ascending: true })
+                        .order('created_at', { ascending: false })
+                        .limit(4);
+
+                    scopedVideos = (tutorialVideos || []).map(video => ({
+                        id: video.id,
+                        title: video.title,
+                        category: video.category,
+                        video_url: video.video_url,
+                        thumbnail_url: video.thumbnail_url,
+                        duration: video.duration
+                    }));
+                }
+
+                if (!scopedVideos || scopedVideos.length === 0) {
                     container.innerHTML = `
-                        <div class="grid sm:grid-cols-2 gap-4">
-                            <a href="../public/tutorial-videos.html" class="video-card group block bg-gray-50 rounded-xl overflow-hidden border border-gray-100">
-                                <div class="aspect-video bg-gradient-to-br from-brand/10 to-green-500/10 flex items-center justify-center">
-                                    <div class="w-12 h-12 bg-white rounded-full flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
-                                        <svg class="w-6 h-6 text-brand ml-1" fill="currentColor" viewBox="0 0 24 24">
-                                            <path d="M8 5v14l11-7z"/>
-                                        </svg>
-                                    </div>
-                                </div>
-                                <div class="p-4">
-                                    <h4 class="font-semibold text-gray-800 mb-1">Getting Started with MathTuro</h4>
-                                    <p class="text-sm text-gray-500">Learn the basics • 5 min</p>
-                                </div>
-                            </a>
-                            <a href="../public/tutorial-videos.html" class="video-card group block bg-gray-50 rounded-xl overflow-hidden border border-gray-100">
-                                <div class="aspect-video bg-gradient-to-br from-purple-500/10 to-pink-500/10 flex items-center justify-center">
-                                    <div class="w-12 h-12 bg-white rounded-full flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
-                                        <svg class="w-6 h-6 text-purple-600 ml-1" fill="currentColor" viewBox="0 0 24 24">
-                                            <path d="M8 5v14l11-7z"/>
-                                        </svg>
-                                    </div>
-                                </div>
-                                <div class="p-4">
-                                    <h4 class="font-semibold text-gray-800 mb-1">How to Take Quizzes</h4>
-                                    <p class="text-sm text-gray-500">Quiz tips • 3 min</p>
-                                </div>
-                            </a>
+                        <div class="p-8 text-center">
+                            <div class="w-12 h-12 mx-auto bg-gray-100 rounded-full flex items-center justify-center mb-3">
+                                <svg class="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                                </svg>
+                            </div>
+                            <p class="text-gray-500">No tutorial videos available yet</p>
+                            <a href="../public/tutorial-videos.html" class="inline-flex mt-3 px-4 py-2 rounded-lg bg-brand text-white hover:bg-brand-dark transition-colors">Open Tutorial Videos</a>
                         </div>
                     `;
                     return;
@@ -958,7 +1006,7 @@
 
                 container.innerHTML = `
                     <div class="grid sm:grid-cols-2 gap-4">
-                        ${videos.map(video => `
+                        ${scopedVideos.map(video => `
                             <a href="../public/tutorial-videos.html?video=${video.id}" class="video-card group block bg-gray-50 rounded-xl overflow-hidden border border-gray-100">
                                 <div class="aspect-video bg-gray-200 relative">
                                     ${video.thumbnail_url ? 

@@ -410,142 +410,6 @@
         let currentCategory = 'all';
         let currentVideo = null;
 
-        // Sample videos (fallback if no database videos)
-        const sampleVideos = [
-            {
-                id: 1,
-                title: 'Getting Started with MathTuro',
-                description: 'Learn how to navigate the MathTuro learning platform, access modules, and track your progress.',
-                category: 'getting-started',
-                video_url: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
-                thumbnail_url: null,
-                duration: '5:30',
-                is_featured: true,
-                order: 1
-            },
-            {
-                id: 2,
-                title: 'How to Take Quizzes',
-                description: 'A complete guide on taking quizzes, submitting answers, and understanding your scores.',
-                category: 'getting-started',
-                video_url: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
-                thumbnail_url: null,
-                duration: '3:45',
-                is_featured: true,
-                order: 2
-            },
-            {
-                id: 3,
-                title: 'Introduction to Algebra',
-                description: 'Master the basics of algebraic expressions, equations, and problem-solving techniques.',
-                category: 'algebra',
-                video_url: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
-                thumbnail_url: null,
-                duration: '12:20',
-                is_featured: false,
-                order: 3
-            },
-            {
-                id: 4,
-                title: 'Solving Linear Equations',
-                description: 'Step-by-step guide to solving linear equations with one and two variables.',
-                category: 'algebra',
-                video_url: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
-                thumbnail_url: null,
-                duration: '8:15',
-                is_featured: false,
-                order: 4
-            },
-            {
-                id: 5,
-                title: 'Basic Geometry Concepts',
-                description: 'Learn about points, lines, angles, and basic geometric shapes.',
-                category: 'geometry',
-                video_url: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
-                thumbnail_url: null,
-                duration: '10:00',
-                is_featured: false,
-                order: 5
-            },
-            {
-                id: 6,
-                title: 'Area and Perimeter',
-                description: 'Calculate area and perimeter of common shapes including rectangles, triangles, and circles.',
-                category: 'geometry',
-                video_url: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
-                thumbnail_url: null,
-                duration: '7:30',
-                is_featured: false,
-                order: 6
-            },
-            {
-                id: 7,
-                title: 'Introduction to Limits',
-                description: 'Understanding the concept of limits in calculus with visual examples.',
-                category: 'calculus',
-                video_url: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
-                thumbnail_url: null,
-                duration: '15:45',
-                is_featured: false,
-                order: 7
-            },
-            {
-                id: 8,
-                title: 'Derivatives Explained',
-                description: 'Learn how to find derivatives and understand their real-world applications.',
-                category: 'calculus',
-                video_url: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
-                thumbnail_url: null,
-                duration: '18:20',
-                is_featured: false,
-                order: 8
-            },
-            {
-                id: 9,
-                title: 'Mean, Median, and Mode',
-                description: 'Understanding measures of central tendency in statistics.',
-                category: 'statistics',
-                video_url: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
-                thumbnail_url: null,
-                duration: '6:45',
-                is_featured: false,
-                order: 9
-            },
-            {
-                id: 10,
-                title: 'Effective Study Techniques',
-                description: 'Proven study strategies to improve your learning and retention.',
-                category: 'tips',
-                video_url: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
-                thumbnail_url: null,
-                duration: '9:00',
-                is_featured: true,
-                order: 10
-            },
-            {
-                id: 11,
-                title: 'Time Management for Students',
-                description: 'Learn to balance studies, activities, and rest for optimal performance.',
-                category: 'tips',
-                video_url: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
-                thumbnail_url: null,
-                duration: '7:15',
-                is_featured: false,
-                order: 11
-            },
-            {
-                id: 12,
-                title: 'Overcoming Math Anxiety',
-                description: 'Practical tips to build confidence and reduce stress when studying math.',
-                category: 'tips',
-                video_url: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
-                thumbnail_url: null,
-                duration: '8:30',
-                is_featured: false,
-                order: 12
-            }
-        ];
-
         // DOM Elements
         const loadingOverlay = document.getElementById('loadingOverlay');
         const mobileMenuBtn = document.getElementById('mobileMenuBtn');
@@ -567,6 +431,10 @@
                 // Update UI based on role
                 updateUserInfo(currentUser);
                 updateUIForRole(currentUser.role);
+
+                if (currentUser.role === 'student' && typeof syncStudentScopeFromAuth === 'function') {
+                    await syncStudentScopeFromAuth(currentUser.id);
+                }
 
                 // Load videos
                 await loadVideos();
@@ -629,32 +497,59 @@
                     .eq('is_published', true)
                     .order('created_at', { ascending: false });
 
-                if (error) throw error;
+                if (error) {
+                    throw error;
+                }
 
-                if (dbVideos && dbVideos.length > 0) {
-                    // Map database videos to expected format
-                    allVideos = dbVideos.map(v => ({
+                allVideos = (dbVideos || []).map(v => ({
+                    id: v.id,
+                    title: v.title,
+                    description: v.description || '',
+                    category: v.category || 'general',
+                    video_url: v.video_url,
+                    thumbnail_url: v.thumbnail_url || getYouTubeThumbnail(v.video_url),
+                    duration: v.duration || null,
+                    is_featured: Boolean(v.is_featured),
+                    views: v.view_count || 0,
+                    teacher: 'MathTuro',
+                    grade_level: v.grade_level || ''
+                }));
+
+                if (allVideos.length === 0) {
+                    const { data: tutorialVideos, error: tutorialVideosError } = await getSupabase()
+                        .from('tutorial_videos')
+                        .select('*')
+                        .eq('is_active', true)
+                        .order('is_featured', { ascending: false })
+                        .order('order', { ascending: true })
+                        .order('created_at', { ascending: false });
+
+                    if (tutorialVideosError) {
+                        throw tutorialVideosError;
+                    }
+
+                    allVideos = (tutorialVideos || []).map(v => ({
                         id: v.id,
                         title: v.title,
                         description: v.description || '',
                         category: v.category || 'general',
                         video_url: v.video_url,
                         thumbnail_url: v.thumbnail_url || getYouTubeThumbnail(v.video_url),
-                        views: v.view_count || 0,
+                        duration: v.duration || null,
+                        is_featured: Boolean(v.is_featured),
+                        views: 0,
                         teacher: 'MathTuro',
-                        grade_level: v.grade_level || ''
+                        grade_level: ''
                     }));
-                } else {
-                    // Use sample videos as fallback
-                    allVideos = sampleVideos;
                 }
 
                 renderVideos();
 
             } catch (error) {
-                console.log('Using sample videos', error);
-                allVideos = sampleVideos;
+                console.error('Failed to load published videos:', error);
+                allVideos = [];
                 renderVideos();
+                showToast('Unable to load videos from database. Please try again later.', 'error');
             }
         }
 
@@ -918,7 +813,7 @@
 
             try {
                 const { data, error } = await getSupabase()
-                    .from('tutorial_videos')
+                    .from('videos')
                     .insert({
                         title,
                         category,
@@ -927,16 +822,27 @@
                         duration,
                         thumbnail_url: thumbnailUrl || null,
                         is_featured: isFeatured,
-                        is_active: true,
-                        created_by: currentUser.id,
-                        order: allVideos.length + 1
+                        is_published: true,
+                        teacher_id: currentUser.id
                     })
                     .select()
                     .single();
 
                 if (error) throw error;
 
-                allVideos.push(data);
+                allVideos.unshift({
+                    id: data.id,
+                    title: data.title,
+                    description: data.description || '',
+                    category: data.category || 'general',
+                    video_url: data.video_url,
+                    thumbnail_url: data.thumbnail_url || getYouTubeThumbnail(data.video_url),
+                    duration: data.duration || null,
+                    is_featured: Boolean(data.is_featured),
+                    views: data.view_count || 0,
+                    teacher: 'MathTuro',
+                    grade_level: data.grade_level || ''
+                });
                 renderVideos();
                 
                 // Reset form

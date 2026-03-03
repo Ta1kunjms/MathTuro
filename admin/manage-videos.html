@@ -185,6 +185,52 @@
     <script>
         let currentUser = null;
 
+        function normalizeGradeValue(value) {
+            if (value === null || value === undefined) return null;
+            const str = String(value).trim().toLowerCase();
+            if (!str) return null;
+            return str.startsWith('grade') ? str.replace(/^grade\s*/, '') : str;
+        }
+
+        async function ensureVideoSectionGradeConsistency(videoId, selectedGradeLevelText) {
+            if (!videoId) return;
+
+            const { data: currentVideo, error: videoError } = await getSupabase()
+                .from('videos')
+                .select('id, section_id')
+                .eq('id', videoId)
+                .maybeSingle();
+
+            if (videoError) throw videoError;
+            if (!currentVideo?.section_id) return;
+
+            const { data: section, error: sectionError } = await getSupabase()
+                .from('sections')
+                .select('id, name, grade_level_id')
+                .eq('id', currentVideo.section_id)
+                .maybeSingle();
+
+            if (sectionError) throw sectionError;
+            if (!section?.grade_level_id) {
+                throw new Error('Existing section scope is invalid. Please fix section assignment first.');
+            }
+
+            const { data: gradeLevel, error: gradeError } = await getSupabase()
+                .from('grade_levels')
+                .select('id, name')
+                .eq('id', section.grade_level_id)
+                .maybeSingle();
+
+            if (gradeError) throw gradeError;
+
+            const selectedNormalized = normalizeGradeValue(selectedGradeLevelText);
+            const sectionGradeNormalized = normalizeGradeValue(gradeLevel?.name);
+
+            if (!selectedNormalized || !sectionGradeNormalized || selectedNormalized !== sectionGradeNormalized) {
+                throw new Error(`This video is scoped to section "${section.name}" (${gradeLevel?.name || 'unknown grade'}). Choose the matching grade level.`);
+            }
+        }
+
         function formatGradeLabel(gradeLevel) {
             if (gradeLevel === null || gradeLevel === undefined) return 'N/A';
             const gradeText = String(gradeLevel).trim();
@@ -345,6 +391,10 @@
             const isPublished = status === 'active' || status === 'published';
 
             try {
+                if (videoId) {
+                    await ensureVideoSectionGradeConsistency(videoId, gradeLevel);
+                }
+
                 if (videoId) {
                     const updates = {
                         title,

@@ -341,6 +341,7 @@
         let videos = [];
         let editingVideoId = null;
         let gradeLevels = [];
+        let sections = [];
         const unsupportedVideoColumns = new Set(JSON.parse(localStorage.getItem('unsupported_videos_columns') || '[]'));
 
         // Initialize
@@ -370,6 +371,30 @@
             if (!gradeLevelId) return null;
             const found = gradeLevels.find(g => String(g.id) === String(gradeLevelId));
             return found?.name || null;
+        }
+
+        async function ensureVideoSectionGradeConsistency(videoId, selectedGradeLevelId) {
+            if (!videoId) return;
+
+            const { data: currentVideo, error: currentVideoError } = await getSupabase()
+                .from('videos')
+                .select('id, section_id')
+                .eq('id', videoId)
+                .maybeSingle();
+
+            if (currentVideoError) throw currentVideoError;
+            if (!currentVideo?.section_id) return;
+
+            const section = sections.find(s => String(s.id) === String(currentVideo.section_id));
+            if (!section?.grade_level_id) {
+                throw new Error('Existing section scope is invalid. Please clear or fix section assignment first.');
+            }
+
+            const sectionGradeLevelId = String(section.grade_level_id);
+            if (!selectedGradeLevelId || String(selectedGradeLevelId) !== sectionGradeLevelId) {
+                const gradeName = getGradeLevelNameById(sectionGradeLevelId) || 'the section grade';
+                throw new Error(`This video is scoped to a section under ${gradeName}. Use the matching grade level.`);
+            }
         }
 
         function getVideoScopeLabels(video) {
@@ -473,10 +498,19 @@
                 if (gradeError) throw gradeError;
                 gradeLevels = gradeData || [];
 
+                const { data: sectionData, error: sectionError } = await getSupabase()
+                    .from('sections')
+                    .select('id, name, grade_level_id')
+                    .eq('is_active', true)
+                    .order('name', { ascending: true });
+
+                if (sectionError) throw sectionError;
+                sections = sectionData || [];
+
                 populateVideoGradeLevelOptions();
             } catch (error) {
                 console.error('Error loading grade/section options:', error);
-                showToast('Failed to load grade levels', 'error');
+                showToast('Failed to load grade levels and sections', 'error');
             }
         }
 
@@ -562,11 +596,47 @@
 
                 if (error) throw error;
                 videos = data || [];
+                await syncPublishedVideosToTutorialVideos(videos);
                 updateStats();
                 renderVideos();
             } catch (error) {
                 console.error('Error loading videos:', error);
                 showToast('Failed to load videos', 'error');
+            }
+        }
+
+        async function syncPublishedVideosToTutorialVideos(videoRows) {
+            try {
+                const published = (videoRows || []).filter(v => v.is_published && v.video_url);
+                if (published.length === 0) return;
+
+                for (const video of published) {
+                    const { data: existingRows, error: existingError } = await getSupabase()
+                        .from('tutorial_videos')
+                        .select('id')
+                        .eq('created_by', currentUser.id)
+                        .eq('video_url', video.video_url)
+                        .limit(1);
+
+                    if (existingError) continue;
+                    if (existingRows && existingRows.length > 0) continue;
+
+                    await getSupabase()
+                        .from('tutorial_videos')
+                        .insert({
+                            title: video.title,
+                            description: video.description || null,
+                            category: video.category || 'general',
+                            video_url: video.video_url,
+                            thumbnail_url: video.thumbnail_url || getYouTubeThumbnail(video.video_url),
+                            duration: video.duration || null,
+                            is_featured: Boolean(video.is_featured),
+                            is_active: true,
+                            created_by: currentUser.id
+                        });
+                }
+            } catch (error) {
+                console.warn('Video mirror sync skipped:', error);
             }
         }
 
@@ -730,6 +800,11 @@
 
             try {
                 const selectedGradeLevelId = document.getElementById('videoGradeLevel').value || null;
+
+                if (editingVideoId) {
+                    await ensureVideoSectionGradeConsistency(editingVideoId, selectedGradeLevelId);
+                }
+
                 const videoData = {
                     title: document.getElementById('videoTitle').value,
                     description: document.getElementById('videoDescription').value,

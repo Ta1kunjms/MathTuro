@@ -61,6 +61,42 @@ async function getModules(activeOnly = true) {
   }
 }
 
+function normalizeScopeGrade(value) {
+  if (value === null || value === undefined || value === '') return null;
+  const normalized = String(value).trim().toLowerCase();
+  return normalized.startsWith('grade') ? normalized.replace(/^grade\s*/, '') : normalized;
+}
+
+function isContentInStudentScope(content, studentAssignment) {
+  if (!studentAssignment) return true;
+
+  const gradeId = studentAssignment?.gradeLevel?.id || null;
+  const sectionId = studentAssignment?.section?.id || null;
+  const gradeName = normalizeScopeGrade(studentAssignment?.gradeLevel?.name || null);
+
+  const contentGradeId = content?.grade_level_id || null;
+  const contentSectionId = content?.section_id || null;
+  const contentGradeName = normalizeScopeGrade(content?.grade_level || content?.grade_level_name || null);
+
+  const gradeMatch =
+    !gradeId && !gradeName
+      ? !contentGradeId && !contentGradeName
+      : contentGradeId
+        ? String(contentGradeId) === String(gradeId)
+        : contentGradeName
+          ? contentGradeName === gradeName
+          : true;
+
+  const sectionMatch =
+    !sectionId
+      ? !contentSectionId
+      : contentSectionId
+        ? String(contentSectionId) === String(sectionId)
+        : true;
+
+  return gradeMatch && sectionMatch;
+}
+
 /*
   Function Name: getModuleById
   Purpose:
@@ -84,20 +120,31 @@ async function getModules(activeOnly = true) {
   - Returns null if module not found
   - Logs errors to console
 */
-async function getModuleById(moduleId) {
+async function getModuleById(moduleId, options = {}) {
   try {
+    const { requirePublished = false, studentAssignment = null } = options;
+
     // Get module details
-    const { data: module, error: moduleError } = await getSupabase()
+    let moduleQuery = getSupabase()
       .from('modules')
       .select('*')
-      .eq('id', moduleId)
-      .single();
+      .eq('id', moduleId);
+
+    if (requirePublished) {
+      moduleQuery = moduleQuery.eq('status', 'published');
+    }
+
+    const { data: module, error: moduleError } = await moduleQuery.single();
 
     if (moduleError) {
       if (moduleError.code === 'PGRST116') { // No rows returned
         return null;
       }
       console.error('Error loading module:', moduleError);
+      return null;
+    }
+
+    if (studentAssignment && !isContentInStudentScope(module, studentAssignment)) {
       return null;
     }
 

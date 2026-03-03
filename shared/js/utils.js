@@ -1142,6 +1142,120 @@ async function getStudentGradeSection(studentId) {
   }
 }
 
+async function syncStudentScopeFromAuth(studentId) {
+  try {
+    if (!studentId) return false;
+
+    const supabase = getSupabase();
+    if (!supabase) return false;
+
+    const {
+      data: { session }
+    } = await supabase.auth.getSession();
+
+    const authUser = session?.user || null;
+    if (!authUser || authUser.id !== studentId) return false;
+
+    const metadata = authUser.user_metadata || {};
+
+    const { data: userRow, error: userError } = await supabase
+      .from('users')
+      .select('id, role, grade_level_id, section_id, grade_level_text, section_text, grade_level, section')
+      .eq('id', studentId)
+      .maybeSingle();
+
+    if (userError || !userRow || userRow.role !== 'student') return false;
+
+    const normalize = (value) => {
+      if (value === null || value === undefined) return null;
+      const text = String(value).trim();
+      return text.length > 0 ? text : null;
+    };
+
+    const metadataGradeText = normalize(metadata.grade_level_text || metadata.grade_level || metadata.grade || null);
+    const metadataSectionText = normalize(metadata.section_text || metadata.section || null);
+
+    let targetGradeId = userRow.grade_level_id || metadata.grade_level_id || null;
+    let targetSectionId = userRow.section_id || metadata.section_id || null;
+
+    if (!targetGradeId && metadataGradeText) {
+      const { data: gradeRows } = await supabase
+        .from('grade_levels')
+        .select('id, name')
+        .eq('is_active', true)
+        .ilike('name', metadataGradeText)
+        .limit(1);
+
+      if (gradeRows && gradeRows.length > 0) {
+        targetGradeId = gradeRows[0].id;
+      }
+    }
+
+    if (!targetSectionId && metadataSectionText) {
+      let sectionQuery = supabase
+        .from('sections')
+        .select('id, name')
+        .eq('is_active', true)
+        .ilike('name', metadataSectionText)
+        .limit(1);
+
+      if (targetGradeId) {
+        sectionQuery = sectionQuery.eq('grade_level_id', targetGradeId);
+      }
+
+      const { data: sectionRows } = await sectionQuery;
+
+      if (sectionRows && sectionRows.length > 0) {
+        targetSectionId = sectionRows[0].id;
+      }
+    }
+
+    const updatePayload = {};
+
+    if (!userRow.grade_level_id && targetGradeId) updatePayload.grade_level_id = targetGradeId;
+    if (!userRow.section_id && targetSectionId) updatePayload.section_id = targetSectionId;
+
+    if (!normalize(userRow.grade_level_text) && metadataGradeText) updatePayload.grade_level_text = metadataGradeText;
+    if (!normalize(userRow.section_text) && metadataSectionText) updatePayload.section_text = metadataSectionText;
+    if (!normalize(userRow.grade_level) && metadataGradeText) updatePayload.grade_level = metadataGradeText;
+    if (!normalize(userRow.section) && metadataSectionText) updatePayload.section = metadataSectionText;
+
+    if (Object.keys(updatePayload).length === 0) return false;
+
+    let keys = Object.keys(updatePayload);
+    for (let attempt = 0; attempt <= keys.length; attempt++) {
+      const payload = keys.reduce((acc, key) => {
+        acc[key] = updatePayload[key];
+        return acc;
+      }, {});
+
+      const { error } = await supabase
+        .from('users')
+        .update(payload)
+        .eq('id', studentId);
+
+      if (!error) return true;
+
+      const missingColumnMatch =
+        (error.message || '').match(/Could not find the '([^']+)' column/i) ||
+        (error.message || '').match(/column\s+users\.([a-zA-Z0-9_]+)\s+does not exist/i);
+
+      if ((error.code === 'PGRST204' || error.code === '42703') && missingColumnMatch) {
+        const missingColumn = missingColumnMatch[1];
+        keys = keys.filter(key => key !== missingColumn);
+        if (keys.length > 0) continue;
+      }
+
+      return false;
+    }
+
+    return false;
+  } catch (error) {
+    console.warn('syncStudentScopeFromAuth failed:', error);
+    return false;
+  }
+}
+
 // Grade Level Management Functions
 async function createGradeLevel(name, description = '') {
   try {

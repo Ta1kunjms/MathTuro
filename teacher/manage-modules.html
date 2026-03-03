@@ -469,6 +469,46 @@
             return found?.name || null;
         }
 
+        function getSectionById(sectionId) {
+            if (!sectionId) return null;
+            return sections.find(s => String(s.id) === String(sectionId)) || null;
+        }
+
+        function validateAndResolveScope(gradeLevelId, sectionId) {
+            let resolvedGradeLevelId = gradeLevelId ? String(gradeLevelId) : '';
+            const resolvedSectionId = sectionId ? String(sectionId) : '';
+
+            if (!resolvedSectionId) {
+                return {
+                    gradeLevelId: resolvedGradeLevelId || null,
+                    sectionId: null
+                };
+            }
+
+            const selectedSection = getSectionById(resolvedSectionId);
+            if (!selectedSection) {
+                throw new Error('Selected section is invalid. Please choose a valid section.');
+            }
+
+            const sectionGradeLevelId = selectedSection.grade_level_id ? String(selectedSection.grade_level_id) : '';
+            if (!sectionGradeLevelId) {
+                throw new Error('Selected section is not linked to a grade level.');
+            }
+
+            if (!resolvedGradeLevelId) {
+                resolvedGradeLevelId = sectionGradeLevelId;
+            }
+
+            if (resolvedGradeLevelId !== sectionGradeLevelId) {
+                throw new Error('Section does not belong to the selected grade level.');
+            }
+
+            return {
+                gradeLevelId: resolvedGradeLevelId,
+                sectionId: resolvedSectionId
+            };
+        }
+
         function getModuleScopeLabels(module) {
             const gradeLevelId = resolveGradeLevelId(module);
             const gradeLabel = getGradeLevelNameById(gradeLevelId) || module.grade_level || 'All Grade Levels';
@@ -843,6 +883,7 @@
                 const contentType = document.querySelector('input[name="contentType"]:checked').value;
                 const selectedGradeLevelId = document.getElementById('moduleGradeLevel').value || null;
                 const selectedSectionId = document.getElementById('moduleSection').value || null;
+                const resolvedScope = validateAndResolveScope(selectedGradeLevelId, selectedSectionId);
                 let pdfUrl = null;
                 let imageUrls = [];
 
@@ -865,9 +906,9 @@
                     content_type: contentType,
                     pdf_url: pdfUrl,
                     image_urls: imageUrls.length > 0 ? imageUrls : null,
-                    grade_level: getGradeLevelNameById(selectedGradeLevelId),
-                    grade_level_id: selectedGradeLevelId,
-                    section_id: selectedSectionId,
+                    grade_level: getGradeLevelNameById(resolvedScope.gradeLevelId),
+                    grade_level_id: resolvedScope.gradeLevelId,
+                    section_id: resolvedScope.sectionId,
                     status: document.getElementById('moduleStatus').value,
                     teacher_id: currentUser.id
                 });
@@ -1025,10 +1066,11 @@
             const sectionId = document.getElementById('detailModuleSection')?.value || null;
 
             try {
+                const resolvedScope = validateAndResolveScope(gradeLevelId, sectionId);
                 const { error } = await updateModuleWithFallback(moduleId, {
-                    grade_level: getGradeLevelNameById(gradeLevelId),
-                    grade_level_id: gradeLevelId,
-                    section_id: sectionId
+                    grade_level: getGradeLevelNameById(resolvedScope.gradeLevelId),
+                    grade_level_id: resolvedScope.gradeLevelId,
+                    section_id: resolvedScope.sectionId
                 });
                 if (error) throw error;
 

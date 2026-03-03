@@ -322,10 +322,47 @@
         let moduleImages = [];
         let currentImageIndex = 0;
         let selectedScreenshot = null;
+        let studentAssignment = null;
 
         // Get module ID from URL
         const urlParams = new URLSearchParams(window.location.search);
         const moduleId = urlParams.get('id');
+
+        function normalizeGradeValue(value) {
+            if (value === null || value === undefined || value === '') return null;
+            const str = String(value).trim().toLowerCase();
+            return str.startsWith('grade') ? str.replace(/^grade\s*/, '') : str;
+        }
+
+        function isInStudentScope(content, assignment) {
+            if (!assignment) return true;
+
+            const gradeId = assignment?.gradeLevel?.id || null;
+            const sectionId = assignment?.section?.id || null;
+            const gradeName = normalizeGradeValue(assignment?.gradeLevel?.name || null);
+
+            const contentGradeId = content?.grade_level_id || null;
+            const contentSectionId = content?.section_id || null;
+            const contentGradeName = normalizeGradeValue(content?.grade_level ?? content?.grade_level_name ?? null);
+
+            const gradeMatch =
+                !gradeId && !gradeName
+                    ? !contentGradeId && !contentGradeName
+                    : contentGradeId
+                        ? String(contentGradeId) === String(gradeId)
+                        : contentGradeName
+                            ? contentGradeName === gradeName
+                            : true;
+
+            const sectionMatch =
+                !sectionId
+                    ? !contentSectionId
+                    : contentSectionId
+                        ? String(contentSectionId) === String(sectionId)
+                        : true;
+
+            return gradeMatch && sectionMatch;
+        }
 
         // Initialize
         document.addEventListener('DOMContentLoaded', async function() {
@@ -378,6 +415,8 @@
         // Load module data
         async function loadModule() {
             try {
+                studentAssignment = await getStudentGradeSection(currentUser.id);
+
                 // Fetch module first
                 const { data: moduleData, error: moduleError } = await getSupabase()
                     .from('modules')
@@ -404,23 +443,32 @@
 
                 module = moduleData;
 
+                if (!isInStudentScope(module, studentAssignment)) {
+                    document.getElementById('loadingState').classList.add('hidden');
+                    showToast('This module is not assigned to your section', 'error');
+                    setTimeout(() => window.location.href = 'modules.html', 1200);
+                    return;
+                }
+
                 // Fetch videos separately
                 const { data: videosData } = await getSupabase()
                     .from('videos')
                     .select('*')
                     .eq('module_id', moduleId)
+                    .eq('is_published', true)
                     .order('order_index', { ascending: true });
                 
-                module.videos = videosData || [];
+                module.videos = (videosData || []).filter(video => isInStudentScope(video, studentAssignment));
 
                 // Fetch quizzes separately
                 const { data: quizzesData } = await getSupabase()
                     .from('quizzes')
                     .select('*')
                     .eq('module_id', moduleId)
+                    .eq('is_published', true)
                     .order('order_index', { ascending: true });
                 
-                module.quizzes = quizzesData || [];
+                module.quizzes = (quizzesData || []).filter(quiz => isInStudentScope(quiz, studentAssignment));
 
                 // Update header
                 document.getElementById('moduleTitle').textContent = module.title;

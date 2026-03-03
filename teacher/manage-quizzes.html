@@ -424,6 +424,41 @@
             return sections.find(s => String(s.id) === String(sectionId)) || null;
         }
 
+        function validateAndResolveQuizScope(gradeLevelId, sectionId) {
+            let resolvedGradeLevelId = gradeLevelId ? String(gradeLevelId) : '';
+            const resolvedSectionId = sectionId ? String(sectionId) : '';
+
+            if (!resolvedSectionId) {
+                return {
+                    gradeLevelId: resolvedGradeLevelId || null,
+                    sectionId: null
+                };
+            }
+
+            const selectedSection = getSectionById(resolvedSectionId);
+            if (!selectedSection) {
+                throw new Error('Selected section is invalid. Please choose a valid section.');
+            }
+
+            const sectionGradeLevelId = selectedSection.grade_level_id ? String(selectedSection.grade_level_id) : '';
+            if (!sectionGradeLevelId) {
+                throw new Error('Selected section is not linked to a grade level.');
+            }
+
+            if (!resolvedGradeLevelId) {
+                resolvedGradeLevelId = sectionGradeLevelId;
+            }
+
+            if (resolvedGradeLevelId !== sectionGradeLevelId) {
+                throw new Error('Section does not belong to the selected grade level.');
+            }
+
+            return {
+                gradeLevelId: resolvedGradeLevelId,
+                sectionId: resolvedSectionId
+            };
+        }
+
         function getQuizScopeLabels(quiz) {
             const sectionRecord = getSectionById(quiz.section_id);
             const gradeLevelId = resolveGradeLevelId(quiz) || (sectionRecord?.grade_level_id ? String(sectionRecord.grade_level_id) : '');
@@ -883,6 +918,7 @@
                     document.getElementById('quizGradeLevel').value ||
                     (selectedSection?.grade_level_id ? String(selectedSection.grade_level_id) : '') ||
                     null;
+                const resolvedScope = validateAndResolveQuizScope(selectedGradeLevelId, selectedSectionId);
 
                 const quizData = {
                     title: document.getElementById('quizTitle').value,
@@ -890,9 +926,9 @@
                     quiz_url: document.getElementById('quizUrl').value,
                     video_id: document.getElementById('quizVideoId').value || null,
                     category: document.getElementById('quizCategory').value,
-                    grade_level: getGradeLevelNameById(selectedGradeLevelId),
-                    grade_level_id: selectedGradeLevelId,
-                    section_id: selectedSectionId,
+                    grade_level: getGradeLevelNameById(resolvedScope.gradeLevelId),
+                    grade_level_id: resolvedScope.gradeLevelId,
+                    section_id: resolvedScope.sectionId,
                     total_items: parseInt(document.getElementById('quizTotalItems').value),
                     passing_score: parseInt(document.getElementById('quizPassingScore').value) || 0,
                     time_limit_minutes: parseInt(document.getElementById('quizTimeLimit').value) || 0,

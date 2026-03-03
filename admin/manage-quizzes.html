@@ -192,6 +192,52 @@
     <script>
         let currentUser = null;
 
+        function normalizeGradeValue(value) {
+            if (value === null || value === undefined) return null;
+            const str = String(value).trim().toLowerCase();
+            if (!str) return null;
+            return str.startsWith('grade') ? str.replace(/^grade\s*/, '') : str;
+        }
+
+        async function ensureQuizSectionGradeConsistency(quizId, selectedGradeLevelText) {
+            if (!quizId) return;
+
+            const { data: currentQuiz, error: quizError } = await getSupabase()
+                .from('quizzes')
+                .select('id, section_id')
+                .eq('id', quizId)
+                .maybeSingle();
+
+            if (quizError) throw quizError;
+            if (!currentQuiz?.section_id) return;
+
+            const { data: section, error: sectionError } = await getSupabase()
+                .from('sections')
+                .select('id, name, grade_level_id')
+                .eq('id', currentQuiz.section_id)
+                .maybeSingle();
+
+            if (sectionError) throw sectionError;
+            if (!section?.grade_level_id) {
+                throw new Error('Existing section scope is invalid. Please fix section assignment first.');
+            }
+
+            const { data: gradeLevel, error: gradeError } = await getSupabase()
+                .from('grade_levels')
+                .select('id, name')
+                .eq('id', section.grade_level_id)
+                .maybeSingle();
+
+            if (gradeError) throw gradeError;
+
+            const selectedNormalized = normalizeGradeValue(selectedGradeLevelText);
+            const sectionGradeNormalized = normalizeGradeValue(gradeLevel?.name);
+
+            if (!selectedNormalized || !sectionGradeNormalized || selectedNormalized !== sectionGradeNormalized) {
+                throw new Error(`This quiz is scoped to section "${section.name}" (${gradeLevel?.name || 'unknown grade'}). Choose the matching grade level.`);
+            }
+        }
+
         function formatGradeLabel(gradeLevel) {
             if (gradeLevel === null || gradeLevel === undefined) return 'N/A';
             const gradeText = String(gradeLevel).trim();
@@ -384,6 +430,10 @@
             const isPublished = status === 'active' || status === 'published';
 
             try {
+                if (quizId) {
+                    await ensureQuizSectionGradeConsistency(quizId, gradeLevel);
+                }
+
                 if (quizId) {
                     const updates = {
                         title,

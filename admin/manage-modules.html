@@ -195,6 +195,52 @@
     <script>
         let currentUser = null;
 
+        function normalizeGradeValue(value) {
+            if (value === null || value === undefined) return null;
+            const str = String(value).trim().toLowerCase();
+            if (!str) return null;
+            return str.startsWith('grade') ? str.replace(/^grade\s*/, '') : str;
+        }
+
+        async function ensureModuleSectionGradeConsistency(moduleId, selectedGradeLevelText) {
+            if (!moduleId) return;
+
+            const { data: currentModule, error: moduleError } = await getSupabase()
+                .from('modules')
+                .select('id, section_id')
+                .eq('id', moduleId)
+                .maybeSingle();
+
+            if (moduleError) throw moduleError;
+            if (!currentModule?.section_id) return;
+
+            const { data: section, error: sectionError } = await getSupabase()
+                .from('sections')
+                .select('id, name, grade_level_id')
+                .eq('id', currentModule.section_id)
+                .maybeSingle();
+
+            if (sectionError) throw sectionError;
+            if (!section?.grade_level_id) {
+                throw new Error('Existing section scope is invalid. Please fix section assignment first.');
+            }
+
+            const { data: gradeLevel, error: gradeError } = await getSupabase()
+                .from('grade_levels')
+                .select('id, name')
+                .eq('id', section.grade_level_id)
+                .maybeSingle();
+
+            if (gradeError) throw gradeError;
+
+            const selectedNormalized = normalizeGradeValue(selectedGradeLevelText);
+            const sectionGradeNormalized = normalizeGradeValue(gradeLevel?.name);
+
+            if (!selectedNormalized || !sectionGradeNormalized || selectedNormalized !== sectionGradeNormalized) {
+                throw new Error(`This module is scoped to section "${section.name}" (${gradeLevel?.name || 'unknown grade'}). Choose the matching grade level.`);
+            }
+        }
+
         function formatGradeLabel(gradeLevel) {
             if (gradeLevel === null || gradeLevel === undefined) return 'N/A';
             const gradeText = String(gradeLevel).trim();
@@ -382,6 +428,10 @@
                 if (fileInput.files.length > 0) {
                     const file = fileInput.files[0];
                     imageUrl = await uploadFile(file, 'modules');
+                }
+
+                if (moduleId) {
+                    await ensureModuleSectionGradeConsistency(moduleId, gradeLevel);
                 }
 
                 if (moduleId) {

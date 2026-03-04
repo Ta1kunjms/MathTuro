@@ -531,8 +531,8 @@ This project is licensed under the MIT License.
 ## Support
 
 For support, please contact:
-- Email: support@example.com
-- Phone: +1 (555) 123-4567
+- Email: tycoonjamesflores@gmail.com
+- Phone: +639123640851
 
 ## Changelog
 

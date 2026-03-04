@@ -66,14 +66,13 @@
         
         .module-card {
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            max-width: 320px;
+            max-width: 380px;
             width: 100%;
         }
         
         .module-card:hover {
-            transform: translateY(-8px) scale(1.02);
-            box-shadow: 0 25px 50px -12px rgba(0, 88, 1, 0.2);
-            border-color: #005801;
+            transform: translateY(-6px);
+            box-shadow: 0 20px 40px -14px rgba(0, 88, 1, 0.25);
         }
         
         .module-card a {
@@ -84,6 +83,26 @@
         .module-card iframe {
             border: none;
             background: white;
+        }
+
+        .module-preview-image {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .module-preview-frame {
+            width: 100%;
+            height: 100%;
+            border: 0;
+            background: #fff;
+        }
+
+        .module-description {
+            display: -webkit-box;
+            -webkit-line-clamp: 4;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
         }
         
         ::-webkit-scrollbar { width: 6px; }
@@ -141,6 +160,14 @@
                 </div>
             </div>
 
+            <div class="flex flex-wrap gap-2 mb-8" id="quarterTabs">
+                <button type="button" class="quarter-tab px-4 py-2 rounded-xl text-sm font-medium bg-brand text-white" data-quarter="all">All Modules</button>
+                <button type="button" class="quarter-tab px-4 py-2 rounded-xl text-sm font-medium bg-white text-gray-700 border border-gray-200 hover:border-brand/40" data-quarter="1">Quarter 1</button>
+                <button type="button" class="quarter-tab px-4 py-2 rounded-xl text-sm font-medium bg-white text-gray-700 border border-gray-200 hover:border-brand/40" data-quarter="2">Quarter 2</button>
+                <button type="button" class="quarter-tab px-4 py-2 rounded-xl text-sm font-medium bg-white text-gray-700 border border-gray-200 hover:border-brand/40" data-quarter="3">Quarter 3</button>
+                <button type="button" class="quarter-tab px-4 py-2 rounded-xl text-sm font-medium bg-white text-gray-700 border border-gray-200 hover:border-brand/40" data-quarter="4">Quarter 4</button>
+            </div>
+
             <!-- Loading State -->
             <div id="loadingState" class="text-center py-16">
                 <div class="inline-block animate-spin rounded-full h-12 w-12 border-4 border-brand border-t-transparent"></div>
@@ -148,7 +175,7 @@
             </div>
 
             <!-- Modules Grid -->
-            <div id="modulesGrid" class="hidden grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8 justify-items-center">
+            <div id="modulesGrid" class="hidden grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 justify-items-center">
                 <!-- Modules will be loaded here -->
             </div>
 
@@ -182,6 +209,7 @@
         let currentUser = null;
         let modules = [];
         let studentAssignment = null;
+        let activeQuarterFilter = 'all';
 
         document.addEventListener('DOMContentLoaded', async function() {
             try {
@@ -214,6 +242,21 @@
             if (value === null || value === undefined || value === '') return null;
             const str = String(value).trim().toLowerCase();
             return str.startsWith('grade') ? str.replace(/^grade\s*/, '') : str;
+        }
+
+        function normalizeQuarterValue(value) {
+            if (value === null || value === undefined || value === '') return '';
+            const quarter = String(value).trim().replace(/[^0-9]/g, '');
+            return ['1', '2', '3', '4'].includes(quarter) ? quarter : '';
+        }
+
+        function getModuleQuarter(module) {
+            return normalizeQuarterValue(module?.quarter ?? module?.module_quarter ?? module?.quarter_number);
+        }
+
+        function getQuarterLabel(module) {
+            const quarter = getModuleQuarter(module);
+            return quarter ? `Quarter ${quarter}` : '';
         }
 
         function getModuleProgress(module) {
@@ -257,6 +300,29 @@
 
             // Search
             document.getElementById('searchInput').addEventListener('input', handleSearch);
+
+            document.querySelectorAll('.quarter-tab').forEach(tab => {
+                tab.addEventListener('click', () => setQuarterFilter(tab.dataset.quarter || 'all'));
+            });
+            updateQuarterTabs();
+        }
+
+        function setQuarterFilter(quarter) {
+            activeQuarterFilter = quarter || 'all';
+            updateQuarterTabs();
+            renderModules(modules);
+        }
+
+        function updateQuarterTabs() {
+            document.querySelectorAll('.quarter-tab').forEach(tab => {
+                const isActive = (tab.dataset.quarter || 'all') === activeQuarterFilter;
+                tab.classList.toggle('bg-brand', isActive);
+                tab.classList.toggle('text-white', isActive);
+                tab.classList.toggle('bg-white', !isActive);
+                tab.classList.toggle('text-gray-700', !isActive);
+                tab.classList.toggle('border', !isActive);
+                tab.classList.toggle('border-gray-200', !isActive);
+            });
         }
 
         function toggleMobileMenu() {
@@ -267,16 +333,7 @@
         }
 
         function handleSearch() {
-            const query = document.getElementById('searchInput').value.toLowerCase().trim();
-            if (query === '') {
-                renderModules(modules);
-            } else {
-                const filtered = modules.filter(m => 
-                    m.title.toLowerCase().includes(query) || 
-                    (m.description && m.description.toLowerCase().includes(query))
-                );
-                renderModules(filtered);
-            }
+            renderModules(modules);
         }
 
         async function loadModules() {
@@ -338,9 +395,20 @@
         function renderModules(data) {
             const grid = document.getElementById('modulesGrid');
             const empty = document.getElementById('emptyState');
-            document.getElementById('moduleCount').textContent = data.length;
+            const query = document.getElementById('searchInput').value.toLowerCase().trim();
+            const quarterFiltered = activeQuarterFilter === 'all'
+                ? data
+                : data.filter(module => getModuleQuarter(module) === activeQuarterFilter);
+            const filtered = query
+                ? quarterFiltered.filter(m =>
+                    (m.title || '').toLowerCase().includes(query) ||
+                    ((m.description || '').toLowerCase().includes(query))
+                )
+                : quarterFiltered;
 
-            if (data.length === 0) {
+            document.getElementById('moduleCount').textContent = filtered.length;
+
+            if (filtered.length === 0) {
                 grid.classList.add('hidden');
                 empty.classList.remove('hidden');
                 return;
@@ -349,67 +417,32 @@
             empty.classList.add('hidden');
             grid.classList.remove('hidden');
             
-            grid.innerHTML = data.map(module => {
-                const progress = getModuleProgress(module);
-                const progressStatus = getProgressStatus(progress);
-                const estimatedTime = getEstimatedTime(module);
-                const difficulty = getDifficulty(module);
+            grid.innerHTML = filtered.map(module => {
+                const subtitle = module.topic || module.subject || module.grade_level_text || module.grade_level || 'Learning Module';
+                const description = module.description || 'Open this module to start learning and explore the lesson activities.';
+                const filePath = module.file_path || '';
+                const lowerFilePath = String(filePath).toLowerCase();
+                const isPdf = String(module.content_type || '').toLowerCase() === 'pdf' || lowerFilePath.includes('.pdf');
+                const thumbnail = module.thumbnail_url || module.cover_image || module.image_url || filePath || '../Logo/MATHURO-LOGO.png';
+                const quarterLabel = getQuarterLabel(module);
+
+                const previewMedia = isPdf && filePath
+                    ? `<iframe src="${filePath}#page=1&view=FitH&toolbar=0&navpanes=0&scrollbar=0" class="module-preview-frame" title="${module.title}"></iframe>`
+                    : `<img src="${thumbnail}" class="module-preview-image" alt="${module.title}" onerror="this.onerror=null; this.src='../Logo/MATHURO-LOGO.png';">`;
 
                 return `
-                <div class="module-card bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden flex flex-col max-w-sm mx-auto">
-                    <a href="module-view.html?id=${module.id}" class="flex flex-col h-full">
-                        <div class="h-48 bg-gradient-to-br from-brand to-brand-light relative overflow-hidden">
-                            ${module.content_type === 'pdf' ? `
-                                <div class="absolute inset-0 flex items-center justify-center">
-                                    ${module.file_path ? `
-                                        <iframe src="${module.file_path}#view=FitH&toolbar=0&navpanes=0" 
-                                                class="w-full h-full" 
-                                                style="min-height: 200px;"
-                                                title="${module.title}">
-                                        </iframe>
-                                    ` : `
-                                        <svg class="w-16 h-16 text-white/80" fill="currentColor" viewBox="0 0 24 24">
-                                            <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8l-6-6zm-1 2l5 5h-5V4z"/>
-                                        </svg>
-                                    `}
-                                </div>
-                            ` : `
-                                <div class="absolute inset-0 flex items-center justify-center">
-                                    ${module.file_path ? `
-                                        <img src="${module.file_path}" 
-                                             class="w-full h-full object-cover" 
-                                             alt="${module.title}">
-                                    ` : `
-                                        <svg class="w-16 h-16 text-white/80" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
-                                        </svg>
-                                    `}
-                                </div>
-                            `}
-                            <span class="absolute top-3 right-3 px-3 py-1 bg-white/20 backdrop-blur-sm rounded-full text-xs text-white font-medium">
-                                ${module.content_type === 'pdf' ? 'PDF Module' : 'Image Module'}
-                            </span>
+                <div class="module-card bg-primary-100 rounded-[2rem] shadow-xl overflow-hidden mx-auto">
+                    <a href="module-view.html?id=${module.id}" class="flex flex-col h-[360px]">
+                        <div class="h-[46%] bg-gray-200 overflow-hidden">
+                            ${previewMedia}
                         </div>
-                        <div class="p-5 flex flex-col flex-1">
-                            <h3 class="font-bold text-gray-800 mb-2 line-clamp-2 text-lg">${module.title}</h3>
-                            <p class="text-sm text-gray-600 line-clamp-2 mb-4 flex-1">${module.description || 'No description available'}</p>
-                            <div class="flex flex-wrap items-center gap-2 mb-3">
-                                <span class="px-2.5 py-1 rounded-full text-xs font-semibold ${progressStatus.className}">${progressStatus.label}</span>
-                                <span class="px-2.5 py-1 rounded-full text-xs font-semibold bg-brand/10 text-brand">${difficulty}</span>
-                                <span class="px-2.5 py-1 rounded-full text-xs font-semibold bg-gray-100 text-gray-600">${estimatedTime}</span>
-                            </div>
-                            <div class="flex items-center text-xs text-gray-500 mb-4">
-                                <span class="flex items-center space-x-1">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
-                                    </svg>
-                                    <span>${new Date(module.created_at).toLocaleDateString()}</span>
-                                </span>
-                            </div>
-                            <div>
-                                <div class="w-full py-3 bg-brand text-white rounded-xl text-center text-sm font-semibold hover:bg-brand-dark transition-colors">
-                                    Start Learning →
-                                </div>
+                        <div class="px-5 py-4 flex flex-col flex-1">
+                            <h3 class="text-2xl font-extrabold text-gray-900 mb-1 line-clamp-1">${module.title}</h3>
+                            <p class="text-xl font-semibold text-gray-900 mb-1 line-clamp-1">${subtitle}</p>
+                            ${quarterLabel ? `<p class="text-sm font-medium text-brand mb-2">${quarterLabel}</p>` : ''}
+                            <p class="module-description text-[12px] text-gray-700 italic leading-snug mb-4 flex-1">${description}</p>
+                            <div class="w-full py-2.5 bg-brand text-white rounded-full text-center text-2xl font-bold hover:bg-brand-dark transition-colors">
+                                Open
                             </div>
                         </div>
                     </a>

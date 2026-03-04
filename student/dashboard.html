@@ -169,7 +169,7 @@
                         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
                         </svg>
-                        <span id="notificationBadge" class="notification-badge absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center hidden">0</span>
+                        <span id="notificationBadge" class="notification-badge absolute top-1 right-1 w-2.5 h-2.5 bg-red-500 rounded-full hidden" aria-label="New notifications"></span>
                     </button>
                     
                     <!-- User Menu -->
@@ -1218,6 +1218,23 @@
             }).join('');
         }
 
+        function getNotificationSeenStorageKey() {
+            return `studentNotificationLastSeen:${currentUser?.id || 'unknown'}`;
+        }
+
+        function getLastSeenNotificationDate() {
+            const rawValue = localStorage.getItem(getNotificationSeenStorageKey());
+            if (!rawValue) return null;
+            const parsed = new Date(rawValue);
+            return Number.isNaN(parsed.getTime()) ? null : parsed;
+        }
+
+        function markNotificationsAsSeen() {
+            localStorage.setItem(getNotificationSeenStorageKey(), new Date().toISOString());
+            const badge = document.getElementById('notificationBadge');
+            if (badge) badge.classList.add('hidden');
+        }
+
         // Load notifications
         async function loadNotifications() {
             try {
@@ -1234,11 +1251,19 @@
 
                 // Count unread (last 24 hours)
                 const dayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
-                const unreadCount = submissions?.filter(s => new Date(s.reviewed_at) > dayAgo).length || 0;
+                const lastSeenAt = getLastSeenNotificationDate();
+                const unreadCount = submissions?.filter(s => {
+                    const reviewedAt = new Date(s.reviewed_at);
+                    if (Number.isNaN(reviewedAt.getTime())) return false;
+                    const isRecent = reviewedAt > dayAgo;
+                    const isAfterLastSeen = !lastSeenAt || reviewedAt > lastSeenAt;
+                    return isRecent && isAfterLastSeen;
+                }).length || 0;
 
                 if (unreadCount > 0) {
-                    badge.textContent = unreadCount > 9 ? '9+' : unreadCount;
                     badge.classList.remove('hidden');
+                } else {
+                    badge.classList.add('hidden');
                 }
 
                 if (!submissions || submissions.length === 0) {
@@ -1317,6 +1342,7 @@
             notificationBtn.addEventListener('click', () => {
                 notificationPanel.classList.remove('hidden');
                 setTimeout(() => notificationPanel.classList.remove('translate-x-full'), 10);
+                markNotificationsAsSeen();
             });
 
             // Logout

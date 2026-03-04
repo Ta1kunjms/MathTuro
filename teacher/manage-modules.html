@@ -186,6 +186,14 @@
                 </div>
             </div>
 
+            <div class="flex flex-wrap gap-2 mb-6" id="quarterTabs">
+                <button type="button" class="quarter-tab px-4 py-2 rounded-xl text-sm font-medium bg-brand text-white" data-quarter="all">All Modules</button>
+                <button type="button" class="quarter-tab px-4 py-2 rounded-xl text-sm font-medium bg-white text-gray-700 border border-gray-200 hover:border-brand/40" data-quarter="1">Quarter 1</button>
+                <button type="button" class="quarter-tab px-4 py-2 rounded-xl text-sm font-medium bg-white text-gray-700 border border-gray-200 hover:border-brand/40" data-quarter="2">Quarter 2</button>
+                <button type="button" class="quarter-tab px-4 py-2 rounded-xl text-sm font-medium bg-white text-gray-700 border border-gray-200 hover:border-brand/40" data-quarter="3">Quarter 3</button>
+                <button type="button" class="quarter-tab px-4 py-2 rounded-xl text-sm font-medium bg-white text-gray-700 border border-gray-200 hover:border-brand/40" data-quarter="4">Quarter 4</button>
+            </div>
+
             <!-- Modules Grid -->
             <div id="modulesGrid" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
                 <!-- Loading state -->
@@ -309,7 +317,17 @@
                 </div>
 
                 <!-- Status -->
-                <div class="grid grid-cols-2 gap-4">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Quarter *</label>
+                        <select id="moduleQuarter" required class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-brand focus:border-transparent">
+                            <option value="">Select quarter</option>
+                            <option value="1">Quarter 1</option>
+                            <option value="2">Quarter 2</option>
+                            <option value="3">Quarter 3</option>
+                            <option value="4">Quarter 4</option>
+                        </select>
+                    </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-2">Grade Level</label>
                         <select id="moduleGradeLevel" class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-brand focus:border-transparent">
@@ -378,6 +396,7 @@
         let currentModuleId = null;
         let gradeLevels = [];
         let sections = [];
+        let activeQuarterFilter = 'all';
         const unsupportedModuleColumns = new Set(JSON.parse(localStorage.getItem('unsupported_modules_columns') || '[]'));
 
         // Initialize
@@ -447,6 +466,21 @@
             if (value === null || value === undefined || value === '') return null;
             const str = String(value).trim().toLowerCase();
             return str.startsWith('grade') ? str.replace(/^grade\s*/, '') : str;
+        }
+
+        function normalizeQuarterValue(value) {
+            if (value === null || value === undefined || value === '') return '';
+            const quarter = String(value).trim().replace(/[^0-9]/g, '');
+            return ['1', '2', '3', '4'].includes(quarter) ? quarter : '';
+        }
+
+        function getModuleQuarter(module) {
+            return normalizeQuarterValue(module?.quarter ?? module?.module_quarter ?? module?.quarter_number);
+        }
+
+        function getQuarterLabel(module) {
+            const quarter = getModuleQuarter(module);
+            return quarter ? `Quarter ${quarter}` : 'No Quarter';
         }
 
         function resolveGradeLevelId(record) {
@@ -732,6 +766,33 @@
             document.getElementById('moduleGradeLevel').addEventListener('change', function() {
                 populateModuleSectionOptions(this.value, '');
             });
+
+            document.querySelectorAll('.quarter-tab').forEach(tab => {
+                tab.addEventListener('click', () => setQuarterFilter(tab.dataset.quarter || 'all'));
+            });
+        }
+
+        function setQuarterFilter(quarter) {
+            activeQuarterFilter = quarter || 'all';
+            updateQuarterTabs();
+            renderModules();
+        }
+
+        function updateQuarterTabs() {
+            document.querySelectorAll('.quarter-tab').forEach(tab => {
+                const isActive = (tab.dataset.quarter || 'all') === activeQuarterFilter;
+                tab.classList.toggle('bg-brand', isActive);
+                tab.classList.toggle('text-white', isActive);
+                tab.classList.toggle('bg-white', !isActive);
+                tab.classList.toggle('text-gray-700', !isActive);
+                tab.classList.toggle('border', !isActive);
+                tab.classList.toggle('border-gray-200', !isActive);
+            });
+        }
+
+        function getQuarterFilteredModules() {
+            if (activeQuarterFilter === 'all') return modules;
+            return modules.filter(module => getModuleQuarter(module) === activeQuarterFilter);
         }
 
         // Load modules
@@ -764,15 +825,16 @@
         function renderModules() {
             const grid = document.getElementById('modulesGrid');
             const emptyState = document.getElementById('emptyState');
+            const filteredModules = getQuarterFilteredModules();
 
-            if (modules.length === 0) {
+            if (filteredModules.length === 0) {
                 grid.innerHTML = '';
                 emptyState.classList.remove('hidden');
                 return;
             }
 
             emptyState.classList.add('hidden');
-            grid.innerHTML = modules.map(module => `
+            grid.innerHTML = filteredModules.map(module => `
                 ${(() => {
                     const scope = getModuleScopeLabels(module);
                     return `
@@ -791,6 +853,9 @@
                         </div>
                         <p class="text-sm text-gray-600 line-clamp-2 mb-3">${module.description || 'No description'}</p>
                         <div class="flex flex-wrap gap-2 mb-4">
+                            <span class="px-2 py-1 text-xs rounded-full bg-amber-50 text-amber-700 border border-amber-100">
+                                <i class="fas fa-calendar-alt mr-1"></i>${getQuarterLabel(module)}
+                            </span>
                             <span class="px-2 py-1 text-xs rounded-full bg-blue-50 text-blue-700 border border-blue-100">
                                 <i class="fas fa-layer-group mr-1"></i>${scope.gradeLabel}
                             </span>
@@ -881,11 +946,14 @@
 
             try {
                 const contentType = document.querySelector('input[name="contentType"]:checked').value;
+                const selectedQuarter = document.getElementById('moduleQuarter').value;
                 const selectedGradeLevelId = document.getElementById('moduleGradeLevel').value || null;
                 const selectedSectionId = document.getElementById('moduleSection').value || null;
                 const resolvedScope = validateAndResolveScope(selectedGradeLevelId, selectedSectionId);
                 let pdfUrl = null;
                 let imageUrls = [];
+
+                if (!selectedQuarter) throw new Error('Please select a quarter');
 
                 // Upload files
                 if (contentType === 'pdf') {
@@ -906,6 +974,7 @@
                     content_type: contentType,
                     pdf_url: pdfUrl,
                     image_urls: imageUrls.length > 0 ? imageUrls : null,
+                    quarter: Number(selectedQuarter),
                     grade_level: getGradeLevelNameById(resolvedScope.gradeLevelId),
                     grade_level_id: resolvedScope.gradeLevelId,
                     section_id: resolvedScope.sectionId,
@@ -963,6 +1032,10 @@
                 gradeLevels.map(g => `<option value="${g.id}" ${String(g.id) === String(selectedGradeLevelId) ? 'selected' : ''}>${g.name}</option>`).join('');
             const sectionOptions = '<option value="">All Sections</option>' +
                 filteredSections.map(s => `<option value="${s.id}" ${String(s.id) === String(module.section_id || '') ? 'selected' : ''}>${s.name}</option>`).join('');
+            const selectedQuarter = getModuleQuarter(module);
+            const quarterOptions = ['1', '2', '3', '4']
+                .map(q => `<option value="${q}" ${q === selectedQuarter ? 'selected' : ''}>Quarter ${q}</option>`)
+                .join('');
 
             document.getElementById('detailModuleTitle').textContent = module.title;
             
@@ -1012,7 +1085,14 @@
 
                     <div class="border-t pt-6">
                         <h4 class="font-semibold text-gray-800 mb-4">Access Scope</h4>
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Quarter</label>
+                                <select id="detailModuleQuarter" class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-brand focus:border-transparent">
+                                    <option value="">Select quarter</option>
+                                    ${quarterOptions}
+                                </select>
+                            </div>
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-2">Grade Level</label>
                                 <select id="detailModuleGradeLevel" onchange="handleDetailModuleGradeChange()" class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-brand focus:border-transparent">
@@ -1062,12 +1142,18 @@
         }
 
         async function saveModuleAccess(moduleId) {
+            const quarter = document.getElementById('detailModuleQuarter')?.value || null;
             const gradeLevelId = document.getElementById('detailModuleGradeLevel')?.value || null;
             const sectionId = document.getElementById('detailModuleSection')?.value || null;
 
             try {
                 const resolvedScope = validateAndResolveScope(gradeLevelId, sectionId);
+                if (!quarter) {
+                    showToast('Please select a quarter', 'error');
+                    return;
+                }
                 const { error } = await updateModuleWithFallback(moduleId, {
+                    quarter: Number(quarter),
                     grade_level: getGradeLevelNameById(resolvedScope.gradeLevelId),
                     grade_level_id: resolvedScope.gradeLevelId,
                     section_id: resolvedScope.sectionId
@@ -1087,6 +1173,7 @@
         function openCreateModuleModal() {
             document.getElementById('createModuleModal').classList.remove('hidden');
             document.getElementById('createModuleForm').reset();
+            document.getElementById('moduleQuarter').value = '';
             populateModuleGradeLevelOptions('');
             populateModuleSectionOptions('', '');
             selectedPdf = null;

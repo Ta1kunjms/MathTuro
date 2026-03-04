@@ -6,7 +6,7 @@
     <link rel="icon" type="image/png" href="Logo/MATHURO-LOGO.png">
     <title>Guest Modules</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="shared/js/supabase-lib.js"></script>
+    <script src="../shared/js/supabase-lib.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800;900&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
     <style>
         body { font-family: 'Inter', sans-serif; background: #f5f5f5; color: #1f2937; }
@@ -53,13 +53,11 @@
     <div class="container">
         <h1>Guest Modules</h1>
         <div class="filter-tabs">
-            <button class="filter-tab active" data-grade="all">All Grades</button>
-            <button class="filter-tab" data-grade="grade7">Grade 7</button>
-            <button class="filter-tab" data-grade="grade8">Grade 8</button>
-            <button class="filter-tab" data-grade="grade9">Grade 9</button>
-            <button class="filter-tab" data-grade="grade10">Grade 10</button>
-            <button class="filter-tab" data-grade="grade11">Grade 11</button>
-            <button class="filter-tab" data-grade="grade12">Grade 12</button>
+            <button class="filter-tab active" data-quarter="all">All Modules</button>
+            <button class="filter-tab" data-quarter="1">Quarter 1</button>
+            <button class="filter-tab" data-quarter="2">Quarter 2</button>
+            <button class="filter-tab" data-quarter="3">Quarter 3</button>
+            <button class="filter-tab" data-quarter="4">Quarter 4</button>
         </div>
         <div id="loading" class="loading">
             <div class="spinner"></div>
@@ -68,7 +66,7 @@
         <div id="modulesGrid" class="modules-grid"></div>
         <div id="emptyState" class="empty-state" style="display: none;">
             <h3>No Modules Found</h3>
-            <p>No modules are available for this grade level yet. Check back soon for new content!</p>
+            <p>No modules are available for this quarter yet. Check back soon for new content!</p>
         </div>
     </div>
 
@@ -83,9 +81,9 @@
         </div>
     </div>
 
-    <script src="public/shared/js/config.js"></script>
-    <script src="public/shared/js/supabase.js"></script>
-    <script src="public/shared/js/utils.js"></script>
+    <script src="../shared/js/config.js"></script>
+    <script src="../shared/js/supabase.js"></script>
+    <script src="../shared/js/utils.js"></script>
 
     <script>
         let allModules = [];
@@ -95,7 +93,7 @@
             try {
                 await loadModules();
                 setupEventListeners();
-                filterByGrade('all');
+                filterByQuarter('all');
             } catch (error) {
                 console.error('Error initializing page:', error);
                 displayError('Failed to load modules');
@@ -104,7 +102,7 @@
 
         async function loadModules() {
             try {
-                const { data, error } = await supabase
+                const { data, error } = await getSupabase()
                     .from('modules')
                     .select('*')
                     .order('title');
@@ -121,8 +119,8 @@
         function setupEventListeners() {
             document.querySelectorAll('.filter-tab').forEach(button => {
                 button.addEventListener('click', function() {
-                    const grade = this.getAttribute('data-grade');
-                    filterByGrade(grade);
+                    const quarter = this.getAttribute('data-quarter');
+                    filterByQuarter(quarter);
                 });
             });
 
@@ -133,18 +131,24 @@
             });
         }
 
-        function filterByGrade(grade) {
+        function normalizeQuarterValue(value) {
+            if (value === null || value === undefined || value === '') return '';
+            const quarter = String(value).trim().replace(/[^0-9]/g, '');
+            return ['1', '2', '3', '4'].includes(quarter) ? quarter : '';
+        }
+
+        function filterByQuarter(quarter) {
             document.querySelectorAll('.filter-tab').forEach(button => {
                 button.classList.remove('active');
-                if (button.getAttribute('data-grade') === grade) {
+                if (button.getAttribute('data-quarter') === quarter) {
                     button.classList.add('active');
                 }
             });
 
-            if (grade === 'all') {
+            if (quarter === 'all') {
                 filteredModules = [...allModules];
             } else {
-                filteredModules = allModules.filter(module => module.grade_level === grade);
+                filteredModules = allModules.filter(module => normalizeQuarterValue(module?.quarter ?? module?.module_quarter ?? module?.quarter_number) === quarter);
             }
 
             displayModules(filteredModules);
@@ -168,6 +172,10 @@
                     <div class="module-card" onclick="showLoginModal()">
                         <div class="module-icon icon-green">📚</div>
                         <h3 class="module-title">${module.title}</h3>
+                        <p class="module-description" style="margin-bottom: 0.5rem; color: #005801; font-weight: 600;">${(() => {
+                            const quarter = normalizeQuarterValue(module?.quarter ?? module?.module_quarter ?? module?.quarter_number);
+                            return quarter ? `Quarter ${quarter}` : 'No Quarter';
+                        })()}</p>
                         <p class="module-description">${module.description || 'No description available'}</p>
                         <button class="view-btn">View Module</button>
                     </div>

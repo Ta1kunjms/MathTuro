@@ -44,6 +44,7 @@
                         6px 6px 15px rgba(92, 98, 92, 0.9),
                         inset 1px 1px 2px rgba(255, 255, 255, 0.3),
                         inset -1px -1px 2px rgba(92, 98, 92, 0.5);
+            transition: box-shadow 0.3s, padding 0.3s, margin 0.3s;
         }
         
         .neu-step {
@@ -249,6 +250,35 @@
         
         /* Testimonial card */
         .testimonial-card {
+                    /* Responsive Card Styles */
+                    @media (max-width: 768px) {
+                        .neu-card,
+                        .stat-card,
+                        .testimonial-card,
+                        .role-card-student,
+                        .role-card-teacher,
+                        .role-card-admin {
+                            max-width: 100% !important;
+                            min-width: 0 !important;
+                            width: 100% !important;
+                            margin: 0 0 1.5rem 0 !important;
+                            padding: 1.25rem !important;
+                            box-sizing: border-box;
+                        }
+                        .modules-grid,
+                        .cards-row,
+                        .role-cards-row {
+                            display: flex !important;
+                            flex-direction: column !important;
+                            gap: 1.5rem !important;
+                        }
+                        .stat-card {
+                            padding: 1.25rem !important;
+                        }
+                        .testimonial-card {
+                            padding: 1.25rem !important;
+                        }
+                    }
             background: white;
             box-shadow: 0 20px 60px rgba(0, 0, 0, 0.08);
         }

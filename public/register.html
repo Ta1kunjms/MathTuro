@@ -10,6 +10,23 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <script>
         tailwind.config = {
+                    /* Responsive Card Styles */
+                    @media (max-width: 768px) {
+                        .register-card,
+                        .content-card {
+                            max-width: 100% !important;
+                            min-width: 0 !important;
+                            width: 100% !important;
+                            margin: 0 0 1.5rem 0 !important;
+                            padding: 1.25rem !important;
+                            box-sizing: border-box;
+                        }
+                        .cards-row {
+                            display: flex !important;
+                            flex-direction: column !important;
+                            gap: 1.5rem !important;
+                        }
+                    }
             theme: {
                 extend: {
                     colors: {

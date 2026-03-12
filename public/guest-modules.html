@@ -18,6 +18,20 @@
         .filter-tab.active { background: #005801; color: white; border-color: #005801; }
         .modules-grid { display: grid; grid-template-columns: repeat(5, minmax(180px, 1fr)); gap: 1.2rem; margin-bottom: 3rem; justify-items: start; }
         .module-card { background: white; border-radius: 16px; padding: 1rem; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05); transition: all 0.3s ease; cursor: pointer; border: 2px solid transparent; min-width: 180px; max-width: 220px; }
+                @media (max-width: 768px) {
+                    .modules-grid {
+                        grid-template-columns: 1fr !important;
+                        gap: 1.2rem !important;
+                    }
+                    .module-card {
+                        max-width: 100% !important;
+                        min-width: 0 !important;
+                        width: 100% !important;
+                        margin: 0 0 1.5rem 0 !important;
+                        padding: 1.25rem !important;
+                        box-sizing: border-box;
+                    }
+                }
         .module-card:hover { transform: translateY(-5px); box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1); border-color: #005801; }
         .module-icon { width: 80px; height: 80px; border-radius: 20px; display: flex; align-items: center; justify-content: center; font-size: 2rem; margin-bottom: 1.5rem; }
         .icon-green { background: linear-gradient(135deg, #005801 0%, #34C759 100%); color: white; }

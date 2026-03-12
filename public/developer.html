@@ -36,6 +36,25 @@
         }
         
         .gradient-card {
+                    @media (max-width: 768px) {
+                        .gradient-card,
+                        .glass-card,
+                        .contact-card,
+                        .service-card {
+                            max-width: 100% !important;
+                            min-width: 0 !important;
+                            width: 100% !important;
+                            margin: 0 0 1.5rem 0 !important;
+                            padding: 1.25rem !important;
+                            box-sizing: border-box;
+                        }
+                        .cards-row,
+                        .services-row {
+                            display: flex !important;
+                            flex-direction: column !important;
+                            gap: 1.5rem !important;
+                        }
+                    }
             background: linear-gradient(145deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.02) 100%);
             border: 1px solid rgba(255,255,255,0.1);
         }

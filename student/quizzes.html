@@ -38,6 +38,25 @@
     </script>
     <style>
         body { font-family: 'Inter', system-ui, sans-serif; }
+                @media (max-width: 768px) {
+                    .quiz-card,
+                    .lesson-card,
+                    .module-card {
+                        max-width: 100% !important;
+                        min-width: 0 !important;
+                        width: 100% !important;
+                        margin: 0 0 1.5rem 0 !important;
+                        padding: 1.25rem !important;
+                        box-sizing: border-box;
+                    }
+                    .cards-row,
+                    .quizzes-grid,
+                    .modules-grid {
+                        display: flex !important;
+                        flex-direction: column !important;
+                        gap: 1.5rem !important;
+                    }
+                }
         
         .gradient-text {
             background: linear-gradient(135deg, #005801 0%, #22c55e 100%);

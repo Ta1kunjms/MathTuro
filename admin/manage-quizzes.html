@@ -107,7 +107,14 @@
             <!-- Quizzes List -->
             <div class="bg-white rounded-lg shadow">
                 <div class="p-6">
-                    <h2 class="text-lg font-semibold mb-4">All Quizzes</h2>
+                    <h2 class="text-lg font-semibold mb-4">Quiz Library</h2>
+                    <div class="flex flex-wrap gap-2 mb-6" id="quarterTabs">
+                        <button type="button" class="quarter-tab px-4 py-2 rounded-lg text-sm font-medium bg-maroon text-white" data-quarter="all">All Quarters</button>
+                        <button type="button" class="quarter-tab px-4 py-2 rounded-lg text-sm font-medium bg-white text-gray-700 border border-gray-200 hover:border-maroon/40" data-quarter="1">Quarter 1</button>
+                        <button type="button" class="quarter-tab px-4 py-2 rounded-lg text-sm font-medium bg-white text-gray-700 border border-gray-200 hover:border-maroon/40" data-quarter="2">Quarter 2</button>
+                        <button type="button" class="quarter-tab px-4 py-2 rounded-lg text-sm font-medium bg-white text-gray-700 border border-gray-200 hover:border-maroon/40" data-quarter="3">Quarter 3</button>
+                        <button type="button" class="quarter-tab px-4 py-2 rounded-lg text-sm font-medium bg-white text-gray-700 border border-gray-200 hover:border-maroon/40" data-quarter="4">Quarter 4</button>
+                    </div>
                     <div id="quizzesList" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                         <!-- Quizzes will be dynamically loaded here -->
                     </div>
@@ -136,7 +143,7 @@
                         <textarea id="quizDescription" rows="3" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-maroon focus:border-transparent" placeholder="Enter quiz description"></textarea>
                     </div>
                     
-                    <div class="grid grid-cols-2 gap-4">
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-2">Grade Level</label>
                             <select id="quizGradeLevel" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-maroon focus:border-transparent">
@@ -147,6 +154,17 @@
                                 <option value="4">Grade 4</option>
                                 <option value="5">Grade 5</option>
                                 <option value="6">Grade 6</option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Quarter</label>
+                            <select id="quizQuarter" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-maroon focus:border-transparent">
+                                <option value="">Select quarter</option>
+                                <option value="1">Quarter 1</option>
+                                <option value="2">Quarter 2</option>
+                                <option value="3">Quarter 3</option>
+                                <option value="4">Quarter 4</option>
                             </select>
                         </div>
                         
@@ -191,12 +209,46 @@
     <script src="assets/js/admin.js"></script>
     <script>
         let currentUser = null;
+        let activeQuarterFilter = 'all';
 
         function normalizeGradeValue(value) {
             if (value === null || value === undefined) return null;
             const str = String(value).trim().toLowerCase();
             if (!str) return null;
             return str.startsWith('grade') ? str.replace(/^grade\s*/, '') : str;
+        }
+
+        function normalizeQuarterValue(value) {
+            if (value === null || value === undefined || value === '') return '';
+            const quarter = String(value).trim().replace(/[^0-9]/g, '');
+            return ['1', '2', '3', '4'].includes(quarter) ? quarter : '';
+        }
+
+        function getQuizQuarter(quiz) {
+            return normalizeQuarterValue(quiz?.quarter ?? quiz?.module_quarter ?? quiz?.quarter_number);
+        }
+
+        function getQuarterLabel(quiz) {
+            const quarter = getQuizQuarter(quiz);
+            return quarter ? `Quarter ${quarter}` : 'No Quarter';
+        }
+
+        function setQuarterFilter(quarter) {
+            activeQuarterFilter = quarter || 'all';
+            updateQuarterTabs();
+            loadAllQuizzes();
+        }
+
+        function updateQuarterTabs() {
+            document.querySelectorAll('.quarter-tab').forEach(tab => {
+                const isActive = (tab.dataset.quarter || 'all') === activeQuarterFilter;
+                tab.classList.toggle('bg-maroon', isActive);
+                tab.classList.toggle('text-white', isActive);
+                tab.classList.toggle('bg-white', !isActive);
+                tab.classList.toggle('text-gray-700', !isActive);
+                tab.classList.toggle('border', !isActive);
+                tab.classList.toggle('border-gray-200', !isActive);
+            });
         }
 
         async function ensureQuizSectionGradeConsistency(quizId, selectedGradeLevelText) {
@@ -309,7 +361,22 @@
                     return;
                 }
 
-                quizzesList.innerHTML = quizzes.map(quiz => `
+                const quarterFiltered = activeQuarterFilter === 'all'
+                    ? quizzes
+                    : quizzes.filter(quiz => getQuizQuarter(quiz) === activeQuarterFilter);
+
+                if (quarterFiltered.length === 0) {
+                    quizzesList.innerHTML = `
+                        <div class="col-span-full text-center py-12">
+                            <i class="fas fa-calendar-times text-6xl text-gray-300 mb-4"></i>
+                            <h3 class="text-lg font-medium text-gray-900 mb-2">No Quizzes in This Quarter</h3>
+                            <p class="text-gray-500">Try another quarter tab or add a new quiz.</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                quizzesList.innerHTML = quarterFiltered.map(quiz => `
                     <div class="quiz-card bg-white border-2 border-maroon/20 rounded-xl p-6 hover:shadow-xl hover:border-maroon/40 transition-all duration-300">
                         <div class="flex justify-between items-start mb-4">
                             <h3 class="text-lg font-bold text-maroon">${quiz.title}</h3>
@@ -332,6 +399,10 @@
                             <div class="flex items-center">
                                 <i class="fas fa-user mr-2 text-maroon"></i>
                                 <span>Created by: ${teacherMap[quiz.teacher_id]?.full_name || 'Unknown'}</span>
+                            </div>
+                            <div class="flex items-center">
+                                <i class="fas fa-calendar-alt mr-2 text-maroon"></i>
+                                <span>${getQuarterLabel(quiz)}</span>
                             </div>
                             <div class="flex items-center">
                                 <i class="fas fa-clock mr-2 text-maroon"></i>
@@ -369,6 +440,7 @@
             document.getElementById('submitIcon').className = 'fas fa-save mr-2';
             document.getElementById('quizForm').reset();
             document.getElementById('quizId').value = '';
+            document.getElementById('quizQuarter').value = '';
             document.getElementById('quizModal').classList.remove('hidden');
         }
 
@@ -389,6 +461,7 @@
                 document.getElementById('quizTitle').value = quiz.title;
                 document.getElementById('quizDescription').value = quiz.description;
                 document.getElementById('quizGradeLevel').value = quiz.grade_level;
+                document.getElementById('quizQuarter').value = getQuizQuarter(quiz);
                 document.getElementById('quizStatus').value = quiz.status || (quiz.is_published ? 'active' : 'draft');
                 document.getElementById('quizTimeLimit').value = quiz.time_limit_minutes ?? quiz.time_limit ?? 0;
                 document.getElementById('quizPassingScore').value = quiz.passing_score;
@@ -424,6 +497,7 @@
             const title = document.getElementById('quizTitle').value;
             const description = document.getElementById('quizDescription').value;
             const gradeLevel = document.getElementById('quizGradeLevel').value;
+            const quarter = document.getElementById('quizQuarter').value;
             const status = document.getElementById('quizStatus').value;
             const timeLimit = document.getElementById('quizTimeLimit').value;
             const passingScore = document.getElementById('quizPassingScore').value;
@@ -439,6 +513,7 @@
                         title,
                         description,
                         grade_level: gradeLevel,
+                        quarter: Number(quarter),
                         status,
                         is_published: isPublished,
                         time_limit_minutes: parseInt(timeLimit, 10) || 0,
@@ -454,6 +529,7 @@
                         title,
                         description,
                         grade_level: gradeLevel,
+                        quarter: Number(quarter),
                         status,
                         is_published: isPublished,
                         time_limit_minutes: parseInt(timeLimit, 10) || 0,
@@ -485,6 +561,12 @@
                 redirectToLogin();
                 return;
             }
+
+            document.querySelectorAll('.quarter-tab').forEach(tab => {
+                tab.addEventListener('click', () => setQuarterFilter(tab.dataset.quarter || 'all'));
+            });
+
+            updateQuarterTabs();
 
             loadAllQuizzes();
         });

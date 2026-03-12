@@ -120,6 +120,14 @@
             transform: scale(1.02);
         }
 
+        .play-button {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
         ::-webkit-scrollbar { width: 6px; }
         ::-webkit-scrollbar-track { background: #f1f1f1; }
         ::-webkit-scrollbar-thumb { background: #005801; border-radius: 3px; }
@@ -551,6 +559,10 @@
             lessons: [],
             submissions: [],
             progress: [],
+            completedProgress: [],
+            progressByLesson: {},
+            stats: null,
+            activityTimeline: [],
             streak: 0,
             xp: 0,
             achievements: []
@@ -589,18 +601,21 @@
                 // Update UI with user info
                 updateUserInfo(currentUser);
                 
-                // Load all dashboard data in parallel
+                await loadCoreDashboardData();
+
+                // Load dashboard widgets
                 await Promise.all([
-                    loadDashboardStats(),
-                    loadContinueLearning(),
                     loadFeaturedVideos(),
-                    loadRecentSubmissions(),
-                    loadRecentActivity(),
-                    loadNotifications(),
-                    loadAchievements(),
-                    loadWeeklyActivity(),
-                    loadStreak()
+                    loadNotifications()
                 ]);
+
+                loadDashboardStats();
+                loadContinueLearning();
+                loadRecentSubmissions();
+                loadRecentActivity();
+                loadWeeklyActivity();
+                loadStreak();
+                loadAchievements();
 
                 // Setup event listeners
                 setupEventListeners();
@@ -696,21 +711,195 @@
             return gradeMatch && sectionMatch;
         }
 
-        // Load streak data
-        async function loadStreak() {
+        function isLessonCompleted(progressRecord) {
+            return !!(
+                progressRecord &&
+                (
+                    progressRecord.completed === true ||
+                    progressRecord.completed_at ||
+                    progressRecord.status === 'completed'
+                )
+            );
+        }
+
+        function getModuleLessonIds(module) {
+            return module?.lessons?.map(lesson => lesson.id).filter(Boolean) || [];
+        }
+
+        function getCompletedLessonCountForModule(module) {
+            return getModuleLessonIds(module).reduce((count, lessonId) => {
+                return count + (isLessonCompleted(dashboardData.progressByLesson[lessonId]) ? 1 : 0);
+            }, 0);
+        }
+
+        function getModuleProgressPercent(module) {
+            const lessonIds = getModuleLessonIds(module);
+            if (lessonIds.length === 0) return 0;
+            return Math.round((getCompletedLessonCountForModule(module) / lessonIds.length) * 100);
+        }
+
+        function getCompletedModuleCount() {
+            return dashboardData.modules.filter(module => {
+                const lessonIds = getModuleLessonIds(module);
+                return lessonIds.length > 0 && getCompletedLessonCountForModule(module) >= lessonIds.length;
+            }).length;
+        }
+
+        function buildActivityTimeline(progressRecords, submissions) {
+            const lessonActivities = (progressRecords || [])
+                .filter(record => record.updated_at || record.completed_at || record.created_at)
+                .map(record => ({
+                    type: 'lesson',
+                    title: record.lessons?.title || 'Lesson',
+                    status: isLessonCompleted(record) ? 'Completed' : 'In progress',
+                    icon: isLessonCompleted(record) ? '✓' : '📖',
+                    iconClass: isLessonCompleted(record) ? 'bg-green-100' : 'bg-blue-100',
+                    timestamp: record.completed_at || record.updated_at || record.created_at
+                }));
+
+            const submissionActivities = (submissions || [])
+                .filter(submission => submission.submitted_at || submission.reviewed_at || submission.updated_at)
+                .map(submission => {
+                    const statusLabel = submission.status === 'approved'
+                        ? 'Quiz approved'
+                        : submission.status === 'rejected'
+                            ? 'Quiz needs work'
+                            : 'Quiz submitted';
+                    const iconClass = submission.status === 'approved'
+                        ? 'bg-green-100'
+                        : submission.status === 'rejected'
+                            ? 'bg-red-100'
+                            : 'bg-yellow-100';
+                    const icon = submission.status === 'approved'
+                        ? '⭐'
+                        : submission.status === 'rejected'
+                            ? '✕'
+                            : '📝';
+
+                    return {
+                        type: 'quiz',
+                        title: submission.lessons?.title || 'Quiz',
+                        status: statusLabel,
+                        icon,
+                        iconClass,
+                        timestamp: submission.reviewed_at || submission.submitted_at || submission.updated_at
+                    };
+                });
+
+            return [...lessonActivities, ...submissionActivities]
+                .filter(item => item.timestamp)
+                .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+        }
+
+        async function loadCoreDashboardData() {
             try {
-                const { data: progressData, error } = await getSupabase()
-                    .from('lesson_progress')
-                    .select('completed_at, updated_at')
-                    .eq('user_id', currentUser.id)
-                    .not('completed_at', 'is', null)
-                    .order('updated_at', { ascending: false });
+                const [modulesResponse, progressResponse, submissionsResponse] = await Promise.all([
+                    getSupabase()
+                        .from('modules')
+                        .select('*, lessons(id, title)')
+                        .eq('status', 'published')
+                        .order('created_at', { ascending: false }),
+                    getSupabase()
+                        .from('lesson_progress')
+                        .select('*, lessons(module_id, title)')
+                        .eq('user_id', currentUser.id)
+                        .order('updated_at', { ascending: false }),
+                    getSupabase()
+                        .from('quiz_submissions')
+                        .select('*, lessons(title)')
+                        .eq('user_id', currentUser.id)
+                        .order('submitted_at', { ascending: false })
+                ]);
 
-                if (error) throw error;
+                if (modulesResponse.error) throw modulesResponse.error;
+                if (progressResponse.error) throw progressResponse.error;
+                if (submissionsResponse.error) throw submissionsResponse.error;
 
+                const scopedModules = (modulesResponse.data || []).filter(module => isInStudentScope(module, studentAssignment));
+                const scopedModuleIds = new Set(scopedModules.map(module => module.id));
+
+                const scopedProgress = (progressResponse.data || []).filter(record => {
+                    const moduleId = record.module_id || record.lessons?.module_id || null;
+                    return moduleId ? scopedModuleIds.has(moduleId) : true;
+                });
+
+                const scopedSubmissions = (submissionsResponse.data || []).filter(submission => {
+                    return submission.module_id ? scopedModuleIds.has(submission.module_id) : true;
+                });
+
+                const progressByLesson = {};
+                scopedProgress.forEach(record => {
+                    if (!record.lesson_id) return;
+                    const existing = progressByLesson[record.lesson_id];
+                    if (!existing) {
+                        progressByLesson[record.lesson_id] = record;
+                        return;
+                    }
+                    const existingTime = new Date(existing.updated_at || existing.completed_at || existing.created_at || 0).getTime();
+                    const recordTime = new Date(record.updated_at || record.completed_at || record.created_at || 0).getTime();
+                    if (recordTime >= existingTime) {
+                        progressByLesson[record.lesson_id] = record;
+                    }
+                });
+
+                const normalizedProgress = Object.values(progressByLesson);
+                const completedProgress = normalizedProgress.filter(isLessonCompleted);
+                const completedLessons = completedProgress.length;
+                const totalLessons = scopedModules.reduce((sum, module) => sum + getModuleLessonIds(module).length, 0);
+                const completedModules = scopedModules.filter(module => {
+                    const lessonIds = getModuleLessonIds(module);
+                    return lessonIds.length > 0 && lessonIds.every(lessonId => isLessonCompleted(progressByLesson[lessonId]));
+                }).length;
+                const approvedSubmissions = scopedSubmissions.filter(submission => submission.status === 'approved');
+
+                const averageScore = approvedSubmissions.length > 0
+                    ? Math.round(
+                        approvedSubmissions.reduce((sum, submission) => {
+                            const score = Number(submission.student_score || 0);
+                            const total = Math.max(Number(submission.total_items || 0), 1);
+                            return sum + ((score / total) * 100);
+                        }, 0) / approvedSubmissions.length
+                    )
+                    : 0;
+
+                const todayKey = new Date().toISOString().slice(0, 10);
+                const dailyGoalProgress = completedProgress.filter(record => {
+                    const timestamp = record.completed_at || record.updated_at || record.created_at;
+                    return timestamp && new Date(timestamp).toISOString().slice(0, 10) === todayKey;
+                }).length;
+
+                const xp = (completedLessons * 10) + (completedModules * 50) + (approvedSubmissions.length * 20);
+
+                dashboardData.modules = scopedModules;
+                dashboardData.lessons = scopedModules.flatMap(module => module.lessons || []);
+                dashboardData.progress = normalizedProgress;
+                dashboardData.completedProgress = completedProgress;
+                dashboardData.progressByLesson = progressByLesson;
+                dashboardData.submissions = scopedSubmissions;
+                dashboardData.xp = xp;
+                dashboardData.activityTimeline = buildActivityTimeline(normalizedProgress, scopedSubmissions);
+                dashboardData.stats = {
+                    totalModules: scopedModules.length,
+                    completedModules,
+                    totalLessons,
+                    completedLessons,
+                    averageScore,
+                    xp,
+                    dailyGoalTarget: 3,
+                    dailyGoalProgress: Math.min(dailyGoalProgress, 3)
+                };
+            } catch (error) {
+                console.error('Error loading core dashboard data:', error);
+                throw error;
+            }
+        }
+
+        // Load streak data
+        function loadStreak() {
+            try {
                 const activeDays = new Set(
-                    (progressData || [])
-                        .map(item => item.completed_at || item.updated_at)
+                    dashboardData.completedProgress
+                        .map(item => item.completed_at || item.updated_at || item.created_at)
                         .filter(Boolean)
                         .map(date => {
                             const normalized = new Date(date);
@@ -736,127 +925,47 @@
                 dashboardData.streak = streak;
 
                 const dailyStreakEl = document.getElementById('dailyStreak');
-                const streakCountEl = document.getElementById('streakCount');
-                const streakBadge = document.getElementById('streakBadge');
 
                 if (dailyStreakEl) dailyStreakEl.textContent = streak;
-                if (streakCountEl) streakCountEl.textContent = `${streak} day streak`;
-                
-                // Update streak badge color based on streak length
-                if (streakBadge) {
-                    if (streak >= 7) streakBadge.textContent = '🔥';
-                    else if (streak >= 3) streakBadge.textContent = '🔥';
-                    else streakBadge.textContent = '🔥';
-                }
-
             } catch (error) {
                 console.log('No streak data yet');
             }
         }
 
         // Load dashboard statistics
-        async function loadDashboardStats() {
+        function loadDashboardStats() {
             try {
-                console.log('Loading dashboard stats...');
-                // Get all modules
-                const { data: modules, error: modulesError } = await getSupabase()
-                    .from('modules')
-                    .select('*, lessons(id)')
-                    .eq('status', 'published');
-                
-                if (modulesError) {
-                    console.error('Error loading modules:', modulesError);
-                }
-                const scopedModules = (modules || []).filter(module => isInStudentScope(module, studentAssignment));
-                console.log('Modules:', scopedModules);
-                dashboardData.modules = scopedModules;
+                const stats = dashboardData.stats || {
+                    totalModules: 0,
+                    completedModules: 0,
+                    totalLessons: 0,
+                    completedLessons: 0,
+                    averageScore: 0,
+                    xp: 0,
+                    dailyGoalProgress: 0,
+                    dailyGoalTarget: 3
+                };
 
-                // Get lesson progress
-                const { data: lessonProgress, error: progressError } = await getSupabase()
-                    .from('lesson_progress')
-                    .select('*, lessons(module_id)')
-                    .eq('user_id', currentUser.id)
-                    .not('completed_at', 'is', null);
-                
-                if (progressError) {
-                    console.error('Error loading lesson progress:', progressError);
-                }
-                console.log('Lesson progress:', lessonProgress);
+                document.getElementById('modulesCompletedStat').textContent = stats.completedModules;
+                document.getElementById('lessonsCompletedStat').textContent = stats.completedLessons;
+                document.getElementById('averageScoreStat').textContent = `${stats.averageScore}%`;
+                document.getElementById('totalXpStat').textContent = stats.xp.toLocaleString();
 
-                dashboardData.progress = lessonProgress || [];
-
-                // Get quiz submissions
-                const { data: submissions } = await getSupabase()
-                    .from('quiz_submissions')
-                    .select('student_score, total_items, status')
-                    .eq('user_id', currentUser.id);
-
-                dashboardData.submissions = submissions || [];
-
-                // Calculate stats
-                const completedLessons = lessonProgress ? lessonProgress.length : 0;
-                
-                // Get total lessons
-                let totalLessons = 0;
-                scopedModules.forEach(m => totalLessons += (m.lessons?.length || 0));
-
-                // Calculate completed modules
-                const moduleProgress = {};
-                if (lessonProgress) {
-                    lessonProgress.forEach(lp => {
-                        const moduleId = lp.lessons?.module_id;
-                        if (moduleId) {
-                            moduleProgress[moduleId] = (moduleProgress[moduleId] || 0) + 1;
-                        }
-                    });
-                }
-
-                let completedModules = 0;
-                for (const module of (modules || [])) {
-                    const moduleLessonsCount = module.lessons?.length || 0;
-                    if (moduleLessonsCount > 0 && moduleProgress[module.id] >= moduleLessonsCount) {
-                        completedModules++;
-                    }
-                }
-
-                // Calculate average score
-                let averageScore = 0;
-                if (submissions && submissions.length > 0) {
-                    const approvedSubmissions = submissions.filter(s => s.status === 'approved');
-                    if (approvedSubmissions.length > 0) {
-                        const totalPercent = approvedSubmissions.reduce((sum, s) => {
-                            const score = s.student_score || 0;
-                            const total = s.total_items || 1;
-                            return sum + (score / total * 100);
-                        }, 0);
-                        averageScore = Math.round(totalPercent / approvedSubmissions.length);
-                    }
-                }
-
-                // Calculate XP (10 XP per lesson, 50 XP per module, 20 XP per approved submission)
-                const xp = (completedLessons * 10) + (completedModules * 50) + 
-                           ((submissions?.filter(s => s.status === 'approved').length || 0) * 20);
-                dashboardData.xp = xp;
-
-                // Update UI
-                document.getElementById('modulesCompletedStat').textContent = completedModules;
-                document.getElementById('lessonsCompletedStat').textContent = completedLessons;
-                document.getElementById('averageScoreStat').textContent = averageScore + '%';
-                document.getElementById('totalXpStat').textContent = xp.toLocaleString();
-
-                // Update progress circle
-                const progressPercent = (modules?.length || 0) > 0 ? Math.round((completedModules / modules.length) * 100) : 0;
+                const progressPercent = stats.totalModules > 0
+                    ? Math.round((stats.completedModules / stats.totalModules) * 100)
+                    : 0;
                 updateProgressCircle(progressPercent);
                 document.getElementById('overallProgressPercent').textContent = progressPercent + '%';
-                document.getElementById('completedModulesText').textContent = `${completedModules} of ${modules?.length || 0}`;
+                document.getElementById('completedModulesText').textContent = `${stats.completedModules} of ${stats.totalModules}`;
 
-                // Update lesson progress bar
-                const lessonPercent = totalLessons > 0 ? Math.round((completedLessons / totalLessons) * 100) : 0;
-                document.getElementById('lessonProgressText').textContent = `${completedLessons}/${totalLessons}`;
+                const lessonPercent = stats.totalLessons > 0
+                    ? Math.round((stats.completedLessons / stats.totalLessons) * 100)
+                    : 0;
+                document.getElementById('lessonProgressText').textContent = `${stats.completedLessons}/${stats.totalLessons}`;
                 document.getElementById('lessonProgressBar').style.width = `${lessonPercent}%`;
 
-                // Daily goal
-                document.getElementById('dailyGoalProgress').textContent = Math.min(completedLessons, 3);
+                document.getElementById('dailyGoalProgress').textContent = stats.dailyGoalProgress;
+                document.getElementById('dailyGoalTarget').textContent = stats.dailyGoalTarget;
 
             } catch (error) {
                 console.error('Error loading stats:', error);
@@ -871,17 +980,11 @@
         }
 
         // Load continue learning section
-        async function loadContinueLearning() {
+        function loadContinueLearning() {
             const container = document.getElementById('continueLearningSections');
             
             try {
-                const { data: modules } = await getSupabase()
-                    .from('modules')
-                    .select('*, lessons(id)')
-                    .eq('status', 'published')
-                    .order('created_at', { ascending: false });
-
-                const scopedModules = (modules || []).filter(module => isInStudentScope(module, studentAssignment));
+                const scopedModules = dashboardData.modules;
                 
                 if (!scopedModules || scopedModules.length === 0) {
                     container.innerHTML = `
@@ -898,23 +1001,26 @@
                     return;
                 }
 
-                // Get progress for each module
-                const moduleCards = await Promise.all(scopedModules.slice(0, 4).map(async (module) => {
-                    const lessonIds = module.lessons?.map(l => l.id) || [];
+                const sortedModules = [...scopedModules].sort((left, right) => {
+                    const leftProgress = getModuleProgressPercent(left);
+                    const rightProgress = getModuleProgressPercent(right);
 
-                    let progress = [];
-                    if (lessonIds.length > 0) {
-                        const { data } = await getSupabase()
-                            .from('lesson_progress')
-                            .select('lesson_id')
-                            .eq('user_id', currentUser.id)
-                            .not('completed_at', 'is', null)
-                            .in('lesson_id', lessonIds);
-                        progress = data || [];
+                    if (leftProgress === rightProgress) {
+                        const leftTime = new Date(left.created_at || 0).getTime();
+                        const rightTime = new Date(right.created_at || 0).getTime();
+                        return rightTime - leftTime;
                     }
 
-                    const totalLessons = lessonIds.length;
-                    const completedLessons = progress?.length || 0;
+                    if (leftProgress === 100) return 1;
+                    if (rightProgress === 100) return -1;
+                    if (leftProgress === 0 && rightProgress > 0) return 1;
+                    if (rightProgress === 0 && leftProgress > 0) return -1;
+                    return rightProgress - leftProgress;
+                });
+
+                const moduleCards = sortedModules.slice(0, 4).map((module) => {
+                    const totalLessons = getModuleLessonIds(module).length;
+                    const completedLessons = getCompletedLessonCountForModule(module);
                     const progressPercent = totalLessons > 0 ? Math.round((completedLessons / totalLessons) * 100) : 0;
                     const isCompleted = progressPercent === 100;
 
@@ -944,7 +1050,7 @@
                             </div>
                         </a>
                     `;
-                }));
+                });
 
                 container.innerHTML = moduleCards.join('');
 
@@ -967,7 +1073,10 @@
                     .order('created_at', { ascending: false })
                     .limit(4);
 
-                let scopedVideos = videos || [];
+                let scopedVideos = (videos || []).map(video => ({
+                    ...video,
+                    quarter: video.quarter || video.module_quarter || video.quarter_number || ''
+                }));
 
                 if (scopedVideos.length === 0) {
                     const { data: tutorialVideos } = await getSupabase()
@@ -983,6 +1092,7 @@
                         id: video.id,
                         title: video.title,
                         category: video.category,
+                        quarter: video.quarter || video.module_quarter || video.quarter_number || '',
                         video_url: video.video_url,
                         thumbnail_url: video.thumbnail_url,
                         duration: video.duration
@@ -1013,9 +1123,9 @@
                                         `<img src="${video.thumbnail_url}" alt="${escapeHtml(video.title)}" class="w-full h-full object-cover">` :
                                         `<div class="w-full h-full bg-gradient-to-br from-brand/10 to-green-500/10"></div>`
                                     }
-                                    <div class="absolute inset-0 flex items-center justify-center">
+                                    <div class="play-button">
                                         <div class="w-12 h-12 bg-white/90 rounded-full flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
-                                            <svg class="w-6 h-6 text-brand ml-1" fill="currentColor" viewBox="0 0 24 24">
+                                            <svg class="w-6 h-6 text-brand" fill="currentColor" viewBox="0 0 24 24">
                                                 <path d="M8 5v14l11-7z"/>
                                             </svg>
                                         </div>
@@ -1024,7 +1134,7 @@
                                 </div>
                                 <div class="p-4">
                                     <h4 class="font-semibold text-gray-800 mb-1 line-clamp-1">${escapeHtml(video.title)}</h4>
-                                    <p class="text-sm text-gray-500 line-clamp-1">${escapeHtml(video.category || 'Tutorial')}</p>
+                                    ${(video.quarter || '').toString().trim() ? `<p class="text-xs text-brand font-medium mt-1">Quarter ${String(video.quarter).replace(/[^0-9]/g, '')}</p>` : ''}
                                 </div>
                             </a>
                         `).join('')}
@@ -1037,16 +1147,11 @@
         }
 
         // Load recent submissions
-        async function loadRecentSubmissions() {
+        function loadRecentSubmissions() {
             const container = document.getElementById('recentSubmissions');
             
             try {
-                const { data: submissions } = await getSupabase()
-                    .from('quiz_submissions')
-                    .select('*, lessons(title)')
-                    .eq('user_id', currentUser.id)
-                    .order('submitted_at', { ascending: false })
-                    .limit(5);
+                const submissions = dashboardData.submissions.slice(0, 5);
 
                 if (!submissions || submissions.length === 0) {
                     container.innerHTML = `
@@ -1096,18 +1201,13 @@
         }
 
         // Load recent activity
-        async function loadRecentActivity() {
+        function loadRecentActivity() {
             const container = document.getElementById('recentActivity');
             
             try {
-                const { data: progress } = await getSupabase()
-                    .from('lesson_progress')
-                    .select('*, lessons(title)')
-                    .eq('user_id', currentUser.id)
-                    .order('updated_at', { ascending: false })
-                    .limit(5);
+                const activities = dashboardData.activityTimeline.slice(0, 6);
 
-                if (!progress || progress.length === 0) {
+                if (!activities || activities.length === 0) {
                     container.innerHTML = `
                         <div class="p-6 text-center text-gray-500">
                             <p>No recent activity</p>
@@ -1117,14 +1217,14 @@
                     return;
                 }
 
-                container.innerHTML = progress.map(p => `
+                container.innerHTML = activities.map(activity => `
                     <div class="activity-item p-4 flex items-center space-x-4">
-                        <div class="w-10 h-10 ${p.completed ? 'bg-green-100' : 'bg-blue-100'} rounded-full flex items-center justify-center">
-                            <span class="text-lg">${p.completed ? '✓' : '📖'}</span>
+                        <div class="w-10 h-10 ${activity.iconClass} rounded-full flex items-center justify-center">
+                            <span class="text-lg">${activity.icon}</span>
                         </div>
                         <div class="flex-1 min-w-0">
-                            <p class="font-medium text-gray-800 truncate">${escapeHtml(p.lessons?.title || 'Lesson')}</p>
-                            <p class="text-sm text-gray-500">${p.completed ? 'Completed' : 'In progress'} • ${formatDate(p.updated_at)}</p>
+                            <p class="font-medium text-gray-800 truncate">${escapeHtml(activity.title)}</p>
+                            <p class="text-sm text-gray-500">${activity.status} • ${formatDate(activity.timestamp)}</p>
                         </div>
                     </div>
                 `).join('');
@@ -1135,30 +1235,23 @@
         }
 
         // Load weekly activity heatmap
-        async function loadWeeklyActivity() {
+        function loadWeeklyActivity() {
             const container = document.getElementById('weeklyActivity');
             
             try {
-                // Get this week's activity
                 const startOfWeek = new Date();
                 startOfWeek.setDate(startOfWeek.getDate() - startOfWeek.getDay() + 1);
                 startOfWeek.setHours(0, 0, 0, 0);
 
-                const { data: activity } = await getSupabase()
-                    .from('lesson_progress')
-                    .select('updated_at')
-                    .eq('user_id', currentUser.id)
-                    .gte('updated_at', startOfWeek.toISOString());
-
-                // Count activity by day
                 const dayCounts = [0, 0, 0, 0, 0, 0, 0];
-                activity?.forEach(a => {
-                    const day = new Date(a.updated_at).getDay();
+                dashboardData.activityTimeline.forEach(activity => {
+                    const timestamp = new Date(activity.timestamp);
+                    if (Number.isNaN(timestamp.getTime()) || timestamp < startOfWeek) return;
+                    const day = timestamp.getDay();
                     const adjustedDay = day === 0 ? 6 : day - 1; // Monday = 0
                     dayCounts[adjustedDay]++;
                 });
 
-                // Generate heatmap
                 const today = new Date().getDay();
                 const adjustedToday = today === 0 ? 6 : today - 1;
 
@@ -1179,18 +1272,12 @@
         }
 
         // Load achievements
-        async function loadAchievements() {
+        function loadAchievements() {
             const container = document.getElementById('achievementsPreview');
-
-            const completedModuleCount = dashboardData.modules.filter((module) => {
-                const lessonIds = module.lessons?.map(l => l.id) || [];
-                if (lessonIds.length === 0) return false;
-                const completedLessons = dashboardData.progress.filter(p => lessonIds.includes(p.lesson_id)).length;
-                return completedLessons >= lessonIds.length;
-            }).length;
+            const completedModuleCount = getCompletedModuleCount();
             
             const allAchievements = [
-                { id: 'first_lesson', emoji: '🏆', name: 'First Steps', condition: () => dashboardData.progress.length >= 1 },
+                { id: 'first_lesson', emoji: '🏆', name: 'First Steps', condition: () => dashboardData.completedProgress.length >= 1 },
                 { id: 'quiz_master', emoji: '⭐', name: 'Quiz Star', condition: () => dashboardData.submissions.filter(s => s.status === 'approved').length >= 5 },
                 { id: 'perfect_score', emoji: '🎯', name: 'Perfect', condition: () => dashboardData.submissions.some(s => Number(s.student_score || 0) >= Number(s.total_items || 0) && Number(s.total_items || 0) > 0) },
                 { id: 'module_master', emoji: '📚', name: 'Scholar', condition: () => completedModuleCount >= 1 },
@@ -1405,8 +1492,7 @@
 
         // Modal functions
         function showMyProgress() {
-            const lessonsCompleted = dashboardData.progress.length;
-            const totalModules = dashboardData.modules.length;
+            const lessonsCompleted = dashboardData.completedProgress.length;
             
             showModal('My Learning Progress', `
                 <div class="space-y-6">
@@ -1425,9 +1511,7 @@
                         <h4 class="font-semibold text-gray-800 mb-3">Module Progress</h4>
                         <div class="space-y-3">
                             ${dashboardData.modules.map(m => {
-                                const lessonIds = m.lessons?.map(l => l.id) || [];
-                                const completed = dashboardData.progress.filter(p => lessonIds.includes(p.lesson_id)).length;
-                                const percent = lessonIds.length > 0 ? Math.round((completed / lessonIds.length) * 100) : 0;
+                                const percent = getModuleProgressPercent(m);
                                 return `
                                     <div>
                                         <div class="flex justify-between text-sm mb-1">
@@ -1447,17 +1531,12 @@
         }
 
         function showAchievements() {
-            const completedModuleCount = dashboardData.modules.filter((module) => {
-                const lessonIds = module.lessons?.map(l => l.id) || [];
-                if (lessonIds.length === 0) return false;
-                const completedLessons = dashboardData.progress.filter(p => lessonIds.includes(p.lesson_id)).length;
-                return completedLessons >= lessonIds.length;
-            }).length;
+            const completedModuleCount = getCompletedModuleCount();
 
             const allAchievements = [
-                { id: 'first_lesson', emoji: '🏆', name: 'First Steps', desc: 'Complete your first lesson', condition: () => dashboardData.progress.length >= 1 },
-                { id: 'five_lessons', emoji: '📖', name: 'Bookworm', desc: 'Complete 5 lessons', condition: () => dashboardData.progress.length >= 5 },
-                { id: 'ten_lessons', emoji: '📚', name: 'Scholar', desc: 'Complete 10 lessons', condition: () => dashboardData.progress.length >= 10 },
+                { id: 'first_lesson', emoji: '🏆', name: 'First Steps', desc: 'Complete your first lesson', condition: () => dashboardData.completedProgress.length >= 1 },
+                { id: 'five_lessons', emoji: '📖', name: 'Bookworm', desc: 'Complete 5 lessons', condition: () => dashboardData.completedProgress.length >= 5 },
+                { id: 'ten_lessons', emoji: '📚', name: 'Scholar', desc: 'Complete 10 lessons', condition: () => dashboardData.completedProgress.length >= 10 },
                 { id: 'quiz_master', emoji: '⭐', name: 'Quiz Star', desc: 'Get 5 quizzes approved', condition: () => dashboardData.submissions.filter(s => s.status === 'approved').length >= 5 },
                 { id: 'perfect_score', emoji: '🎯', name: 'Perfectionist', desc: 'Get a perfect quiz score', condition: () => dashboardData.submissions.some(s => Number(s.student_score || 0) >= Number(s.total_items || 0) && Number(s.total_items || 0) > 0) },
                 { id: 'streak_3', emoji: '🔥', name: '3 Day Streak', desc: 'Learn 3 days in a row', condition: () => dashboardData.streak >= 3 },

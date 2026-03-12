@@ -16,8 +16,8 @@
         .filter-tab { padding: 0.75rem 1.5rem; border: 1px solid #e5e7eb; border-radius: 25px; background: white; color: #6b7280; cursor: pointer; transition: all 0.3s ease; font-weight: 500; }
         .filter-tab:hover { background: #f3f4f6; color: #005801; border-color: #005801; }
         .filter-tab.active { background: #005801; color: white; border-color: #005801; }
-        .modules-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 2rem; margin-bottom: 3rem; }
-        .module-card { background: white; border-radius: 16px; padding: 2rem; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05); transition: all 0.3s ease; cursor: pointer; border: 2px solid transparent; }
+        .modules-grid { display: grid; grid-template-columns: repeat(5, minmax(180px, 1fr)); gap: 1.2rem; margin-bottom: 3rem; justify-items: start; }
+        .module-card { background: white; border-radius: 16px; padding: 1rem; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05); transition: all 0.3s ease; cursor: pointer; border: 2px solid transparent; min-width: 180px; max-width: 220px; }
         .module-card:hover { transform: translateY(-5px); box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1); border-color: #005801; }
         .module-icon { width: 80px; height: 80px; border-radius: 20px; display: flex; align-items: center; justify-content: center; font-size: 2rem; margin-bottom: 1.5rem; }
         .icon-green { background: linear-gradient(135deg, #005801 0%, #34C759 100%); color: white; }
@@ -51,6 +51,11 @@
 </head>
 <body>
     <div class="container">
+        <button onclick="window.history.back()" aria-label="Back" style="background:none;border:none;position:absolute;left:32px;top:32px;cursor:pointer;padding:0;z-index:10;">
+            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="none" viewBox="0 0 24 24" stroke="currentColor" style="color:#005801;">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+            </svg>
+        </button>
         <h1>Guest Modules</h1>
         <div class="filter-tabs">
             <button class="filter-tab active" data-quarter="all">All Modules</button>

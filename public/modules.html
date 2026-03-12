@@ -66,14 +66,16 @@
         
         .module-card {
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            max-width: 380px;
             width: 100%;
+            max-width: 250px;
             cursor: pointer;
+            background: #ffffff;
+            border: 1px solid #e5e7eb;
         }
         
         .module-card:hover {
             transform: translateY(-6px);
-            box-shadow: 0 20px 40px -14px rgba(0, 88, 1, 0.25);
+            box-shadow: 0 24px 40px -18px rgba(17, 24, 39, 0.18);
         }
 
         .module-preview-image {
@@ -89,11 +91,39 @@
             background: #fff;
         }
 
+        .module-preview-shell {
+            width: 100%;
+            height: 150px;
+            background: linear-gradient(180deg, #f8fafc 0%, #e5e7eb 100%);
+            overflow: hidden;
+            border-radius: 1.4rem 1.4rem 0 0;
+        }
+
         .module-description {
             display: -webkit-box;
-            -webkit-line-clamp: 4;
+            -webkit-line-clamp: 3;
             -webkit-box-orient: vertical;
             overflow: hidden;
+        }
+
+        .module-chip {
+            display: inline-flex;
+            align-items: center;
+            padding: 0.35rem 0.75rem;
+            border-radius: 999px;
+            font-size: 0.72rem;
+            font-weight: 600;
+            line-height: 1;
+        }
+
+        .module-chip-primary {
+            background: #ecfdf3;
+            color: #005801;
+        }
+
+        .module-chip-secondary {
+            background: #f3f4f6;
+            color: #6b7280;
         }
         
         ::-webkit-scrollbar { width: 6px; }
@@ -103,7 +133,13 @@
 </head>
 <body class="bg-gray-50 min-h-screen">
     <main class="min-h-screen max-w-7xl mx-auto px-4 py-8">
-        <div class="mb-8">
+
+        <div class="mb-8 relative">
+            <button onclick="window.history.back()" aria-label="Back" style="background:none;border:none;position:absolute;left:-48px;top:0;cursor:pointer;padding:0;z-index:10;">
+                <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="none" viewBox="0 0 24 24" stroke="currentColor" style="color:#005801;">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+                </svg>
+            </button>
             <h1 class="text-3xl font-bold text-gray-800">Learning Modules</h1>
             <p class="text-gray-500">Browse modules by quarter</p>
         </div>
@@ -116,7 +152,7 @@
             <button type="button" class="quarter-tab px-4 py-2 rounded-xl text-sm font-medium bg-white text-gray-700 border border-gray-200 hover:border-brand/40" data-quarter="4">Quarter 4</button>
         </div>
 
-        <div id="modulesGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div id="modulesGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-5 justify-items-start items-start">
             <div class="col-span-full py-12 text-center">
                 <div class="inline-block animate-spin rounded-full h-8 w-8 border-4 border-brand border-t-transparent mb-4"></div>
                 <p class="text-gray-500">Loading modules...</p>
@@ -175,6 +211,31 @@
             });
         }
 
+        function resolveLearningMaterialUrl(rawPath) {
+            if (!rawPath) return '';
+
+            const value = String(rawPath).trim();
+            if (!value) return '';
+
+            if (/^https?:\/\//i.test(value)) {
+                return value;
+            }
+
+            const normalizedPath = value
+                .replace(/^\/+/, '')
+                .replace(/^learning-materials\//i, '');
+
+            if (!normalizedPath) return '';
+
+            try {
+                const { data } = getSupabase().storage.from('learning-materials').getPublicUrl(normalizedPath);
+                return data?.publicUrl || value;
+            } catch (error) {
+                console.warn('Failed to resolve learning material URL:', error);
+                return value;
+            }
+        }
+
         async function loadModules() {
             try {
                 const { data, error } = await getSupabase()
@@ -207,27 +268,31 @@
                 const quarter = normalizeQuarterValue(module?.quarter ?? module?.module_quarter ?? module?.quarter_number);
                 const subtitle = module.topic || module.subject || module.grade_level_text || module.grade_level || 'Learning Module';
                 const description = module.description || 'Open this module to start learning and explore the lesson activities.';
-                const filePath = module.file_path || module.pdf_url || '';
-                const lowerFilePath = String(filePath).toLowerCase();
-                const isPdf = String(module.content_type || '').toLowerCase() === 'pdf' || lowerFilePath.includes('.pdf');
-                const thumbnail = module.thumbnail_url || module.cover_image || module.image_url || filePath || '../Logo/MATHURO-LOGO.png';
+                const pdfSource = module.pdf_url || module.file_path || '';
+                const pdfPreviewUrl = resolveLearningMaterialUrl(pdfSource);
+                const lowerFilePath = String(pdfSource).toLowerCase();
+                const isPdf = String(module.content_type || '').toLowerCase() === 'pdf' || lowerFilePath.includes('.pdf') || Boolean(module.pdf_url);
+                const thumbnailSource = module.thumbnail_url || module.cover_image || module.image_url || '';
+                const thumbnail = resolveLearningMaterialUrl(thumbnailSource) || pdfPreviewUrl || '../Logo/MATHURO-LOGO.png';
 
-                const previewMedia = isPdf && filePath
-                    ? `<iframe src="${filePath}#page=1&view=FitH&toolbar=0&navpanes=0&scrollbar=0" class="module-preview-frame" title="${escapeHtml(module.title || 'Module')}"></iframe>`
+                const previewMedia = isPdf && pdfPreviewUrl
+                    ? `<iframe src="${pdfPreviewUrl}#page=1&view=FitH&toolbar=0&navpanes=0&scrollbar=0" class="module-preview-frame" title="${escapeHtml(module.title || 'Module')}"></iframe>`
                     : `<img src="${thumbnail}" class="module-preview-image" alt="${escapeHtml(module.title || 'Module')}" onerror="this.onerror=null; this.src='../Logo/MATHURO-LOGO.png';">`;
 
                 return `
-                    <div class="module-card bg-primary-100 rounded-[2rem] shadow-xl overflow-hidden mx-auto" onclick="openSigninModal()">
-                        <div class="flex flex-col h-[360px]">
-                            <div class="h-[46%] bg-gray-200 overflow-hidden">
+                    <div class="module-card rounded-[1.6rem] shadow-lg overflow-hidden" onclick="openSigninModal()">
+                        <div class="flex flex-col min-h-[320px]">
+                            <div class="module-preview-shell">
                                 ${previewMedia}
                             </div>
-                            <div class="px-5 py-4 flex flex-col flex-1">
-                                <h3 class="text-2xl font-extrabold text-gray-900 mb-1 line-clamp-1">${escapeHtml(module.title || 'Untitled Module')}</h3>
-                                <p class="text-xl font-semibold text-gray-900 mb-1 line-clamp-1">${escapeHtml(subtitle)}</p>
-                                ${quarter ? `<p class="text-sm font-medium text-brand mb-2">Quarter ${quarter}</p>` : ''}
-                                <p class="module-description text-[12px] text-gray-700 italic leading-snug mb-4 flex-1">${escapeHtml(description)}</p>
-                                <div class="w-full py-2.5 bg-brand text-white rounded-full text-center text-2xl font-bold hover:bg-brand-dark transition-colors">
+                            <div class="px-4 py-4 flex flex-col flex-1 min-w-0 bg-white">
+                                <div class="flex flex-wrap gap-2 mb-3">
+                                    <span class="module-chip module-chip-primary">${quarter ? `Quarter ${quarter}` : 'Module'}</span>
+                                    <span class="module-chip module-chip-secondary">${escapeHtml(subtitle)}</span>
+                                </div>
+                                <h3 class="text-xl font-bold text-gray-900 mb-2 line-clamp-2">${escapeHtml(module.title || 'Untitled Module')}</h3>
+                                <p class="module-description text-sm text-gray-600 leading-6 mb-4 flex-1">${escapeHtml(description)}</p>
+                                <div class="w-full py-2.5 bg-brand text-white rounded-full text-center text-sm font-semibold hover:bg-brand-dark transition-colors">
                                     Open
                                 </div>
                             </div>

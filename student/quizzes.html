@@ -73,16 +73,6 @@
             box-shadow: 0 4px 15px rgba(0, 88, 1, 0.3);
         }
         
-        .category-btn {
-            transition: all 0.2s ease;
-        }
-        
-        .category-btn.active {
-            background: linear-gradient(135deg, #005801 0%, #006B01 100%);
-            color: white;
-            box-shadow: 0 4px 15px rgba(0, 88, 1, 0.3);
-        }
-        
         .tab-btn.active {
             color: #005801;
             border-color: #005801;
@@ -200,32 +190,18 @@
                 </div>
             </div>
 
-            <!-- Category Filters -->
-            <div class="flex flex-wrap gap-2 mb-6">
-                <button onclick="filterCategory('')" class="category-btn active px-4 py-2 rounded-full text-sm font-medium bg-gray-100 text-gray-700 hover:bg-gray-200 transition-all" data-category="">
-                    All Quizzes
-                </button>
-                <button onclick="filterCategory('algebra')" class="category-btn px-4 py-2 rounded-full text-sm font-medium bg-gray-100 text-gray-700 hover:bg-gray-200 transition-all" data-category="algebra">
-                    Algebra
-                </button>
-                <button onclick="filterCategory('geometry')" class="category-btn px-4 py-2 rounded-full text-sm font-medium bg-gray-100 text-gray-700 hover:bg-gray-200 transition-all" data-category="geometry">
-                    Geometry
-                </button>
-                <button onclick="filterCategory('calculus')" class="category-btn px-4 py-2 rounded-full text-sm font-medium bg-gray-100 text-gray-700 hover:bg-gray-200 transition-all" data-category="calculus">
-                    Calculus
-                </button>
-                <button onclick="filterCategory('trigonometry')" class="category-btn px-4 py-2 rounded-full text-sm font-medium bg-gray-100 text-gray-700 hover:bg-gray-200 transition-all" data-category="trigonometry">
-                    Trigonometry
-                </button>
-                <button onclick="filterCategory('statistics')" class="category-btn px-4 py-2 rounded-full text-sm font-medium bg-gray-100 text-gray-700 hover:bg-gray-200 transition-all" data-category="statistics">
-                    Statistics
-                </button>
+            <!-- Quarter Tabs -->
+            <div class="flex flex-wrap gap-2 mb-6" id="quarterTabs">
+                <button type="button" class="quarter-tab px-4 py-2 rounded-xl text-sm font-medium bg-brand text-white" data-quarter="all" onclick="setQuarterFilter('all')">All Quarters</button>
+                <button type="button" class="quarter-tab px-4 py-2 rounded-xl text-sm font-medium bg-white text-gray-700 border border-gray-200 hover:border-brand/40" data-quarter="1" onclick="setQuarterFilter('1')">Quarter 1</button>
+                <button type="button" class="quarter-tab px-4 py-2 rounded-xl text-sm font-medium bg-white text-gray-700 border border-gray-200 hover:border-brand/40" data-quarter="2" onclick="setQuarterFilter('2')">Quarter 2</button>
+                <button type="button" class="quarter-tab px-4 py-2 rounded-xl text-sm font-medium bg-white text-gray-700 border border-gray-200 hover:border-brand/40" data-quarter="3" onclick="setQuarterFilter('3')">Quarter 3</button>
+                <button type="button" class="quarter-tab px-4 py-2 rounded-xl text-sm font-medium bg-white text-gray-700 border border-gray-200 hover:border-brand/40" data-quarter="4" onclick="setQuarterFilter('4')">Quarter 4</button>
             </div>
-
             <!-- Tab Navigation -->
             <div class="flex space-x-4 mb-6 border-b border-gray-200">
                 <button onclick="showTab('all')" id="tabAll" class="tab-btn px-4 py-3 font-medium text-brand border-b-2 border-brand">
-                    All Quizzes
+                    All
                 </button>
                 <button onclick="showTab('pending')" id="tabPending" class="tab-btn px-4 py-3 font-medium text-gray-500 hover:text-gray-700 border-b-2 border-transparent">
                     Not Taken
@@ -323,9 +299,38 @@
     
     <script>
         let currentUser = null;
+        // Quarter filter logic
+        let activeQuarterFilter = 'all';
+        function normalizeQuarterValue(value) {
+            if (value === null || value === undefined || value === '') return '';
+            const quarter = String(value).trim().replace(/[^0-9]/g, '');
+            return ['1', '2', '3', '4'].includes(quarter) ? quarter : '';
+        }
+        function getQuizQuarter(quiz) {
+            return normalizeQuarterValue(quiz?.quarter ?? quiz?.module_quarter ?? quiz?.quarter_number);
+        }
+        function getQuarterLabel(quiz) {
+            const quarter = getQuizQuarter(quiz);
+            return quarter ? `Quarter ${quarter}` : 'No Quarter';
+        }
+        function setQuarterFilter(quarter) {
+            activeQuarterFilter = quarter || 'all';
+            updateQuarterTabs();
+            renderQuizzes();
+        }
+        function updateQuarterTabs() {
+            document.querySelectorAll('.quarter-tab').forEach(tab => {
+                const isActive = (tab.dataset.quarter || 'all') === activeQuarterFilter;
+                tab.classList.toggle('bg-brand', isActive);
+                tab.classList.toggle('text-white', isActive);
+                tab.classList.toggle('bg-white', !isActive);
+                tab.classList.toggle('text-gray-700', !isActive);
+                tab.classList.toggle('border', !isActive);
+                tab.classList.toggle('border-gray-200', !isActive);
+            });
+        }
         let quizzes = [];
         let submissions = {};
-        let currentCategory = '';
         let currentTab = 'all';
         let studentAssignment = null;
 
@@ -443,17 +448,14 @@
             const search = document.getElementById('searchInput').value.toLowerCase();
             
             let filtered = quizzes.filter(q => {
-                // Category filter
-                if (currentCategory && q.category !== currentCategory) return false;
-                
+                // Quarter filter
+                if (activeQuarterFilter !== 'all' && getQuizQuarter(q) !== activeQuarterFilter) return false;
                 // Search filter
                 if (search && !q.title.toLowerCase().includes(search) && !q.description?.toLowerCase().includes(search)) return false;
-                
                 // Tab filter
                 const hasSubmission = submissions[q.id];
                 if (currentTab === 'pending' && hasSubmission) return false;
                 if (currentTab === 'completed' && !hasSubmission) return false;
-                
                 return true;
             });
 
@@ -498,10 +500,12 @@
                                              alt="${escapeHtml(quiz.video.title)}" 
                                              class="w-full h-full object-cover">
                                         <div class="absolute inset-0 flex items-center justify-center bg-black/30 hover:bg-black/50 transition-colors">
-                                            <div class="w-12 h-12 bg-red-600 rounded-full flex items-center justify-center shadow-lg hover:scale-110 transition-transform">
-                                                <svg class="w-6 h-6 text-white ml-1" fill="currentColor" viewBox="0 0 24 24">
-                                                    <path d="M8 5v14l11-7z"/>
-                                                </svg>
+                                            <div class="flex items-center justify-center w-full h-full">
+                                                <div class="w-12 h-12 bg-red-600 rounded-full flex items-center justify-center shadow-lg hover:scale-110 transition-transform">
+                                                    <svg class="w-6 h-6 text-white ml-1" fill="currentColor" viewBox="0 0 24 24">
+                                                        <path d="M8 5v14l11-7z"/>
+                                                    </svg>
+                                                </div>
                                             </div>
                                         </div>
                                         <div class="absolute bottom-2 left-2 right-2">
@@ -527,11 +531,11 @@
                             </div>
 
                             <div class="flex items-center text-xs text-gray-400 mb-4">
-                                <span class="capitalize flex items-center">
+                                <span class="flex items-center">
                                     <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/>
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10m-13 9h16a2 2 0 002-2V7a2 2 0 00-2-2H4a2 2 0 00-2 2v11a2 2 0 002 2z"/>
                                     </svg>
-                                    ${quiz.category || 'General'}
+                                    ${getQuarterLabel(quiz)}
                                 </span>
                                 <span class="ml-auto">${quiz.teacher?.full_name || 'MathTuro'}</span>
                             </div>
@@ -656,21 +660,6 @@
             modal.addEventListener('click', (e) => {
                 if (e.target === modal) {
                     modal.remove();
-                }
-            });
-        }
-
-        function filterCategory(category) {
-            currentCategory = category;
-            updateCategoryButtons();
-            renderQuizzes();
-        }
-
-        function updateCategoryButtons() {
-            document.querySelectorAll('.category-btn').forEach(btn => {
-                btn.classList.remove('active');
-                if (btn.dataset.category === currentCategory) {
-                    btn.classList.add('active');
                 }
             });
         }

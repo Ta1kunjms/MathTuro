@@ -119,6 +119,24 @@ This platform provides a complete learning management solution with role-based a
 └── README.md                    # This documentation
 ```
 
+## Root Folder Policy (Updated: 2026-03-04)
+
+The root folder is intentionally kept minimal and contains only project entry/deployment files plus core folders.
+
+### Keep at root
+- `index.html` (main redirect entry)
+- `vercel.json` (deployment routing/headers)
+- `package.json` and `package-lock.json` (local tooling scripts)
+- `README.md` (main project documentation)
+
+### Do not keep at root
+- One-off test pages/scripts
+- Temporary admin-fix scripts
+- Standalone SQL fix files
+- Backup/version folders (for example: `_old_files`, `public 102`, `public.94 `)
+
+Place SQL in `/database` and keep feature code/assets inside their respective folders (`/admin`, `/student`, `/teacher`, `/shared`, `/public`).
+
 ## Folder Organization
 
 ### `/public` - Public Pages

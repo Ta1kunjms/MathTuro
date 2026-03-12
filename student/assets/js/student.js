@@ -855,19 +855,15 @@ async function getStudentNotifications(limit = 10) {
 /*
   Function Name: getTutorialVideos
   Purpose:
-  - Retrieves tutorial videos, optionally filtered by category
+  - Retrieves active tutorial videos
 */
-async function getTutorialVideos(category = null, featured = false) {
+async function getTutorialVideos(featured = false) {
   try {
     let query = getSupabase()
       .from('tutorial_videos')
       .select('*')
       .eq('is_active', true)
       .order('order', { ascending: true });
-
-    if (category && category !== 'all') {
-      query = query.eq('category', category);
-    }
 
     if (featured) {
       query = query.eq('is_featured', true);
@@ -926,7 +922,6 @@ async function addTutorialVideo(videoData) {
       .insert({
         title: videoData.title,
         description: videoData.description,
-        category: videoData.category,
         video_url: videoData.videoUrl,
         thumbnail_url: videoData.thumbnailUrl,
         duration: videoData.duration,

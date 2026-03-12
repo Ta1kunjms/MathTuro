@@ -108,6 +108,15 @@
             <div class="bg-white rounded-lg shadow">
                 <div class="p-6">
                     <h2 class="text-lg font-semibold mb-4">All Videos</h2>
+                    <div class="mb-4 flex flex-wrap gap-3">
+                        <select id="quarterFilter" class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-maroon focus:border-transparent">
+                            <option value="">All Quarters</option>
+                            <option value="1">Quarter 1</option>
+                            <option value="2">Quarter 2</option>
+                            <option value="3">Quarter 3</option>
+                            <option value="4">Quarter 4</option>
+                        </select>
+                    </div>
                     <div id="videosList" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                         <!-- Videos will be dynamically loaded here -->
                     </div>
@@ -152,6 +161,16 @@
                                 <option value="4">Grade 4</option>
                                 <option value="5">Grade 5</option>
                                 <option value="6">Grade 6</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Quarter</label>
+                            <select id="videoQuarter" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-maroon focus:border-transparent">
+                                <option value="">All Quarters</option>
+                                <option value="1">Quarter 1</option>
+                                <option value="2">Quarter 2</option>
+                                <option value="3">Quarter 3</option>
+                                <option value="4">Quarter 4</option>
                             </select>
                         </div>
                         
@@ -238,6 +257,17 @@
             return /^grade\s+/i.test(gradeText) ? gradeText : `Grade ${gradeText}`;
         }
 
+        function normalizeQuarterValue(value) {
+            if (value === null || value === undefined || value === '') return '';
+            const quarter = String(value).trim().replace(/[^0-9]/g, '');
+            return ['1', '2', '3', '4'].includes(quarter) ? quarter : '';
+        }
+
+        function formatQuarterLabel(value) {
+            const quarter = normalizeQuarterValue(value);
+            return quarter ? `Quarter ${quarter}` : 'All Quarters';
+        }
+
         // Video management functions
         async function loadAllVideos() {
             try {
@@ -284,7 +314,23 @@
                     return;
                 }
 
-                videosList.innerHTML = videos.map(video => `
+                const activeQuarter = document.getElementById('quarterFilter')?.value || '';
+                const filteredVideos = activeQuarter
+                    ? (videos || []).filter(video => normalizeQuarterValue(video.quarter ?? video.module_quarter ?? video.quarter_number) === activeQuarter)
+                    : (videos || []);
+
+                if (filteredVideos.length === 0) {
+                    videosList.innerHTML = `
+                        <div class="col-span-full text-center py-12">
+                            <i class="fas fa-video text-6xl text-gray-300 mb-4"></i>
+                            <h3 class="text-lg font-medium text-gray-900 mb-2">No Videos Found</h3>
+                            <p class="text-gray-500 mb-6">No videos match the selected quarter</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                videosList.innerHTML = filteredVideos.map(video => `
                     <div class="video-card bg-white border-2 border-maroon/20 rounded-xl p-6 hover:shadow-xl hover:border-maroon/40 transition-all duration-300">
                         <div class="flex justify-between items-start mb-4">
                             <h3 class="text-lg font-bold text-maroon">${video.title}</h3>
@@ -299,6 +345,10 @@
                             <div class="flex items-center">
                                 <i class="fas fa-graduation-cap mr-2 text-maroon"></i>
                                 <span>${formatGradeLabel(video.grade_level)}</span>
+                            </div>
+                            <div class="flex items-center">
+                                <i class="fas fa-calendar-alt mr-2 text-maroon"></i>
+                                <span>${formatQuarterLabel(video.quarter ?? video.module_quarter ?? video.quarter_number)}</span>
                             </div>
                             <div class="flex items-center">
                                 <i class="fas fa-user mr-2 text-maroon"></i>
@@ -332,6 +382,7 @@
             document.getElementById('submitIcon').className = 'fas fa-save mr-2';
             document.getElementById('videoForm').reset();
             document.getElementById('videoId').value = '';
+            document.getElementById('videoQuarter').value = '';
             document.getElementById('videoModal').classList.remove('hidden');
         }
 
@@ -353,6 +404,7 @@
                 document.getElementById('videoUrl').value = video.video_url || video.url || '';
                 document.getElementById('videoDescription').value = video.description;
                 document.getElementById('videoGradeLevel').value = video.grade_level;
+                document.getElementById('videoQuarter').value = normalizeQuarterValue(video.quarter ?? video.module_quarter ?? video.quarter_number);
                 document.getElementById('videoStatus').value = video.status || (video.is_published ? 'active' : 'draft');
                 document.getElementById('videoModal').classList.remove('hidden');
             } catch (error) {
@@ -387,6 +439,7 @@
             const url = document.getElementById('videoUrl').value;
             const description = document.getElementById('videoDescription').value;
             const gradeLevel = document.getElementById('videoGradeLevel').value;
+            const quarter = normalizeQuarterValue(document.getElementById('videoQuarter').value) || null;
             const status = document.getElementById('videoStatus').value;
             const isPublished = status === 'active' || status === 'published';
 
@@ -401,6 +454,7 @@
                         video_url: url,
                         description,
                         grade_level: gradeLevel,
+                        quarter,
                         status,
                         is_published: isPublished,
                         updated_at: new Date().toISOString()
@@ -415,6 +469,7 @@
                         video_url: url,
                         description,
                         grade_level: gradeLevel,
+                        quarter,
                         status,
                         is_published: isPublished,
                         created_at: new Date().toISOString(),
@@ -444,6 +499,8 @@
                 redirectToLogin();
                 return;
             }
+
+            document.getElementById('quarterFilter').addEventListener('change', loadAllVideos);
 
             loadAllVideos();
         });

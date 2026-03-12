@@ -81,6 +81,13 @@
             opacity: 0;
             transition: opacity 0.3s ease;
         }
+
+        .play-button {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
         
         .category-tab {
             transition: all 0.2s ease;
@@ -280,40 +287,33 @@
                         <h2 id="videoTitle" class="text-xl font-bold text-gray-800 mb-2">Video Title</h2>
                         <p id="videoDescription" class="text-gray-600 mb-4">Video description will appear here.</p>
                         <div class="flex items-center space-x-4 text-sm text-gray-500">
+                            <span id="videoQuarter" class="px-3 py-1 bg-blue-50 text-blue-700 rounded-full">All Quarters</span>
                             <span id="videoDuration" class="flex items-center space-x-1">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
                                 </svg>
                                 <span>5 min</span>
                             </span>
-                            <span id="videoCategory" class="px-3 py-1 bg-brand/10 text-brand rounded-full">Category</span>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <!-- Category Tabs -->
-            <div class="flex flex-wrap gap-2 mb-6">
-                <button onclick="filterByCategory('all')" class="category-tab active px-4 py-2 rounded-xl text-sm font-medium bg-gray-100 text-gray-600 hover:bg-gray-200" data-category="all">
+            <div class="flex flex-wrap gap-2 mb-6" id="quarterTabs">
+                <button onclick="filterByQuarter('all')" class="quarter-tab active px-4 py-2 rounded-xl text-sm font-medium bg-brand text-white hover:bg-brand-dark" data-quarter="all">
                     All Videos
                 </button>
-                <button onclick="filterByCategory('getting-started')" class="category-tab px-4 py-2 rounded-xl text-sm font-medium bg-gray-100 text-gray-600 hover:bg-gray-200" data-category="getting-started">
-                    Getting Started
+                <button onclick="filterByQuarter('1')" class="quarter-tab px-4 py-2 rounded-xl text-sm font-medium bg-gray-100 text-gray-600 hover:bg-gray-200" data-quarter="1">
+                    Quarter 1
                 </button>
-                <button onclick="filterByCategory('algebra')" class="category-tab px-4 py-2 rounded-xl text-sm font-medium bg-gray-100 text-gray-600 hover:bg-gray-200" data-category="algebra">
-                    Algebra
+                <button onclick="filterByQuarter('2')" class="quarter-tab px-4 py-2 rounded-xl text-sm font-medium bg-gray-100 text-gray-600 hover:bg-gray-200" data-quarter="2">
+                    Quarter 2
                 </button>
-                <button onclick="filterByCategory('geometry')" class="category-tab px-4 py-2 rounded-xl text-sm font-medium bg-gray-100 text-gray-600 hover:bg-gray-200" data-category="geometry">
-                    Geometry
+                <button onclick="filterByQuarter('3')" class="quarter-tab px-4 py-2 rounded-xl text-sm font-medium bg-gray-100 text-gray-600 hover:bg-gray-200" data-quarter="3">
+                    Quarter 3
                 </button>
-                <button onclick="filterByCategory('calculus')" class="category-tab px-4 py-2 rounded-xl text-sm font-medium bg-gray-100 text-gray-600 hover:bg-gray-200" data-category="calculus">
-                    Calculus
-                </button>
-                <button onclick="filterByCategory('statistics')" class="category-tab px-4 py-2 rounded-xl text-sm font-medium bg-gray-100 text-gray-600 hover:bg-gray-200" data-category="statistics">
-                    Statistics
-                </button>
-                <button onclick="filterByCategory('tips')" class="category-tab px-4 py-2 rounded-xl text-sm font-medium bg-gray-100 text-gray-600 hover:bg-gray-200" data-category="tips">
-                    Study Tips
+                <button onclick="filterByQuarter('4')" class="quarter-tab px-4 py-2 rounded-xl text-sm font-medium bg-gray-100 text-gray-600 hover:bg-gray-200" data-quarter="4">
+                    Quarter 4
                 </button>
             </div>
 
@@ -331,7 +331,7 @@
                 </div>
                 <h3 class="text-xl font-bold text-gray-800 mb-2">No videos found</h3>
                 <p class="text-gray-500 mb-4">Try adjusting your search or filter criteria</p>
-                <button onclick="filterByCategory('all')" class="px-6 py-2 bg-brand text-white rounded-xl hover:bg-brand-dark">View All Videos</button>
+                <button onclick="filterByQuarter('all')" class="px-6 py-2 bg-brand text-white rounded-xl hover:bg-brand-dark">View All Videos</button>
             </div>
 
             <!-- Add Video Section (Admin/Teacher Only) -->
@@ -343,15 +343,13 @@
                         <input type="text" id="newVideoTitle" required class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand" placeholder="Enter video title">
                     </div>
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Category</label>
-                        <select id="newVideoCategory" required class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand">
-                            <option value="">Select category</option>
-                            <option value="getting-started">Getting Started</option>
-                            <option value="algebra">Algebra</option>
-                            <option value="geometry">Geometry</option>
-                            <option value="calculus">Calculus</option>
-                            <option value="statistics">Statistics</option>
-                            <option value="tips">Study Tips</option>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Quarter</label>
+                        <select id="newVideoQuarter" class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand">
+                            <option value="">All Quarters</option>
+                            <option value="1">Quarter 1</option>
+                            <option value="2">Quarter 2</option>
+                            <option value="3">Quarter 3</option>
+                            <option value="4">Quarter 4</option>
                         </select>
                     </div>
                     <div class="md:col-span-2">
@@ -407,7 +405,7 @@
         // Global variables
         let currentUser = null;
         let allVideos = [];
-        let currentCategory = 'all';
+        let currentQuarter = 'all';
         let currentVideo = null;
 
         // DOM Elements
@@ -488,6 +486,17 @@
             }
         }
 
+        function normalizeQuarterValue(value) {
+            if (value === null || value === undefined || value === '') return '';
+            const quarter = String(value).trim().replace(/[^0-9]/g, '');
+            return ['1', '2', '3', '4'].includes(quarter) ? quarter : '';
+        }
+
+        function getQuarterLabel(value) {
+            const quarter = normalizeQuarterValue(value);
+            return quarter ? `Quarter ${quarter}` : 'All Quarters';
+        }
+
         // Load videos from database
         async function loadVideos() {
             try {
@@ -505,7 +514,7 @@
                     id: v.id,
                     title: v.title,
                     description: v.description || '',
-                    category: v.category || 'general',
+                    quarter: normalizeQuarterValue(v.quarter ?? v.module_quarter ?? v.quarter_number),
                     video_url: v.video_url,
                     thumbnail_url: v.thumbnail_url || getYouTubeThumbnail(v.video_url),
                     duration: v.duration || null,
@@ -532,7 +541,7 @@
                         id: v.id,
                         title: v.title,
                         description: v.description || '',
-                        category: v.category || 'general',
+                        quarter: normalizeQuarterValue(v.quarter ?? v.module_quarter ?? v.quarter_number),
                         video_url: v.video_url,
                         thumbnail_url: v.thumbnail_url || getYouTubeThumbnail(v.video_url),
                         duration: v.duration || null,
@@ -612,9 +621,8 @@
             
             let filteredVideos = allVideos;
 
-            // Filter by category
-            if (currentCategory !== 'all') {
-                filteredVideos = filteredVideos.filter(v => v.category === currentCategory);
+            if (currentQuarter !== 'all') {
+                filteredVideos = filteredVideos.filter(v => normalizeQuarterValue(v.quarter) === currentQuarter);
             }
 
             // Filter by search
@@ -622,8 +630,7 @@
             if (searchTerm) {
                 filteredVideos = filteredVideos.filter(v => 
                     v.title.toLowerCase().includes(searchTerm) ||
-                    v.description?.toLowerCase().includes(searchTerm) ||
-                    v.category.toLowerCase().includes(searchTerm)
+                    v.description?.toLowerCase().includes(searchTerm)
                 );
             }
 
@@ -636,25 +643,7 @@
             emptyState.classList.add('hidden');
 
             grid.innerHTML = filteredVideos.map(video => {
-                const categoryColors = {
-                    'getting-started': 'bg-blue-500',
-                    'algebra': 'bg-green-500',
-                    'geometry': 'bg-purple-500',
-                    'calculus': 'bg-orange-500',
-                    'statistics': 'bg-pink-500',
-                    'tips': 'bg-yellow-500'
-                };
-                const categoryColor = categoryColors[video.category] || 'bg-brand';
-                
-                const gradients = {
-                    'getting-started': 'from-blue-500/10 to-blue-600/10',
-                    'algebra': 'from-green-500/10 to-green-600/10',
-                    'geometry': 'from-purple-500/10 to-purple-600/10',
-                    'calculus': 'from-orange-500/10 to-orange-600/10',
-                    'statistics': 'from-pink-500/10 to-pink-600/10',
-                    'tips': 'from-yellow-500/10 to-yellow-600/10'
-                };
-                const gradient = gradients[video.category] || 'from-brand/10 to-green-500/10';
+                const gradient = 'from-brand/10 to-green-500/10';
 
                 return `
                     <div class="video-card bg-white rounded-xl overflow-hidden border border-gray-100 cursor-pointer" onclick="playVideo(${JSON.stringify(video).replace(/"/g, '&quot;')})">
@@ -668,9 +657,9 @@
                                     </svg>
                                 </div>`
                             }
-                            <div class="play-overlay absolute inset-0 bg-black/40 flex items-center justify-center">
-                                <div class="w-14 h-14 bg-white rounded-full flex items-center justify-center shadow-lg">
-                                    <svg class="w-6 h-6 text-brand ml-1" fill="currentColor" viewBox="0 0 24 24">
+                            <div class="play-overlay absolute inset-0 bg-black/40">
+                                <div class="play-button w-14 h-14 bg-white rounded-full flex items-center justify-center shadow-lg">
+                                    <svg class="w-6 h-6 text-brand" fill="currentColor" viewBox="0 0 24 24">
                                         <path d="M8 5v14l11-7z"/>
                                     </svg>
                                 </div>
@@ -683,10 +672,9 @@
                                 <h3 class="font-semibold text-gray-800 line-clamp-2 flex-1">${escapeHtml(video.title)}</h3>
                             </div>
                             <p class="text-sm text-gray-500 line-clamp-2 mb-3">${escapeHtml(video.description || '')}</p>
-                            <div class="flex items-center justify-between">
-                                <span class="inline-flex items-center space-x-1 px-2 py-1 rounded-full text-xs font-medium ${categoryColor} bg-opacity-10" style="background: ${categoryColor}20; color: ${categoryColor.replace('bg-', '')}">
-                                    <span class="w-1.5 h-1.5 ${categoryColor} rounded-full"></span>
-                                    <span class="text-gray-700 capitalize">${video.category.replace('-', ' ')}</span>
+                            <div class="flex items-center justify-start gap-2 flex-wrap">
+                                <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-50 text-blue-700">
+                                    ${getQuarterLabel(video.quarter)}
                                 </span>
                             </div>
                         </div>
@@ -707,7 +695,7 @@
             document.getElementById('videoTitle').textContent = video.title;
             document.getElementById('videoDescription').textContent = video.description || 'No description available.';
             document.getElementById('videoDuration').querySelector('span:last-child').textContent = video.duration || 'N/A';
-            document.getElementById('videoCategory').textContent = video.category.replace('-', ' ');
+            document.getElementById('videoQuarter').textContent = getQuarterLabel(video.quarter);
 
             // Set video source safely
             const embedUrl = normalizeVideoUrlForEmbed(video.video_url);
@@ -744,17 +732,18 @@
             }
         }
 
-        // Filter by category
-        function filterByCategory(category) {
-            currentCategory = category;
-            
-            // Update tab states
-            document.querySelectorAll('.category-tab').forEach(tab => {
-                if (tab.dataset.category === category) {
-                    tab.classList.add('active');
-                } else {
-                    tab.classList.remove('active');
-                }
+        function filterByQuarter(quarter) {
+            currentQuarter = quarter || 'all';
+
+            document.querySelectorAll('.quarter-tab').forEach(tab => {
+                const isActive = (tab.dataset.quarter || 'all') === currentQuarter;
+                tab.classList.toggle('active', isActive);
+                tab.classList.toggle('bg-brand', isActive);
+                tab.classList.toggle('text-white', isActive);
+                tab.classList.toggle('hover:bg-brand-dark', isActive);
+                tab.classList.toggle('bg-gray-100', !isActive);
+                tab.classList.toggle('text-gray-600', !isActive);
+                tab.classList.toggle('hover:bg-gray-200', !isActive);
             });
 
             renderVideos();
@@ -799,14 +788,14 @@
             e.preventDefault();
 
             const title = document.getElementById('newVideoTitle').value.trim();
-            const category = document.getElementById('newVideoCategory').value;
             const videoUrl = document.getElementById('newVideoUrl').value.trim();
             const description = document.getElementById('newVideoDescription').value.trim();
             const duration = document.getElementById('newVideoDuration').value.trim();
             const thumbnailUrl = document.getElementById('newVideoThumbnail').value.trim();
+            const quarter = normalizeQuarterValue(document.getElementById('newVideoQuarter').value);
             const isFeatured = document.getElementById('newVideoFeatured').checked;
 
-            if (!title || !category || !videoUrl) {
+            if (!title || !videoUrl) {
                 showToast('Please fill in all required fields', 'error');
                 return;
             }
@@ -816,7 +805,7 @@
                     .from('videos')
                     .insert({
                         title,
-                        category,
+                        quarter: quarter || null,
                         video_url: videoUrl,
                         description,
                         duration,
@@ -834,7 +823,7 @@
                     id: data.id,
                     title: data.title,
                     description: data.description || '',
-                    category: data.category || 'general',
+                    quarter: normalizeQuarterValue(data.quarter ?? data.module_quarter ?? data.quarter_number),
                     video_url: data.video_url,
                     thumbnail_url: data.thumbnail_url || getYouTubeThumbnail(data.video_url),
                     duration: data.duration || null,

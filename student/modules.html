@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="icon" type="image/png" href="../Logo/MATHURO-LOGO.png">
+    <link rel="icon" type="image/png" href="../Logo/MATHURO-LOGO-v2.png">
     <title>Browse Modules - MathTuro LMS</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="../shared/js/supabase-lib.js"></script>
@@ -474,8 +474,8 @@
                     previewMedia = `<iframe src="${pdfPreviewUrl}#page=1&view=FitH&toolbar=0&navpanes=0&scrollbar=0" class="module-preview-frame" title="${module.title}" style="width:100%;height:100%;min-height:120px;"></iframe>`;
                 } else {
                     const thumbnailSource = module.thumbnail_url || module.cover_image || module.image_url || '';
-                    const thumbnail = resolveLearningMaterialUrl(thumbnailSource) || '../Logo/MATHURO-LOGO.png';
-                    previewMedia = `<img src="${thumbnail}" class="module-preview-image" alt="${module.title}" onerror="this.onerror=null; this.src='../Logo/MATHURO-LOGO.png';">`;
+                    const thumbnail = resolveLearningMaterialUrl(thumbnailSource) || '../Logo/MATHURO-LOGO-v2.png';
+                    previewMedia = `<img src="${thumbnail}" class="module-preview-image" alt="${module.title}" onerror="this.onerror=null; this.src='../Logo/MATHURO-LOGO-v2.png';">`;
                 }
                 return `
                 <div class="module-card bg-primary-100 rounded-[2rem] shadow-xl overflow-hidden mx-auto min-w-[260px] max-w-[300px] flex flex-col">

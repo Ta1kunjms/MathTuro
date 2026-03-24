@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="icon" type="image/png" href="Logo/MATHURO-LOGO.png">
+    <link rel="icon" type="image/png" href="Logo/MATHURO-LOGO-v2.png">
     <title>Learning Modules - MathTuro LMS</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="../shared/js/supabase-lib.js"></script>
@@ -292,11 +292,11 @@
                 const lowerFilePath = String(pdfSource).toLowerCase();
                 const isPdf = String(module.content_type || '').toLowerCase() === 'pdf' || lowerFilePath.includes('.pdf') || Boolean(module.pdf_url);
                 const thumbnailSource = module.thumbnail_url || module.cover_image || module.image_url || '';
-                const thumbnail = resolveLearningMaterialUrl(thumbnailSource) || pdfPreviewUrl || '../Logo/MATHURO-LOGO.png';
+                const thumbnail = resolveLearningMaterialUrl(thumbnailSource) || pdfPreviewUrl || '../Logo/MATHURO-LOGO-v2.png';
 
                 const previewMedia = isPdf && pdfPreviewUrl
                     ? `<iframe src="${pdfPreviewUrl}#page=1&view=FitH&toolbar=0&navpanes=0&scrollbar=0" class="module-preview-frame" title="${escapeHtml(module.title || 'Module')}"></iframe>`
-                    : `<img src="${thumbnail}" class="module-preview-image" alt="${escapeHtml(module.title || 'Module')}" onerror="this.onerror=null; this.src='../Logo/MATHURO-LOGO.png';">`;
+                    : `<img src="${thumbnail}" class="module-preview-image" alt="${escapeHtml(module.title || 'Module')}" onerror="this.onerror=null; this.src='../Logo/MATHURO-LOGO-v2.png';">`;
 
                 return `
                     <div class="module-card rounded-[1.6rem] shadow-lg overflow-hidden" onclick="openSigninModal()">

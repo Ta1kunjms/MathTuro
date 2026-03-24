@@ -8,7 +8,7 @@ document.addEventListener('DOMContentLoaded', function () {
             <div class="p-6 border-b border-gray-100">
                 <a href="dashboard.html" class="flex items-center space-x-3">
                     <div class="w-12 h-12 bg-white rounded-xl flex items-center justify-center shadow-lg">
-                        <img src="../Logo/MATHURO-LOGO.png" alt="MathTuro" class="w-10 h-10 object-contain">
+                        <img src="../Logo/MATHURO-LOGO-v2.png" alt="MathTuro" class="w-10 h-10 object-contain">
                     </div>
                     <div>
                         <span class="text-xl font-bold gradient-text">MathTuro</span>

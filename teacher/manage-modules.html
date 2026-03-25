@@ -240,6 +240,36 @@
                     <textarea id="moduleDescription" rows="3" class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-brand focus:border-transparent" placeholder="Brief description of the module..."></textarea>
                 </div>
 
+                <!-- Optional Quiz Setup -->
+                <div class="border border-gray-200 rounded-xl p-4 bg-amber-50/40">
+                    <div class="flex items-center space-x-2 mb-3">
+                        <i class="fas fa-clipboard-list text-amber-600"></i>
+                        <h4 class="text-sm font-semibold text-gray-800">Optional Quiz Setup</h4>
+                    </div>
+                    <p class="text-xs text-gray-600 mb-4">Add a quiz now so students can see it immediately in module view.</p>
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Quiz URL</label>
+                            <input type="url" id="moduleQuizUrl" class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-brand focus:border-transparent" placeholder="https://forms.google.com/...">
+                            <p class="text-xs text-gray-500 mt-1">Leave blank if you do not want to add a quiz yet.</p>
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Quiz Title</label>
+                                <input type="text" id="moduleQuizTitle" class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-brand focus:border-transparent" placeholder="Auto: Module Title Quiz">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Total Items</label>
+                                <input type="number" id="moduleQuizTotalItems" min="1" value="10" class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-brand focus:border-transparent" placeholder="10">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Passing Score</label>
+                                <input type="number" id="moduleQuizPassingScore" min="0" value="0" class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-brand focus:border-transparent" placeholder="0">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Content Type -->
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-3">Content Type *</label>
@@ -398,6 +428,7 @@
         let sections = [];
         let activeQuarterFilter = 'all';
         const unsupportedModuleColumns = new Set(JSON.parse(localStorage.getItem('unsupported_modules_columns') || '[]'));
+        const unsupportedQuizColumns = new Set(JSON.parse(localStorage.getItem('unsupported_quizzes_columns') || '[]'));
 
         // Initialize
         document.addEventListener('DOMContentLoaded', async function() {
@@ -583,6 +614,20 @@
             return sanitized;
         }
 
+        function rememberUnsupportedQuizColumn(columnName) {
+            if (!columnName) return;
+            unsupportedQuizColumns.add(columnName);
+            localStorage.setItem('unsupported_quizzes_columns', JSON.stringify(Array.from(unsupportedQuizColumns)));
+        }
+
+        function stripUnsupportedQuizColumns(payload) {
+            const sanitized = { ...payload };
+            unsupportedQuizColumns.forEach(column => {
+                if (column in sanitized) delete sanitized[column];
+            });
+            return sanitized;
+        }
+
         async function insertModuleWithFallback(payload) {
             const workingPayload = stripUnsupportedModuleColumns(payload);
             let lastError = null;
@@ -639,6 +684,43 @@
             }
 
             throw lastError || new Error('Failed to update module');
+        }
+
+        async function insertQuizWithFallback(payload) {
+            const workingPayload = stripUnsupportedQuizColumns(payload);
+            let lastError = null;
+
+            for (let attempt = 0; attempt < 4; attempt++) {
+                const result = await getSupabase()
+                    .from('quizzes')
+                    .insert(workingPayload)
+                    .select()
+                    .single();
+
+                if (!result.error) return result;
+
+                const missingColumn = getMissingColumnName(result.error);
+                if (!missingColumn || !(missingColumn in workingPayload)) {
+                    lastError = result.error;
+                    break;
+                }
+
+                rememberUnsupportedQuizColumn(missingColumn);
+                delete workingPayload[missingColumn];
+                lastError = result.error;
+            }
+
+            throw lastError || new Error('Failed to create quiz');
+        }
+
+        function isValidHttpUrl(value) {
+            if (!value) return false;
+            try {
+                const parsed = new URL(value);
+                return parsed.protocol === 'http:' || parsed.protocol === 'https:';
+            } catch {
+                return false;
+            }
         }
 
         async function loadGradeSectionOptions() {
@@ -946,14 +1028,30 @@
 
             try {
                 const contentType = document.querySelector('input[name="contentType"]:checked').value;
+                const moduleTitle = document.getElementById('moduleTitle').value.trim();
+                const moduleDescription = document.getElementById('moduleDescription').value.trim();
                 const selectedQuarter = document.getElementById('moduleQuarter').value;
                 const selectedGradeLevelId = document.getElementById('moduleGradeLevel').value || null;
                 const selectedSectionId = document.getElementById('moduleSection').value || null;
+                const moduleStatus = document.getElementById('moduleStatus').value;
+                const quizUrl = document.getElementById('moduleQuizUrl').value.trim();
+                const quizTitleInput = document.getElementById('moduleQuizTitle').value.trim();
+                const quizTotalItemsInput = parseInt(document.getElementById('moduleQuizTotalItems').value, 10);
+                const quizPassingScoreInput = parseInt(document.getElementById('moduleQuizPassingScore').value, 10);
                 const resolvedScope = validateAndResolveScope(selectedGradeLevelId, selectedSectionId);
                 let pdfUrl = null;
                 let imageUrls = [];
 
                 if (!selectedQuarter) throw new Error('Please select a quarter');
+                if (!moduleTitle) throw new Error('Please enter a module title');
+                if (quizUrl && !isValidHttpUrl(quizUrl)) throw new Error('Please enter a valid quiz URL (http/https)');
+
+                const quizTotalItems = Number.isFinite(quizTotalItemsInput) && quizTotalItemsInput > 0 ? quizTotalItemsInput : 10;
+                const quizPassingScore = Number.isFinite(quizPassingScoreInput) && quizPassingScoreInput >= 0 ? quizPassingScoreInput : 0;
+
+                if (quizPassingScore > quizTotalItems) {
+                    throw new Error('Quiz passing score cannot be greater than total items');
+                }
 
                 // Upload files
                 if (contentType === 'pdf') {
@@ -969,8 +1067,8 @@
 
                 // Create module
                 const { data, error } = await insertModuleWithFallback({
-                    title: document.getElementById('moduleTitle').value,
-                    description: document.getElementById('moduleDescription').value,
+                    title: moduleTitle,
+                    description: moduleDescription,
                     content_type: contentType,
                     pdf_url: pdfUrl,
                     image_urls: imageUrls.length > 0 ? imageUrls : null,
@@ -978,13 +1076,36 @@
                     grade_level: getGradeLevelNameById(resolvedScope.gradeLevelId),
                     grade_level_id: resolvedScope.gradeLevelId,
                     section_id: resolvedScope.sectionId,
-                    status: document.getElementById('moduleStatus').value,
+                    status: moduleStatus,
                     teacher_id: currentUser.id
                 });
 
                 if (error) throw error;
 
-                showToast('Module created successfully!', 'success');
+                // Optional: create a linked quiz for this module
+                if (quizUrl && data?.id) {
+                    const now = new Date().toISOString();
+                    const quizTitle = quizTitleInput || `${moduleTitle} Quiz`;
+
+                    await insertQuizWithFallback({
+                        title: quizTitle,
+                        description: moduleDescription || `Quiz for ${moduleTitle}`,
+                        quiz_url: quizUrl,
+                        module_id: data.id,
+                        quarter: Number(selectedQuarter),
+                        grade_level: getGradeLevelNameById(resolvedScope.gradeLevelId),
+                        grade_level_id: resolvedScope.gradeLevelId,
+                        section_id: resolvedScope.sectionId,
+                        total_items: quizTotalItems,
+                        passing_score: quizPassingScore,
+                        is_published: moduleStatus === 'published',
+                        teacher_id: currentUser.id,
+                        created_at: now,
+                        updated_at: now
+                    });
+                }
+
+                showToast(quizUrl ? 'Module and quiz created successfully!' : 'Module created successfully!', 'success');
                 closeCreateModuleModal();
                 await loadModules();
             } catch (error) {
@@ -1160,6 +1281,25 @@
                 });
                 if (error) throw error;
 
+                let quizScopeUpdateQuery = getSupabase()
+                    .from('quizzes')
+                    .update({
+                        quarter: Number(quarter),
+                        grade_level: getGradeLevelNameById(resolvedScope.gradeLevelId),
+                        grade_level_id: resolvedScope.gradeLevelId,
+                        section_id: resolvedScope.sectionId
+                    })
+                    .eq('module_id', moduleId);
+
+                if (currentUser?.role === 'teacher') {
+                    quizScopeUpdateQuery = quizScopeUpdateQuery.eq('teacher_id', currentUser.id);
+                }
+
+                const { error: quizScopeError } = await quizScopeUpdateQuery;
+                if (quizScopeError) {
+                    console.warn('Quiz scope sync warning:', quizScopeError);
+                }
+
                 showToast('Module access scope updated', 'success');
                 await loadModules();
                 await openModuleDetail(moduleId);
@@ -1217,6 +1357,22 @@
                 }
                 const { error } = await updateQuery;
                 if (error) throw error;
+
+                // Keep linked quizzes visible state aligned with module visibility.
+                let quizUpdateQuery = getSupabase()
+                    .from('quizzes')
+                    .update({ is_published: newStatus === 'published' })
+                    .eq('module_id', moduleId);
+
+                if (currentUser?.role === 'teacher') {
+                    quizUpdateQuery = quizUpdateQuery.eq('teacher_id', currentUser.id);
+                }
+
+                const { error: quizUpdateError } = await quizUpdateQuery;
+                if (quizUpdateError) {
+                    console.warn('Quiz status sync warning:', quizUpdateError);
+                }
+
                 showToast(`Module ${newStatus}`, 'success');
                 await loadModules();
                 openModuleDetail(moduleId);

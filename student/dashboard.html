@@ -580,6 +580,9 @@
             progress: [],
             completedProgress: [],
             progressByLesson: {},
+            moduleProgressRecords: [],
+            moduleProgressByModule: {},
+            persistedAchievements: {},
             stats: null,
             activityTimeline: [],
             streak: 0,
@@ -634,7 +637,7 @@
                 loadRecentActivity();
                 loadWeeklyActivity();
                 loadStreak();
-                loadAchievements();
+                await loadAchievements();
 
                 // Setup event listeners
                 setupEventListeners();
@@ -753,18 +756,102 @@
 
         function getModuleProgressPercent(module) {
             const lessonIds = getModuleLessonIds(module);
-            if (lessonIds.length === 0) return 0;
-            return Math.round((getCompletedLessonCountForModule(module) / lessonIds.length) * 100);
+            if (lessonIds.length > 0) {
+                return Math.round((getCompletedLessonCountForModule(module) / lessonIds.length) * 100);
+            }
+
+            const moduleProgress = dashboardData.moduleProgressByModule[module?.id] || null;
+            return moduleProgress?.content_viewed ? 100 : 0;
         }
 
         function getCompletedModuleCount() {
-            return dashboardData.modules.filter(module => {
-                const lessonIds = getModuleLessonIds(module);
-                return lessonIds.length > 0 && getCompletedLessonCountForModule(module) >= lessonIds.length;
-            }).length;
+            return dashboardData.modules.filter(module => getModuleProgressPercent(module) >= 100).length;
         }
 
-        function buildActivityTimeline(progressRecords, submissions) {
+        function getAchievementCatalog() {
+            const completedModuleCount = getCompletedModuleCount();
+            const approvedSubmissionCount = dashboardData.submissions.filter(s => s.status === 'approved').length;
+
+            return [
+                { id: 'first_lesson', emoji: '🏆', name: 'First Steps', desc: 'Complete your first lesson', condition: () => dashboardData.completedProgress.length >= 1 },
+                { id: 'five_lessons', emoji: '📖', name: 'Bookworm', desc: 'Complete 5 lessons', condition: () => dashboardData.completedProgress.length >= 5 },
+                { id: 'ten_lessons', emoji: '📚', name: 'Scholar', desc: 'Complete 10 lessons', condition: () => dashboardData.completedProgress.length >= 10 },
+                { id: 'quiz_master', emoji: '⭐', name: 'Quiz Star', desc: 'Get 5 quizzes approved', condition: () => approvedSubmissionCount >= 5 },
+                { id: 'perfect_score', emoji: '🎯', name: 'Perfectionist', desc: 'Get a perfect quiz score', condition: () => dashboardData.submissions.some(s => Number(s.student_score || 0) >= Number(s.total_items || 0) && Number(s.total_items || 0) > 0) },
+                { id: 'streak_3', emoji: '🔥', name: '3 Day Streak', desc: 'Learn 3 days in a row', condition: () => dashboardData.streak >= 3 },
+                { id: 'streak_7', emoji: '💪', name: 'Week Warrior', desc: 'Learn 7 days in a row', condition: () => dashboardData.streak >= 7 },
+                { id: 'xp_100', emoji: '💎', name: 'XP Hunter', desc: 'Earn 100 XP', condition: () => dashboardData.xp >= 100 },
+                { id: 'xp_500', emoji: '🌟', name: 'XP Master', desc: 'Earn 500 XP', condition: () => dashboardData.xp >= 500 },
+                { id: 'xp_1000', emoji: '👑', name: 'XP Legend', desc: 'Earn 1000 XP', condition: () => dashboardData.xp >= 1000 },
+                { id: 'module_master', emoji: '📘', name: 'Module Master', desc: 'Complete at least one full module', condition: () => completedModuleCount >= 1 }
+            ];
+        }
+
+        async function syncStudentAchievements(catalog) {
+            const persistedMap = {};
+
+            try {
+                const { data: existingRows, error: fetchError } = await getSupabase()
+                    .from('student_achievements')
+                    .select('achievement_id, earned_at')
+                    .eq('student_id', currentUser.id);
+
+                if (fetchError) {
+                    if (isMissingTableError(fetchError, 'student_achievements')) {
+                        dashboardData.persistedAchievements = {};
+                        return;
+                    }
+                    throw fetchError;
+                }
+
+                (existingRows || []).forEach(row => {
+                    if (!row?.achievement_id) return;
+                    persistedMap[row.achievement_id] = {
+                        achievement_id: row.achievement_id,
+                        earned_at: row.earned_at
+                    };
+                });
+
+                const newlyEarnedIds = catalog
+                    .filter(item => item.condition() && !persistedMap[item.id])
+                    .map(item => item.id);
+
+                if (newlyEarnedIds.length > 0) {
+                    const nowIso = new Date().toISOString();
+                    const insertPayload = newlyEarnedIds.map(achievementId => ({
+                        student_id: currentUser.id,
+                        achievement_id: achievementId,
+                        earned_at: nowIso,
+                        created_at: nowIso,
+                        updated_at: nowIso
+                    }));
+
+                    const { data: insertedRows, error: insertError } = await getSupabase()
+                        .from('student_achievements')
+                        .insert(insertPayload)
+                        .select('achievement_id, earned_at');
+
+                    if (insertError && !isMissingTableError(insertError, 'student_achievements')) {
+                        throw insertError;
+                    }
+
+                    (insertedRows || []).forEach(row => {
+                        if (!row?.achievement_id) return;
+                        persistedMap[row.achievement_id] = {
+                            achievement_id: row.achievement_id,
+                            earned_at: row.earned_at
+                        };
+                    });
+                }
+
+                dashboardData.persistedAchievements = persistedMap;
+            } catch (error) {
+                console.warn('Failed to sync persistent achievements:', error);
+                dashboardData.persistedAchievements = {};
+            }
+        }
+
+        function buildActivityTimeline(progressRecords, submissions, moduleProgressRecords) {
             const lessonActivities = (progressRecords || [])
                 .filter(record => record.updated_at || record.completed_at || record.created_at)
                 .map(record => ({
@@ -805,14 +892,31 @@
                     };
                 });
 
-            return [...lessonActivities, ...submissionActivities]
+            const moduleOpenActivities = (moduleProgressRecords || [])
+                .filter(record => record.last_opened_at || record.first_opened_at || record.updated_at)
+                .map(record => ({
+                    type: 'module',
+                    title: record.modules?.title || 'Module',
+                    status: 'Opened module',
+                    icon: '📘',
+                    iconClass: 'bg-indigo-100',
+                    timestamp: record.last_opened_at || record.first_opened_at || record.updated_at
+                }));
+
+            return [...lessonActivities, ...submissionActivities, ...moduleOpenActivities]
                 .filter(item => item.timestamp)
                 .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
         }
 
+        function isMissingTableError(error, tableName) {
+            if (!error) return false;
+            const combined = `${error.message || ''} ${error.details || ''} ${error.hint || ''}`.toLowerCase();
+            return combined.includes((tableName || '').toLowerCase());
+        }
+
         async function loadCoreDashboardData() {
             try {
-                const [modulesResponse, progressResponse, submissionsResponse] = await Promise.all([
+                const [modulesResponse, progressResponse, submissionsResponse, moduleProgressResponse] = await Promise.all([
                     getSupabase()
                         .from('modules')
                         .select('*, lessons(id, title)')
@@ -828,11 +932,26 @@
                         .select('*, lessons(title)')
                         .eq('user_id', currentUser.id)
                         .order('submitted_at', { ascending: false })
+                    ,
+                    getSupabase()
+                        .from('student_module_progress')
+                        .select('*, modules(title)')
+                        .eq('student_id', currentUser.id)
+                        .order('last_opened_at', { ascending: false })
                 ]);
 
                 if (modulesResponse.error) throw modulesResponse.error;
                 if (progressResponse.error) throw progressResponse.error;
                 if (submissionsResponse.error) throw submissionsResponse.error;
+
+                let moduleProgressRows = [];
+                if (moduleProgressResponse?.error && !isMissingTableError(moduleProgressResponse.error, 'student_module_progress')) {
+                    throw moduleProgressResponse.error;
+                }
+
+                if (moduleProgressResponse?.data) {
+                    moduleProgressRows = moduleProgressResponse.data;
+                }
 
                 const scopedModules = (modulesResponse.data || []).filter(module => isInStudentScope(module, studentAssignment));
                 const scopedModuleIds = new Set(scopedModules.map(module => module.id));
@@ -844,6 +963,25 @@
 
                 const scopedSubmissions = (submissionsResponse.data || []).filter(submission => {
                     return submission.module_id ? scopedModuleIds.has(submission.module_id) : true;
+                });
+
+                const scopedModuleProgress = (moduleProgressRows || []).filter(record => {
+                    return record.module_id ? scopedModuleIds.has(record.module_id) : false;
+                });
+
+                const moduleProgressByModule = {};
+                scopedModuleProgress.forEach(record => {
+                    if (!record?.module_id) return;
+                    const existing = moduleProgressByModule[record.module_id];
+                    if (!existing) {
+                        moduleProgressByModule[record.module_id] = record;
+                        return;
+                    }
+                    const existingTime = new Date(existing.last_opened_at || existing.updated_at || existing.created_at || 0).getTime();
+                    const recordTime = new Date(record.last_opened_at || record.updated_at || record.created_at || 0).getTime();
+                    if (recordTime >= existingTime) {
+                        moduleProgressByModule[record.module_id] = record;
+                    }
                 });
 
                 const progressByLesson = {};
@@ -865,10 +1003,19 @@
                 const completedProgress = normalizedProgress.filter(isLessonCompleted);
                 const completedLessons = completedProgress.length;
                 const totalLessons = scopedModules.reduce((sum, module) => sum + getModuleLessonIds(module).length, 0);
-                const completedModules = scopedModules.filter(module => {
+                const getScopedModuleProgressPercent = (module) => {
                     const lessonIds = getModuleLessonIds(module);
-                    return lessonIds.length > 0 && lessonIds.every(lessonId => isLessonCompleted(progressByLesson[lessonId]));
-                }).length;
+                    if (lessonIds.length > 0) {
+                        const completedLessonCount = lessonIds.reduce((count, lessonId) => {
+                            return count + (isLessonCompleted(progressByLesson[lessonId]) ? 1 : 0);
+                        }, 0);
+                        return Math.round((completedLessonCount / lessonIds.length) * 100);
+                    }
+
+                    return moduleProgressByModule[module?.id]?.content_viewed ? 100 : 0;
+                };
+
+                const completedModules = scopedModules.filter(module => getScopedModuleProgressPercent(module) >= 100).length;
                 const approvedSubmissions = scopedSubmissions.filter(submission => submission.status === 'approved');
 
                 const averageScore = approvedSubmissions.length > 0
@@ -894,9 +1041,11 @@
                 dashboardData.progress = normalizedProgress;
                 dashboardData.completedProgress = completedProgress;
                 dashboardData.progressByLesson = progressByLesson;
+                dashboardData.moduleProgressRecords = scopedModuleProgress;
+                dashboardData.moduleProgressByModule = moduleProgressByModule;
                 dashboardData.submissions = scopedSubmissions;
                 dashboardData.xp = xp;
-                dashboardData.activityTimeline = buildActivityTimeline(normalizedProgress, scopedSubmissions);
+                dashboardData.activityTimeline = buildActivityTimeline(normalizedProgress, scopedSubmissions, scopedModuleProgress);
                 dashboardData.stats = {
                     totalModules: scopedModules.length,
                     completedModules,
@@ -917,8 +1066,8 @@
         function loadStreak() {
             try {
                 const activeDays = new Set(
-                    dashboardData.completedProgress
-                        .map(item => item.completed_at || item.updated_at || item.created_at)
+                    dashboardData.activityTimeline
+                        .map(item => item.timestamp)
                         .filter(Boolean)
                         .map(date => {
                             const normalized = new Date(date);
@@ -1291,28 +1440,20 @@
         }
 
         // Load achievements
-        function loadAchievements() {
+        async function loadAchievements() {
             const container = document.getElementById('achievementsPreview');
-            const completedModuleCount = getCompletedModuleCount();
-            
-            const allAchievements = [
-                { id: 'first_lesson', emoji: '🏆', name: 'First Steps', condition: () => dashboardData.completedProgress.length >= 1 },
-                { id: 'quiz_master', emoji: '⭐', name: 'Quiz Star', condition: () => dashboardData.submissions.filter(s => s.status === 'approved').length >= 5 },
-                { id: 'perfect_score', emoji: '🎯', name: 'Perfect', condition: () => dashboardData.submissions.some(s => Number(s.student_score || 0) >= Number(s.total_items || 0) && Number(s.total_items || 0) > 0) },
-                { id: 'module_master', emoji: '📚', name: 'Scholar', condition: () => completedModuleCount >= 1 },
-                { id: 'streak_3', emoji: '🔥', name: '3 Day Streak', condition: () => dashboardData.streak >= 3 },
-                { id: 'streak_7', emoji: '💪', name: 'Week Warrior', condition: () => dashboardData.streak >= 7 },
-                { id: 'xp_100', emoji: '💎', name: 'XP Hunter', condition: () => dashboardData.xp >= 100 },
-                { id: 'xp_500', emoji: '🌟', name: 'XP Master', condition: () => dashboardData.xp >= 500 }
-            ];
+            const allAchievements = getAchievementCatalog();
+            await syncStudentAchievements(allAchievements);
 
-            const earned = allAchievements.filter(a => a.condition());
+            const earned = allAchievements.filter(a => {
+                return Boolean(dashboardData.persistedAchievements[a.id]) || a.condition();
+            });
             const achievementCountEl = document.getElementById('achievementCount');
             if (achievementCountEl) achievementCountEl.textContent = earned.length;
             dashboardData.achievements = earned;
 
             container.innerHTML = allAchievements.slice(0, 4).map(a => {
-                const isEarned = a.condition();
+                const isEarned = Boolean(dashboardData.persistedAchievements[a.id]) || a.condition();
                 return `
                     <div class="text-center ${!isEarned ? 'opacity-30 grayscale' : ''}" title="${a.name}">
                         <div class="w-12 h-12 mx-auto ${isEarned ? 'bg-yellow-100' : 'bg-gray-100'} rounded-full flex items-center justify-center mb-1">
@@ -1550,26 +1691,16 @@
         }
 
         function showAchievements() {
-            const completedModuleCount = getCompletedModuleCount();
-
-            const allAchievements = [
-                { id: 'first_lesson', emoji: '🏆', name: 'First Steps', desc: 'Complete your first lesson', condition: () => dashboardData.completedProgress.length >= 1 },
-                { id: 'five_lessons', emoji: '📖', name: 'Bookworm', desc: 'Complete 5 lessons', condition: () => dashboardData.completedProgress.length >= 5 },
-                { id: 'ten_lessons', emoji: '📚', name: 'Scholar', desc: 'Complete 10 lessons', condition: () => dashboardData.completedProgress.length >= 10 },
-                { id: 'quiz_master', emoji: '⭐', name: 'Quiz Star', desc: 'Get 5 quizzes approved', condition: () => dashboardData.submissions.filter(s => s.status === 'approved').length >= 5 },
-                { id: 'perfect_score', emoji: '🎯', name: 'Perfectionist', desc: 'Get a perfect quiz score', condition: () => dashboardData.submissions.some(s => Number(s.student_score || 0) >= Number(s.total_items || 0) && Number(s.total_items || 0) > 0) },
-                { id: 'streak_3', emoji: '🔥', name: '3 Day Streak', desc: 'Learn 3 days in a row', condition: () => dashboardData.streak >= 3 },
-                { id: 'streak_7', emoji: '💪', name: 'Week Warrior', desc: 'Learn 7 days in a row', condition: () => dashboardData.streak >= 7 },
-                { id: 'xp_100', emoji: '💎', name: 'XP Hunter', desc: 'Earn 100 XP', condition: () => dashboardData.xp >= 100 },
-                { id: 'xp_500', emoji: '🌟', name: 'XP Master', desc: 'Earn 500 XP', condition: () => dashboardData.xp >= 500 },
-                { id: 'xp_1000', emoji: '👑', name: 'XP Legend', desc: 'Earn 1000 XP', condition: () => dashboardData.xp >= 1000 },
-                { id: 'module_master', emoji: '📘', name: 'Module Master', desc: 'Complete at least one full module', condition: () => completedModuleCount >= 1 }
-            ];
+            const allAchievements = getAchievementCatalog();
 
             showModal('Achievements', `
                 <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
                     ${allAchievements.map(a => {
-                        const earned = a.condition();
+                        const earnedRecord = dashboardData.persistedAchievements[a.id] || null;
+                        const earned = Boolean(earnedRecord) || a.condition();
+                        const earnedAtLabel = earnedRecord?.earned_at
+                            ? new Date(earnedRecord.earned_at).toLocaleDateString()
+                            : null;
                         return `
                             <div class="text-center p-4 ${earned ? 'bg-yellow-50' : 'bg-gray-50 opacity-50'} rounded-xl">
                                 <div class="w-16 h-16 mx-auto ${earned ? 'bg-yellow-100' : 'bg-gray-100'} rounded-full flex items-center justify-center mb-3">
@@ -1577,7 +1708,7 @@
                                 </div>
                                 <h4 class="font-semibold text-gray-800">${a.name}</h4>
                                 <p class="text-sm text-gray-500">${a.desc}</p>
-                                ${earned ? '<p class="text-xs text-green-600 mt-1">✓ Earned</p>' : ''}
+                                ${earned ? `<p class="text-xs text-green-600 mt-1">✓ Earned${earnedAtLabel ? ` on ${earnedAtLabel}` : ''}</p>` : ''}
                             </div>
                         `;
                     }).join('')}

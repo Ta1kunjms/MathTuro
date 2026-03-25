@@ -239,9 +239,76 @@ async function loadGradeSectionInfo(studentId, userProfile = null, authUser = nu
 // Load and display the student's streak count
 async function loadStreakCount() {
   try {
-    // This function would typically fetch the streak count from the database
-    // For now, we'll use a placeholder value
-    const streakCount = 0;
+    const supabase = getSupabase();
+    if (!supabase) return;
+
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session?.user?.id) return;
+
+    let streakCount = 0;
+
+    const { data: streakData, error: streakError } = await supabase
+      .from('student_streaks')
+      .select('current_streak')
+      .eq('student_id', session.user.id)
+      .maybeSingle();
+
+    if (streakError && !(String(streakError.code || '') === 'PGRST116')) {
+      const message = `${streakError.message || ''} ${streakError.details || ''}`.toLowerCase();
+      if (!message.includes('student_streaks')) {
+        throw streakError;
+      }
+    }
+
+    if (streakData?.current_streak !== undefined && streakData?.current_streak !== null) {
+      streakCount = Number(streakData.current_streak || 0);
+    } else {
+      const activeDays = new Set();
+
+      const { data: progressRows } = await supabase
+        .from('lesson_progress')
+        .select('completed_at, updated_at, created_at')
+        .eq('user_id', session.user.id)
+        .order('updated_at', { ascending: false })
+        .limit(200);
+
+      (progressRows || []).forEach(row => {
+        const timestamp = row.completed_at || row.updated_at || row.created_at;
+        if (!timestamp) return;
+        const date = new Date(timestamp);
+        date.setHours(0, 0, 0, 0);
+        activeDays.add(date.toISOString().slice(0, 10));
+      });
+
+      const { data: moduleProgressRows } = await supabase
+        .from('student_module_progress')
+        .select('last_opened_at, first_opened_at, updated_at')
+        .eq('student_id', session.user.id)
+        .order('last_opened_at', { ascending: false })
+        .limit(200);
+
+      (moduleProgressRows || []).forEach(row => {
+        const timestamp = row.last_opened_at || row.first_opened_at || row.updated_at;
+        if (!timestamp) return;
+        const date = new Date(timestamp);
+        date.setHours(0, 0, 0, 0);
+        activeDays.add(date.toISOString().slice(0, 10));
+      });
+
+      const cursor = new Date();
+      cursor.setHours(0, 0, 0, 0);
+
+      const todayKey = cursor.toISOString().slice(0, 10);
+      if (!activeDays.has(todayKey)) {
+        cursor.setDate(cursor.getDate() - 1);
+      }
+
+      while (activeDays.has(cursor.toISOString().slice(0, 10))) {
+        streakCount += 1;
+        cursor.setDate(cursor.getDate() - 1);
+      }
+    }
+
     const streakCountEl = document.getElementById('streakCount');
     if (streakCountEl) {
       streakCountEl.textContent = `${streakCount} day streak`;

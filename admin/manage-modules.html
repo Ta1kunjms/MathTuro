@@ -191,6 +191,36 @@
                         <label class="block text-sm font-medium text-gray-700 mb-2">Module Cover Image (Optional)</label>
                         <input type="file" id="moduleImage" accept="image/*" class="w-full px-3 py-2 border border-gray-300 rounded-lg file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-maroon file:text-white hover:file:bg-maroon-dark">
                     </div>
+
+                    <div class="border border-amber-200 bg-amber-50 rounded-lg p-4">
+                        <div class="flex items-center space-x-2 mb-3">
+                            <i class="fas fa-clipboard-list text-amber-700"></i>
+                            <h4 class="text-sm font-semibold text-gray-800">Optional Quiz Setup</h4>
+                        </div>
+                        <p class="text-xs text-gray-600 mb-4">Add a quiz while creating the module so students can access it from module view.</p>
+
+                        <div class="space-y-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Quiz URL</label>
+                                <input type="url" id="moduleQuizUrl" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-maroon focus:border-transparent" placeholder="https://forms.google.com/...">
+                                <p class="text-xs text-gray-500 mt-1">Leave blank if no quiz is needed yet.</p>
+                            </div>
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">Quiz Title</label>
+                                    <input type="text" id="moduleQuizTitle" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-maroon focus:border-transparent" placeholder="Auto: Module Quiz">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">Total Items</label>
+                                    <input type="number" id="moduleQuizTotalItems" min="1" value="10" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-maroon focus:border-transparent" placeholder="10">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">Passing Score</label>
+                                    <input type="number" id="moduleQuizPassingScore" min="0" value="0" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-maroon focus:border-transparent" placeholder="0">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
                 
                 <div class="p-6 border-t border-gray-200 flex justify-end space-x-3">
@@ -213,6 +243,8 @@
     <script>
         let currentUser = null;
         let activeQuarterFilter = 'all';
+        let editingLinkedQuizId = null;
+        const unsupportedQuizColumns = new Set(JSON.parse(localStorage.getItem('unsupported_quizzes_columns') || '[]'));
 
         function normalizeGradeValue(value) {
             if (value === null || value === undefined) return null;
@@ -234,6 +266,158 @@
         function getQuarterLabel(module) {
             const quarter = getModuleQuarter(module);
             return quarter ? `Quarter ${quarter}` : 'No Quarter';
+        }
+
+        function getMissingColumnName(error) {
+            const message = `${error?.message || ''} ${error?.details || ''} ${error?.hint || ''}`;
+            const patterns = [
+                /Could not find the '([^']+)' column/i,
+                /column '([^']+)'/i,
+                /'([^']+)' column/i
+            ];
+
+            for (const pattern of patterns) {
+                const match = message.match(pattern);
+                if (match?.[1]) return match[1];
+            }
+
+            return null;
+        }
+
+        function rememberUnsupportedQuizColumn(columnName) {
+            if (!columnName) return;
+            unsupportedQuizColumns.add(columnName);
+            localStorage.setItem('unsupported_quizzes_columns', JSON.stringify(Array.from(unsupportedQuizColumns)));
+        }
+
+        function stripUnsupportedQuizColumns(payload) {
+            const sanitized = { ...payload };
+            unsupportedQuizColumns.forEach(column => {
+                if (column in sanitized) delete sanitized[column];
+            });
+            return sanitized;
+        }
+
+        async function insertQuizWithFallback(payload) {
+            const workingPayload = stripUnsupportedQuizColumns(payload);
+            let lastError = null;
+
+            for (let attempt = 0; attempt < 4; attempt++) {
+                const result = await getSupabase()
+                    .from('quizzes')
+                    .insert(workingPayload)
+                    .select()
+                    .single();
+
+                if (!result.error) return result;
+
+                const missingColumn = getMissingColumnName(result.error);
+                if (!missingColumn || !(missingColumn in workingPayload)) {
+                    lastError = result.error;
+                    break;
+                }
+
+                rememberUnsupportedQuizColumn(missingColumn);
+                delete workingPayload[missingColumn];
+                lastError = result.error;
+            }
+
+            throw lastError || new Error('Failed to create quiz');
+        }
+
+        async function updateLinkedQuizzesWithFallback(moduleId, payload) {
+            const workingPayload = stripUnsupportedQuizColumns(payload);
+            let lastError = null;
+
+            for (let attempt = 0; attempt < 4; attempt++) {
+                const result = await getSupabase()
+                    .from('quizzes')
+                    .update(workingPayload)
+                    .eq('module_id', moduleId);
+
+                if (!result.error) return result;
+
+                const missingColumn = getMissingColumnName(result.error);
+                if (!missingColumn || !(missingColumn in workingPayload)) {
+                    lastError = result.error;
+                    break;
+                }
+
+                rememberUnsupportedQuizColumn(missingColumn);
+                delete workingPayload[missingColumn];
+                lastError = result.error;
+            }
+
+            throw lastError || new Error('Failed to sync linked quizzes');
+        }
+
+        async function updateQuizByIdWithFallback(quizId, payload) {
+            const workingPayload = stripUnsupportedQuizColumns(payload);
+            let lastError = null;
+
+            for (let attempt = 0; attempt < 4; attempt++) {
+                const result = await getSupabase()
+                    .from('quizzes')
+                    .update(workingPayload)
+                    .eq('id', quizId);
+
+                if (!result.error) return result;
+
+                const missingColumn = getMissingColumnName(result.error);
+                if (!missingColumn || !(missingColumn in workingPayload)) {
+                    lastError = result.error;
+                    break;
+                }
+
+                rememberUnsupportedQuizColumn(missingColumn);
+                delete workingPayload[missingColumn];
+                lastError = result.error;
+            }
+
+            throw lastError || new Error('Failed to update quiz');
+        }
+
+        function resetOptionalQuizFields() {
+            editingLinkedQuizId = null;
+            document.getElementById('moduleQuizUrl').value = '';
+            document.getElementById('moduleQuizTitle').value = '';
+            document.getElementById('moduleQuizTotalItems').value = '10';
+            document.getElementById('moduleQuizPassingScore').value = '0';
+        }
+
+        async function loadLinkedQuizForModule(moduleId) {
+            resetOptionalQuizFields();
+
+            const { data: linkedQuiz, error } = await getSupabase()
+                .from('quizzes')
+                .select('*')
+                .eq('module_id', moduleId)
+                .order('created_at', { ascending: true })
+                .limit(1)
+                .maybeSingle();
+
+            if (error) {
+                console.warn('Could not load linked quiz for module:', error);
+                return;
+            }
+
+            if (!linkedQuiz) return;
+
+            editingLinkedQuizId = linkedQuiz.id;
+            document.getElementById('moduleQuizUrl').value = linkedQuiz.quiz_url || '';
+            document.getElementById('moduleQuizTitle').value = linkedQuiz.title || '';
+            document.getElementById('moduleQuizTotalItems').value = String(linkedQuiz.total_items || 10);
+            document.getElementById('moduleQuizPassingScore').value = String(linkedQuiz.passing_score || 0);
+        }
+
+        function isValidHttpUrl(value) {
+            if (!value) return false;
+            try {
+                const parsed = new URL(value);
+                return parsed.protocol === 'http:' || parsed.protocol === 'https:';
+            } catch {
+                return false;
+            }
         }
 
         function setQuarterFilter(quarter) {
@@ -438,6 +622,7 @@
             document.getElementById('submitIcon').className = 'fas fa-save mr-2';
             document.getElementById('moduleForm').reset();
             document.getElementById('moduleId').value = '';
+            resetOptionalQuizFields();
             document.getElementById('moduleModal').classList.remove('hidden');
         }
 
@@ -460,6 +645,7 @@
                 document.getElementById('moduleGradeLevel').value = module.grade_level;
                 document.getElementById('moduleQuarter').value = getModuleQuarter(module);
                 document.getElementById('moduleStatus').value = module.status;
+                await loadLinkedQuizForModule(module.id);
                 document.getElementById('moduleModal').classList.remove('hidden');
             } catch (error) {
                 console.error('Error fetching module:', error);
@@ -495,10 +681,27 @@
             const quarter = document.getElementById('moduleQuarter').value;
             const status = document.getElementById('moduleStatus').value;
             const fileInput = document.getElementById('moduleImage');
+            const quizUrl = document.getElementById('moduleQuizUrl').value.trim();
+            const quizTitleInput = document.getElementById('moduleQuizTitle').value.trim();
+            const quizTotalItemsInput = parseInt(document.getElementById('moduleQuizTotalItems').value, 10);
+            const quizPassingScoreInput = parseInt(document.getElementById('moduleQuizPassingScore').value, 10);
 
             try {
                 if (!quarter) {
                     showToast('Please select a quarter', 'error');
+                    return;
+                }
+
+                if (quizUrl && !isValidHttpUrl(quizUrl)) {
+                    showToast('Please enter a valid quiz URL (http/https)', 'error');
+                    return;
+                }
+
+                const quizTotalItems = Number.isFinite(quizTotalItemsInput) && quizTotalItemsInput > 0 ? quizTotalItemsInput : 10;
+                const quizPassingScore = Number.isFinite(quizPassingScoreInput) && quizPassingScoreInput >= 0 ? quizPassingScoreInput : 0;
+
+                if (quizPassingScore > quizTotalItems) {
+                    showToast('Passing score cannot exceed total items', 'error');
                     return;
                 }
 
@@ -514,13 +717,14 @@
 
                 if (moduleId) {
                     // Update existing module
+                    const now = new Date().toISOString();
                     const updates = {
                         title,
                         description,
                         grade_level: gradeLevel,
                         quarter: Number(quarter),
                         status,
-                        updated_at: new Date().toISOString()
+                        updated_at: now
                     };
                     if (imageUrl) {
                         updates.image_url = imageUrl;
@@ -528,20 +732,84 @@
 
                     const { error } = await getSupabase().from('modules').update(updates).eq('id', moduleId);
                     if (error) throw error;
+
+                    // Keep linked quizzes in sync with module scope and visibility.
+                    await updateLinkedQuizzesWithFallback(moduleId, {
+                        quarter: Number(quarter),
+                        grade_level: gradeLevel,
+                        is_published: status === 'active',
+                        updated_at: now
+                    });
+
+                    // Update a specific linked quiz if present in the optional quiz form,
+                    // or create one if URL is provided and no linked quiz exists yet.
+                    if (quizUrl) {
+                        const quizTitle = quizTitleInput || `${title} Quiz`;
+                        if (editingLinkedQuizId) {
+                            await updateQuizByIdWithFallback(editingLinkedQuizId, {
+                                title: quizTitle,
+                                description: description || `Quiz for ${title}`,
+                                quiz_url: quizUrl,
+                                quarter: Number(quarter),
+                                grade_level: gradeLevel,
+                                total_items: quizTotalItems,
+                                passing_score: quizPassingScore,
+                                is_published: status === 'active',
+                                updated_at: now
+                            });
+                        } else {
+                            const createdQuizResult = await insertQuizWithFallback({
+                                title: quizTitle,
+                                description: description || `Quiz for ${title}`,
+                                quiz_url: quizUrl,
+                                module_id: moduleId,
+                                quarter: Number(quarter),
+                                grade_level: gradeLevel,
+                                total_items: quizTotalItems,
+                                passing_score: quizPassingScore,
+                                is_published: status === 'active',
+                                teacher_id: currentUser.id,
+                                created_at: now,
+                                updated_at: now
+                            });
+                            editingLinkedQuizId = createdQuizResult?.data?.id || null;
+                        }
+                    }
+
                     showToast('Module updated successfully', 'success');
                 } else {
                     // Create new module
-                    const { error } = await getSupabase().from('modules').insert({
+                    const now = new Date().toISOString();
+                    const { data: createdModule, error } = await getSupabase().from('modules').insert({
                         title,
                         description,
                         grade_level: gradeLevel,
                         quarter: Number(quarter),
                         status,
-                        created_at: new Date().toISOString(),
-                        updated_at: new Date().toISOString(),
+                        created_at: now,
+                        updated_at: now,
                         image_url: imageUrl
-                    });
+                    }).select().single();
                     if (error) throw error;
+
+                    if (quizUrl && createdModule?.id) {
+                        const quizTitle = quizTitleInput || `${title} Quiz`;
+                        await insertQuizWithFallback({
+                            title: quizTitle,
+                            description: description || `Quiz for ${title}`,
+                            quiz_url: quizUrl,
+                            module_id: createdModule.id,
+                            quarter: Number(quarter),
+                            grade_level: gradeLevel,
+                            total_items: quizTotalItems,
+                            passing_score: quizPassingScore,
+                            is_published: status === 'active',
+                            teacher_id: currentUser.id,
+                            created_at: now,
+                            updated_at: now
+                        });
+                    }
+
                     showToast('Module created successfully', 'success');
                 }
 

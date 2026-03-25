@@ -138,16 +138,7 @@
                         </div>
                     </div>
 
-                    <div id="responseTimeIndicator" class="flex items-center justify-between p-4 border border-gray-200 rounded-xl">
-                        <div>
-                            <p class="font-medium text-gray-800">Response Time</p>
-                            <p class="text-sm text-gray-500">Current latency</p>
-                        </div>
-                        <div class="flex items-center space-x-2">
-                            <div class="indicator w-3 h-3 bg-green-500 rounded-full"></div>
-                            <span class="status text-sm font-medium text-green-600">Good</span>
-                        </div>
-                    </div>
+                    <!-- Removed duplicate Response Time box -->
 
                     <div id="storage" class="flex items-center justify-between p-4 border border-gray-200 rounded-xl">
                         <div>
@@ -213,7 +204,6 @@
                 // Update API Server status
                 const apiServerStatus = document.querySelector('#apiServer .status');
                 const apiServerIndicator = document.querySelector('#apiServer .indicator');
-                
                 if (!healthError) {
                     apiServerIndicator.className = 'w-3 h-3 bg-green-500 rounded-full';
                     apiServerStatus.textContent = 'Healthy';
@@ -227,7 +217,6 @@
                 // Update Database status
                 const dbStatus = document.querySelector('#database .status');
                 const dbIndicator = document.querySelector('#database .indicator');
-                
                 if (!healthError) {
                     dbIndicator.className = 'w-3 h-3 bg-green-500 rounded-full';
                     dbStatus.textContent = 'Healthy';
@@ -244,7 +233,6 @@
                     .from('users')
                     .select('last_login')
                     .gt('last_login', fiveMinutesAgo);
-
                 if (!activeUsersError && activeUsers) {
                     document.getElementById('activeUsers').textContent = activeUsers.length;
                 }
@@ -252,20 +240,10 @@
                 // Calculate response time (simulated)
                 const responseTime = Math.floor(Math.random() * 100) + 20; // 20-120ms
                 document.getElementById('responseTime').textContent = `${responseTime}ms`;
-
-                // Check if response time is within acceptable range
-                const responseTimeIndicator = document.querySelector('#responseTimeIndicator');
-                if (responseTime < 50) {
-                    responseTimeIndicator.className = 'w-3 h-3 bg-green-500 rounded-full';
-                } else if (responseTime < 100) {
-                    responseTimeIndicator.className = 'w-3 h-3 bg-yellow-500 rounded-full';
-                } else {
-                    responseTimeIndicator.className = 'w-3 h-3 bg-red-500 rounded-full';
-                }
+                // No more responseTimeIndicator logic, as the box is removed
 
                 // Load recent system events from activity log
                 await loadRecentEvents();
-
             } catch (error) {
                 console.error('Error loading system status:', error);
                 showToast('Failed to load system status', 'error');

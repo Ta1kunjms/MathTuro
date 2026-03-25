@@ -643,7 +643,7 @@ async function getStudentStreak() {
     const { data: streakData } = await getSupabase()
       .from('student_streaks')
       .select('*')
-      .eq('user_id', user.id)
+      .eq('student_id', user.id)
       .single();
 
     return streakData?.current_streak || 0;
@@ -671,7 +671,7 @@ async function updateStudentStreak() {
     const { data: existing } = await getSupabase()
       .from('student_streaks')
       .select('*')
-      .eq('user_id', user.id)
+      .eq('student_id', user.id)
       .single();
 
     if (existing) {
@@ -695,13 +695,13 @@ async function updateStudentStreak() {
           last_activity_date: today,
           updated_at: new Date().toISOString()
         })
-        .eq('user_id', user.id);
+        .eq('student_id', user.id);
 
     } else {
       await getSupabase()
         .from('student_streaks')
         .insert({
-          user_id: user.id,
+          student_id: user.id,
           current_streak: 1,
           longest_streak: 1,
           last_activity_date: today,

@@ -944,21 +944,43 @@
                     .from('quiz-screenshots')
                     .getPublicUrl(fileName);
 
-                // Create submission
-                const { error: insertError } = await getSupabase()
-                    .from('quiz_submissions')
-                    .insert({
-                        user_id: currentUser.id,
-                        quiz_id: quizId,
-                        module_id: moduleId,
-                        student_score: studentScore,
-                        total_items: totalItems,
-                        screenshot_url: urlData.publicUrl,
-                        status: 'pending',
-                        submitted_at: new Date().toISOString()
-                    });
+                // Check if updating or inserting
+                const existingSubmission = latestSubmissionByQuiz[quizId];
+                let updateResult;
 
-                if (insertError) throw insertError;
+                if (existingSubmission) {
+                    console.log('Updating existing submission:', existingSubmission);
+                    updateResult = await getSupabase()
+                        .from('quiz_submissions')
+                        .update({
+                            student_score: studentScore,
+                            total_items: totalItems,
+                            screenshot_url: urlData.publicUrl,
+                            status: 'pending', // Reset to pending when updating
+                            teacher_comment: null, // Clear teacher comment when student updates
+                            teacher_feedback: null, // Clear teacher feedback when student updates
+                            reviewed_at: null, // Clear reviewed timestamp
+                            reviewed_by: null, // Clear reviewed by user
+                            updated_at: new Date().toISOString()
+                        })
+                        .eq('id', existingSubmission.id);
+                } else {
+                    // Create submission
+                    updateResult = await getSupabase()
+                        .from('quiz_submissions')
+                        .insert({
+                            user_id: currentUser.id,
+                            quiz_id: quizId,
+                            module_id: moduleId,
+                            student_score: studentScore,
+                            total_items: totalItems,
+                            screenshot_url: urlData.publicUrl,
+                            status: 'pending',
+                            submitted_at: new Date().toISOString()
+                        });
+                }
+
+                if (updateResult.error) throw updateResult.error;
 
                 showToast('Score submitted successfully! Waiting for teacher approval.', 'success');
                 closeSubmitQuizModal();

@@ -603,6 +603,24 @@
 
         async function loadModuleAndLessons(moduleId) {
             try {
+                // Fetch student lesson progress from database to sync with localStorage
+                if (currentUser.role === 'student') {
+                    try {
+                        const { data: progressData, error: progressError } = await getSupabase()
+                            .from('lesson_progress')
+                            .select('lesson_id')
+                            .eq('user_id', currentUser.id)
+                            .eq('completed', true);
+                        
+                        if (!progressError && progressData) {
+                            const completedLessonIds = progressData.map(p => p.lesson_id).filter(Boolean);
+                            localStorage.setItem('completedLessons', JSON.stringify(completedLessonIds));
+                        }
+                    } catch (err) {
+                        console.warn('Failed to sync lesson progress from database:', err);
+                    }
+                }
+
                 const moduleOptions = currentUser.role === 'student'
                     ? { requirePublished: true, studentAssignment }
                     : {};

@@ -328,6 +328,7 @@
 
         async function loadActivity() {
             try {
+                // Fetch quiz submissions activity
                 let submissionsResult = await getSupabase()
                     .from('quiz_submissions')
                     .select('id, user_id, quiz_id, module_id, status, submitted_at, created_at, student_score, total_items')
@@ -345,7 +346,20 @@
                 if (submissionsResult.error) throw submissionsResult.error;
 
                 const submissions = submissionsResult.data || [];
-                const userIds = [...new Set(submissions.map(s => s.user_id).filter(Boolean))];
+
+                // Fetch login events from activity_log
+                const { data: loginEvents } = await getSupabase()
+                    .from('activity_log')
+                    .select('id, user_id, action, created_at')
+                    .eq('action', 'login')
+                    .order('created_at', { ascending: false })
+                    .limit(200);
+
+                const userIds = [...new Set([
+                    ...submissions.map(s => s.user_id),
+                    ...(loginEvents || []).map(e => e.user_id)
+                ].filter(Boolean))];
+
                 const quizIds = [...new Set(submissions.map(s => s.quiz_id).filter(Boolean))];
                 const moduleIds = [...new Set(submissions.map(s => s.module_id).filter(Boolean))];
 
@@ -358,9 +372,7 @@
                         .from('users')
                         .select('id, full_name, email')
                         .in('id', userIds);
-                    (users || []).forEach(user => {
-                        usersMap[user.id] = user;
-                    });
+                    (users || []).forEach(user => { usersMap[user.id] = user; });
                 }
 
                 if (quizIds.length > 0) {
@@ -368,9 +380,7 @@
                         .from('quizzes')
                         .select('id, title')
                         .in('id', quizIds);
-                    (quizzes || []).forEach(quiz => {
-                        quizzesMap[quiz.id] = quiz;
-                    });
+                    (quizzes || []).forEach(quiz => { quizzesMap[quiz.id] = quiz; });
                 }
 
                 if (moduleIds.length > 0) {
@@ -378,12 +388,11 @@
                         .from('modules')
                         .select('*')
                         .in('id', moduleIds);
-                    (modules || []).forEach(module => {
-                        modulesMap[module.id] = module;
-                    });
+                    (modules || []).forEach(module => { modulesMap[module.id] = module; });
                 }
 
-                allActivities = submissions.map(sub => {
+                // Build submission activities
+                const submissionActivities = submissions.map(sub => {
                     const user = usersMap[sub.user_id];
                     const quiz = quizzesMap[sub.quiz_id];
                     const module = modulesMap[sub.module_id];
@@ -400,6 +409,25 @@
                         timestamp: sub.submitted_at || sub.created_at || new Date().toISOString()
                     };
                 });
+
+                // Build login activities from activity_log
+                const loginActivities = (loginEvents || []).map(event => {
+                    const user = usersMap[event.user_id];
+                    return {
+                        id: event.id,
+                        type: 'login',
+                        action: 'logged in',
+                        user: user?.full_name || 'Unknown User',
+                        email: user?.email || '',
+                        details: 'User session started',
+                        status: 'login',
+                        timestamp: event.created_at || new Date().toISOString()
+                    };
+                });
+
+                // Merge and sort by timestamp descending
+                allActivities = [...submissionActivities, ...loginActivities]
+                    .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
 
                 updateStats();
                 renderActivities();

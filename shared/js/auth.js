@@ -101,7 +101,26 @@ async function login(email, password) {
       userData = newUser;
     }
 
-    // Step 3: Store user information in localStorage
+    // Step 3: Update last_login in database and record login event in activity_log
+    try {
+      await supabase
+        .from('users')
+        .update({ last_login: new Date().toISOString() })
+        .eq('id', authData.user.id);
+
+      await supabase
+        .from('activity_log')
+        .insert({
+          user_id: authData.user.id,
+          action: 'login',
+          details: 'User logged in successfully',
+          created_at: new Date().toISOString()
+        });
+    } catch (dbErr) {
+      console.warn('Could not write login logs to database:', dbErr);
+    }
+
+    // Step 4: Store user information in localStorage
     const user = {
       id: authData.user.id,
       email: authData.user.email,

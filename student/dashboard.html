@@ -916,7 +916,7 @@
 
         async function loadCoreDashboardData() {
             try {
-                const [modulesResponse, progressResponse, submissionsResponse, moduleProgressResponse] = await Promise.all([
+                const [modulesResponse, progressResponse, submissionsResponse, moduleProgressResponse, streakResponse] = await Promise.all([
                     getSupabase()
                         .from('modules')
                         .select('*, lessons(id, title)')
@@ -937,7 +937,12 @@
                         .from('student_module_progress')
                         .select('*, modules(title)')
                         .eq('student_id', currentUser.id)
-                        .order('last_opened_at', { ascending: false })
+                        .order('last_opened_at', { ascending: false }),
+                    getSupabase()
+                        .from('student_streaks')
+                        .select('*')
+                        .eq('student_id', currentUser.id)
+                        .maybeSingle()
                 ]);
 
                 if (modulesResponse.error) throw modulesResponse.error;
@@ -951,6 +956,11 @@
 
                 if (moduleProgressResponse?.data) {
                     moduleProgressRows = moduleProgressResponse.data;
+                }
+
+                let dbStreak = 0;
+                if (streakResponse && !streakResponse.error && streakResponse.data) {
+                    dbStreak = streakResponse.data.current_streak || 0;
                 }
 
                 const scopedModules = (modulesResponse.data || []).filter(module => isInStudentScope(module, studentAssignment));
@@ -1036,6 +1046,7 @@
 
                 const xp = (completedLessons * 10) + (completedModules * 50) + (approvedSubmissions.length * 20);
 
+                dashboardData.streak = dbStreak;
                 dashboardData.modules = scopedModules;
                 dashboardData.lessons = scopedModules.flatMap(module => module.lessons || []);
                 dashboardData.progress = normalizedProgress;
@@ -1065,36 +1076,8 @@
         // Load streak data
         function loadStreak() {
             try {
-                const activeDays = new Set(
-                    dashboardData.activityTimeline
-                        .map(item => item.timestamp)
-                        .filter(Boolean)
-                        .map(date => {
-                            const normalized = new Date(date);
-                            normalized.setHours(0, 0, 0, 0);
-                            return normalized.toISOString().slice(0, 10);
-                        })
-                );
-
-                let streak = 0;
-                const cursor = new Date();
-                cursor.setHours(0, 0, 0, 0);
-
-                const todayKey = cursor.toISOString().slice(0, 10);
-                if (!activeDays.has(todayKey)) {
-                    cursor.setDate(cursor.getDate() - 1);
-                }
-
-                while (activeDays.has(cursor.toISOString().slice(0, 10))) {
-                    streak += 1;
-                    cursor.setDate(cursor.getDate() - 1);
-                }
-
-                dashboardData.streak = streak;
-
                 const dailyStreakEl = document.getElementById('dailyStreak');
-
-                if (dailyStreakEl) dailyStreakEl.textContent = streak;
+                if (dailyStreakEl) dailyStreakEl.textContent = dashboardData.streak || 0;
             } catch (error) {
                 console.log('No streak data yet');
             }
@@ -1188,8 +1171,7 @@
 
                 const moduleCards = sortedModules.slice(0, 4).map((module) => {
                     const totalLessons = getModuleLessonIds(module).length;
-                    const completedLessons = getCompletedLessonCountForModule(module);
-                    const progressPercent = totalLessons > 0 ? Math.round((completedLessons / totalLessons) * 100) : 0;
+                    const progressPercent = getModuleProgressPercent(module);
                     const isCompleted = progressPercent === 100;
 
                     return `

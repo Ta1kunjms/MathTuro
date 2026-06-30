@@ -387,6 +387,11 @@
         }
 
         function quizMatchesScope(quiz, selectedGradeLevelId, selectedSectionId) {
+            // If no filters are active, include ALL quizzes
+            if (!selectedGradeLevelId && !selectedSectionId) {
+                return true;
+            }
+
             const quizGradeLevelId = resolveGradeLevelId(quiz);
             const quizSectionId = quiz.section_id ? String(quiz.section_id) : '';
 
@@ -401,7 +406,8 @@
                 return true;
             }
 
-            return !quizSectionId;
+            // Grade filter only — include quizzes of that grade regardless of section scope
+            return true;
         }
 
         function renderTableHeader(quizzes) {

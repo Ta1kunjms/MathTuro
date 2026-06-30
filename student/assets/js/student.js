@@ -577,7 +577,7 @@ async function getStudentDashboardStats() {
     // Get quiz submissions
     const { data: submissions } = await getSupabase()
       .from('quiz_submissions')
-      .select('score, total_items, status')
+      .select('student_score, total_items, status')
       .eq('user_id', user.id);
 
     // Calculate stats
@@ -604,7 +604,7 @@ async function getStudentDashboardStats() {
     let averageScore = 0;
     const approvedSubmissions = submissions?.filter(s => s.status === 'approved') || [];
     if (approvedSubmissions.length > 0) {
-      const totalPercent = approvedSubmissions.reduce((sum, s) => sum + (s.score / s.total_items * 100), 0);
+      const totalPercent = approvedSubmissions.reduce((sum, s) => sum + (s.student_score / s.total_items * 100), 0);
       averageScore = Math.round(totalPercent / approvedSubmissions.length);
     }
 

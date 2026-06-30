@@ -623,12 +623,15 @@
             const container = document.getElementById('pendingSubmissionsList');
             
             try {
-                const { data: submissions } = await getSupabase()
+                // Fetch pending submissions — include both quiz-based (quiz_id) and module-based (module_id only)
+                const { data: submissions, error } = await getSupabase()
                     .from('quiz_submissions')
-                    .select('*, users(full_name), quizzes(title), modules(title)')
+                    .select('id, user_id, quiz_id, module_id, student_score, total_items, status, submitted_at, users(full_name), quizzes(title), modules(title)')
                     .eq('status', 'pending')
                     .order('submitted_at', { ascending: true })
                     .limit(5);
+
+                if (error) throw error;
 
                 pendingSubmissions = submissions || [];
 
@@ -647,15 +650,19 @@
                     return;
                 }
 
-                container.innerHTML = submissions.map(sub => `
+                container.innerHTML = submissions.map(sub => {
+                    const studentName = sub.users?.full_name || 'Student';
+                    // Graceful fallback: use quiz title, then module title, then 'Unnamed Quiz'
+                    const quizTitle = sub.quizzes?.title || sub.modules?.title || 'Unnamed Quiz';
+                    return `
                     <div class="submission-card p-4 flex items-center justify-between hover:bg-gray-50">
                         <div class="flex items-center space-x-4">
-                            <div class="w-12 h-12 bg-yellow-100 rounded-full flex items-center justify-center">
-                                <span class="text-yellow-600 font-bold">${getInitials(sub.users?.full_name || 'Student')}</span>
+                            <div class="w-12 h-12 bg-yellow-100 rounded-full flex items-center justify-center flex-shrink-0">
+                                <span class="text-yellow-600 font-bold text-sm">${getInitials(studentName)}</span>
                             </div>
                             <div>
-                                <p class="font-medium text-gray-800">${escapeHtml(sub.users?.full_name || 'Student')}</p>
-                                <p class="text-sm text-gray-500">${escapeHtml(sub.quizzes?.title || sub.modules?.title || 'Quiz')} • Score: ${sub.student_score || 0}/${sub.total_items || 0}</p>
+                                <p class="font-medium text-gray-800">${escapeHtml(studentName)}</p>
+                                <p class="text-sm text-gray-500">${escapeHtml(quizTitle)} • Score: ${sub.student_score || 0}/${sub.total_items || 0}</p>
                                 <p class="text-xs text-gray-400">${formatDate(sub.submitted_at)}</p>
                             </div>
                         </div>
@@ -665,7 +672,7 @@
                             </a>
                         </div>
                     </div>
-                `).join('');
+                `}).join('');
 
             } catch (error) {
                 console.error('Error loading submissions:', error);

@@ -3,39 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="../dist/styles.css">
+    <script src="../shared/js/device.js"></script>
     <link rel="icon" type="image/png" href="Logo/MATHURO-LOGO-v2.png">
     <title>Tutorial Videos - MathTuro LMS</title>
-    <script src="https://cdn.tailwindcss.com"></script>
     <script src="shared/js/supabase-lib.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        primary: {
-                            50: '#f0fdf4',
-                            100: '#dcfce7',
-                            200: '#bbf7d0',
-                            300: '#86efac',
-                            400: '#4ade80',
-                            500: '#22c55e',
-                            600: '#16a34a',
-                            700: '#15803d',
-                            800: '#166534',
-                            900: '#14532d',
-                        },
-                        brand: '#005801',
-                        'brand-dark': '#004601',
-                        'brand-light': '#006B01',
-                    },
-                    fontFamily: {
-                        sans: ['Inter', 'system-ui', 'sans-serif'],
-                    },
-                },
-            },
-        }
-    </script>
     <style>
         body { font-family: 'Inter', system-ui, sans-serif; }
                 @media (max-width: 768px) {
@@ -129,6 +102,9 @@
     <link rel="stylesheet" href="shared/css/base.css">
 </head>
 <body class="bg-gray-50 min-h-screen">
+    <!-- Mobile bottom navigation container for student role -->
+    <div id="mobileNavContainer"></div>
+
     <!-- Mobile Menu Overlay -->
     <div id="mobileOverlay" class="fixed inset-0 bg-black bg-opacity-50 z-40 hidden lg:hidden"></div>
     
@@ -448,8 +424,22 @@
                 updateUserInfo(currentUser);
                 updateUIForRole(currentUser.role);
 
-                if (currentUser.role === 'student' && typeof syncStudentScopeFromAuth === 'function') {
-                    await syncStudentScopeFromAuth(currentUser.id);
+                if (currentUser.role === 'student') {
+                    document.documentElement.setAttribute('data-portal', 'student');
+                    document.documentElement.setAttribute('data-native-mobile', 'true');
+                    document.body.classList.add('has-mobile-nav');
+                    
+                    const mobileNav = document.getElementById('mobileNavContainer');
+                    if (mobileNav) {
+                        mobileNav.innerHTML = '<div data-include="nav-mobile-student" data-depth="../"></div>';
+                        if (window.loadIncludes) {
+                            window.loadIncludes();
+                        }
+                    }
+                    
+                    if (typeof syncStudentScopeFromAuth === 'function') {
+                        await syncStudentScopeFromAuth(currentUser.id);
+                    }
                 }
 
                 // Load videos
@@ -894,5 +884,6 @@
             setTimeout(() => toast.remove(), 3000);
         }
     </script>
+    <script src="../shared/js/includes.js"></script>
 </body>
 </html>

@@ -3,31 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="../dist/styles.css">
+    <script src="../shared/js/device.js"></script>
     <link rel="icon" type="image/png" href="../Logo/MATHURO-LOGO-v2.png">
     <title>Manage Videos - Admin Portal</title>
-    <script src="https://cdn.tailwindcss.com"></script>
     <script src="../shared/js/supabase-lib.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        maroon: '#800000',
-                        'maroon-dark': '#600000',
-                        'maroon-light': '#990000',
-                        gold: '#FFD700',
-                        'gold-light': '#FFED4E',
-                        'gold-dark': '#B8860B',
-                    },
-                    fontFamily: {
-                        sans: ['Inter', 'system-ui', 'sans-serif'],
-                    },
-                },
-            },
-        }
-    </script>
     <style>
         body { font-family: 'Inter', system-ui, sans-serif; }
         
@@ -74,6 +56,8 @@
     <link rel="stylesheet" href="assets/css/admin.css">
 </head>
 <body class="bg-gray-50 min-h-screen">
+    <!-- Mobile bottom navigation -->
+
     <!-- Mobile Menu Overlay -->
     <div id="mobileOverlay" class="fixed inset-0 bg-black bg-opacity-50 z-40 hidden lg:hidden"></div>
     
@@ -542,5 +526,6 @@
         });
     </script>
 
+    <script src="../shared/js/includes.js"></script>
 </body>
 </html>

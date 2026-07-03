@@ -1,61 +1,53 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-portal="student">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="../dist/styles.css">
+    <script src="../shared/js/device.js"></script>
     <link rel="icon" type="image/png" href="../Logo/MATHURO-LOGO-v2.png">
     <title>Browse Modules - MathTuro LMS</title>
-    <script src="https://cdn.tailwindcss.com"></script>
     <script src="../shared/js/supabase-lib.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        primary: {
-                            50: '#f0fdf4',
-                            100: '#dcfce7',
-                            200: '#bbf7d0',
-                            300: '#86efac',
-                            400: '#4ade80',
-                            500: '#22c55e',
-                            600: '#16a34a',
-                            700: '#15803d',
-                            800: '#166534',
-                            900: '#14532d',
-                        },
-                        brand: '#005801',
-                        'brand-dark': '#004601',
-                        'brand-light': '#006B01',
-                    },
-                    fontFamily: {
-                        sans: ['Inter', 'system-ui', 'sans-serif'],
-                    },
-                },
-            },
-        }
-    </script>
     <style>
         body { font-family: 'Inter', system-ui, sans-serif; }
-                @media (max-width: 768px) {
-                    .module-card,
-                    .lesson-card,
-                    .quiz-card {
-                        max-width: 100% !important;
-                        min-width: 0 !important;
-                        width: 100% !important;
-                        margin: 0 0 1.5rem 0 !important;
-                        padding: 1.25rem !important;
-                        box-sizing: border-box;
-                    }
-                    .modules-grid,
-                    .cards-row {
-                        display: flex !important;
-                        flex-direction: column !important;
-                        gap: 1.5rem !important;
-                    }
-                }
+        @media (max-width: 768px) {
+            #modulesGrid {
+                display: flex !important;
+                flex-direction: column !important;
+                gap: 1.5rem !important;
+            }
+            .module-card {
+                max-width: 100% !important;
+                min-width: 0 !important;
+                width: 100% !important;
+                margin: 0 0 1.5rem 0 !important;
+                padding: 0 !important;
+                box-sizing: border-box;
+                border-radius: 1.5rem !important;
+            }
+            .module-card .module-preview-container {
+                display: none !important;
+            }
+            .module-card a {
+                height: auto !important;
+                display: block !important;
+            }
+            .lesson-card,
+            .quiz-card {
+                max-width: 100% !important;
+                min-width: 0 !important;
+                width: 100% !important;
+                margin: 0 0 1.5rem 0 !important;
+                padding: 1.25rem !important;
+                box-sizing: border-box;
+            }
+            .cards-row {
+                display: flex !important;
+                flex-direction: column !important;
+                gap: 1.5rem !important;
+            }
+        }
         
         .gradient-text {
             background: linear-gradient(135deg, #005801 0%, #22c55e 100%);
@@ -132,6 +124,9 @@
     <link rel="stylesheet" href="assets/css/student.css">
 </head>
 <body class="bg-gray-50 min-h-screen">
+    <!-- Mobile bottom navigation -->
+    <div data-include="nav-mobile-student" data-depth="../"></div>
+
     <!-- Mobile Menu Overlay -->
     <div id="mobileOverlay" class="fixed inset-0 bg-black bg-opacity-50 z-40 hidden lg:hidden"></div>
     
@@ -192,8 +187,7 @@
                 <p class="mt-4 text-gray-600">Loading modules...</p>
             </div>
 
-            <!-- Modules Grid -->
-            <div id="modulesGrid" class="hidden grid grid-cols-5 gap-6 justify-start items-stretch overflow-x-auto" style="grid-auto-flow: column;">
+            <div id="modulesGrid" class="hidden grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 justify-start items-stretch">
                 <!-- Modules will be loaded here -->
             </div>
 
@@ -217,6 +211,8 @@
     </main>
 
     <!-- Scripts -->
+    <script src="../shared/js/includes.js"></script>
+
     <script src="../shared/js/config.js"></script>
     <script src="../shared/js/utils.js"></script>
     <script src="../shared/js/supabase.js"></script>
@@ -480,7 +476,7 @@
                 return `
                 <div class="module-card bg-primary-100 rounded-[2rem] shadow-xl overflow-hidden mx-auto min-w-[260px] max-w-[300px] flex flex-col">
                     <a href="module-view.html?id=${module.id}" class="flex flex-col h-[360px]">
-                        <div class="h-[46%] bg-gray-200 overflow-hidden flex items-center justify-center">
+                        <div class="module-preview-container h-[46%] bg-gray-200 overflow-hidden flex items-center justify-center">
                             ${previewMedia}
                         </div>
                         <div class="px-5 py-4 flex flex-col flex-1">

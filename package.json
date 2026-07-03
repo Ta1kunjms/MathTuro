@@ -3,10 +3,16 @@
   "version": "1.0.0",
   "description": "MathTuro LMS",
   "scripts": {
-    "build": "mkdir -p dist && cp -R * dist/ 2>/dev/null || echo 'Build completed successfully'",
+    "build:css": "npx tailwindcss -i ./shared/css/input.css -o ./dist/styles.css --minify",
+    "build": "npm run build:css",
+    "dev:css": "npx tailwindcss -i ./shared/css/input.css -o ./dist/styles.css --watch",
     "dev": "python -m http.server 3000"
+  },
+  "devDependencies": {
+    "tailwindcss": "^3.4.0"
   },
   "keywords": ["lms", "education"],
   "author": "",
   "license": "MIT"
 }
+

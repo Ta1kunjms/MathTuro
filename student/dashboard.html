@@ -1,41 +1,14 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-portal="student">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="../dist/styles.css">
+    <script src="../shared/js/device.js"></script>
     <link rel="icon" type="image/png" href="../Logo/MATHURO-LOGO-v2.png">
     <title>Student Dashboard - MathTuro LMS</title>
-    <script src="https://cdn.tailwindcss.com"></script>
     <script src="../shared/js/supabase-lib.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        primary: {
-                            50: '#f0fdf4',
-                            100: '#dcfce7',
-                            200: '#bbf7d0',
-                            300: '#86efac',
-                            400: '#4ade80',
-                            500: '#22c55e',
-                            600: '#16a34a',
-                            700: '#15803d',
-                            800: '#166534',
-                            900: '#14532d',
-                        },
-                        brand: '#005801',
-                        'brand-dark': '#004601',
-                        'brand-light': '#006B01',
-                    },
-                    fontFamily: {
-                        sans: ['Inter', 'system-ui', 'sans-serif'],
-                    },
-                },
-            },
-        }
-    </script>
     <style>
         body { font-family: 'Inter', system-ui, sans-serif; }
                 @media (max-width: 768px) {
@@ -156,6 +129,9 @@
     <link rel="stylesheet" href="assets/css/student.css">
 </head>
 <body class="bg-gray-50 min-h-screen">
+    <!-- Mobile bottom navigation -->
+    <div data-include="nav-mobile-student" data-depth="../"></div>
+
     <!-- Mobile Menu Overlay -->
     <div id="mobileOverlay" class="fixed inset-0 bg-black bg-opacity-50 z-40 hidden lg:hidden"></div>
     
@@ -561,6 +537,8 @@
     </div>
 
     <!-- Scripts -->
+    <script src="../shared/js/includes.js"></script>
+
     <script src="../shared/js/config.js"></script>
     <script src="../shared/js/utils.js"></script>
     <script src="../shared/js/supabase.js"></script>
@@ -1216,12 +1194,13 @@
             
             try {
                 // Try the videos table first (from teacher uploads)
+                const limitCount = Device.isNativeMobile() ? 2 : 4;
                 const { data: videos } = await getSupabase()
                     .from('videos')
                     .select('*')
                     .eq('is_published', true)
                     .order('created_at', { ascending: false })
-                    .limit(4);
+                    .limit(limitCount);
 
                 let scopedVideos = (videos || []).map(video => ({
                     ...video,
@@ -1236,7 +1215,7 @@
                         .order('is_featured', { ascending: false })
                         .order('order', { ascending: true })
                         .order('created_at', { ascending: false })
-                        .limit(4);
+                        .limit(limitCount);
 
                     scopedVideos = (tutorialVideos || []).map(video => ({
                         id: video.id,
@@ -1301,7 +1280,8 @@
             const container = document.getElementById('recentSubmissions');
             
             try {
-                const submissions = dashboardData.submissions.slice(0, 5);
+                const limitCount = Device.isNativeMobile() ? 3 : 5;
+                const submissions = dashboardData.submissions.slice(0, limitCount);
 
                 if (!submissions || submissions.length === 0) {
                     container.innerHTML = `
@@ -1355,7 +1335,8 @@
             const container = document.getElementById('recentActivity');
             
             try {
-                const activities = dashboardData.activityTimeline.slice(0, 6);
+                const limitCount = Device.isNativeMobile() ? 3 : 6;
+                const activities = dashboardData.activityTimeline.slice(0, limitCount);
 
                 if (!activities || activities.length === 0) {
                     container.innerHTML = `

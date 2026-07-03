@@ -220,3 +220,128 @@ body {
 
 /* Lightbox */
 .lightbox { background: rgba(0, 0, 0, 0.95); }
+
+/* ============================================
+   MOBILE BOTTOM NAV TAB BAR STYLES
+   ============================================ */
+html[data-portal="student"] #mobileTabBar {
+  left: 16px !important;
+  right: 16px !important;
+  bottom: 20px !important;
+  margin: 0 auto !important;
+  max-width: 480px !important;
+  border-radius: 28px !important;
+  height: 64px !important;
+  background: rgba(0, 70, 1, 0.96) !important; /* System Brand Dark Green (#004601) with opacity */
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  box-shadow: 0 12px 30px -6px rgba(0, 0, 0, 0.4), 0 8px 16px -8px rgba(0, 0, 0, 0.4) !important;
+  backdrop-filter: blur(12px) !important;
+  padding-bottom: 0 !important;
+  align-items: center !important;
+  justify-content: space-around !important;
+  padding-left: 8px !important;
+  padding-right: 8px !important;
+}
+
+html[data-portal="student"] .mobile-tab {
+  min-height: auto !important;
+  height: 48px !important;
+  flex: 0 1 auto !important;
+  width: 56px !important;
+  border-radius: 20px !important;
+  padding: 0 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+  color: rgba(255, 255, 255, 0.5) !important;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  position: relative !important;
+  -webkit-tap-highlight-color: transparent;
+}
+
+html[data-portal="student"] .mobile-tab span {
+  display: none !important;
+}
+
+html[data-portal="student"] .mobile-tab svg {
+  width: 24px !important;
+  height: 24px !important;
+  stroke-width: 2.2 !important;
+  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), color 0.2s ease !important;
+}
+
+html[data-portal="student"] .mobile-tab:focus {
+  outline: none;
+}
+
+html[data-portal="student"] .mobile-tab.active,
+html[data-portal="student"] .mobile-tab[aria-current="page"] {
+  background: rgba(255, 255, 255, 0.15) !important;
+  color: #ffffff !important;
+}
+
+html[data-portal="student"] .mobile-tab.active svg,
+html[data-portal="student"] .mobile-tab[aria-current="page"] svg {
+  transform: scale(1.1) !important;
+}
+
+html[data-portal="student"] .mobile-tab:active svg {
+  transform: scale(0.9) !important;
+}
+
+/* Push page content above bottom tab bar on mobile — student portal only */
+@media (max-width: 1023px) {
+  html[data-portal="student"] body.has-mobile-nav {
+    padding-bottom: calc(64px + env(safe-area-inset-bottom, 0px)) !important;
+  }
+}
+
+/* Hide desktop sidebar and hamburger on native mobile — student portal only.
+   Teacher and admin retain their hamburger + sidebar on all screen sizes. */
+html[data-portal="student"][data-native-mobile="true"] #sidebar,
+html[data-portal="student"][data-native-mobile="true"] #studentSidebar,
+html[data-portal="student"][data-native-mobile="true"] #mobileMenuBtn,
+html[data-portal="student"][data-native-mobile="true"] #mobileOverlay {
+  display: none !important;
+}
+
+/* Bottom sheets for modals on native mobile — student portal only */
+html[data-portal="student"][data-native-mobile="true"] #modalContainer {
+  align-items: flex-end !important;
+  justify-content: center !important;
+  padding: 0 !important;
+}
+
+html[data-portal="student"][data-native-mobile="true"] #modalContent {
+  max-width: 100% !important;
+  width: 100% !important;
+  max-height: 85vh !important;
+  border-bottom-left-radius: 0 !important;
+  border-bottom-right-radius: 0 !important;
+  border-top-left-radius: 1.5rem !important;
+  border-top-right-radius: 1.5rem !important;
+  margin: 0 !important;
+  box-shadow: 0 -10px 25px -5px rgba(0, 0, 0, 0.1), 0 -8px 10px -6px rgba(0, 0, 0, 0.1) !important;
+  animation: slideUp 0.3s ease-out forwards;
+}
+
+/* Drag handle on student bottom-sheet modals */
+html[data-portal="student"][data-native-mobile="true"] #modalContent::before {
+  content: '';
+  display: block;
+  width: 40px;
+  height: 4px;
+  background: #d1d5db;
+  border-radius: 2px;
+  margin: 12px auto 0;
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}

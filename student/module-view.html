@@ -1,41 +1,14 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-portal="student">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="../dist/styles.css">
+    <script src="../shared/js/device.js"></script>
     <link rel="icon" type="image/png" href="../Logo/MATHURO-LOGO-v2.png">
     <title>Module View - MathTuro LMS</title>
-    <script src="https://cdn.tailwindcss.com"></script>
     <script src="../shared/js/supabase-lib.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        primary: {
-                            50: '#f0fdf4',
-                            100: '#dcfce7',
-                            200: '#bbf7d0',
-                            300: '#86efac',
-                            400: '#4ade80',
-                            500: '#22c55e',
-                            600: '#16a34a',
-                            700: '#15803d',
-                            800: '#166534',
-                            900: '#14532d',
-                        },
-                        brand: '#005801',
-                        'brand-dark': '#004601',
-                        'brand-light': '#006B01',
-                    },
-                    fontFamily: {
-                        sans: ['Inter', 'system-ui', 'sans-serif'],
-                    },
-                },
-            },
-        }
-    </script>
     <style>
         body { font-family: 'Inter', system-ui, sans-serif; }
                 @media (max-width: 768px) {
@@ -84,6 +57,9 @@
     <link rel="stylesheet" href="assets/css/student.css">
 </head>
 <body class="bg-gray-50 min-h-screen">
+    <!-- Mobile bottom navigation -->
+    <div data-include="nav-mobile-student" data-depth="../"></div>
+
     <!-- Mobile Menu Overlay -->
     <div id="mobileOverlay" class="fixed inset-0 bg-black bg-opacity-50 z-40 hidden lg:hidden"></div>
     
@@ -330,6 +306,8 @@
     </div>
 
     <!-- Scripts -->
+    <script src="../shared/js/includes.js"></script>
+
     <script src="../shared/js/config.js"></script>
     <script src="../shared/js/utils.js"></script>
     <script src="../shared/js/supabase.js"></script>
@@ -685,19 +663,37 @@
             const section = document.getElementById('contentSection');
 
             if (module.content_type === 'pdf' && module.pdf_url) {
-                section.innerHTML = `
-                    <div class="pdf-container rounded-xl overflow-hidden bg-gray-100">
-                        <iframe src="${module.pdf_url}" class="w-full h-full" frameborder="0"></iframe>
-                    </div>
-                    <div class="mt-4 flex justify-center">
-                        <a href="${module.pdf_url}" target="_blank" class="inline-flex items-center space-x-2 px-6 py-3 bg-red-50 text-red-600 rounded-xl hover:bg-red-100 transition-colors">
-                            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-                                <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8l-6-6z"/>
-                            </svg>
-                            <span>Open PDF in New Tab</span>
-                        </a>
-                    </div>
-                `;
+                const isMobile = window.innerWidth <= 768;
+                if (isMobile) {
+                    section.innerHTML = `
+                        <div class="text-center py-4 bg-gray-50 border border-gray-100 rounded-xl p-4">
+                            <div class="w-12 h-12 bg-red-100 text-red-600 rounded-full flex items-center justify-center mx-auto mb-3">
+                                <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+                                    <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8l-6-6z"/>
+                                </svg>
+                            </div>
+                            <h4 class="font-bold text-gray-800 mb-1 text-sm">PDF Learning Material</h4>
+                            <p class="text-xs text-gray-500 mb-4">View or download the learning document.</p>
+                            <a href="${module.pdf_url}" target="_blank" class="w-full inline-flex items-center justify-center space-x-2 px-4 py-3 bg-red-600 text-white rounded-xl hover:bg-red-700 transition-colors font-medium text-sm shadow-sm">
+                                <span>Open PDF Document</span>
+                            </a>
+                        </div>
+                    `;
+                } else {
+                    section.innerHTML = `
+                        <div class="pdf-container rounded-xl overflow-hidden bg-gray-100">
+                            <iframe src="${module.pdf_url}" class="w-full h-full" frameborder="0"></iframe>
+                        </div>
+                        <div class="mt-4 flex justify-center">
+                            <a href="${module.pdf_url}" target="_blank" class="inline-flex items-center space-x-2 px-6 py-3 bg-red-50 text-red-600 rounded-xl hover:bg-red-100 transition-colors">
+                                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                                    <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8l-6-6z"/>
+                                </svg>
+                                <span>Open PDF in New Tab</span>
+                            </a>
+                        </div>
+                    `;
+                }
             } else if (module.image_urls && module.image_urls.length > 0) {
                 moduleImages = module.image_urls;
                 section.innerHTML = `

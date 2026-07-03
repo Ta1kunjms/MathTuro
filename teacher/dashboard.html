@@ -3,48 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="../dist/styles.css">
+    <script src="../shared/js/device.js"></script>
     <link rel="icon" type="image/png" href="../Logo/MATHURO-LOGO-v2.png">
     <title>Teacher Dashboard - MathTuro LMS</title>
-    <script src="https://cdn.tailwindcss.com"></script>
     <script src="../shared/js/supabase-lib.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        primary: {
-                            50: '#f0fdf4',
-                            100: '#dcfce7',
-                            200: '#bbf7d0',
-                            300: '#86efac',
-                            400: '#4ade80',
-                            500: '#22c55e',
-                            600: '#16a34a',
-                            700: '#15803d',
-                            800: '#166534',
-                            900: '#14532d',
-                        },
-                        brand: '#005801',
-                        'brand-dark': '#004601',
-                        'brand-light': '#006B01',
-                        teacher: {
-                            50: '#fdf2f8',
-                            100: '#fce7f3',
-                            200: '#fbcfe8',
-                            500: '#910568',
-                            600: '#720455',
-                            700: '#5a0344',
-                            800: '#4a0338',
-                        },
-                    },
-                    fontFamily: {
-                        sans: ['Inter', 'system-ui', 'sans-serif'],
-                    },
-                },
-            },
-        }
-    </script>
     <style>
         body { font-family: 'Inter', system-ui, sans-serif; }
         
@@ -125,6 +89,8 @@
     <link rel="stylesheet" href="assets/css/teacher.css">
 </head>
 <body class="bg-gray-50 min-h-screen">
+    <!-- Mobile bottom navigation -->
+
     <!-- Mobile Menu Overlay -->
     <div id="mobileOverlay" class="fixed inset-0 bg-black bg-opacity-50 z-40 hidden lg:hidden"></div>
     
@@ -486,6 +452,8 @@
     </div>
 
     <!-- Scripts -->
+    <script src="../shared/js/includes.js"></script>
+
     <script src="../shared/js/config.js"></script>
     <script src="../shared/js/utils.js"></script>
     <script src="../shared/js/supabase.js"></script>
@@ -624,12 +592,13 @@
             
             try {
                 // Fetch pending submissions — include both quiz-based (quiz_id) and module-based (module_id only)
+                const limitCount = Device.isNativeMobile() ? 3 : 5;
                 const { data: submissions, error } = await getSupabase()
                     .from('quiz_submissions')
                     .select('id, user_id, quiz_id, module_id, student_score, total_items, status, submitted_at, users(full_name), quizzes(title), modules(title)')
                     .eq('status', 'pending')
                     .order('submitted_at', { ascending: true })
-                    .limit(5);
+                    .limit(limitCount);
 
                 if (error) throw error;
 
@@ -776,11 +745,12 @@
             const container = document.getElementById('recentActivity');
             
             try {
+                const limitCount = Device.isNativeMobile() ? 3 : 5;
                 const { data: submissions } = await getSupabase()
-                    .from('quiz_submissions')
-                    .select('*, users(full_name), quizzes(title), modules(title)')
-                    .order('submitted_at', { ascending: false })
-                    .limit(5);
+                     .from('quiz_submissions')
+                     .select('*, users(full_name), quizzes(title), modules(title)')
+                     .order('submitted_at', { ascending: false })
+                     .limit(limitCount);
 
                 if (!submissions || submissions.length === 0) {
                     container.innerHTML = '<div class="p-6 text-center text-gray-500"><p>No recent activity</p></div>';

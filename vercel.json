@@ -1,8 +1,6 @@
 {
   "version": 2,
-  "buildCommand": "echo 'No build needed'",
-  "devCommand": null,
-  "installCommand": null,
+  "buildCommand": "npm run build",
   "outputDirectory": ".",
   "rewrites": [
     { "source": "/", "destination": "/index.html" },
@@ -10,6 +8,7 @@
     { "source": "/student/(.*)", "destination": "/student/$1" },
     { "source": "/admin/(.*)", "destination": "/admin/$1" },
     { "source": "/shared/(.*)", "destination": "/shared/$1" },
+    { "source": "/dist/(.*)", "destination": "/dist/$1" },
     { "source": "/Logo/(.*)", "destination": "/Logo/$1" },
     { "source": "/Researchers/(.*)", "destination": "/Researchers/$1" },
     { "source": "/public/(.*)", "destination": "/public/$1" }

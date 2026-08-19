@@ -1,14 +1,19 @@
 // Student Sidebar - Reusable Component
 // Usage: Add <div id="sidebar"></div> in your HTML, then include this script at the end of <body>
 
-document.addEventListener('DOMContentLoaded', function () {
+function initSidebar() {
+  const isPublicDir = window.location.pathname.toLowerCase().includes('/public/');
+  const studentPrefix = isPublicDir ? '../student/' : '';
+  const publicPrefix = isPublicDir ? '' : '../public/';
+  const logoPrefix = '../Logo/MATHURO-LOGO-v2.png';
+
   const sidebarHTML = `
   <div class="sidebar-scrollable flex-1 overflow-y-auto">
             <!-- Logo -->
             <div class="p-6 border-b border-gray-100">
-                <a href="dashboard.html" class="flex items-center space-x-3">
+                <a href="${studentPrefix}dashboard.html" class="flex items-center space-x-3">
                     <div class="w-12 h-12 bg-white rounded-xl flex items-center justify-center shadow-lg">
-                        <img src="../Logo/MATHURO-LOGO-v2.png" alt="MathTuro" class="w-10 h-10 object-contain">
+                        <img src="${logoPrefix}" alt="MathTuro" class="w-10 h-10 object-contain">
                     </div>
                     <div>
                         <span class="text-xl font-bold gradient-text">MathTuro</span>
@@ -18,7 +23,7 @@ document.addEventListener('DOMContentLoaded', function () {
             </div>
             
             <!-- User Info -->
-            <div class="p-6 border-b border-gray-100">
+            <div class="p-6 border-b border-gray-100 cursor-pointer hover:bg-gray-50 transition-colors" onclick="if(typeof showProfile==='function'){showProfile();}" title="Click to view profile">
                 <div class="flex items-center space-x-3">
                     <div class="w-12 h-12 bg-brand/10 rounded-full flex items-center justify-center">
                         <span id="userInitials" class="text-brand font-bold text-lg">--</span>
@@ -39,26 +44,26 @@ document.addEventListener('DOMContentLoaded', function () {
             <!-- Navigation -->
             <nav class="p-4 space-y-2 overflow-y-auto" style="max-height: calc(100vh - 320px);">
                 <p class="text-xs text-gray-400 uppercase tracking-wider px-4 mb-2">Main Menu</p>
-                <a href="dashboard.html" class="sidebar-link active flex items-center space-x-3 px-4 py-3 rounded-xl text-gray-700">
+                <a href="${studentPrefix}dashboard.html" class="sidebar-link active flex items-center space-x-3 px-4 py-3 rounded-xl text-gray-700">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
                     </svg>
                     <span>Dashboard</span>
                 </a>
-                <a href="modules.html" class="sidebar-link flex items-center space-x-3 px-4 py-3 rounded-xl text-gray-700">
+                <a href="${studentPrefix}modules.html" class="sidebar-link flex items-center space-x-3 px-4 py-3 rounded-xl text-gray-700">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
                     </svg>
                     <span>Browse Modules</span>
                 </a>
-                <a href="../public/tutorial-videos.html" class="sidebar-link flex items-center space-x-3 px-4 py-3 rounded-xl text-gray-700">
+                <a href="${publicPrefix}tutorial-videos.html" class="sidebar-link flex items-center space-x-3 px-4 py-3 rounded-xl text-gray-700">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/>
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
                     </svg>
                     <span>Tutorial Videos</span>
                 </a>
-                <a href="quizzes.html" class="sidebar-link flex items-center space-x-3 px-4 py-3 rounded-xl text-gray-700">
+                <a href="${studentPrefix}quizzes.html" class="sidebar-link flex items-center space-x-3 px-4 py-3 rounded-xl text-gray-700">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/>
                     </svg>
@@ -89,7 +94,7 @@ document.addEventListener('DOMContentLoaded', function () {
   const sidebarLinks = document.querySelectorAll('.sidebar-link');
   sidebarLinks.forEach(link => {
     const href = (link.getAttribute('href') || '').toLowerCase();
-    const linkPage = href.split('#')[0].split('?')[0];
+    const linkPage = href.split('#')[0].split('?')[0].split('/').pop();
     const isActive =
       currentPage === linkPage ||
       (currentPage === '' && linkPage === 'dashboard.html') ||
@@ -107,6 +112,22 @@ document.addEventListener('DOMContentLoaded', function () {
     }
   });
 
+  // Handle mobile drawer toggles
+  const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+  const mobileOverlay = document.getElementById('mobileOverlay');
+  if (mobileMenuBtn && sidebarContainer) {
+    mobileMenuBtn.addEventListener('click', () => {
+      sidebarContainer.classList.toggle('-translate-x-full');
+      if (mobileOverlay) mobileOverlay.classList.toggle('hidden');
+    });
+  }
+  if (mobileOverlay && sidebarContainer) {
+    mobileOverlay.addEventListener('click', () => {
+      sidebarContainer.classList.add('-translate-x-full');
+      mobileOverlay.classList.add('hidden');
+    });
+  }
+
   // Load sidebar user info
   loadSidebarUserInfo();
 
@@ -118,7 +139,13 @@ document.addEventListener('DOMContentLoaded', function () {
   if (logoutButton) {
     logoutButton.addEventListener('click', handleLogout);
   }
-});
+}
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initSidebar);
+} else {
+  initSidebar();
+}
 
 // Load and display the logged-in student's name and initials in the sidebar
 async function loadSidebarUserInfo() {
@@ -343,3 +370,125 @@ async function handleLogout() {
     window.location.href = '../public/login.html';
   }
 }
+
+// Global Modal & Profile Management for all Student pages
+function ensureModalContainer() {
+  let container = document.getElementById('modalContainer');
+  if (!container) {
+    container = document.createElement('div');
+    container.id = 'modalContainer';
+    container.className = 'hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 transition-opacity duration-300';
+    container.innerHTML = `
+      <div id="modalContent" class="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl transform transition-all scale-100">
+        <!-- Modal content loaded dynamically -->
+      </div>
+    `;
+    container.addEventListener('click', (e) => {
+      if (e.target === container) window.closeModal();
+    });
+    document.body.appendChild(container);
+  }
+  return container;
+}
+
+window.showModal = function (title, content) {
+  ensureModalContainer();
+  const modal = document.getElementById('modalContainer');
+  const modalContent = document.getElementById('modalContent');
+  if (modalContent) {
+    modalContent.innerHTML = `
+      <div class="p-6 border-b border-gray-100 flex items-center justify-between">
+        <h3 class="text-xl font-bold text-gray-800">${title}</h3>
+        <button onclick="closeModal()" class="p-2 text-gray-500 hover:text-gray-700 rounded-lg hover:bg-gray-100 transition-colors">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+          </svg>
+        </button>
+      </div>
+      <div class="p-6">${content}</div>
+    `;
+  }
+  if (modal) modal.classList.remove('hidden');
+};
+
+window.closeModal = function () {
+  const modal = document.getElementById('modalContainer');
+  if (modal) modal.classList.add('hidden');
+};
+
+window.showProfile = async function () {
+  let name = '';
+  let email = '';
+
+  const sidebarUserNameEl = document.getElementById('sidebarUserName');
+  if (sidebarUserNameEl && sidebarUserNameEl.textContent !== 'Loading...') {
+    name = sidebarUserNameEl.textContent;
+  }
+
+  if (typeof getSupabase === 'function') {
+    try {
+      const supabase = getSupabase();
+      if (supabase) {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session && session.user) {
+          email = session.user.email || '';
+          if (!name || name === 'Loading...') {
+            name = session.user.user_metadata?.full_name || session.user.user_metadata?.name || email.split('@')[0] || 'Student';
+          }
+        }
+      }
+    } catch (e) {
+      console.warn('Error fetching user for profile modal:', e);
+    }
+  }
+
+  window.showModal('Profile Settings', `
+    <form id="profileForm" class="space-y-4" onsubmit="handleGlobalProfileSave(event)">
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-2">Full Name</label>
+        <input type="text" id="profileName" value="${name || 'Student'}" class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand">
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-2">Email</label>
+        <input type="email" id="profileEmail" value="${email || ''}" disabled class="w-full px-4 py-3 border border-gray-200 rounded-xl bg-gray-50 text-gray-500">
+      </div>
+      <button type="submit" class="w-full py-3 bg-brand text-white rounded-xl font-semibold hover:bg-brand-dark transition-all transform active:scale-95">Save Changes</button>
+    </form>
+  `);
+};
+
+window.handleGlobalProfileSave = async function (event) {
+  event.preventDefault();
+  const nameInput = document.getElementById('profileName');
+  const newName = nameInput ? nameInput.value.trim() : '';
+  if (!newName) return;
+
+  try {
+    if (typeof getSupabase === 'function') {
+      const supabase = getSupabase();
+      if (supabase) {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session?.user?.id) {
+          await supabase.from('users').update({ full_name: newName, updated_at: new Date().toISOString() }).eq('id', session.user.id);
+          await supabase.auth.updateUser({ data: { full_name: newName } });
+        }
+      }
+    }
+    const sidebarUserNameEl = document.getElementById('sidebarUserName');
+    if (sidebarUserNameEl) sidebarUserNameEl.textContent = newName;
+
+    if (typeof showToast === 'function') {
+      showToast('Profile updated successfully!', 'success');
+    } else {
+      alert('Profile updated successfully!');
+    }
+    window.closeModal();
+  } catch (err) {
+    console.error('Error saving profile:', err);
+    if (typeof showToast === 'function') {
+      showToast('Failed to update profile.', 'error');
+    } else {
+      alert('Failed to update profile.');
+    }
+  }
+};

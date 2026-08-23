@@ -769,10 +769,12 @@
                     if (selectError) throw selectError;
                     console.log('Updated submission:', updatedData);
                 } else {
+                    const targetQuiz = quizzes.find(q => q.id === quizId);
                     const { data, error } = await getSupabase()
                         .from('quiz_submissions')
                         .insert({
                             quiz_id: quizId,
+                            module_id: targetQuiz?.module_id || null,
                             user_id: currentUser.id,
                             student_score: studentScore,
                             total_items: totalItems,

@@ -768,48 +768,107 @@
                 return;
             }
 
-            list.innerHTML = module.quizzes.map(quiz => `
-                <div class="quiz-card p-4 transition-all">
-                    <div class="flex items-start justify-between mb-3">
-                        <div class="flex items-center space-x-3">
-                            <div class="w-10 h-10 bg-yellow-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                                <svg class="w-5 h-5 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/>
-                                </svg>
+            list.innerHTML = module.quizzes.map(quiz => {
+                const submission = latestSubmissionByQuiz[quiz.id];
+                const isPassed = submission && (quiz.passing_score != null ? submission.student_score >= quiz.passing_score : true);
+
+                let badgeHtml = '';
+                if (submission) {
+                    if (submission.status === 'approved') {
+                        badgeHtml = `<span class="px-3 py-1 rounded-full text-xs font-medium ${isPassed ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}">
+                            ${isPassed ? 'Passed' : 'Failed'} - ${submission.student_score}/${submission.total_items}
+                        </span>`;
+                    } else if (submission.status === 'rejected') {
+                        badgeHtml = `<span class="px-3 py-1 rounded-full text-xs font-medium bg-red-100 text-red-700">
+                            Rejected - ${submission.student_score}/${submission.total_items}
+                        </span>`;
+                    } else {
+                        badgeHtml = `<span class="px-3 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-700">
+                            Pending - ${submission.student_score}/${submission.total_items}
+                        </span>`;
+                    }
+                } else {
+                    badgeHtml = `<span class="px-3 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-600">
+                        Not taken
+                    </span>`;
+                }
+
+                const safeTitle = typeof escapeHtml === 'function' ? escapeHtml(quiz.title || '') : (quiz.title || '');
+                const safeDesc = typeof escapeHtml === 'function' ? escapeHtml(quiz.description || '') : (quiz.description || '');
+                const safeComment = submission?.teacher_comment ? (typeof escapeHtml === 'function' ? escapeHtml(submission.teacher_comment) : submission.teacher_comment) : '';
+
+                return `
+                    <div class="quiz-card p-4 transition-all">
+                        <div class="flex items-start justify-between mb-3">
+                            <div class="flex items-center space-x-3">
+                                <div class="w-10 h-10 bg-yellow-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                                    <svg class="w-5 h-5 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/>
+                                    </svg>
+                                </div>
+                                <div>
+                                    <h4 class="font-semibold text-gray-800">${safeTitle}</h4>
+                                    <p class="text-xs text-gray-500">${quiz.total_items} items ${quiz.passing_score ? `• Pass: ${quiz.passing_score}` : ''}</p>
+                                </div>
                             </div>
-                            <div>
-                                <h4 class="font-semibold text-gray-800">${quiz.title}</h4>
-                                <p class="text-xs text-gray-500">${quiz.total_items} items</p>
+                            ${badgeHtml}
+                        </div>
+                        ${safeDesc ? `<p class="text-sm text-gray-600 mb-3">${safeDesc}</p>` : ''}
+                        
+                        ${safeComment ? `
+                            <div class="mb-3 p-3 bg-red-50 border border-red-200 rounded-lg">
+                                <div class="flex items-start space-x-2">
+                                    <svg class="w-4 h-4 text-red-500 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                                    </svg>
+                                    <div class="flex-1">
+                                        <p class="text-xs font-semibold text-red-700 mb-1">Teacher Comment:</p>
+                                        <p class="text-xs text-red-600">${safeComment}</p>
+                                    </div>
+                                </div>
                             </div>
+                        ` : ''}
+
+                        <div class="flex space-x-2">
+                            <a href="${quiz.quiz_url}" target="_blank" class="flex-1 text-center px-4 py-2 bg-yellow-50 text-yellow-700 rounded-lg text-sm font-medium hover:bg-yellow-100 transition-colors flex items-center justify-center space-x-1">
+                                <span>Take Quiz ↗</span>
+                            </a>
+                            <button onclick="openSubmitQuizModal('${quiz.id}', '${safeTitle.replace(/'/g, "\\'")}', ${quiz.total_items})" 
+                                ${submission && submission.status === 'approved' ? 'disabled' : ''}
+                                class="flex-1 px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
+                                    submission 
+                                        ? (submission.status === 'approved' ? 'bg-gray-100 text-gray-400 cursor-not-allowed' : 'bg-blue-100 text-blue-700 hover:bg-blue-200')
+                                        : 'bg-brand text-white hover:bg-brand-dark'
+                                } flex items-center justify-center space-x-1">
+                                <span>${submission ? 'Update' : 'Submit'}</span>
+                            </button>
                         </div>
                     </div>
-                    ${quiz.description ? `<p class="text-sm text-gray-600 mb-3">${quiz.description}</p>` : ''}
-                    <div class="flex space-x-2">
-                        <a href="${quiz.quiz_url}" target="_blank" class="flex-1 text-center px-4 py-2 bg-yellow-50 text-yellow-700 rounded-lg text-sm font-medium hover:bg-yellow-100 transition-colors">
-                            Take Quiz ↗
-                        </a>
-                        <button onclick="openSubmitQuizModal('${quiz.id}', '${quiz.title}', ${quiz.total_items})" class="flex-1 px-4 py-2 bg-brand text-white rounded-lg text-sm font-medium hover:bg-brand-dark transition-colors">
-                            Submit Score
-                        </button>
-                    </div>
-                </div>
-            `).join('');
+                `;
+            }).join('');
         }
 
         // Load user's submissions for this module
         async function loadSubmissions() {
             try {
+                const quizIds = (module?.quizzes || []).map(q => q.id);
+
                 const { data, error } = await getSupabase()
                     .from('quiz_submissions')
                     .select('*, quizzes(title, total_items)')
                     .eq('user_id', currentUser.id)
-                    .eq('module_id', moduleId)
                     .order('submitted_at', { ascending: false });
 
                 if (error) throw error;
 
+                // Match submissions by module_id OR quiz_id in current module's quizzes
+                const relevantSubmissions = (data || []).filter(sub => 
+                    (sub.module_id && String(sub.module_id) === String(moduleId)) ||
+                    (sub.quiz_id && quizIds.includes(sub.quiz_id))
+                );
+
                 latestSubmissionByQuiz = {};
-                (data || []).forEach(submission => {
+                (relevantSubmissions || []).forEach(submission => {
                     if (!submission?.quiz_id) return;
                     if (!latestSubmissionByQuiz[submission.quiz_id]) {
                         latestSubmissionByQuiz[submission.quiz_id] = submission;
@@ -817,33 +876,33 @@
                 });
 
                 const list = document.getElementById('submissionsList');
-                if (!data || data.length === 0) {
+                if (!relevantSubmissions || relevantSubmissions.length === 0) {
                     list.innerHTML = `
                         <div class="p-6 text-center text-gray-500">
                             <p>No submissions yet</p>
                         </div>
                     `;
-                    return;
+                } else {
+                    list.innerHTML = relevantSubmissions.map(sub => `
+                        <div class="p-4">
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="font-medium text-gray-800">${sub.quizzes?.title || 'Quiz'}</span>
+                                <span class="px-2 py-1 text-xs rounded-full ${
+                                    sub.status === 'approved' ? 'bg-green-100 text-green-700' :
+                                    sub.status === 'rejected' ? 'bg-red-100 text-red-700' :
+                                    'bg-yellow-100 text-yellow-700'
+                                }">${sub.status}</span>
+                            </div>
+                            <div class="flex items-center justify-between text-sm">
+                                <span class="text-gray-500">Score: <span class="font-semibold text-gray-800">${sub.student_score}/${sub.total_items}</span></span>
+                                <span class="text-gray-400">${new Date(sub.submitted_at).toLocaleDateString()}</span>
+                            </div>
+                            ${sub.teacher_comment ? `<p class="mt-2 text-sm text-gray-600 bg-gray-50 p-2 rounded-lg">"${sub.teacher_comment}"</p>` : ''}
+                        </div>
+                    `).join('');
                 }
 
-                list.innerHTML = data.map(sub => `
-                    <div class="p-4">
-                        <div class="flex items-center justify-between mb-2">
-                            <span class="font-medium text-gray-800">${sub.quizzes?.title || 'Quiz'}</span>
-                            <span class="px-2 py-1 text-xs rounded-full ${
-                                sub.status === 'approved' ? 'bg-green-100 text-green-700' :
-                                sub.status === 'rejected' ? 'bg-red-100 text-red-700' :
-                                'bg-yellow-100 text-yellow-700'
-                            }">${sub.status}</span>
-                        </div>
-                        <div class="flex items-center justify-between text-sm">
-                            <span class="text-gray-500">Score: <span class="font-semibold text-gray-800">${sub.student_score}/${sub.total_items}</span></span>
-                            <span class="text-gray-400">${new Date(sub.submitted_at).toLocaleDateString()}</span>
-                        </div>
-                        ${sub.teacher_comment ? `<p class="mt-2 text-sm text-gray-600 bg-gray-50 p-2 rounded-lg">"${sub.teacher_comment}"</p>` : ''}
-                    </div>
-                `).join('');
-
+                renderQuizzes();
                 updateProgress();
             } catch (error) {
                 console.error('Error loading submissions:', error);
@@ -860,10 +919,10 @@
             const totalQuizzes = module.quizzes?.length || 0;
             const completedQuizzes = (module.quizzes || []).filter(quiz => {
                 const latest = latestSubmissionByQuiz[quiz.id];
-                return latest?.status === 'approved';
+                return latest && (latest.status === 'approved' || latest.status === 'pending' || latest.student_score != null);
             }).length;
             document.getElementById('quizProgress').textContent = `${completedQuizzes}/${totalQuizzes}`;
-            const quizPercent = totalQuizzes > 0 ? (completedQuizzes / totalQuizzes) * 100 : 0;
+            const quizPercent = totalQuizzes > 0 ? Math.round((completedQuizzes / totalQuizzes) * 100) : 0;
             document.getElementById('quizProgressBar').style.width = quizPercent + '%';
         }
 
@@ -877,6 +936,21 @@
             document.getElementById('submitQuizForm').reset();
             document.getElementById('totalItemsDisplay').value = totalItems;
             removeScreenshot();
+
+            const existingSubmission = latestSubmissionByQuiz[quizId];
+            if (existingSubmission) {
+                document.getElementById('studentScore').value = existingSubmission.student_score;
+                if (existingSubmission.screenshot_url) {
+                    document.getElementById('screenshotImage').src = existingSubmission.screenshot_url;
+                    document.getElementById('screenshotPreview').classList.remove('hidden');
+                    document.getElementById('screenshotDropZone').classList.add('hidden');
+                    document.getElementById('screenshotInput').required = false;
+                }
+            } else {
+                document.getElementById('studentScore').value = '';
+                document.getElementById('screenshotInput').required = true;
+            }
+
             document.getElementById('submitQuizModal').classList.remove('hidden');
         }
 
@@ -905,6 +979,11 @@
             document.getElementById('screenshotInput').value = '';
             document.getElementById('screenshotPreview').classList.add('hidden');
             document.getElementById('screenshotDropZone').classList.remove('hidden');
+            const quizId = document.getElementById('submitQuizId').value;
+            const existingSubmission = latestSubmissionByQuiz[quizId];
+            if (!existingSubmission || !existingSubmission.screenshot_url) {
+                document.getElementById('screenshotInput').required = true;
+            }
         }
 
         // Submit quiz score
@@ -916,32 +995,37 @@
             btn.innerHTML = '<div class="animate-spin rounded-full h-5 w-5 border-2 border-white border-t-transparent"></div>';
 
             try {
-                if (!selectedScreenshot) {
-                    throw new Error('Please upload a screenshot of your score');
-                }
-
                 const quizId = document.getElementById('submitQuizId').value;
                 const studentScore = parseInt(document.getElementById('studentScore').value);
                 const totalItems = parseInt(document.getElementById('submitQuizTotalItems').value);
+                const existingSubmission = latestSubmissionByQuiz[quizId];
+
+                if (!selectedScreenshot && !existingSubmission?.screenshot_url) {
+                    throw new Error('Please upload a screenshot of your score');
+                }
 
                 if (studentScore > totalItems) {
                     throw new Error('Score cannot exceed total items');
                 }
 
-                // Upload screenshot
-                const fileName = `${currentUser.id}/${quizId}_${Date.now()}.${selectedScreenshot.name.split('.').pop()}`;
-                const { error: uploadError } = await getSupabase().storage
-                    .from('quiz-screenshots')
-                    .upload(fileName, selectedScreenshot);
+                let screenshotUrl = existingSubmission?.screenshot_url || null;
 
-                if (uploadError) throw uploadError;
+                // Upload screenshot if a new one was selected
+                if (selectedScreenshot) {
+                    const fileName = `${currentUser.id}/${quizId}_${Date.now()}.${selectedScreenshot.name.split('.').pop()}`;
+                    const { error: uploadError } = await getSupabase().storage
+                        .from('quiz-screenshots')
+                        .upload(fileName, selectedScreenshot);
 
-                const { data: urlData } = getSupabase().storage
-                    .from('quiz-screenshots')
-                    .getPublicUrl(fileName);
+                    if (uploadError) throw uploadError;
 
-                // Check if updating or inserting
-                const existingSubmission = latestSubmissionByQuiz[quizId];
+                    const { data: urlData } = getSupabase().storage
+                        .from('quiz-screenshots')
+                        .getPublicUrl(fileName);
+
+                    screenshotUrl = urlData.publicUrl;
+                }
+
                 let updateResult;
 
                 if (existingSubmission) {
@@ -951,7 +1035,7 @@
                         .update({
                             student_score: studentScore,
                             total_items: totalItems,
-                            screenshot_url: urlData.publicUrl,
+                            screenshot_url: screenshotUrl,
                             status: 'pending', // Reset to pending when updating
                             teacher_comment: null, // Clear teacher comment when student updates
                             teacher_feedback: null, // Clear teacher feedback when student updates
@@ -970,7 +1054,7 @@
                             module_id: moduleId,
                             student_score: studentScore,
                             total_items: totalItems,
-                            screenshot_url: urlData.publicUrl,
+                            screenshot_url: screenshotUrl,
                             status: 'pending',
                             submitted_at: new Date().toISOString()
                         });

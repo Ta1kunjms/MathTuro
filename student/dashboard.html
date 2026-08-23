@@ -279,21 +279,13 @@
                                 id="welcomeName">Student</span>! 👋</h2>
                         <p class="text-white/80 mb-4">Continue your learning journey and achieve your goals today.</p>
 
-                        <!-- Daily Goal Progress -->
+                        <!-- Daily Goal / Streak -->
                         <div class="flex items-center space-x-4">
                             <div class="flex items-center space-x-2 bg-white/20 px-4 py-2 rounded-xl">
                                 <span class="streak-flame text-xl">🔥</span>
                                 <div>
                                     <p class="text-sm font-medium"><span id="dailyStreak">0</span> day streak</p>
                                     <p class="text-xs text-white/70">Keep it going!</p>
-                                </div>
-                            </div>
-                            <div class="hidden sm:flex items-center space-x-2 bg-white/20 px-4 py-2 rounded-xl">
-                                <span class="text-xl">🎯</span>
-                                <div>
-                                    <p class="text-sm font-medium"><span id="dailyGoalProgress">0</span>/<span
-                                            id="dailyGoalTarget">3</span> lessons</p>
-                                    <p class="text-xs text-white/70">Daily goal</p>
                                 </div>
                             </div>
                         </div>
@@ -307,7 +299,7 @@
                                     d="M14 5l7 7m0 0l-7 7m7-7H3" />
                             </svg>
                         </a>
-                        <a href="../public/tutorial-videos.html"
+                        <a href="tutorial-videos.html"
                             class="inline-flex items-center justify-center space-x-2 bg-white/20 text-white px-6 py-3 rounded-xl font-semibold hover:bg-white/30 transition-colors border border-white/30">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -426,7 +418,7 @@
                                     <h3 class="text-lg font-bold text-gray-800">Featured Tutorials</h3>
                                     <p class="text-sm text-gray-500">Learn with video guides</p>
                                 </div>
-                                <a href="../public/tutorial-videos.html"
+                                <a href="tutorial-videos.html"
                                     class="text-brand hover:text-brand-dark text-sm font-medium flex items-center space-x-1">
                                     <span>View All</span>
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -472,43 +464,7 @@
 
                 <!-- Right Column - Activity & Achievements -->
                 <div class="space-y-6">
-                    <!-- Overall Progress -->
-                    <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
-                        <h3 class="text-lg font-bold text-gray-800 mb-4">Overall Progress</h3>
-                        <div class="flex items-center justify-center mb-4">
-                            <div class="relative">
-                                <svg class="w-32 h-32 progress-ring" viewBox="0 0 120 120">
-                                    <circle cx="60" cy="60" r="54" fill="none" stroke="#e5e7eb" stroke-width="8" />
-                                    <circle id="progressCircle" cx="60" cy="60" r="54" fill="none"
-                                        stroke="url(#progressGradient)" stroke-width="8" stroke-linecap="round"
-                                        stroke-dasharray="339.292" stroke-dashoffset="339.292" />
-                                    <defs>
-                                        <linearGradient id="progressGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-                                            <stop offset="0%" stop-color="#005801" />
-                                            <stop offset="100%" stop-color="#22c55e" />
-                                        </linearGradient>
-                                    </defs>
-                                </svg>
-                                <div class="absolute inset-0 flex items-center justify-center">
-                                    <span id="overallProgressPercent" class="text-2xl font-bold text-gray-800">0%</span>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="text-center text-sm text-gray-500 mb-4">
-                            <span id="completedModulesText">0 of 0</span> modules completed
-                        </div>
-                        <div class="space-y-2">
-                            <div class="flex justify-between text-sm">
-                                <span class="text-gray-600">Lessons</span>
-                                <span id="lessonProgressText" class="font-medium text-gray-800">0/0</span>
-                            </div>
-                            <div class="h-2 bg-gray-100 rounded-full overflow-hidden">
-                                <div id="lessonProgressBar"
-                                    class="h-full bg-gradient-to-r from-brand to-green-500 rounded-full transition-all duration-500"
-                                    style="width: 0%"></div>
-                            </div>
-                        </div>
-                    </div>
+
 
                     <!-- Weekly Activity -->
                     <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
@@ -826,9 +782,9 @@
             const approvedSubmissionCount = dashboardData.submissions.filter(s => s.status === 'approved').length;
 
             return [
-                { id: 'first_lesson', emoji: '🏆', name: 'First Steps', desc: 'Complete your first lesson', condition: () => dashboardData.completedProgress.length >= 1 },
-                { id: 'five_lessons', emoji: '📖', name: 'Bookworm', desc: 'Complete 5 lessons', condition: () => dashboardData.completedProgress.length >= 5 },
-                { id: 'ten_lessons', emoji: '📚', name: 'Scholar', desc: 'Complete 10 lessons', condition: () => dashboardData.completedProgress.length >= 10 },
+                { id: 'first_lesson', emoji: '🏆', name: 'First Steps', desc: 'Open your first module', condition: () => Object.keys(dashboardData.moduleProgressByModule || {}).length >= 1 || dashboardData.completedProgress.length >= 1 },
+                { id: 'five_lessons', emoji: '📖', name: 'Bookworm', desc: 'Open 5 modules', condition: () => Object.keys(dashboardData.moduleProgressByModule || {}).length >= 5 },
+                { id: 'ten_lessons', emoji: '📚', name: 'Scholar', desc: 'Open 10 modules', condition: () => Object.keys(dashboardData.moduleProgressByModule || {}).length >= 10 },
                 { id: 'quiz_master', emoji: '⭐', name: 'Quiz Star', desc: 'Get 5 quizzes approved', condition: () => approvedSubmissionCount >= 5 },
                 { id: 'perfect_score', emoji: '🎯', name: 'Perfectionist', desc: 'Get a perfect quiz score', condition: () => dashboardData.submissions.some(s => Number(s.student_score || 0) >= Number(s.total_items || 0) && Number(s.total_items || 0) > 0) },
                 { id: 'streak_3', emoji: '🔥', name: '3 Day Streak', desc: 'Learn 3 days in a row', condition: () => dashboardData.streak >= 3 },
@@ -1150,26 +1106,44 @@
                     dailyGoalTarget: 3
                 };
 
-                document.getElementById('modulesCompletedStat').textContent = stats.completedModules;
-                document.getElementById('lessonsCompletedStat').textContent = stats.completedLessons;
-                document.getElementById('averageScoreStat').textContent = `${stats.averageScore}%`;
-                document.getElementById('totalXpStat').textContent = stats.xp.toLocaleString();
+                const modulesCompletedEl = document.getElementById('modulesCompletedStat');
+                if (modulesCompletedEl) modulesCompletedEl.textContent = stats.completedModules;
+
+                const lessonsCompletedEl = document.getElementById('lessonsCompletedStat');
+                if (lessonsCompletedEl) lessonsCompletedEl.textContent = stats.completedLessons;
+
+                const averageScoreEl = document.getElementById('averageScoreStat');
+                if (averageScoreEl) averageScoreEl.textContent = `${stats.averageScore}%`;
+
+                const totalXpEl = document.getElementById('totalXpStat');
+                if (totalXpEl) totalXpEl.textContent = stats.xp.toLocaleString();
 
                 const progressPercent = stats.totalModules > 0
                     ? Math.round((stats.completedModules / stats.totalModules) * 100)
                     : 0;
                 updateProgressCircle(progressPercent);
-                document.getElementById('overallProgressPercent').textContent = progressPercent + '%';
-                document.getElementById('completedModulesText').textContent = `${stats.completedModules} of ${stats.totalModules}`;
+
+                const overallProgressPercentEl = document.getElementById('overallProgressPercent');
+                if (overallProgressPercentEl) overallProgressPercentEl.textContent = progressPercent + '%';
+
+                const completedModulesTextEl = document.getElementById('completedModulesText');
+                if (completedModulesTextEl) completedModulesTextEl.textContent = `${stats.completedModules} of ${stats.totalModules}`;
 
                 const lessonPercent = stats.totalLessons > 0
                     ? Math.round((stats.completedLessons / stats.totalLessons) * 100)
                     : 0;
-                document.getElementById('lessonProgressText').textContent = `${stats.completedLessons}/${stats.totalLessons}`;
-                document.getElementById('lessonProgressBar').style.width = `${lessonPercent}%`;
 
-                document.getElementById('dailyGoalProgress').textContent = stats.dailyGoalProgress;
-                document.getElementById('dailyGoalTarget').textContent = stats.dailyGoalTarget;
+                const lessonProgressTextEl = document.getElementById('lessonProgressText');
+                if (lessonProgressTextEl) lessonProgressTextEl.textContent = `${stats.completedLessons}/${stats.totalLessons}`;
+
+                const lessonProgressBarEl = document.getElementById('lessonProgressBar');
+                if (lessonProgressBarEl) lessonProgressBarEl.style.width = `${lessonPercent}%`;
+
+                const dailyGoalProgressEl = document.getElementById('dailyGoalProgress');
+                if (dailyGoalProgressEl) dailyGoalProgressEl.textContent = stats.dailyGoalProgress;
+
+                const dailyGoalTargetEl = document.getElementById('dailyGoalTarget');
+                if (dailyGoalTargetEl) dailyGoalTargetEl.textContent = stats.dailyGoalTarget;
 
             } catch (error) {
                 console.error('Error loading stats:', error);
@@ -1178,6 +1152,7 @@
 
         function updateProgressCircle(percent) {
             const circle = document.getElementById('progressCircle');
+            if (!circle) return;
             const circumference = 2 * Math.PI * 54;
             const offset = circumference - (percent / 100) * circumference;
             circle.style.strokeDashoffset = offset;
@@ -1312,7 +1287,7 @@
                                 </svg>
                             </div>
                             <p class="text-gray-500">No tutorial videos available yet</p>
-                            <a href="../public/tutorial-videos.html" class="inline-flex mt-3 px-4 py-2 rounded-lg bg-brand text-white hover:bg-brand-dark transition-colors">Open Tutorial Videos</a>
+                            <a href="tutorial-videos.html" class="inline-flex mt-3 px-4 py-2 rounded-lg bg-brand text-white hover:bg-brand-dark transition-colors">Open Tutorial Videos</a>
                         </div>
                     `;
                     return;
@@ -1321,7 +1296,7 @@
                 container.innerHTML = `
                     <div class="grid sm:grid-cols-2 gap-4">
                         ${scopedVideos.map(video => `
-                            <a href="../public/tutorial-videos.html?video=${video.id}" class="video-card group block bg-gray-50 rounded-xl overflow-hidden border border-gray-100">
+                            <a href="tutorial-videos.html?video=${video.id}" class="video-card group block bg-gray-50 rounded-xl overflow-hidden border border-gray-100">
                                 <div class="aspect-video bg-gray-200 relative">
                                     ${video.thumbnail_url ?
                         `<img src="${video.thumbnail_url}" alt="${escapeHtml(video.title)}" class="w-full h-full object-cover">` :

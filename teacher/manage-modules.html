@@ -1126,6 +1126,43 @@
                 .map(q => `<option value="${q}" ${q === selectedQuarter ? 'selected' : ''}>Quarter ${q}</option>`)
                 .join('');
 
+            // Fetch attached quiz and video for this module
+            let linkedQuiz = null;
+            try {
+                const { data: quizData } = await getSupabase()
+                    .from('quizzes')
+                    .select('*')
+                    .eq('module_id', moduleId)
+                    .maybeSingle();
+                linkedQuiz = quizData || null;
+            } catch (e) {
+                console.warn('Could not fetch quiz for module:', e);
+            }
+
+            let linkedVideo = null;
+            try {
+                const { data: videoData } = await getSupabase()
+                    .from('videos')
+                    .select('*')
+                    .eq('module_id', moduleId)
+                    .maybeSingle();
+                linkedVideo = videoData || null;
+            } catch (e) {
+                console.warn('Could not fetch video for module:', e);
+            }
+
+            let teacherVideos = [];
+            try {
+                let vQuery = getSupabase().from('videos').select('id, title, video_url');
+                if (currentUser?.role === 'teacher') {
+                    vQuery = vQuery.eq('teacher_id', currentUser.id);
+                }
+                const { data: vList } = await vQuery;
+                teacherVideos = vList || [];
+            } catch (e) {
+                console.warn('Could not fetch teacher videos:', e);
+            }
+
             document.getElementById('detailModuleTitle').textContent = module.title;
             
             const content = document.getElementById('moduleDetailContent');
@@ -1200,28 +1237,89 @@
                         </div>
                     </div>
 
-                    <!-- Quick Links to Videos & Quizzes -->
-                    <div class="border-t pt-6">
-                        <h4 class="font-semibold text-gray-800 mb-4">Related Content</h4>
-                        <div class="grid grid-cols-2 gap-4">
-                            <a href="manage-videos.html" class="flex items-center space-x-3 p-4 bg-brand/5 rounded-xl hover:bg-brand/10 transition-colors">
-                                <div class="w-10 h-10 bg-brand/10 rounded-lg flex items-center justify-center">
-                                    <i class="fas fa-video text-brand"></i>
+                    <!-- Associated Video & Quiz Management Section -->
+                    <div class="border-t pt-6 space-y-6">
+                        <h4 class="font-semibold text-gray-800 text-lg">Attached Video & Quiz</h4>
+                        
+                        <!-- Attached Video Form -->
+                        <div class="border border-gray-200 rounded-xl p-5 bg-blue-50/30">
+                            <div class="flex items-center justify-between mb-4">
+                                <div class="flex items-center space-x-2">
+                                    <div class="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center text-blue-600">
+                                        <i class="fas fa-video"></i>
+                                    </div>
+                                    <h5 class="font-medium text-gray-800">Module Video</h5>
                                 </div>
+                                ${linkedVideo ? '<span class="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-green-100 text-green-700">Attached</span>' : '<span class="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-gray-100 text-gray-500">None</span>'}
+                            </div>
+                            
+                            <div class="space-y-4">
                                 <div>
-                                    <p class="font-medium text-gray-800">Manage Videos</p>
-                                    <p class="text-xs text-gray-500">Add tutorial videos</p>
+                                    <label class="block text-xs font-semibold text-gray-600 mb-1 uppercase tracking-wider">Select Existing Video or Input New</label>
+                                    <select id="detailSelectVideo" onchange="handleDetailVideoSelect(this)" class="w-full px-4 py-2.5 border border-gray-300 rounded-xl bg-white focus:ring-2 focus:ring-brand text-sm">
+                                        <option value="">-- Enter New Video Details --</option>
+                                        ${teacherVideos.map(v => `<option value="${v.id}" data-url="${v.video_url || ''}" data-title="${v.title || ''}" ${linkedVideo && linkedVideo.id === v.id ? 'selected' : ''}>${v.title} (${v.video_url || 'No URL'})</option>`).join('')}
+                                    </select>
                                 </div>
-                            </a>
-                            <a href="manage-quizzes.html" class="flex items-center space-x-3 p-4 bg-brand/5 rounded-xl hover:bg-brand/10 transition-colors">
-                                <div class="w-10 h-10 bg-brand/10 rounded-lg flex items-center justify-center">
-                                    <i class="fas fa-clipboard-list text-brand"></i>
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div>
+                                        <label class="block text-xs font-medium text-gray-700 mb-1">Video Title</label>
+                                        <input type="text" id="detailVideoTitle" value="${linkedVideo?.title || ''}" placeholder="e.g., Lesson 1 Tutorial Video" class="w-full px-4 py-2.5 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-brand">
+                                    </div>
+                                    <div>
+                                        <label class="block text-xs font-medium text-gray-700 mb-1">Video URL (YouTube/Vimeo)</label>
+                                        <input type="url" id="detailVideoUrl" value="${linkedVideo?.video_url || ''}" placeholder="https://youtube.com/watch?v=..." class="w-full px-4 py-2.5 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-brand">
+                                    </div>
                                 </div>
-                                <div>
-                                    <p class="font-medium text-gray-800">Manage Quizzes</p>
-                                    <p class="text-xs text-gray-500">Add quiz links</p>
+                                <div class="flex items-center justify-end space-x-2 pt-2">
+                                    ${linkedVideo ? `<button type="button" onclick="unlinkModuleVideo('${linkedVideo.id}', '${module.id}')" class="px-4 py-2 text-sm border border-red-200 text-red-600 hover:bg-red-50 rounded-xl font-medium transition-colors">Unlink Video</button>` : ''}
+                                    <button type="button" onclick="saveModuleVideo('${module.id}', '${linkedVideo?.id || ''}')" class="px-4 py-2 text-sm bg-brand text-white hover:bg-brand-dark rounded-xl font-medium transition-colors">
+                                        ${linkedVideo ? 'Update Video' : 'Save / Attach Video'}
+                                    </button>
                                 </div>
-                            </a>
+                            </div>
+                        </div>
+
+                        <!-- Attached Quiz Form -->
+                        <div class="border border-gray-200 rounded-xl p-5 bg-amber-50/30">
+                            <div class="flex items-center justify-between mb-4">
+                                <div class="flex items-center space-x-2">
+                                    <div class="w-8 h-8 bg-amber-100 rounded-lg flex items-center justify-center text-amber-600">
+                                        <i class="fas fa-clipboard-list"></i>
+                                    </div>
+                                    <h5 class="font-medium text-gray-800">Module Quiz</h5>
+                                </div>
+                                ${linkedQuiz ? '<span class="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-green-100 text-green-700">Attached</span>' : '<span class="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-gray-100 text-gray-500">None</span>'}
+                            </div>
+
+                            <div class="space-y-4">
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div>
+                                        <label class="block text-xs font-medium text-gray-700 mb-1">Quiz Title</label>
+                                        <input type="text" id="detailQuizTitle" value="${linkedQuiz?.title || ''}" placeholder="e.g., ${module.title} Quiz" class="w-full px-4 py-2.5 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-brand">
+                                    </div>
+                                    <div>
+                                        <label class="block text-xs font-medium text-gray-700 mb-1">Quiz URL (Google Form, Quizizz, Kahoot, etc.)</label>
+                                        <input type="url" id="detailQuizUrl" value="${linkedQuiz?.quiz_url || ''}" placeholder="https://forms.google.com/..." class="w-full px-4 py-2.5 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-brand">
+                                    </div>
+                                </div>
+                                <div class="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <label class="block text-xs font-medium text-gray-700 mb-1">Total Items</label>
+                                        <input type="number" id="detailQuizTotalItems" min="1" value="${linkedQuiz?.total_items || 10}" class="w-full px-4 py-2.5 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-brand">
+                                    </div>
+                                    <div>
+                                        <label class="block text-xs font-medium text-gray-700 mb-1">Passing Score</label>
+                                        <input type="number" id="detailQuizPassingScore" min="0" value="${linkedQuiz?.passing_score || 0}" class="w-full px-4 py-2.5 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-brand">
+                                    </div>
+                                </div>
+                                <div class="flex items-center justify-end space-x-2 pt-2">
+                                    ${linkedQuiz ? `<button type="button" onclick="unlinkModuleQuiz('${linkedQuiz.id}', '${module.id}')" class="px-4 py-2 text-sm border border-red-200 text-red-600 hover:bg-red-50 rounded-xl font-medium transition-colors">Unlink Quiz</button>` : ''}
+                                    <button type="button" onclick="saveModuleQuiz('${module.id}', '${linkedQuiz?.id || ''}')" class="px-4 py-2 text-sm bg-brand text-white hover:bg-brand-dark rounded-xl font-medium transition-colors">
+                                        ${linkedQuiz ? 'Update Quiz' : 'Save / Attach Quiz'}
+                                    </button>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -1274,6 +1372,218 @@
             } catch (error) {
                 console.error('Error updating module access scope:', error);
                 showToast('Failed to update module access scope', 'error');
+            }
+        }
+
+        function handleDetailVideoSelect(selectEl) {
+            const selectedOption = selectEl.options[selectEl.selectedIndex];
+            const url = selectedOption.getAttribute('data-url') || '';
+            const title = selectedOption.getAttribute('data-title') || '';
+            
+            if (selectEl.value) {
+                document.getElementById('detailVideoTitle').value = title;
+                document.getElementById('detailVideoUrl').value = url;
+            }
+        }
+
+        async function saveModuleVideo(moduleId, existingVideoId) {
+            const selectEl = document.getElementById('detailSelectVideo');
+            const selectedVideoId = selectEl?.value || null;
+            const title = document.getElementById('detailVideoTitle')?.value?.trim();
+            const videoUrl = document.getElementById('detailVideoUrl')?.value?.trim();
+
+            if (!title) {
+                showToast('Please enter a video title', 'error');
+                return;
+            }
+            if (videoUrl && !isValidHttpUrl(videoUrl)) {
+                showToast('Please enter a valid video URL (http/https)', 'error');
+                return;
+            }
+
+            try {
+                const module = modules.find(m => m.id === moduleId);
+                const resolvedScope = validateAndResolveScope(resolveGradeLevelId(module), module.section_id);
+                const quarter = getModuleQuarter(module);
+
+                if (selectedVideoId) {
+                    let updateQuery = getSupabase()
+                        .from('videos')
+                        .update({
+                            module_id: moduleId,
+                            title: title,
+                            video_url: videoUrl,
+                            quarter: quarter ? Number(quarter) : null,
+                            grade_level: getGradeLevelNameById(resolvedScope.gradeLevelId),
+                            grade_level_id: resolvedScope.gradeLevelId,
+                            section_id: resolvedScope.sectionId
+                        })
+                        .eq('id', selectedVideoId);
+
+                    if (currentUser?.role === 'teacher') {
+                        updateQuery = updateQuery.eq('teacher_id', currentUser.id);
+                    }
+                    const { error } = await updateQuery;
+                    if (error) throw error;
+                } else if (existingVideoId) {
+                    let updateQuery = getSupabase()
+                        .from('videos')
+                        .update({
+                            title: title,
+                            video_url: videoUrl,
+                            quarter: quarter ? Number(quarter) : null,
+                            grade_level: getGradeLevelNameById(resolvedScope.gradeLevelId),
+                            grade_level_id: resolvedScope.gradeLevelId,
+                            section_id: resolvedScope.sectionId
+                        })
+                        .eq('id', existingVideoId);
+
+                    if (currentUser?.role === 'teacher') {
+                        updateQuery = updateQuery.eq('teacher_id', currentUser.id);
+                    }
+                    const { error } = await updateQuery;
+                    if (error) throw error;
+                } else {
+                    const videoPayload = {
+                        title: title,
+                        video_url: videoUrl,
+                        module_id: moduleId,
+                        quarter: quarter ? Number(quarter) : null,
+                        grade_level: getGradeLevelNameById(resolvedScope.gradeLevelId),
+                        grade_level_id: resolvedScope.gradeLevelId,
+                        section_id: resolvedScope.sectionId,
+                        is_published: module.status === 'published',
+                        teacher_id: currentUser.id
+                    };
+                    const { error } = await getSupabase().from('videos').insert(videoPayload);
+                    if (error) throw error;
+                }
+
+                showToast('Video saved for this module!', 'success');
+                await openModuleDetail(moduleId);
+            } catch (error) {
+                console.error('Error saving module video:', error);
+                showToast(error.message || 'Failed to save video attachment', 'error');
+            }
+        }
+
+        async function unlinkModuleVideo(videoId, moduleId) {
+            if (!confirm('Unlink this video from the module?')) return;
+            try {
+                let updateQuery = getSupabase()
+                    .from('videos')
+                    .update({ module_id: null })
+                    .eq('id', videoId);
+                if (currentUser?.role === 'teacher') {
+                    updateQuery = updateQuery.eq('teacher_id', currentUser.id);
+                }
+                const { error } = await updateQuery;
+                if (error) throw error;
+
+                showToast('Video unlinked successfully', 'success');
+                await openModuleDetail(moduleId);
+            } catch (error) {
+                console.error('Error unlinking video:', error);
+                showToast('Failed to unlink video', 'error');
+            }
+        }
+
+        async function saveModuleQuiz(moduleId, existingQuizId) {
+            const title = document.getElementById('detailQuizTitle')?.value?.trim();
+            const quizUrl = document.getElementById('detailQuizUrl')?.value?.trim();
+            const totalItemsInput = parseInt(document.getElementById('detailQuizTotalItems')?.value, 10);
+            const passingScoreInput = parseInt(document.getElementById('detailQuizPassingScore')?.value, 10);
+
+            if (!quizUrl) {
+                showToast('Please enter a quiz URL', 'error');
+                return;
+            }
+            if (!isValidHttpUrl(quizUrl)) {
+                showToast('Please enter a valid quiz URL (http/https)', 'error');
+                return;
+            }
+
+            const quizTotalItems = Number.isFinite(totalItemsInput) && totalItemsInput > 0 ? totalItemsInput : 10;
+            const quizPassingScore = Number.isFinite(passingScoreInput) && passingScoreInput >= 0 ? passingScoreInput : 0;
+
+            if (quizPassingScore > quizTotalItems) {
+                showToast('Passing score cannot exceed total items', 'error');
+                return;
+            }
+
+            try {
+                const module = modules.find(m => m.id === moduleId);
+                const resolvedScope = validateAndResolveScope(resolveGradeLevelId(module), module.section_id);
+                const quarter = getModuleQuarter(module);
+                const quizTitle = title || `${module.title} Quiz`;
+                const now = new Date().toISOString();
+
+                if (existingQuizId) {
+                    let updateQuery = getSupabase()
+                        .from('quizzes')
+                        .update({
+                            title: quizTitle,
+                            quiz_url: quizUrl,
+                            total_items: quizTotalItems,
+                            passing_score: quizPassingScore,
+                            quarter: quarter ? Number(quarter) : null,
+                            grade_level: getGradeLevelNameById(resolvedScope.gradeLevelId),
+                            grade_level_id: resolvedScope.gradeLevelId,
+                            section_id: resolvedScope.sectionId,
+                            updated_at: now
+                        })
+                        .eq('id', existingQuizId);
+
+                    if (currentUser?.role === 'teacher') {
+                        updateQuery = updateQuery.eq('teacher_id', currentUser.id);
+                    }
+                    const { error } = await updateQuery;
+                    if (error) throw error;
+                } else {
+                    await insertQuizWithFallback({
+                        title: quizTitle,
+                        description: module.description || `Quiz for ${module.title}`,
+                        quiz_url: quizUrl,
+                        module_id: moduleId,
+                        quarter: quarter ? Number(quarter) : null,
+                        grade_level: getGradeLevelNameById(resolvedScope.gradeLevelId),
+                        grade_level_id: resolvedScope.gradeLevelId,
+                        section_id: resolvedScope.sectionId,
+                        total_items: quizTotalItems,
+                        passing_score: quizPassingScore,
+                        is_published: module.status === 'published',
+                        teacher_id: currentUser.id,
+                        created_at: now,
+                        updated_at: now
+                    });
+                }
+
+                showToast('Quiz saved for this module!', 'success');
+                await openModuleDetail(moduleId);
+            } catch (error) {
+                console.error('Error saving module quiz:', error);
+                showToast(error.message || 'Failed to save quiz attachment', 'error');
+            }
+        }
+
+        async function unlinkModuleQuiz(quizId, moduleId) {
+            if (!confirm('Unlink this quiz from the module?')) return;
+            try {
+                let updateQuery = getSupabase()
+                    .from('quizzes')
+                    .update({ module_id: null })
+                    .eq('id', quizId);
+                if (currentUser?.role === 'teacher') {
+                    updateQuery = updateQuery.eq('teacher_id', currentUser.id);
+                }
+                const { error } = await updateQuery;
+                if (error) throw error;
+
+                showToast('Quiz unlinked successfully', 'success');
+                await openModuleDetail(moduleId);
+            } catch (error) {
+                console.error('Error unlinking quiz:', error);
+                showToast('Failed to unlink quiz', 'error');
             }
         }
 

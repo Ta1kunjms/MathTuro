@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-portal="student">
 
 <head>
     <meta charset="UTF-8">
@@ -120,6 +120,7 @@
         }
     </style>
     <link rel="stylesheet" href="../shared/css/base.css">
+    <link rel="stylesheet" href="assets/css/student.css">
 </head>
 
 <body class="bg-gray-50 min-h-screen">
@@ -164,7 +165,7 @@
                     </div>
 
                     <!-- Back button -->
-                    <a href="/student/dashboard.html" id="backBtn"
+                    <a href="dashboard.html" id="backBtn"
                         class="flex items-center space-x-2 px-4 py-2 bg-gray-100 rounded-xl text-gray-600 hover:bg-gray-200 transition-colors">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -343,7 +344,7 @@
     <script src="../shared/js/utils.js"></script>
     <script src="../shared/js/supabase.js"></script>
     <script src="../shared/js/auth.js"></script>
-    <script src="../student/assets/js/sidebar.js"></script>
+    <script src="assets/js/sidebar.js"></script>
 
     <script>
         // Global variables
@@ -416,7 +417,7 @@
 
         // Update user info in sidebar
         function updateUserInfo(user) {
-            const initials = user.fullName.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2);
+            const initials = user.fullName ? user.fullName.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2) : 'ST';
             const userInitialsEl = document.getElementById('userInitials');
             const sidebarUserNameEl = document.getElementById('sidebarUserName');
             const userRoleEl = document.getElementById('userRole');
@@ -426,14 +427,11 @@
             if (userRoleEl) userRoleEl.textContent = user.role;
 
             // Update dashboard link based on role
-            const dashboardLink = document.getElementById('dashboardLink');
             const backBtn = document.getElementById('backBtn');
             if (user.role === 'teacher') {
-                dashboardLink.href = '/teacher/dashboard.html';
-                backBtn.href = '/teacher/dashboard.html';
+                if (backBtn) backBtn.href = '/teacher/dashboard.html';
             } else if (user.role === 'admin') {
-                dashboardLink.href = '/admin/dashboard.html';
-                backBtn.href = '/admin/dashboard.html';
+                if (backBtn) backBtn.href = '/admin/dashboard.html';
             }
         }
 
@@ -710,15 +708,19 @@
         // Setup event listeners
         function setupEventListeners() {
             // Mobile menu toggle
-            mobileMenuBtn.addEventListener('click', () => {
-                sidebar.classList.toggle('-translate-x-full');
-                mobileOverlay.classList.toggle('hidden');
-            });
+            if (mobileMenuBtn) {
+                mobileMenuBtn.addEventListener('click', () => {
+                    sidebar.classList.toggle('-translate-x-full');
+                    if (mobileOverlay) mobileOverlay.classList.toggle('hidden');
+                });
+            }
 
-            mobileOverlay.addEventListener('click', () => {
-                sidebar.classList.add('-translate-x-full');
-                mobileOverlay.classList.add('hidden');
-            });
+            if (mobileOverlay) {
+                mobileOverlay.addEventListener('click', () => {
+                    sidebar.classList.add('-translate-x-full');
+                    mobileOverlay.classList.add('hidden');
+                });
+            }
 
             // Search
             if (searchInput) {
@@ -728,11 +730,14 @@
             }
 
             // Logout
-            document.getElementById('logoutButton').addEventListener('click', async () => {
-                if (await logout()) {
-                    redirectToLogin();
-                }
-            });
+            const logoutBtn = document.getElementById('logoutButton');
+            if (logoutBtn) {
+                logoutBtn.addEventListener('click', async () => {
+                    if (await logout()) {
+                        redirectToLogin();
+                    }
+                });
+            }
 
             // Add video form (admin/teacher)
             const addVideoForm = document.getElementById('addVideoForm');

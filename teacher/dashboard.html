@@ -595,16 +595,15 @@
                 const limitCount = Device.isNativeMobile() ? 3 : 5;
                 const { data: submissions, error } = await getSupabase()
                     .from('quiz_submissions')
-                    .select('id, user_id, quiz_id, module_id, student_score, total_items, status, submitted_at, users(full_name), quizzes(title), modules(title)')
+                    .select('id, user_id, quiz_id, module_id, student_score, total_items, status, submitted_at')
                     .eq('status', 'pending')
                     .order('submitted_at', { ascending: true })
                     .limit(limitCount);
 
                 if (error) throw error;
 
-                pendingSubmissions = submissions || [];
-
                 if (!submissions || submissions.length === 0) {
+                    pendingSubmissions = [];
                     container.innerHTML = `
                         <div class="p-8 text-center">
                             <div class="w-16 h-16 mx-auto bg-green-100 rounded-full flex items-center justify-center mb-4">
@@ -619,7 +618,37 @@
                     return;
                 }
 
-                container.innerHTML = submissions.map(sub => {
+                // Fetch details for users, quizzes, and modules separately to avoid PostgREST embedding issues
+                const userIds = [...new Set(submissions.map(s => s.user_id).filter(Boolean))];
+                const quizIds = [...new Set(submissions.map(s => s.quiz_id).filter(Boolean))];
+                const moduleIds = [...new Set(submissions.map(s => s.module_id).filter(Boolean))];
+
+                let usersMap = {};
+                if (userIds.length > 0) {
+                    const { data: users } = await getSupabase().from('users').select('id, full_name').in('id', userIds);
+                    if (users) users.forEach(u => usersMap[u.id] = u);
+                }
+
+                let quizzesMap = {};
+                if (quizIds.length > 0) {
+                    const { data: quizzes } = await getSupabase().from('quizzes').select('id, title').in('id', quizIds);
+                    if (quizzes) quizzes.forEach(q => quizzesMap[q.id] = q);
+                }
+
+                let modulesMap = {};
+                if (moduleIds.length > 0) {
+                    const { data: modules } = await getSupabase().from('modules').select('id, title').in('id', moduleIds);
+                    if (modules) modules.forEach(m => modulesMap[m.id] = m);
+                }
+
+                pendingSubmissions = submissions.map(sub => ({
+                    ...sub,
+                    users: usersMap[sub.user_id] || null,
+                    quizzes: quizzesMap[sub.quiz_id] || null,
+                    modules: modulesMap[sub.module_id] || null
+                }));
+
+                container.innerHTML = pendingSubmissions.map(sub => {
                     const studentName = sub.users?.full_name || 'Student';
                     // Graceful fallback: use quiz title, then module title, then 'Unnamed Quiz'
                     const quizTitle = sub.quizzes?.title || sub.modules?.title || 'Unnamed Quiz';
@@ -746,18 +775,49 @@
             
             try {
                 const limitCount = Device.isNativeMobile() ? 3 : 5;
-                const { data: submissions } = await getSupabase()
+                const { data: submissions, error } = await getSupabase()
                      .from('quiz_submissions')
-                     .select('*, users(full_name), quizzes(title), modules(title)')
+                     .select('id, user_id, quiz_id, module_id, status, submitted_at')
                      .order('submitted_at', { ascending: false })
                      .limit(limitCount);
+
+                if (error) throw error;
 
                 if (!submissions || submissions.length === 0) {
                     container.innerHTML = '<div class="p-6 text-center text-gray-500"><p>No recent activity</p></div>';
                     return;
                 }
 
-                container.innerHTML = submissions.map(sub => {
+                const userIds = [...new Set(submissions.map(s => s.user_id).filter(Boolean))];
+                const quizIds = [...new Set(submissions.map(s => s.quiz_id).filter(Boolean))];
+                const moduleIds = [...new Set(submissions.map(s => s.module_id).filter(Boolean))];
+
+                let usersMap = {};
+                if (userIds.length > 0) {
+                    const { data: users } = await getSupabase().from('users').select('id, full_name').in('id', userIds);
+                    if (users) users.forEach(u => usersMap[u.id] = u);
+                }
+
+                let quizzesMap = {};
+                if (quizIds.length > 0) {
+                    const { data: quizzes } = await getSupabase().from('quizzes').select('id, title').in('id', quizIds);
+                    if (quizzes) quizzes.forEach(q => quizzesMap[q.id] = q);
+                }
+
+                let modulesMap = {};
+                if (moduleIds.length > 0) {
+                    const { data: modules } = await getSupabase().from('modules').select('id, title').in('id', moduleIds);
+                    if (modules) modules.forEach(m => modulesMap[m.id] = m);
+                }
+
+                const fullSubmissions = submissions.map(sub => ({
+                    ...sub,
+                    users: usersMap[sub.user_id] || null,
+                    quizzes: quizzesMap[sub.quiz_id] || null,
+                    modules: modulesMap[sub.module_id] || null
+                }));
+
+                container.innerHTML = fullSubmissions.map(sub => {
                     const statusColors = {
                         pending: 'text-yellow-600 bg-yellow-100',
                         approved: 'text-green-600 bg-green-100',
@@ -771,11 +831,12 @@
                     };
 
                     const quizTitle = sub.quizzes?.title || sub.modules?.title || 'Quiz';
+                    const colors = statusColors[sub.status] || statusColors.pending;
 
                     return `
                         <div class="p-4 flex items-center space-x-4 hover:bg-gray-50">
-                            <div class="w-10 h-10 ${statusColors[sub.status].split(' ')[1]} rounded-full flex items-center justify-center">
-                                <span class="text-lg">${statusIcons[sub.status]}</span>
+                            <div class="w-10 h-10 ${colors.split(' ')[1]} rounded-full flex items-center justify-center">
+                                <span class="text-lg">${statusIcons[sub.status] || '⏳'}</span>
                             </div>
                             <div class="flex-1 min-w-0">
                                 <p class="font-medium text-gray-800 truncate">${escapeHtml(sub.users?.full_name || 'Student')}</p>

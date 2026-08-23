@@ -175,9 +175,9 @@ async function getPendingQuizSubmissions() {
       return [];
     }
 
-    const { data, error } = await getSupabase()
+    const { data: submissions, error } = await getSupabase()
       .from('quiz_submissions')
-      .select('*, users(full_name), lessons(title, module_id), modules(title)')
+      .select('*')
       .eq('status', 'pending')
       .order('submitted_at', { ascending: true });
 
@@ -186,7 +186,39 @@ async function getPendingQuizSubmissions() {
       return [];
     }
 
-    return data;
+    if (!submissions || submissions.length === 0) return [];
+
+    const userIds = [...new Set(submissions.map(s => s.user_id).filter(Boolean))];
+    const quizIds = [...new Set(submissions.map(s => s.quiz_id).filter(Boolean))];
+    const moduleIds = [...new Set(submissions.map(s => s.module_id).filter(Boolean))];
+    const lessonIds = [...new Set(submissions.map(s => s.lesson_id).filter(Boolean))];
+
+    let usersMap = {}, quizzesMap = {}, modulesMap = {}, lessonsMap = {};
+
+    if (userIds.length > 0) {
+      const { data: users } = await getSupabase().from('users').select('id, full_name').in('id', userIds);
+      if (users) users.forEach(u => usersMap[u.id] = u);
+    }
+    if (quizIds.length > 0) {
+      const { data: quizzes } = await getSupabase().from('quizzes').select('id, title').in('id', quizIds);
+      if (quizzes) quizzes.forEach(q => quizzesMap[q.id] = q);
+    }
+    if (moduleIds.length > 0) {
+      const { data: modules } = await getSupabase().from('modules').select('id, title').in('id', moduleIds);
+      if (modules) modules.forEach(m => modulesMap[m.id] = m);
+    }
+    if (lessonIds.length > 0) {
+      const { data: lessons } = await getSupabase().from('lessons').select('id, title, module_id').in('id', lessonIds);
+      if (lessons) lessons.forEach(l => lessonsMap[l.id] = l);
+    }
+
+    return submissions.map(s => ({
+      ...s,
+      users: usersMap[s.user_id] || null,
+      quizzes: quizzesMap[s.quiz_id] || null,
+      modules: modulesMap[s.module_id] || null,
+      lessons: lessonsMap[s.lesson_id] || null
+    }));
 
   } catch (error) {
     console.error('Error getting pending submissions:', error);

@@ -670,15 +670,24 @@
             try {
                 // Get recent submissions as activity
                 const limitCount = Device.isNativeMobile() ? 3 : 5;
-                const { data: submissions } = await getSupabase()
+                const { data: submissions, error } = await getSupabase()
                     .from('quiz_submissions')
-                    .select('*, users(full_name)')
+                    .select('id, user_id, status, submitted_at')
                     .order('submitted_at', { ascending: false })
                     .limit(limitCount);
+
+                if (error) throw error;
 
                 if (!submissions || submissions.length === 0) {
                     container.innerHTML = '<div class="p-6 text-center text-gray-500"><p>No recent activity</p></div>';
                     return;
+                }
+
+                const userIds = [...new Set(submissions.map(s => s.user_id).filter(Boolean))];
+                let usersMap = {};
+                if (userIds.length > 0) {
+                    const { data: users } = await getSupabase().from('users').select('id, full_name').in('id', userIds);
+                    if (users) users.forEach(u => usersMap[u.id] = u);
                 }
 
                 container.innerHTML = submissions.map(sub => {
@@ -694,13 +703,16 @@
                         rejected: '✕'
                     };
 
+                    const userName = usersMap[sub.user_id]?.full_name || 'User';
+                    const colors = statusColors[sub.status] || statusColors.pending;
+
                     return `
                         <div class="p-4 flex items-center space-x-4 hover:bg-gray-50">
-                            <div class="w-10 h-10 ${statusColors[sub.status].split(' ')[0]} rounded-full flex items-center justify-center">
-                                <span>${statusIcons[sub.status]}</span>
+                            <div class="w-10 h-10 ${colors.split(' ')[0]} rounded-full flex items-center justify-center">
+                                <span>${statusIcons[sub.status] || '⏳'}</span>
                             </div>
                             <div class="flex-1 min-w-0">
-                                <p class="font-medium text-gray-800 truncate">${escapeHtml(sub.users?.full_name || 'User')}</p>
+                                <p class="font-medium text-gray-800 truncate">${escapeHtml(userName)}</p>
                                 <p class="text-sm text-gray-500">Quiz submission • ${sub.status}</p>
                             </div>
                             <span class="text-xs text-gray-400">${formatDate(sub.submitted_at)}</span>

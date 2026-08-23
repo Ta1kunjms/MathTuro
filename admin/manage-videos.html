@@ -79,7 +79,7 @@
                 
                 <!-- Header Actions -->
                 <div class="flex items-center space-x-4">
-                    <button onclick="openAddVideoModal()" class="bg-maroon text-white px-4 py-2 rounded-lg hover:bg-maroon-dark transition-colors">
+                    <button onclick="openAddVideoModal()" class="bg-red-700 text-white px-4 py-2 rounded-lg hover:bg-red-800 transition-colors">
                         <i class="fas fa-plus mr-2"></i>Add Video
                     </button>
                 </div>
@@ -111,12 +111,12 @@
 
     <!-- Add/Edit Video Modal -->
     <div id="videoModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center">
-        <div class="bg-white rounded-lg shadow-xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+        <div class="bg-white rounded-lg shadow-xl max-w-2xl w-full mx-4" style="max-height:90vh; display:flex; flex-direction:column;">
             <div class="p-6 border-b border-gray-200">
                 <h3 id="modalTitle" class="text-xl font-semibold">Add New Video</h3>
             </div>
-            <form id="videoForm" onsubmit="handleVideoSubmit(event)">
-                <div class="p-6 space-y-4">
+            <form id="videoForm" onsubmit="handleVideoSubmit(event)" style="display:flex; flex-direction:column; flex:1; overflow:hidden;">
+                <div class="p-6 space-y-4" style="overflow-y:auto; flex:1;">
                     <input type="hidden" id="videoId">
                     
                     <div>
@@ -163,10 +163,10 @@
                     </div>
                 </div>
                 
-                <div class="p-6 border-t border-gray-200 flex justify-end space-x-3">
+                <div style="padding:16px 24px; border-top:1px solid #e5e7eb; display:flex; justify-content:flex-end; gap:12px; background:white; flex-shrink:0;">
                     <button type="button" onclick="closeVideoModal()" class="px-4 py-2 text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50">Cancel</button>
-                    <button type="submit" class="px-4 py-2 bg-maroon text-white rounded-lg hover:bg-maroon-dark">
-                        <i id="submitIcon" class="fas fa-save mr-2"></i>
+                    <button type="submit" style="background:#b91c1c; color:white; padding:8px 20px; border-radius:8px; border:none; cursor:pointer; font-weight:600; font-size:14px; display:inline-flex; align-items:center; gap:8px;">
+                        <i id="submitIcon" class="fas fa-save"></i>
                         <span id="submitText">Save Video</span>
                     </button>
                 </div>
@@ -378,7 +378,7 @@
                         </div>
                         
                         <div class="flex space-x-3">
-                            <button onclick="editVideo('${video.id}')" class="flex-1 px-3 py-2 text-sm bg-maroon text-white rounded-lg hover:bg-maroon-dark transition-colors">
+                            <button onclick="editVideo('${video.id}')" class="flex-1 px-3 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
                                 <i class="fas fa-edit mr-1"></i>Edit
                             </button>
                             <button onclick="deleteVideo('${video.id}')" class="flex-1 px-3 py-2 text-sm bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors">

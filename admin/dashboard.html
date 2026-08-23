@@ -388,27 +388,7 @@
                         </div>
                     </div>
 
-                    <!-- User Distribution Chart -->
-                    <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
-                        <h3 class="text-lg font-bold text-gray-800 mb-6">User Distribution</h3>
-                        <div class="flex items-end justify-center space-x-8 h-48">
-                            <div class="text-center">
-                                <div id="studentsBar" class="chart-bar w-20 bg-green-500 rounded-t-lg mx-auto" style="height: 0%"></div>
-                                <p class="mt-2 font-medium text-gray-700">Students</p>
-                                <p id="studentsBarValue" class="text-sm text-gray-500">0</p>
-                            </div>
-                            <div class="text-center">
-                                <div id="teachersBar" class="chart-bar w-20 bg-purple-500 rounded-t-lg mx-auto" style="height: 0%"></div>
-                                <p class="mt-2 font-medium text-gray-700">Teachers</p>
-                                <p id="teachersBarValue" class="text-sm text-gray-500">0</p>
-                            </div>
-                            <div class="text-center">
-                                <div id="adminsBar" class="chart-bar w-20 bg-red-500 rounded-t-lg mx-auto" style="height: 0%"></div>
-                                <p class="mt-2 font-medium text-gray-700">Admins</p>
-                                <p id="adminsBarValue" class="text-sm text-gray-500">0</p>
-                            </div>
-                        </div>
-                    </div>
+
 
                     <!-- Recent Users -->
                     <div class="bg-white rounded-2xl border border-gray-100 shadow-sm">
@@ -629,14 +609,7 @@
                 document.getElementById('approvedStat').textContent = approved;
                 document.getElementById('activeUsersStat').textContent = activeUsers;
 
-                // Update chart
-                const maxUsers = Math.max(students, teachers, admins, 1);
-                document.getElementById('studentsBar').style.height = `${(students / maxUsers) * 100}%`;
-                document.getElementById('teachersBar').style.height = `${(teachers / maxUsers) * 100}%`;
-                document.getElementById('adminsBar').style.height = `${(admins / maxUsers) * 100}%`;
-                document.getElementById('studentsBarValue').textContent = students;
-                document.getElementById('teachersBarValue').textContent = teachers;
-                document.getElementById('adminsBarValue').textContent = admins;
+
 
             } catch (error) {
                 console.error('Error loading stats:', error);

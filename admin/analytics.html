@@ -163,23 +163,23 @@
             </div>
 
             <div class="bg-white rounded-2xl border border-gray-200 p-8">
-                <h2 class="text-2xl font-bold text-gray-800 mb-6">Top Performing Modules</h2>
+                <h2 class="text-2xl font-bold text-gray-800 mb-6">Top Performing Students</h2>
                 <div class="overflow-x-auto">
-                    <table id="modulePerformance" class="w-full">
+                    <table id="studentPerformance" class="w-full">
                         <thead>
                             <tr class="border-b border-gray-200">
-                                <th class="text-left py-3 px-4 font-semibold text-gray-800">Module</th>
+                                <th class="text-left py-3 px-4 font-semibold text-gray-800">Student Name</th>
                                 <th class="text-left py-3 px-4 font-semibold text-gray-800">Grade Level</th>
-                                <th class="text-left py-3 px-4 font-semibold text-gray-800">Completion Rate</th>
+                                <th class="text-left py-3 px-4 font-semibold text-gray-800">Quizzes Taken</th>
                                 <th class="text-left py-3 px-4 font-semibold text-gray-800">Average Score</th>
-                                <th class="text-left py-3 px-4 font-semibold text-gray-800">Active Users</th>
+                                <th class="text-left py-3 px-4 font-semibold text-gray-800">Performance</th>
                             </tr>
                         </thead>
                         <tbody>
                             <tr>
                                 <td colspan="5" class="py-12 text-center text-gray-500">
                                     <div class="inline-block animate-spin rounded-full h-8 w-8 border-4 border-maroon border-t-transparent mb-4"></div>
-                                    <p>Loading module performance data...</p>
+                                    <p>Loading student performance data...</p>
                                 </td>
                             </tr>
                         </tbody>
@@ -229,14 +229,15 @@
                 const supabase = getSupabase();
 
                 const [usersResult, modulesResult, quizzesResult, submissionsResult] = await Promise.all([
-                    supabase.from('users').select('id'),
+                    supabase.from('users').select('id, full_name, email, grade_level, grade_level_text, role'),
                     supabase.from('modules').select('id, title, name, grade_level, grade_level_text, status'),
                     supabase.from('quizzes').select('id, status, is_published'),
                     supabase.from('quiz_submissions').select('module_id, user_id, student_score, total_items, status, submitted_at, created_at')
                 ]);
 
+                const usersData = usersResult.error ? [] : (usersResult.data || []);
                 if (!usersResult.error && usersResult.data) {
-                    document.getElementById('totalUsers').textContent = usersResult.data.length.toLocaleString();
+                    document.getElementById('totalUsers').textContent = usersData.length.toLocaleString();
                 }
 
                 const modulesData = modulesResult.error ? [] : (modulesResult.data || []);
@@ -264,7 +265,7 @@
 
                 renderDailyActivityChart(submissionsData);
                 renderCompletionStatus(submissionsData);
-                loadModulePerformance(activeModules, submissionsData);
+                loadStudentPerformance(usersData, submissionsData);
 
             } catch (error) {
                 console.error('Error loading analytics:', error);
@@ -352,29 +353,25 @@
             updateStatusBar('rejected', 'rejectedCompletionBar', 'rejectedCompletionValue');
         }
 
-        function loadModulePerformance(activeModules, submissionsData) {
+        function loadStudentPerformance(usersData, submissionsData) {
             try {
-                const modulePerformance = [];
+                const studentPerformance = [];
 
                 const groupedSubmissions = new Map();
                 for (const submission of submissionsData) {
-                    if (!submission.module_id) continue;
-                    if (!groupedSubmissions.has(submission.module_id)) {
-                        groupedSubmissions.set(submission.module_id, []);
+                    if (!submission.user_id) continue;
+                    if (!groupedSubmissions.has(submission.user_id)) {
+                        groupedSubmissions.set(submission.user_id, []);
                     }
-                    groupedSubmissions.get(submission.module_id).push(submission);
+                    groupedSubmissions.get(submission.user_id).push(submission);
                 }
 
-                for (const module of activeModules) {
-                    const moduleSubmissions = groupedSubmissions.get(module.id) || [];
+                const students = (usersData || []).filter(u => !u.role || u.role === 'student');
 
-                    const attemptedByStudents = new Set(moduleSubmissions.map(sub => sub.user_id).filter(Boolean));
-                    const approvedSubmissions = moduleSubmissions.filter(sub => (sub.status || '').toLowerCase() === 'approved');
-                    const completionRate = moduleSubmissions.length > 0
-                        ? Math.round((approvedSubmissions.length / moduleSubmissions.length) * 100)
-                        : 0;
+                for (const student of students) {
+                    const studentSubmissions = groupedSubmissions.get(student.id) || [];
+                    const scoredSubmissions = studentSubmissions.filter(sub => sub.total_items && sub.total_items > 0);
 
-                    const scoredSubmissions = moduleSubmissions.filter(sub => sub.total_items && sub.total_items > 0);
                     const averageScore = scoredSubmissions.length > 0
                         ? Math.round(
                             scoredSubmissions.reduce((sum, sub) => sum + ((sub.student_score / sub.total_items) * 100), 0) /
@@ -382,41 +379,61 @@
                         )
                         : 0;
 
-                    modulePerformance.push({
-                        title: module.title || module.name || 'Untitled Module',
-                        gradeLevel: module.grade_level_text || (module.grade_level ? `Grade ${module.grade_level}` : 'N/A'),
-                        completionRate,
+                    let performanceBadge = 'Needs Improvement';
+                    let badgeClass = 'bg-red-100 text-red-700';
+
+                    if (averageScore >= 90) {
+                        performanceBadge = 'Excellent';
+                        badgeClass = 'bg-green-100 text-green-700';
+                    } else if (averageScore >= 75) {
+                        performanceBadge = 'Good';
+                        badgeClass = 'bg-blue-100 text-blue-700';
+                    } else if (averageScore >= 60) {
+                        performanceBadge = 'Fair';
+                        badgeClass = 'bg-yellow-100 text-yellow-700';
+                    }
+
+                    studentPerformance.push({
+                        name: student.full_name || student.email || 'Student',
+                        gradeLevel: student.grade_level_text || (student.grade_level ? `Grade ${student.grade_level}` : 'N/A'),
+                        quizzesTaken: studentSubmissions.length,
                         averageScore,
-                        activeUsers: attemptedByStudents.size
+                        performanceBadge,
+                        badgeClass
                     });
                 }
 
-                // Sort by completion rate
-                modulePerformance.sort((a, b) => b.completionRate - a.completionRate);
+                // Sort by average score descending, then quizzes taken descending
+                studentPerformance.sort((a, b) => b.averageScore - a.averageScore || b.quizzesTaken - a.quizzesTaken);
 
-                // Render module performance table
-                const tbody = document.querySelector('#modulePerformance tbody');
-                if (modulePerformance.length === 0) {
+                const tbody = document.querySelector('#studentPerformance tbody');
+                if (!tbody) return;
+
+                if (studentPerformance.length === 0) {
                     tbody.innerHTML = `
                         <tr>
-                            <td colspan="5" class="py-10 text-center text-gray-500">No module performance data available yet.</td>
+                            <td colspan="5" class="py-10 text-center text-gray-500">No student performance data available yet.</td>
                         </tr>
                     `;
                     return;
                 }
 
-                tbody.innerHTML = modulePerformance.slice(0, 6).map(module => `
+                tbody.innerHTML = studentPerformance.slice(0, 6).map(student => `
                     <tr class="border-b border-gray-100 hover:bg-gray-50">
-                        <td class="py-4 px-4">${escapeHtml(module.title)}</td>
-                        <td class="py-4 px-4">${escapeHtml(module.gradeLevel)}</td>
-                        <td class="py-4 px-4">${module.completionRate}%</td>
-                        <td class="py-4 px-4">${module.averageScore}%</td>
-                        <td class="py-4 px-4">${module.activeUsers}</td>
+                        <td class="py-4 px-4 font-medium text-gray-900">${escapeHtml(student.name)}</td>
+                        <td class="py-4 px-4 text-gray-600">${escapeHtml(student.gradeLevel)}</td>
+                        <td class="py-4 px-4 text-gray-600">${student.quizzesTaken}</td>
+                        <td class="py-4 px-4 font-semibold text-gray-800">${student.averageScore}%</td>
+                        <td class="py-4 px-4">
+                            <span class="px-3 py-1 rounded-full text-xs font-semibold ${student.badgeClass}">
+                                ${student.performanceBadge}
+                            </span>
+                        </td>
                     </tr>
                 `).join('');
 
             } catch (error) {
-                console.error('Error loading module performance:', error);
+                console.error('Error loading student performance:', error);
             }
         }
 

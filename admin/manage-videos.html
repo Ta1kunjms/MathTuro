@@ -436,9 +436,24 @@
             }
 
             try {
+                // Fetch video details before deleting to clean up mirrored tutorial_videos
+                const { data: videoToDelete } = await getSupabase()
+                    .from('videos')
+                    .select('video_url')
+                    .eq('id', videoId)
+                    .maybeSingle();
+
                 const { error } = await getSupabase().from('videos').delete().eq('id', videoId);
                 
                 if (error) throw error;
+
+                // Clean up matching mirrored row in tutorial_videos
+                if (videoToDelete?.video_url) {
+                    await getSupabase()
+                        .from('tutorial_videos')
+                        .delete()
+                        .eq('video_url', videoToDelete.video_url);
+                }
 
                 showToast('Video deleted successfully', 'success');
                 loadAllVideos();

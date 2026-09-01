@@ -272,6 +272,12 @@ async function deleteVideo(videoId) {
       return false;
     }
 
+    const { data: videoToDelete } = await getSupabase()
+      .from('videos')
+      .select('video_url')
+      .eq('id', videoId)
+      .maybeSingle();
+
     const { error } = await getSupabase()
       .from('videos')
       .delete()
@@ -281,6 +287,13 @@ async function deleteVideo(videoId) {
       console.error('Error deleting video:', error);
       showNotification('Failed to delete video', 'error');
       return false;
+    }
+
+    if (videoToDelete?.video_url) {
+      await getSupabase()
+        .from('tutorial_videos')
+        .delete()
+        .eq('video_url', videoToDelete.video_url);
     }
 
     showNotification('Video deleted successfully', 'success');
@@ -663,7 +676,22 @@ async function archiveModule(moduleId) {
 }
 
 async function archiveVideo(videoId) {
-  return updateVideo(videoId, { status: 'archived' });
+  const result = await updateVideo(videoId, { status: 'archived', is_published: false });
+  if (result) {
+    const { data: videoRow } = await getSupabase()
+      .from('videos')
+      .select('video_url')
+      .eq('id', videoId)
+      .maybeSingle();
+
+    if (videoRow?.video_url) {
+      await getSupabase()
+        .from('tutorial_videos')
+        .update({ is_active: false })
+        .eq('video_url', videoRow.video_url);
+    }
+  }
+  return result;
 }
 
 async function archiveQuiz(quizId) {

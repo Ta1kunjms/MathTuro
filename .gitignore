@@ -118,3 +118,12 @@ dist
 .yarn/install-state.gz
 .pnp.*
 .vercel
+
+# AI assistant configurations (local/private — not for distribution)
+.claude/
+.github/agents/
+.github/skills/
+.opencode/
+CLAUDE.md
+AGENT_INDEX.md
+CLAUDE.md.example

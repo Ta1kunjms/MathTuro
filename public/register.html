@@ -236,8 +236,14 @@
                     </p>
                 </div>
 
+                <!-- Public registration creates pending student accounts only. -->
+                <div class="mb-5 p-4 bg-primary-50 border border-primary-200 rounded-xl">
+                    <p class="text-sm text-primary-800 text-center">
+                        Student accounts are reviewed by an administrator before access is granted.
+                    </p>
+                </div>
                 <!-- Role Selection Tabs -->
-                <div class="flex mb-5 bg-gray-100 rounded-2xl p-1">
+                <div class="hidden flex mb-5 bg-gray-100 rounded-2xl p-1" aria-hidden="true">
                     <button type="button" id="studentTab" 
                         class="role-tab flex-1 py-3 px-5 rounded-xl text-sm font-semibold flex items-center justify-center space-x-2 active" 
                         onclick="selectRole('student')">
@@ -267,27 +273,14 @@
 
                 <!-- Register Form -->
                 <form id="registerForm" class="space-y-4">
-                    <!-- Full Name Input -->
-                    <div class="space-y-2">
-                        <label for="fullName" class="block text-sm font-semibold text-gray-700">
-                            Full Name <span class="text-red-500">*</span>
-                        </label>
-                        <div class="relative">
-                            <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                                <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
-                                </svg>
-                            </div>
-                            <input
-                                type="text"
-                                id="fullName"
-                                name="fullName"
-                                required
-                                maxlength="100"
-                                class="w-full pl-11 pr-4 py-3.5 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent input-focus-effect transition-all text-gray-900 placeholder-gray-400"
-                                placeholder="Enter your full name"
-                                autocomplete="name"
-                            >
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="space-y-2">
+                            <label for="firstName" class="block text-sm font-semibold text-gray-700">First Name <span class="text-red-500">*</span></label>
+                            <input type="text" id="firstName" name="firstName" required maxlength="100" class="w-full px-4 py-3.5 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand input-focus-effect text-gray-900" autocomplete="given-name" placeholder="First name">
+                        </div>
+                        <div class="space-y-2">
+                            <label for="lastName" class="block text-sm font-semibold text-gray-700">Last Name <span class="text-red-500">*</span></label>
+                            <input type="text" id="lastName" name="lastName" required maxlength="100" class="w-full px-4 py-3.5 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand input-focus-effect text-gray-900" autocomplete="family-name" placeholder="Last name">
                         </div>
                     </div>
 
@@ -311,6 +304,25 @@
                                 placeholder="Enter your email address"
                                 autocomplete="email"
                             >
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div class="space-y-2">
+                            <label for="lrn" class="block text-sm font-semibold text-gray-700">LRN <span class="text-red-500">*</span></label>
+                            <input type="text" id="lrn" name="lrn" required inputmode="numeric" pattern="[0-9]{12}" maxlength="12" class="w-full px-4 py-3.5 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand input-focus-effect text-gray-900" placeholder="12-digit LRN">
+                        </div>
+                        <div class="space-y-2">
+                            <label for="schoolYear" class="block text-sm font-semibold text-gray-700">School Year <span class="text-red-500">*</span></label>
+                            <input type="text" id="schoolYear" name="schoolYear" required pattern="S\.Y\. 20[0-9]{2}-20[0-9]{2}" maxlength="13" class="w-full px-4 py-3.5 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand input-focus-effect text-gray-900" placeholder="S.Y. 2026-2027">
+                        </div>
+                        <div class="space-y-2">
+                            <label for="gender" class="block text-sm font-semibold text-gray-700">Gender <span class="text-red-500">*</span></label>
+                            <select id="gender" name="gender" required class="w-full px-4 py-3.5 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand input-focus-effect text-gray-900">
+                                <option value="">Select gender</option>
+                                <option value="Male">Male</option>
+                                <option value="Female">Female</option>
+                            </select>
                         </div>
                     </div>
 
@@ -576,10 +588,10 @@
                 <!-- Success Message -->
                 <div id="successMessage" class="hidden text-center py-8">
                     <div class="success-checkmark mx-auto mb-6">✓</div>
-                    <h2 class="text-2xl font-bold text-gray-800 mb-2">Account Created!</h2>
-                    <p class="text-gray-600 mb-1">Please check your email to verify your account.</p>
+                    <h2 class="text-2xl font-bold text-gray-800 mb-2">Registration Submitted</h2>
+                    <p class="text-gray-600 mb-1">Your student account is pending administrator approval.</p>
                     <p class="text-sm text-gray-500 mb-6">
-                        We've sent a verification link to 
+                        We sent a verification link to 
                         <span id="registeredEmail" class="font-semibold text-brand"></span>
                     </p>
                     <a href="login.html" class="btn-primary inline-flex items-center space-x-2 px-8 py-3 rounded-xl text-white font-semibold">
@@ -813,18 +825,8 @@
             // Load grade levels when page loads
             loadGradeLevels();
 
-            const isAdminContext = new URLSearchParams(window.location.search).get('role') === 'admin';
-            if (isAdminContext) {
-                document.getElementById('selectedRole').value = 'admin';
-                document.getElementById('roleLabel').textContent = 'Admin';
-                document.getElementById('studentTab')?.classList.add('hidden');
-                document.getElementById('teacherTab')?.classList.add('hidden');
-                document.getElementById('roleDescription').className = 'mb-5 p-4 bg-amber-50 border border-amber-200 rounded-xl';
-                document.getElementById('roleDescriptionText').innerHTML = '🛡️ As an <strong>Admin</strong>, grade and section assignment fields are marked as <strong>Admin Only</strong>.';
-                updateRegistrationFieldVisibility('admin');
-            } else {
-                updateRegistrationFieldVisibility('student');
-            }
+            document.getElementById('selectedRole').value = 'student';
+            updateRegistrationFieldVisibility('student');
 
             document.getElementById('toggleGradeInputMode').addEventListener('click', function() {
                 const useManualInput = !document.getElementById('gradeLevelInputWrapper').classList.contains('hidden');
@@ -881,35 +883,31 @@
                 e.preventDefault();
                 hideError();
 
-                const fullName = document.getElementById('fullName').value.trim();
+                const firstName = document.getElementById('firstName').value.trim();
+                const lastName = document.getElementById('lastName').value.trim();
                 const email = document.getElementById('email').value.trim();
+                const lrn = document.getElementById('lrn').value.trim();
+                const schoolYear = document.getElementById('schoolYear').value.trim();
+                const gender = document.getElementById('gender').value;
                 const password = passwordInput.value;
                 const confirmPassword = confirmPasswordInput.value;
                 const termsAccepted = document.getElementById('terms').checked;
-                const selectedRole = document.getElementById('selectedRole').value;
+                const selectedRole = 'student';
                 const gradeLevelId = document.getElementById('gradeLevel').value;
                 const sectionId = document.getElementById('section').value;
                 const gradeLevelInput = document.getElementById('gradeLevelInput').value.trim();
                 const sectionInput = document.getElementById('sectionInput').value.trim();
-                const adminGradeLevelId = document.getElementById('adminGradeLevel').value;
-                const adminSectionId = document.getElementById('adminSection').value;
-
-                const isAdmin = selectedRole === 'admin';
                 const isManualGradeInput = !document.getElementById('gradeLevelInputWrapper').classList.contains('hidden');
                 const isManualSectionInput = !document.getElementById('sectionInputWrapper').classList.contains('hidden');
 
-                const resolvedGradeLevelId = isAdmin ? adminGradeLevelId : (isManualGradeInput ? null : gradeLevelId);
-                const resolvedSectionId = isAdmin ? adminSectionId : (isManualSectionInput ? null : sectionId);
-                const resolvedGradeLevelText = isAdmin
-                    ? getSelectedOptionText('adminGradeLevel')
-                    : (isManualGradeInput ? gradeLevelInput : getSelectedOptionText('gradeLevel'));
-                const resolvedSectionText = isAdmin
-                    ? getSelectedOptionText('adminSection')
-                    : (isManualSectionInput ? sectionInput : getSelectedOptionText('section'));
+                const resolvedGradeLevelId = isManualGradeInput ? null : gradeLevelId;
+                const resolvedSectionId = isManualSectionInput ? null : sectionId;
+                const resolvedGradeLevelText = isManualGradeInput ? gradeLevelInput : getSelectedOptionText('gradeLevel');
+                const resolvedSectionText = isManualSectionInput ? sectionInput : getSelectedOptionText('section');
 
                 // Validation
-                if (!fullName) {
-                    showError('Please enter your full name.');
+                if (!firstName || !lastName) {
+                    showError('Please enter your first and last name.');
                     return;
                 }
 
@@ -920,12 +918,27 @@
                 
                 // Validate grade and section fields
                 if (!resolvedGradeLevelId && !resolvedGradeLevelText) {
-                    showError(isAdmin ? 'Please assign a grade level.' : 'Please select or enter your grade level.');
+                    showError('Please select or enter your grade level.');
                     return;
                 }
 
                 if (!resolvedSectionId && !resolvedSectionText) {
-                    showError(isAdmin ? 'Please assign a section.' : 'Please select or enter your section.');
+                    showError('Please select or enter your section.');
+                    return;
+                }
+
+                if (!/^\d{12}$/.test(lrn)) {
+                    showError('LRN must contain exactly 12 digits.');
+                    return;
+                }
+
+                if (!/^S\.Y\. 20\d{2}-20\d{2}$/.test(schoolYear)) {
+                    showError('School year must use the format S.Y. 20XX-20XX.');
+                    return;
+                }
+
+                if (!['Male', 'Female'].includes(gender)) {
+                    showError('Please select Male or Female.');
                     return;
                 }
 
@@ -959,124 +972,37 @@
 
                 try {
                     const supabase = getSupabase();
-                    let resolvedAuthUser = null;
-                    let recoveredExistingAccount = false;
-
-                    // Create user in Supabase Auth
+                    // Auth signup creates a pending student profile through the database trigger.
                     const { data: authData, error: authError } = await supabase.auth.signUp({
                         email: email,
                         password: password,
                         options: {
                             data: {
-                                full_name: fullName,
-                                role: selectedRole,
+                                first_name: firstName,
+                                last_name: lastName,
+                                full_name: `${firstName} ${lastName}`,
                                 grade_level_id: resolvedGradeLevelId,
                                 section_id: resolvedSectionId,
                                 grade_level_text: resolvedGradeLevelText,
-                                section_text: resolvedSectionText
+                                section_text: resolvedSectionText,
+                                lrn,
+                                school_year: schoolYear,
+                                gender
                             }
                         }
                     });
 
                     if (authError) {
-                        const errorMessage = (authError.message || '').toLowerCase();
-                        if (errorMessage.includes('already registered')) {
-                            const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
-                                email,
-                                password
-                            });
-
-                            if (signInError || !signInData?.user) {
-                                showError('This email is already registered. Please sign in instead.');
-                                return;
-                            }
-
-                            resolvedAuthUser = signInData.user;
-                            recoveredExistingAccount = true;
-                        } else {
-                            showError(authError.message);
-                            return;
-                        }
-                    } else {
-                        resolvedAuthUser = authData?.user || null;
+                        showError(authError.message);
+                        return;
                     }
 
-                    if (!resolvedAuthUser?.id) {
+                    if (!authData?.user?.id) {
                         showError('Unable to complete account setup. Please try again.');
                         return;
                     }
 
-                    // Ensure user record exists in users table (prevents auth-only orphan accounts)
-                    // Some environments may not yet have all optional columns (e.g., grade_level_text).
-                    const schemaFallbackStorageKey = 'users_table_missing_columns';
-                    const cachedMissingColumns = (() => {
-                        try {
-                            const parsed = JSON.parse(localStorage.getItem(schemaFallbackStorageKey) || '[]');
-                            return Array.isArray(parsed) ? parsed : [];
-                        } catch (error) {
-                            return [];
-                        }
-                    })();
-
-                    const profilePayload = {
-                        id: resolvedAuthUser.id,
-                        grade_level_id: resolvedGradeLevelId,
-                        section_id: resolvedSectionId,
-                        grade_level_text: resolvedGradeLevelText,
-                        section_text: resolvedSectionText,
-                        grade_level: resolvedGradeLevelText,
-                        section: resolvedSectionText,
-                        email: email,
-                        full_name: fullName,
-                        role: selectedRole,
-                        created_at: new Date().toISOString(),
-                        updated_at: new Date().toISOString()
-                    };
-
-                    cachedMissingColumns.forEach(columnName => {
-                        if (Object.prototype.hasOwnProperty.call(profilePayload, columnName)) {
-                            delete profilePayload[columnName];
-                        }
-                    });
-
-                    let userError = null;
-                    for (let attempt = 0; attempt < 6; attempt++) {
-                        const upsertResult = await supabase
-                            .from('users')
-                            .upsert(profilePayload, {
-                                onConflict: 'id'
-                            });
-
-                        userError = upsertResult.error;
-                        if (!userError) {
-                            break;
-                        }
-
-                        const missingColumnMatch = (userError.message || '').match(/Could not find the '([^']+)' column/i);
-                        if (userError.code === 'PGRST204' && missingColumnMatch) {
-                            const missingColumn = missingColumnMatch[1];
-                            if (Object.prototype.hasOwnProperty.call(profilePayload, missingColumn)) {
-                                delete profilePayload[missingColumn];
-                                if (!cachedMissingColumns.includes(missingColumn)) {
-                                    cachedMissingColumns.push(missingColumn);
-                                    localStorage.setItem(schemaFallbackStorageKey, JSON.stringify(cachedMissingColumns));
-                                }
-                                continue;
-                            }
-                        }
-
-                        break;
-                    }
-
-                    if (userError) {
-                        console.error('Error syncing user record:', userError);
-                        showError('Account exists in authentication, but profile sync failed. Please contact support/admin to run user sync.');
-                        return;
-                    }
-
-                    if (recoveredExistingAccount) {
-                        await supabase.auth.signOut();
-                    }
+                    await supabase.auth.signOut();
 
                     // Show success message
                     registerForm.classList.add('hidden');

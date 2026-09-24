@@ -215,6 +215,10 @@
                             </svg>
                         </div>
                     </div>
+                    <div class="flex gap-2">
+                        <button type="button" onclick="bulkApproveStudents()" class="px-3 py-3 rounded-xl bg-green-600 text-white text-sm font-semibold hover:bg-green-700">Approve selected</button>
+                        <button type="button" onclick="bulkRejectStudents()" class="px-3 py-3 rounded-xl bg-red-600 text-white text-sm font-semibold hover:bg-red-700">Reject selected</button>
+                    </div>
                 </div>
             </div>
 
@@ -413,19 +417,8 @@
         }
 
         function normalizeAdminStatus(user) {
-            if (user.role !== 'admin') return null;
-
-            const candidateKeys = ['status', 'approval_status', 'admin_status'];
-            for (const key of candidateKeys) {
-                const value = user[key];
-                if (typeof value === 'string') {
-                    const normalized = value.toLowerCase();
-                    if (['approved', 'pending', 'rejected'].includes(normalized)) {
-                        return normalized;
-                    }
-                }
-            }
-
+            const normalized = String(user.approval_status || '').toLowerCase();
+            if (['approved', 'pending', 'rejected'].includes(normalized)) return normalized;
             return user.is_active ? 'approved' : 'pending';
         }
 
@@ -515,6 +508,7 @@
                     <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Name</th>
                     <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Grade Level</th>
                     <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Section</th>
+                    <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Status</th>
                     <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Email</th>
                     <th class="px-6 py-4 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">Actions</th>
                 </tr>
@@ -625,6 +619,7 @@
                     <tr class="user-row">
                         <td class="px-6 py-4">
                             <div class="flex items-center space-x-3">
+                                ${user.role === 'student' && user.admin_review_status === 'pending' ? `<input type="checkbox" class="student-selection" value="${user.id}" aria-label="Select ${escapeHtml(user.full_name || 'student')}" onclick="event.stopPropagation()">` : ''}
                                 <div class="w-10 h-10 ${colors.bg} rounded-full flex items-center justify-center">
                                     <span class="${colors.text} font-semibold text-sm">${getInitials(user.full_name || 'User')}</span>
                                 </div>
@@ -633,9 +628,14 @@
                         </td>
                         <td class="px-6 py-4 text-gray-500 text-sm">${escapeHtml(user.grade_level || 'N/A')}</td>
                         <td class="px-6 py-4 text-gray-500 text-sm">${escapeHtml(user.section || 'N/A')}</td>
+                        <td class="px-6 py-4">${getStatusBadge(user.admin_review_status)}</td>
                         <td class="px-6 py-4 text-gray-600">${escapeHtml(user.email || 'N/A')}</td>
                         <td class="px-6 py-4 text-right">
                             <div class="flex items-center justify-end space-x-2">
+                                ${user.role === 'student' && user.admin_review_status === 'pending' ? `
+                                    <button onclick="approveStudent('${user.id}')" class="px-3 py-1.5 text-xs bg-green-600 text-white rounded-lg hover:bg-green-700">Approve</button>
+                                    <button onclick="rejectStudent('${user.id}')" class="px-3 py-1.5 text-xs bg-red-600 text-white rounded-lg hover:bg-red-700">Reject</button>
+                                ` : ''}
                                 <button onclick="openEditModal('${user.id}')" class="p-2 text-blue-600 hover:bg-blue-50 rounded-lg" title="Edit">
                                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
@@ -651,6 +651,81 @@
                     </tr>
                 `;
             }).join('');
+        }
+
+        async function approveStudent(userId) {
+            try {
+                const { error } = await getSupabase().rpc('approve_student_account', { target_user_id: userId });
+                if (error) throw error;
+                showToast('Student account approved.', 'success');
+                await loadUsers();
+            } catch (error) {
+                console.error('Error approving student:', error);
+                showToast(error.message || 'Failed to approve student account.', 'error');
+            }
+        }
+
+        async function rejectStudent(userId) {
+            const reason = window.prompt('Reason for rejection:');
+            if (!reason || !reason.trim()) return;
+
+            try {
+                const { error } = await getSupabase().rpc('reject_student_account', {
+                    target_user_id: userId,
+                    reason: reason.trim()
+                });
+                if (error) throw error;
+                showToast('Student account rejected.', 'success');
+                await loadUsers();
+            } catch (error) {
+                console.error('Error rejecting student:', error);
+                showToast(error.message || 'Failed to reject student account.', 'error');
+            }
+        }
+
+        function getSelectedStudentIds() {
+            return Array.from(document.querySelectorAll('.student-selection:checked')).map(input => input.value);
+        }
+
+        async function bulkApproveStudents() {
+            const targetUserIds = getSelectedStudentIds();
+            if (!targetUserIds.length) {
+                showToast('Select at least one pending student.', 'error');
+                return;
+            }
+
+            try {
+                const { data, error } = await getSupabase().rpc('bulk_approve_student_accounts', { target_user_ids: targetUserIds });
+                if (error) throw error;
+                showToast(`${data || 0} student account(s) approved.`, 'success');
+                await loadUsers();
+            } catch (error) {
+                console.error('Error bulk approving students:', error);
+                showToast(error.message || 'Failed to approve selected students.', 'error');
+            }
+        }
+
+        async function bulkRejectStudents() {
+            const targetUserIds = getSelectedStudentIds();
+            if (!targetUserIds.length) {
+                showToast('Select at least one pending student.', 'error');
+                return;
+            }
+            const reason = window.prompt('Reason for rejection:');
+            if (!reason || !reason.trim()) return;
+
+            try {
+                const { data, error } = await getSupabase().rpc('bulk_reject_student_accounts', {
+                    target_user_ids: targetUserIds,
+                    reason: reason.trim()
+                });
+                if (error) throw error;
+                showToast(`${data || 0} student account(s) rejected.`, 'success');
+                await loadUsers();
+            } catch (error) {
+                console.error('Error bulk rejecting students:', error);
+                showToast(error.message || 'Failed to reject selected students.', 'error');
+            }
         }
 
         async function updateAdminReviewStatus(userId, newStatus) {
@@ -889,40 +964,8 @@
                     await syncTeacherSectionAssignment(userId, role, sectionId || null);
                     showToast('User updated successfully', 'success');
                 } else {
-                    if (!password || password.length < 6) {
-                        showToast('Password must be at least 6 characters', 'error');
-                        return;
-                    }
-
-                    const { data: authData, error: authError } = await getSupabase().auth.signUp({
-                        email,
-                        password,
-                        options: {
-                            data: { full_name: fullName, role }
-                        }
-                    });
-
-                    if (authError) throw authError;
-
-                    const userData = {
-                        id: authData.user.id,
-                        email,
-                        full_name: fullName,
-                        role
-                    };
-
-                    if (role === 'student' || role === 'teacher') {
-                        userData.grade_level_id = gradeLevelId || null;
-                        userData.section_id = sectionId || null;
-                    }
-
-                    const { error: userError } = await getSupabase()
-                        .from('users')
-                        .insert(userData);
-
-                    if (userError) throw userError;
-                    await syncTeacherSectionAssignment(authData.user.id, role, sectionId || null);
-                    showToast('User created successfully', 'success');
+                    showToast('Direct account creation is unavailable until the trusted server-side provisioning service is configured.', 'error');
+                    return;
                 }
 
                 closeUserModal();

@@ -195,7 +195,36 @@
             </div>
 
             <!-- Quizzes View -->
-            <div id="quizzesView" class="space-y-4 hidden">
+            <div id="quizzesView" class="space-y-6 hidden">
+                <!-- Formal Assessments (Pre-Tests & Post-Tests) -->
+                <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
+                    <div class="flex items-center justify-between mb-6">
+                        <div>
+                            <h2 class="text-lg font-semibold text-gray-800">Formal Pre/Post Assessments</h2>
+                            <p class="text-xs text-gray-500 mt-1">Pre-tests gate module content; post-tests gate module progression</p>
+                        </div>
+                        <span id="formalAsmtCount" class="text-sm text-gray-500">0 assessments</span>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Assessment</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Type</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Module</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Attempts</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Score</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Effective Status</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="formalAssessmentsTableBody" class="bg-white divide-y divide-gray-200">
+                                <tr><td colspan="7" class="text-center py-8 text-gray-400">Loading assessments...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
                 <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
                     <div class="flex items-center justify-between mb-6">
                         <h2 id="quizzesTitle" class="text-lg font-semibold text-gray-800">Student Quizzes</h2>
@@ -259,10 +288,12 @@
     <!-- Scripts -->
     <script src="../shared/js/includes.js"></script>
 
+    <script src="../shared/js/runtime-config.js"></script>
     <script src="../shared/js/config.js"></script>
     <script src="../shared/js/supabase.js"></script>
     <script src="../shared/js/auth.js"></script>
-        <script src="assets/js/sidebar.js"></script>
+    <script src="assets/js/sidebar.js"></script>
+    <script src="assets/js/teacher.js"></script>
     <script>
         // State management
         let currentState = {
@@ -495,6 +526,8 @@
                     .from('users')
                     .select('*')
                     .eq('role', 'student')
+                    .eq('approval_status', 'approved')
+                    .eq('is_active', true)
                     .order('full_name');
                 
                 if (error) {
@@ -665,6 +698,110 @@
             document.getElementById('quizzesTitle').textContent = `${studentName}'s Quizzes`;
             navigateToStep('quizzes');
             loadStudentQuizzes(studentId);
+            loadStudentFormalAssessments(studentId);
+        }
+
+        async function loadStudentFormalAssessments(studentId) {
+            try {
+                const supabase = getSupabase();
+                const { data, error } = await supabase
+                    .from('v_module_assessment_student_summary')
+                    .select('*, module_assessments(title, assessment_type, total_items, passing_threshold, modules(title))')
+                    .eq('student_id', studentId);
+
+                if (error) throw error;
+
+                const countEl = document.getElementById('formalAsmtCount');
+                if (countEl) countEl.textContent = `${data?.length || 0} assessment${data?.length !== 1 ? 's' : ''}`;
+
+                const tableBody = document.getElementById('formalAssessmentsTableBody');
+                if (!tableBody) return;
+
+                if (!data || data.length === 0) {
+                    tableBody.innerHTML = `<tr><td colspan="7" class="text-center py-8 text-gray-400">No formal assessments attempted yet</td></tr>`;
+                    return;
+                }
+
+                tableBody.innerHTML = data.map(row => {
+                    const asmt = row.module_assessments;
+                    const isPreTest = asmt?.assessment_type === 'pre_test';
+                    const canOverride = row.total_attempts >= 3 && row.raw_result === 'failed' && !row.is_teacher_override && row.verification_status === 'verified';
+                    const canVerify = row.verification_status === 'pending';
+
+                    let badgeClass = 'bg-gray-100 text-gray-700';
+                    if (row.is_teacher_override) badgeClass = 'bg-purple-100 text-purple-700';
+                    else if (row.raw_result === 'passed') badgeClass = 'bg-green-100 text-green-700';
+                    else if (row.verification_status === 'pending') badgeClass = 'bg-yellow-100 text-yellow-700';
+                    else if (row.raw_result === 'failed') badgeClass = 'bg-red-100 text-red-700';
+
+                    return `
+                        <tr class="hover:bg-gray-50">
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${asmt?.title || '-'}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-xs font-semibold uppercase ${isPreTest ? 'text-amber-600' : 'text-indigo-600'}">${isPreTest ? 'Pre-Test' : 'Post-Test'}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${asmt?.modules?.title || '-'}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700 font-semibold">${row.total_attempts}/3</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 font-bold">${row.final_numerical_score} / ${row.final_total_items} (${row.final_score_pct}%)</td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <span class="px-2.5 py-1 rounded-full text-xs font-semibold ${badgeClass}">
+                                    ${row.effective_status}
+                                </span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm space-x-2">
+                                ${canVerify ? `
+                                    <button onclick="handleTeacherVerify('${row.latest_attempt_id}', ${row.final_numerical_score}, ${row.final_total_items})" class="px-3 py-1 bg-green-600 text-white rounded-lg text-xs font-medium hover:bg-green-700">
+                                        Verify Score
+                                    </button>
+                                ` : ''}
+                                ${canOverride ? `
+                                    <button onclick="handleTeacherOverride('${row.latest_attempt_id}')" class="px-3 py-1 bg-purple-600 text-white rounded-lg text-xs font-medium hover:bg-purple-700">
+                                        Apply Override
+                                    </button>
+                                ` : ''}
+                                ${!canVerify && !canOverride ? '<span class="text-xs text-gray-400">None</span>' : ''}
+                            </td>
+                        </tr>
+                    `;
+                }).join('');
+            } catch (err) {
+                console.error('Error loading formal assessments:', err);
+                const tableBody = document.getElementById('formalAssessmentsTableBody');
+                if (tableBody) {
+                    tableBody.innerHTML = `<tr><td colspan="7" class="text-center py-6 text-red-500">Error: ${err.message}</td></tr>`;
+                }
+            }
+        }
+
+        async function handleTeacherVerify(attemptId, currentScore, totalItems) {
+            const scoreStr = prompt(`Confirm paper score for student (Total items: ${totalItems}):`, currentScore);
+            if (scoreStr === null) return;
+            const score = parseInt(scoreStr, 10);
+            if (isNaN(score) || score < 0 || score > totalItems) {
+                alert('Invalid score entered');
+                return;
+            }
+            const notes = prompt('Verification notes (optional):', 'Paper test verified by teacher');
+            const res = await verifyAssessmentAttempt(attemptId, score, totalItems, notes);
+            if (res.success) {
+                alert('Assessment verified successfully!');
+                await loadStudentFormalAssessments(currentState.student.id);
+            } else {
+                alert('Verification failed: ' + res.error);
+            }
+        }
+
+        async function handleTeacherOverride(attemptId) {
+            const reason = prompt('Enter justification for authorizing completion override (Attempt 3):', 'Student completed remedial oral examination');
+            if (!reason || !reason.trim()) {
+                alert('Override reason is required');
+                return;
+            }
+            const res = await applyAssessmentOverride(attemptId, reason.trim());
+            if (res.success) {
+                alert('Override successfully applied! Attempt count preserved at 3. Next module unlocked.');
+                await loadStudentFormalAssessments(currentState.student.id);
+            } else {
+                alert('Override failed: ' + res.error);
+            }
         }
 
         function navigateToStep(stepName) {

@@ -5,6 +5,8 @@ node_modules/
 dist/
 build/
 *.log
+shared/js/runtime-config.js
+public/shared/js/runtime-config.js
 
 # IDE files
 .vscode/

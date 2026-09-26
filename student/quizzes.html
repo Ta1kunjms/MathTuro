@@ -261,13 +261,6 @@
                     </div>
                 </div>
 
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Screenshot (Optional)</label>
-                    <input type="file" id="screenshotFile" accept="image/*" 
-                        class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-brand focus:border-transparent">
-                    <p class="text-xs text-gray-500 mt-1">Upload a screenshot of your quiz result</p>
-                </div>
-
                 <div class="flex space-x-3 pt-4">
                     <button type="button" onclick="closeSubmitModal()" 
                         class="flex-1 px-6 py-3 border border-gray-300 rounded-xl font-medium text-gray-700 hover:bg-gray-50 transition-colors">
@@ -288,6 +281,7 @@
     <!-- Scripts -->
     <script src="../shared/js/includes.js"></script>
 
+    <script src="../shared/js/runtime-config.js"></script>
     <script src="../shared/js/config.js"></script>
     <script src="../shared/js/utils.js"></script>
     <script src="../shared/js/supabase.js"></script>
@@ -707,90 +701,27 @@
 
             try {
                 const quizId = document.getElementById('submitQuizId').value;
-                const totalItems = parseInt(document.getElementById('submitTotalItems').value);
-                const studentScore = parseInt(document.getElementById('studentScore').value);
-                const screenshotFile = document.getElementById('screenshotFile').files[0];
+                const totalItems = parseInt(document.getElementById('submitTotalItems').value, 10);
+                const studentScore = parseInt(document.getElementById('studentScore').value, 10);
+
+                if (isNaN(studentScore) || studentScore < 0) {
+                    throw new Error('Please enter a valid non-negative score');
+                }
 
                 if (studentScore > totalItems) {
                     throw new Error('Score cannot be greater than total items');
                 }
 
-                let screenshotUrl = null;
-                
-                // Upload screenshot if provided
-                if (screenshotFile) {
-                    const fileExt = screenshotFile.name.split('.').pop();
-                    const fileName = `${currentUser.id}/${quizId}_${Date.now()}.${fileExt}`;
-                    
-                    const { error: uploadError } = await getSupabase()
-                        .storage
-                        .from('quiz-screenshots')
-                        .upload(fileName, screenshotFile);
-                    
-                    if (uploadError) throw uploadError;
-                    
-                    const { data: { publicUrl } } = getSupabase()
-                        .storage
-                        .from('quiz-screenshots')
-                        .getPublicUrl(fileName);
-                    
-                    screenshotUrl = publicUrl;
-                }
+                // Phase 2: Route student writes through SECURITY DEFINER RPC
+                const { data, error } = await getSupabase().rpc('submit_regular_quiz_score', {
+                    p_quiz_id: quizId,
+                    p_score: studentScore,
+                    p_total: totalItems
+                });
 
-                // Check if updating or inserting
-                const existingSubmission = submissions[quizId];
-                
-                    if (existingSubmission) {
-                        console.log('Existing submission:', existingSubmission);
-                        // Update the submission
-                        const { error: updateError } = await getSupabase()
-                            .from('quiz_submissions')
-                            .update({
-                                student_score: studentScore,
-                                total_items: totalItems,
-                                screenshot_url: screenshotUrl || existingSubmission.screenshot_url,
-                                status: 'pending', // Reset to pending when updating
-                                teacher_comment: null, // Clear teacher comment when student updates
-                                teacher_feedback: null, // Clear teacher feedback when student updates
-                                reviewed_at: null, // Clear reviewed timestamp
-                                reviewed_by: null, // Clear reviewed by user
-                                updated_at: new Date().toISOString()
-                            })
-                            .eq('id', existingSubmission.id);
-                    
-                    if (updateError) throw updateError;
-                    
-                    // Fetch the updated submission
-                    const { data: updatedData, error: selectError } = await getSupabase()
-                        .from('quiz_submissions')
-                        .select('*')
-                        .eq('id', existingSubmission.id);
-                    
-                    if (selectError) throw selectError;
-                    console.log('Updated submission:', updatedData);
-                } else {
-                    const targetQuiz = quizzes.find(q => q.id === quizId);
-                    const { data, error } = await getSupabase()
-                        .from('quiz_submissions')
-                        .insert({
-                            quiz_id: quizId,
-                            module_id: targetQuiz?.module_id || null,
-                            user_id: currentUser.id,
-                            student_score: studentScore,
-                            total_items: totalItems,
-                            screenshot_url: screenshotUrl,
-                            status: 'pending', // Set initial status to pending
-                            submitted_at: new Date().toISOString(),
-                            created_at: new Date().toISOString(),
-                            updated_at: new Date().toISOString()
-                        })
-                        .select('*');
-                    
-                    if (error) throw error;
-                    console.log('New submission:', data);
-                }
+                if (error) throw error;
 
-                showToast('Score submitted successfully!', 'success');
+                showToast('Score submitted successfully! Attempt ' + (data?.attempt_number || 1) + '/3', 'success');
                 closeSubmitModal();
                 await loadData();
             } catch (error) {

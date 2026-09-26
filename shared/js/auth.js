@@ -33,14 +33,29 @@
   - Shows alert if user's role is not found in database
   - Shows alert for any other Supabase error
 */
+let lastLoginError = null;
+
+/*
+  Function Name: getLastLoginError
+  Purpose:
+  - Returns the machine-readable error details from the most recent login attempt
+  - Allows caller pages to display specific, appropriate error messages
+*/
+function getLastLoginError() {
+  return lastLoginError;
+}
+
 async function login(email, password) {
+  lastLoginError = null;
+
   try {
     // Check if Supabase is initialized
     const supabase = getSupabase();
     if (!supabase) {
-      if (typeof showToast === 'function') {
-        showToast('Login failed: Database connection not available. Please refresh the page.', 'error');
-      }
+      lastLoginError = {
+        code: 'DATABASE_UNAVAILABLE',
+        message: 'Database connection not available. Please refresh the page.'
+      };
       console.error('Supabase client not initialized');
       return null;
     }
@@ -51,11 +66,15 @@ async function login(email, password) {
       password: password
     });
 
-    // Check if login failed (invalid credentials)
+    // Check if login failed (invalid credentials or unconfirmed email)
     if (authError) {
-      if (typeof showToast === 'function') {
-        showToast('Login failed: ' + authError.message, 'error');
-      }
+      const isUnconfirmed = (authError.message || '').toLowerCase().includes('email not confirmed');
+      lastLoginError = {
+        code: isUnconfirmed ? 'EMAIL_NOT_CONFIRMED' : 'INVALID_CREDENTIALS',
+        message: isUnconfirmed
+          ? 'Please confirm your email address before logging in. Check your inbox for the verification link.'
+          : 'Invalid email or password. Please try again.'
+      };
       return null;
     }
 
@@ -67,21 +86,32 @@ async function login(email, password) {
       .single();
 
     if (userError || !userData) {
-      if (typeof showToast === 'function') {
-        showToast('Your account profile is not available. Please contact an administrator.', 'error');
-      }
       await supabase.auth.signOut();
+      lastLoginError = {
+        code: 'PROFILE_NOT_FOUND',
+        message: 'Your account profile is not available. Please contact an administrator.'
+      };
       return null;
     }
 
     if (!userData.is_active || userData.approval_status !== 'approved') {
-      if (typeof showToast === 'function') {
-        const message = userData.approval_status === 'rejected'
-          ? 'Your account registration was rejected. Please contact an administrator.'
-          : 'Your account is awaiting administrator approval.';
-        showToast(message, 'error');
-      }
       await supabase.auth.signOut();
+      if (userData.approval_status === 'rejected') {
+        lastLoginError = {
+          code: 'ACCOUNT_REJECTED',
+          message: 'Your account registration was rejected. Please contact an administrator.'
+        };
+      } else if (!userData.is_active) {
+        lastLoginError = {
+          code: 'ACCOUNT_INACTIVE',
+          message: 'Your account is inactive. Please contact an administrator.'
+        };
+      } else {
+        lastLoginError = {
+          code: 'PENDING_APPROVAL',
+          message: 'Your account is awaiting administrator approval.'
+        };
+      }
       return null;
     }
 
@@ -117,12 +147,14 @@ async function login(email, password) {
     };
     localStorage.setItem('user', JSON.stringify(user));
 
+    lastLoginError = null;
     return user;
 
   } catch (error) {
-    if (typeof showToast === 'function') {
-      showToast('Login failed: ' + error.message, 'error');
-    }
+    lastLoginError = {
+      code: 'UNKNOWN_ERROR',
+      message: 'Login failed: ' + error.message
+    };
     return null;
   }
 }

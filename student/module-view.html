@@ -167,6 +167,22 @@
                     </div>
                 </div>
 
+                <!-- Formal Assessments Card (Phase 2 Pre-Test & Post-Test) -->
+                <div class="bg-white rounded-2xl border border-gray-100 shadow-sm">
+                    <div class="p-6 border-b border-gray-100">
+                        <div class="flex items-center justify-between">
+                            <h3 class="text-lg font-bold text-gray-800">Formal Assessments</h3>
+                            <span class="px-2.5 py-0.5 bg-brand/10 text-brand text-xs font-semibold rounded-full">Gated</span>
+                        </div>
+                        <p class="text-xs text-gray-500 mt-1">Pre-test unlocks content; verified post-test unlocks next module</p>
+                    </div>
+                    <div id="formalAssessmentsList" class="divide-y divide-gray-100">
+                        <div class="p-6 text-center text-gray-500 text-sm">
+                            <p>Loading assessments...</p>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Quizzes Card -->
                 <div class="bg-white rounded-2xl border border-gray-100 shadow-sm">
                     <div class="p-6 border-b border-gray-100">
@@ -196,6 +212,42 @@
         </div>
     </main>
 
+    <!-- Submit Formal Assessment Modal -->
+    <div id="submitAssessmentModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl">
+            <div class="flex items-center justify-between pb-4 border-b border-gray-100">
+                <div>
+                    <h3 class="text-xl font-bold text-gray-800" id="asmtModalTitle">Submit Assessment</h3>
+                    <p class="text-sm text-gray-500" id="asmtModalSubtitle"></p>
+                </div>
+                <button type="button" onclick="closeSubmitAssessmentModal()" class="p-2 text-gray-500 hover:text-gray-700 rounded-lg hover:bg-gray-100">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                </button>
+            </div>
+            <form id="submitAssessmentForm" class="pt-4 space-y-4">
+                <input type="hidden" id="asmtModalId">
+                <input type="hidden" id="asmtModalTotalItems">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Paper Assessment Score *</label>
+                    <div class="flex items-center space-x-2">
+                        <input type="number" id="asmtStudentScore" required min="0" 
+                            class="flex-1 px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-brand text-center text-2xl font-bold" 
+                            placeholder="0">
+                        <span class="text-2xl text-gray-400">/</span>
+                        <span id="asmtDisplayTotal" class="text-2xl font-bold text-gray-900">10</span>
+                    </div>
+                    <p class="text-xs text-gray-500 mt-2">Enter your verified paper test score. Maximum 3 attempts.</p>
+                </div>
+                <div class="flex space-x-3 pt-2">
+                    <button type="button" onclick="closeSubmitAssessmentModal()" class="flex-1 px-4 py-2.5 border border-gray-300 rounded-xl text-gray-700 font-medium hover:bg-gray-50 transition-colors">Cancel</button>
+                    <button type="submit" id="asmtSubmitBtn" class="flex-1 px-4 py-2.5 bg-brand text-white rounded-xl font-medium hover:bg-brand-dark transition-colors">Submit Score</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <!-- Submit Quiz Modal -->
     <div id="submitQuizModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
         <div class="bg-white rounded-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto">
@@ -224,8 +276,8 @@
                             <p class="font-medium mb-1">How to submit:</p>
                             <ol class="list-decimal list-inside space-y-1 text-blue-700">
                                 <li>Take the quiz using the external link</li>
-                                <li>Screenshot your final score</li>
-                                <li>Enter your score below and upload the screenshot</li>
+                                <li>Enter your verified score below</li>
+                                <li>Submit to record your attempt (max 3 attempts)</li>
                             </ol>
                         </div>
                     </div>
@@ -240,31 +292,6 @@
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-2">Out of</label>
                         <input type="number" id="totalItemsDisplay" readonly class="w-full px-4 py-3 bg-gray-100 border border-gray-300 rounded-xl text-center text-2xl font-bold text-gray-500" placeholder="0">
-                    </div>
-                </div>
-
-                <!-- Screenshot Upload -->
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Screenshot of Score *</label>
-                    <div id="screenshotDropZone" class="upload-zone border-2 border-dashed border-gray-300 rounded-xl p-6 text-center cursor-pointer transition-colors">
-                        <input type="file" id="screenshotInput" accept="image/*" class="hidden" required>
-                        <div class="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-3">
-                            <svg class="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
-                            </svg>
-                        </div>
-                        <p class="text-gray-600 text-sm">Drop screenshot here or <span class="text-brand font-medium">browse</span></p>
-                        <p class="text-xs text-gray-500 mt-1">PNG, JPG up to 5MB</p>
-                    </div>
-                    <div id="screenshotPreview" class="hidden mt-4">
-                        <div class="relative rounded-xl overflow-hidden">
-                            <img id="screenshotImage" class="w-full h-48 object-cover" alt="Screenshot">
-                            <button type="button" onclick="removeScreenshot()" class="absolute top-2 right-2 p-2 bg-red-500 text-white rounded-full hover:bg-red-600">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-                                </svg>
-                            </button>
-                        </div>
                     </div>
                 </div>
 
@@ -308,11 +335,13 @@
     <!-- Scripts -->
     <script src="../shared/js/includes.js"></script>
 
+    <script src="../shared/js/runtime-config.js"></script>
     <script src="../shared/js/config.js"></script>
     <script src="../shared/js/utils.js"></script>
     <script src="../shared/js/supabase.js"></script>
     <script src="../shared/js/auth.js"></script>
     <script src="assets/js/sidebar.js"></script>
+    <script src="assets/js/student.js"></script>
     
     <script>
         // Global variables
@@ -320,10 +349,12 @@
         let module = null;
         let moduleImages = [];
         let currentImageIndex = 0;
-        let selectedScreenshot = null;
         let studentAssignment = null;
         let moduleProgressRecord = null;
         let latestSubmissionByQuiz = {};
+        let isContentUnlocked = true;
+        let moduleAssessments = [];
+        let moduleAssessmentAttempts = [];
 
         // Get module ID from URL
         const urlParams = new URLSearchParams(window.location.search);
@@ -551,18 +582,11 @@
 
         // Setup event listeners
         function setupEventListeners() {
-            // Screenshot upload
-            const dropZone = document.getElementById('screenshotDropZone');
-            const input = document.getElementById('screenshotInput');
-            
-            dropZone.addEventListener('click', () => input.click());
-            dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.classList.add('drag-over'); });
-            dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
-            dropZone.addEventListener('drop', (e) => { e.preventDefault(); dropZone.classList.remove('drag-over'); handleScreenshotSelect(e.dataTransfer.files[0]); });
-            input.addEventListener('change', (e) => handleScreenshotSelect(e.target.files[0]));
-
-            // Submit form
+            // Submit quiz form
             document.getElementById('submitQuizForm').addEventListener('submit', handleSubmitQuiz);
+            
+            // Submit formal assessment form
+            document.getElementById('submitAssessmentForm').addEventListener('submit', handleSubmitAssessment);
 
             // Lightbox keyboard navigation
             document.addEventListener('keydown', (e) => {
@@ -612,6 +636,26 @@
                     return;
                 }
 
+                // Phase 2 Gating: Check sequential module access
+                const { data: canAccess } = await getSupabase().rpc('can_student_access_module', {
+                    p_student_id: currentUser.id,
+                    p_module_id: moduleId
+                });
+
+                if (canAccess === false) {
+                    document.getElementById('loadingState').classList.add('hidden');
+                    showToast('This module is locked. Please pass the previous module post-test first.', 'error');
+                    setTimeout(() => window.location.href = 'modules.html', 2000);
+                    return;
+                }
+
+                // Phase 2 Gating: Check Option B pre-test unlock
+                const { data: isUnlocked } = await getSupabase().rpc('is_module_content_unlocked', {
+                    p_student_id: currentUser.id,
+                    p_module_id: moduleId
+                });
+                isContentUnlocked = (isUnlocked !== false);
+
                 // Fetch videos separately
                 const { data: videosData } = await getSupabase()
                     .from('videos')
@@ -639,6 +683,7 @@
                 document.getElementById('moduleType').textContent = module.content_type === 'pdf' ? 'PDF Document' : 'Image Gallery';
 
                 // Render content
+                await loadFormalAssessments();
                 renderContent();
                 renderVideos();
                 renderQuizzes();
@@ -661,6 +706,24 @@
         // Render module content (PDF or Images)
         function renderContent() {
             const section = document.getElementById('contentSection');
+
+            if (!isContentUnlocked) {
+                section.innerHTML = `
+                    <div class="text-center py-12 px-6 bg-amber-50 border border-amber-200 rounded-2xl">
+                        <div class="w-16 h-16 bg-amber-100 text-amber-700 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+                            </svg>
+                        </div>
+                        <h3 class="text-xl font-bold text-gray-900 mb-2">Pre-Test Required</h3>
+                        <p class="text-gray-600 mb-6 max-w-md mx-auto">Please submit your pre-test score to unlock this module's learning materials and videos. Any attempt unlocks the content.</p>
+                        <button onclick="openPreTestModal()" class="px-6 py-3 bg-brand text-white font-semibold rounded-xl hover:bg-brand-dark transition-colors">
+                            Take Pre-Test / Enter Score
+                        </button>
+                    </div>
+                `;
+                return;
+            }
 
             if (module.content_type === 'pdf' && module.pdf_url) {
                 const isMobile = window.innerWidth <= 768;
@@ -726,7 +789,7 @@
             const section = document.getElementById('videosSection');
             const list = document.getElementById('videosList');
 
-            if (!module.videos || module.videos.length === 0) {
+            if (!isContentUnlocked || !module.videos || module.videos.length === 0) {
                 section.classList.add('hidden');
                 return;
             }
@@ -935,20 +998,12 @@
             document.getElementById('studentScore').max = totalItems;
             document.getElementById('submitQuizForm').reset();
             document.getElementById('totalItemsDisplay').value = totalItems;
-            removeScreenshot();
 
             const existingSubmission = latestSubmissionByQuiz[quizId];
             if (existingSubmission) {
                 document.getElementById('studentScore').value = existingSubmission.student_score;
-                if (existingSubmission.screenshot_url) {
-                    document.getElementById('screenshotImage').src = existingSubmission.screenshot_url;
-                    document.getElementById('screenshotPreview').classList.remove('hidden');
-                    document.getElementById('screenshotDropZone').classList.add('hidden');
-                    document.getElementById('screenshotInput').required = false;
-                }
             } else {
                 document.getElementById('studentScore').value = '';
-                document.getElementById('screenshotInput').required = true;
             }
 
             document.getElementById('submitQuizModal').classList.remove('hidden');
@@ -958,35 +1013,7 @@
             document.getElementById('submitQuizModal').classList.add('hidden');
         }
 
-        // Screenshot handling
-        function handleScreenshotSelect(file) {
-            if (!file || !file.type.startsWith('image/')) {
-                showToast('Please select an image file', 'error');
-                return;
-            }
-            if (file.size > 5 * 1024 * 1024) {
-                showToast('File must be under 5MB', 'error');
-                return;
-            }
-            selectedScreenshot = file;
-            document.getElementById('screenshotImage').src = URL.createObjectURL(file);
-            document.getElementById('screenshotPreview').classList.remove('hidden');
-            document.getElementById('screenshotDropZone').classList.add('hidden');
-        }
-
-        function removeScreenshot() {
-            selectedScreenshot = null;
-            document.getElementById('screenshotInput').value = '';
-            document.getElementById('screenshotPreview').classList.add('hidden');
-            document.getElementById('screenshotDropZone').classList.remove('hidden');
-            const quizId = document.getElementById('submitQuizId').value;
-            const existingSubmission = latestSubmissionByQuiz[quizId];
-            if (!existingSubmission || !existingSubmission.screenshot_url) {
-                document.getElementById('screenshotInput').required = true;
-            }
-        }
-
-        // Submit quiz score
+        // Submit regular quiz score via RPC
         async function handleSubmitQuiz(e) {
             e.preventDefault();
             
@@ -996,73 +1023,26 @@
 
             try {
                 const quizId = document.getElementById('submitQuizId').value;
-                const studentScore = parseInt(document.getElementById('studentScore').value);
-                const totalItems = parseInt(document.getElementById('submitQuizTotalItems').value);
-                const existingSubmission = latestSubmissionByQuiz[quizId];
+                const studentScore = parseInt(document.getElementById('studentScore').value, 10);
+                const totalItems = parseInt(document.getElementById('submitQuizTotalItems').value, 10);
 
-                if (!selectedScreenshot && !existingSubmission?.screenshot_url) {
-                    throw new Error('Please upload a screenshot of your score');
+                if (isNaN(studentScore) || studentScore < 0) {
+                    throw new Error('Please enter a valid non-negative score');
                 }
 
                 if (studentScore > totalItems) {
                     throw new Error('Score cannot exceed total items');
                 }
 
-                let screenshotUrl = existingSubmission?.screenshot_url || null;
+                const { data, error } = await getSupabase().rpc('submit_regular_quiz_score', {
+                    p_quiz_id: quizId,
+                    p_score: studentScore,
+                    p_total: totalItems
+                });
 
-                // Upload screenshot if a new one was selected
-                if (selectedScreenshot) {
-                    const fileName = `${currentUser.id}/${quizId}_${Date.now()}.${selectedScreenshot.name.split('.').pop()}`;
-                    const { error: uploadError } = await getSupabase().storage
-                        .from('quiz-screenshots')
-                        .upload(fileName, selectedScreenshot);
+                if (error) throw error;
 
-                    if (uploadError) throw uploadError;
-
-                    const { data: urlData } = getSupabase().storage
-                        .from('quiz-screenshots')
-                        .getPublicUrl(fileName);
-
-                    screenshotUrl = urlData.publicUrl;
-                }
-
-                let updateResult;
-
-                if (existingSubmission) {
-                    console.log('Updating existing submission:', existingSubmission);
-                    updateResult = await getSupabase()
-                        .from('quiz_submissions')
-                        .update({
-                            student_score: studentScore,
-                            total_items: totalItems,
-                            screenshot_url: screenshotUrl,
-                            status: 'pending', // Reset to pending when updating
-                            teacher_comment: null, // Clear teacher comment when student updates
-                            teacher_feedback: null, // Clear teacher feedback when student updates
-                            reviewed_at: null, // Clear reviewed timestamp
-                            reviewed_by: null, // Clear reviewed by user
-                            updated_at: new Date().toISOString()
-                        })
-                        .eq('id', existingSubmission.id);
-                } else {
-                    // Create submission
-                    updateResult = await getSupabase()
-                        .from('quiz_submissions')
-                        .insert({
-                            user_id: currentUser.id,
-                            quiz_id: quizId,
-                            module_id: moduleId,
-                            student_score: studentScore,
-                            total_items: totalItems,
-                            screenshot_url: screenshotUrl,
-                            status: 'pending',
-                            submitted_at: new Date().toISOString()
-                        });
-                }
-
-                if (updateResult.error) throw updateResult.error;
-
-                showToast('Score submitted successfully! Waiting for teacher approval.', 'success');
+                showToast('Score submitted successfully! Attempt ' + (data?.attempt_number || 1) + '/3', 'success');
                 closeSubmitQuizModal();
                 await loadSubmissions();
 
@@ -1072,6 +1052,184 @@
             } finally {
                 btn.disabled = false;
                 btn.innerHTML = '<span>Submit Score</span>';
+            }
+        }
+
+        // Formal Assessments (Phase 2 Pre-Test & Post-Test)
+        async function loadFormalAssessments() {
+            try {
+                const { data: asmts, error: asmtError } = await getSupabase()
+                    .from('module_assessments')
+                    .select('*')
+                    .eq('module_id', moduleId)
+                    .eq('is_published', true)
+                    .order('assessment_type', { ascending: false }); // pre_test then post_test
+
+                if (asmtError) throw asmtError;
+                moduleAssessments = asmts || [];
+
+                const asmtIds = moduleAssessments.map(a => a.id);
+                if (asmtIds.length > 0) {
+                    const { data: atts, error: attError } = await getSupabase()
+                        .from('module_assessment_attempts')
+                        .select('*')
+                        .in('assessment_id', asmtIds)
+                        .eq('student_id', currentUser.id)
+                        .order('attempt_number', { ascending: true });
+
+                    if (attError) throw attError;
+                    moduleAssessmentAttempts = atts || [];
+                } else {
+                    moduleAssessmentAttempts = [];
+                }
+
+                renderFormalAssessments();
+            } catch (err) {
+                console.error('Error loading formal assessments:', err);
+            }
+        }
+
+        function renderFormalAssessments() {
+            const container = document.getElementById('formalAssessmentsList');
+            if (!container) return;
+
+            if (moduleAssessments.length === 0) {
+                container.innerHTML = `
+                    <div class="p-6 text-center text-gray-500 text-sm">
+                        <p>No formal pre/post assessments assigned to this module.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = moduleAssessments.map(asmt => {
+                const attempts = moduleAssessmentAttempts.filter(a => a.assessment_id === asmt.id);
+                const latestAttempt = attempts.length > 0 ? attempts[attempts.length - 1] : null;
+                const hasPassed = attempts.some(a => a.assessment_result === 'passed' || a.is_teacher_override);
+                const isOverridden = attempts.some(a => a.is_teacher_override);
+                const isExhausted = attempts.length >= (asmt.max_attempts || 3) && !hasPassed;
+
+                let statusBadge = '';
+                if (isOverridden) {
+                    statusBadge = `<span class="px-2.5 py-1 text-xs font-semibold rounded-full bg-purple-100 text-purple-700">Passed via Override</span>`;
+                } else if (hasPassed) {
+                    statusBadge = `<span class="px-2.5 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-700">Passed</span>`;
+                } else if (latestAttempt && latestAttempt.verification_status === 'pending') {
+                    statusBadge = `<span class="px-2.5 py-1 text-xs font-semibold rounded-full bg-yellow-100 text-yellow-700">Pending Verification</span>`;
+                } else if (isExhausted) {
+                    statusBadge = `<span class="px-2.5 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-700">Failed (3/3)</span>`;
+                } else if (attempts.length > 0) {
+                    statusBadge = `<span class="px-2.5 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-700">Attempted (${attempts.length}/3)</span>`;
+                } else {
+                    statusBadge = `<span class="px-2.5 py-1 text-xs font-semibold rounded-full bg-gray-100 text-gray-600">Not Started</span>`;
+                }
+
+                const canSubmit = !hasPassed && !isExhausted && (!latestAttempt || latestAttempt.verification_status !== 'pending');
+                const isPreTest = asmt.assessment_type === 'pre_test';
+
+                const safeTitle = typeof escapeHtml === 'function' ? escapeHtml(asmt.title || '') : (asmt.title || '');
+
+                return `
+                    <div class="p-4 space-y-3">
+                        <div class="flex items-start justify-between">
+                            <div>
+                                <span class="text-xs uppercase tracking-wide font-bold ${isPreTest ? 'text-amber-600' : 'text-indigo-600'}">
+                                    ${isPreTest ? 'Diagnostic Pre-Test' : 'Summative Post-Test'}
+                                </span>
+                                <h4 class="font-bold text-gray-800 text-sm mt-0.5">${safeTitle}</h4>
+                                <p class="text-xs text-gray-500">${asmt.total_items} items • Pass: ${asmt.passing_threshold}%</p>
+                            </div>
+                            ${statusBadge}
+                        </div>
+
+                        ${latestAttempt ? `
+                            <div class="text-xs text-gray-600 bg-gray-50 p-2.5 rounded-lg flex justify-between items-center">
+                                <span>Latest: <strong class="text-gray-800">${latestAttempt.student_score}/${latestAttempt.total_items}</strong> (${latestAttempt.score_pct}%)</span>
+                                <span>Attempt ${latestAttempt.attempt_number}/3</span>
+                            </div>
+                        ` : ''}
+
+                        <div class="flex space-x-2">
+                            ${asmt.quiz_url ? `
+                                <a href="${asmt.quiz_url}" target="_blank" class="flex-1 text-center py-2 px-3 border border-gray-200 rounded-lg text-xs font-medium text-gray-700 hover:bg-gray-50 transition-colors">
+                                    View Test Form ↗
+                                </a>
+                            ` : ''}
+                            <button onclick="openAssessmentModal('${asmt.id}', '${safeTitle.replace(/'/g, "\\'")}', ${asmt.total_items})"
+                                ${canSubmit ? '' : 'disabled'}
+                                class="flex-1 py-2 px-3 text-xs font-medium rounded-lg transition-colors ${
+                                    canSubmit ? 'bg-brand text-white hover:bg-brand-dark' : 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                                }">
+                                ${latestAttempt && latestAttempt.verification_status === 'pending' ? 'Pending Teacher Check' : (hasPassed ? 'Completed' : (isExhausted ? 'Attempts Exhausted' : 'Submit Paper Score'))}
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function openAssessmentModal(asmtId, title, totalItems) {
+            document.getElementById('asmtModalId').value = asmtId;
+            document.getElementById('asmtModalTitle').textContent = title;
+            document.getElementById('asmtModalSubtitle').textContent = `Total items: ${totalItems}`;
+            document.getElementById('asmtModalTotalItems').value = totalItems;
+            document.getElementById('asmtDisplayTotal').textContent = totalItems;
+            document.getElementById('asmtStudentScore').max = totalItems;
+            document.getElementById('asmtStudentScore').value = '';
+            document.getElementById('submitAssessmentModal').classList.remove('hidden');
+        }
+
+        function openPreTestModal() {
+            const preTest = moduleAssessments.find(a => a.assessment_type === 'pre_test');
+            if (preTest) {
+                openAssessmentModal(preTest.id, preTest.title, preTest.total_items);
+            } else {
+                showToast('Pre-test definition not found', 'error');
+            }
+        }
+
+        function closeSubmitAssessmentModal() {
+            document.getElementById('submitAssessmentModal').classList.add('hidden');
+        }
+
+        async function handleSubmitAssessment(e) {
+            e.preventDefault();
+            const btn = document.getElementById('asmtSubmitBtn');
+            btn.disabled = true;
+            btn.textContent = 'Submitting...';
+
+            try {
+                const asmtId = document.getElementById('asmtModalId').value;
+                const score = parseInt(document.getElementById('asmtStudentScore').value, 10);
+                const total = parseInt(document.getElementById('asmtModalTotalItems').value, 10);
+
+                if (isNaN(score) || score < 0 || score > total) {
+                    throw new Error('Please enter a valid non-negative score');
+                }
+
+                const res = await submitAssessmentScore(asmtId, score, total);
+                if (!res.success) throw new Error(res.error);
+
+                showToast('Assessment score submitted! Waiting for teacher check.', 'success');
+                closeSubmitAssessmentModal();
+
+                // Refresh Option B content gating & assessments
+                const { data: isUnlocked } = await getSupabase().rpc('is_module_content_unlocked', {
+                    p_student_id: currentUser.id,
+                    p_module_id: moduleId
+                });
+                isContentUnlocked = (isUnlocked !== false);
+
+                renderContent();
+                renderVideos();
+                await loadFormalAssessments();
+
+            } catch (err) {
+                console.error('Error submitting assessment:', err);
+                showToast(err.message || 'Failed to submit assessment', 'error');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Submit Score';
             }
         }
 
@@ -1104,6 +1262,13 @@
         function getYouTubeThumbnail(url) {
             const match = url?.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([a-zA-Z0-9_-]+)/);
             return match ? `https://img.youtube.com/vi/${match[1]}/maxresdefault.jpg` : null;
+        }
+
+        function escapeHtml(text) {
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
         }
 
         function showToast(message, type = 'info') {

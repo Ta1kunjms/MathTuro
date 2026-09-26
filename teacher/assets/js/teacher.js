@@ -746,3 +746,71 @@ async function viewSectionStudents(sectionId, sectionName) {
     alert('Error loading students');
   }
 }
+
+/**
+ * Phase 2 Formal Assessment: Teacher Verification
+ * Calls public.verify_assessment_attempt RPC
+ */
+async function verifyAssessmentAttempt(attemptId, verifiedScore = null, verifiedTotal = null, notes = null) {
+  try {
+    const { data, error } = await getSupabase().rpc('verify_assessment_attempt', {
+      p_attempt_id: attemptId,
+      p_verified_score: verifiedScore !== null ? parseInt(verifiedScore, 10) : null,
+      p_verified_total: verifiedTotal !== null ? parseInt(verifiedTotal, 10) : null,
+      p_verification_notes: notes || null
+    });
+
+    if (error) throw error;
+    return { success: true, data };
+  } catch (error) {
+    console.error('Error verifying assessment attempt:', error);
+    return { success: false, error: error.message };
+  }
+}
+
+/**
+ * Phase 2 Formal Assessment: Teacher Override on Terminal (3rd) Failed Attempt
+ * In-place row update, never creates attempt 4, preserves numeric scores.
+ * Calls public.apply_assessment_override RPC
+ */
+async function applyAssessmentOverride(attemptId, reason) {
+  try {
+    if (!reason || !reason.trim()) {
+      return { success: false, error: 'An override reason is required' };
+    }
+
+    const { data, error } = await getSupabase().rpc('apply_assessment_override', {
+      p_attempt_id: attemptId,
+      p_reason: reason.trim()
+    });
+
+    if (error) throw error;
+    return { success: true, data };
+  } catch (error) {
+    console.error('Error applying assessment override:', error);
+    return { success: false, error: error.message };
+  }
+}
+
+/**
+ * Phase 2 Regular Quiz: Teacher Override on Terminal (3rd) Failed Submission
+ * Calls public.apply_quiz_override RPC
+ */
+async function applyQuizOverride(submissionId, reason) {
+  try {
+    if (!reason || !reason.trim()) {
+      return { success: false, error: 'An override reason is required' };
+    }
+
+    const { data, error } = await getSupabase().rpc('apply_quiz_override', {
+      p_submission_id: submissionId,
+      p_reason: reason.trim()
+    });
+
+    if (error) throw error;
+    return { success: true, data };
+  } catch (error) {
+    console.error('Error applying quiz override:', error);
+    return { success: false, error: error.message };
+  }
+}

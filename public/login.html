@@ -399,6 +399,7 @@
     </div>
 
     <!-- Scripts -->
+    <script src="shared/js/runtime-config.js"></script>
     <script src="shared/js/config.js"></script>
     <script src="shared/js/utils.js"></script>
     <script src="shared/js/supabase.js"></script>
@@ -476,7 +477,8 @@
                         }
                         redirectToDashboard();
                     } else {
-                        showError('Invalid email or password. Please try again.');
+                        const lastError = typeof getLastLoginError === 'function' ? getLastLoginError() : null;
+                        showError(lastError?.message || 'Invalid email or password. Please try again.');
                     }
                 } catch (error) {
                     showError('Login failed: ' + error.message);

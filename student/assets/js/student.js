@@ -1120,3 +1120,101 @@ async function searchContent(query) {
     return { modules: [], lessons: [], videos: [] };
   }
 }
+
+/**
+ * Phase 2 Formal Assessment: Student submits pre-test or post-test paper score
+ * Calls public.submit_assessment_score RPC
+ */
+async function submitAssessmentScore(assessmentId, score, totalItems) {
+  try {
+    const numScore = parseInt(score, 10);
+    const numTotal = parseInt(totalItems, 10);
+
+    if (isNaN(numScore) || isNaN(numTotal) || numScore < 0 || numTotal <= 0 || numScore > numTotal) {
+      return { success: false, error: 'Invalid score or total items' };
+    }
+
+    const { data, error } = await getSupabase().rpc('submit_assessment_score', {
+      p_assessment_id: assessmentId,
+      p_student_score: numScore,
+      p_total_items: numTotal
+    });
+
+    if (error) throw error;
+    return { success: true, data };
+  } catch (error) {
+    console.error('Error submitting assessment score:', error);
+    return { success: false, error: error.message };
+  }
+}
+
+/**
+ * Phase 2 Regular Quiz: Student submits quiz score
+ * Calls public.submit_regular_quiz_score RPC
+ */
+async function submitRegularQuizScore(quizId, score, totalItems) {
+  try {
+    const numScore = parseInt(score, 10);
+    const numTotal = parseInt(totalItems, 10);
+
+    if (isNaN(numScore) || isNaN(numTotal) || numScore < 0 || numTotal <= 0 || numScore > numTotal) {
+      return { success: false, error: 'Invalid score or total items' };
+    }
+
+    const { data, error } = await getSupabase().rpc('submit_regular_quiz_score', {
+      p_quiz_id: quizId,
+      p_score: numScore,
+      p_total: numTotal
+    });
+
+    if (error) throw error;
+    return { success: true, data };
+  } catch (error) {
+    console.error('Error submitting regular quiz score:', error);
+    return { success: false, error: error.message };
+  }
+}
+
+/**
+ * Phase 2 Pre-Test Progression: Check if module content is unlocked (Option B)
+ * Returns true if student has attempted pre-test at least once (or if no pre-test exists)
+ */
+async function isModuleContentUnlocked(moduleId) {
+  try {
+    const user = JSON.parse(localStorage.getItem('user'));
+    if (!user) return false;
+
+    const { data, error } = await getSupabase().rpc('is_module_content_unlocked', {
+      p_student_id: user.id,
+      p_module_id: moduleId
+    });
+
+    if (error) throw error;
+    return Boolean(data);
+  } catch (error) {
+    console.error('Error checking module content unlock:', error);
+    return true; // Fallback to avoid breaking navigation on unexpected error
+  }
+}
+
+/**
+ * Phase 2 Module Sequencing: Check if student can access module based on modules.order_index ASC
+ * Returns true if previous module post-test has been verified passed or overridden
+ */
+async function canStudentAccessModule(moduleId) {
+  try {
+    const user = JSON.parse(localStorage.getItem('user'));
+    if (!user) return false;
+
+    const { data, error } = await getSupabase().rpc('can_student_access_module', {
+      p_student_id: user.id,
+      p_module_id: moduleId
+    });
+
+    if (error) throw error;
+    return Boolean(data);
+  } catch (error) {
+    console.error('Error checking module access:', error);
+    return true; // Fallback
+  }
+}

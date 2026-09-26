@@ -223,8 +223,9 @@
             </div>
 
             <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-2 mb-6">
-                <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
                     <button id="studentsTab" onclick="setActiveTab('student')" class="px-4 py-3 rounded-xl text-sm font-semibold bg-red-600 text-white">Students</button>
+                    <button id="pendingTab" onclick="setActiveTab('pending')" class="px-4 py-3 rounded-xl text-sm font-semibold text-gray-700 hover:bg-gray-100">Pending Approval</button>
                     <button id="teachersTab" onclick="setActiveTab('teacher')" class="px-4 py-3 rounded-xl text-sm font-semibold text-gray-700 hover:bg-gray-100">Teachers</button>
                     <button id="adminsTab" onclick="setActiveTab('admin')" class="px-4 py-3 rounded-xl text-sm font-semibold text-gray-700 hover:bg-gray-100">Admin</button>
                 </div>
@@ -283,6 +284,25 @@
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-2">Email Address</label>
                     <input type="email" id="userEmail" required class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-red-500/20 focus:border-red-500" placeholder="user@example.com">
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">LRN</label>
+                        <input type="text" id="userLrn" inputmode="numeric" pattern="[0-9]{12}" maxlength="12" required class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-red-500/20 focus:border-red-500" placeholder="12-digit LRN">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">School Year</label>
+                        <input type="text" id="userSchoolYear" pattern="S\.Y\. 20[0-9]{2}-20[0-9]{2}" maxlength="13" required class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-red-500/20 focus:border-red-500" placeholder="S.Y. 2026-2027">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Gender</label>
+                        <select id="userGender" required class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-red-500/20 focus:border-red-500">
+                            <option value="">Select gender</option>
+                            <option value="Male">Male</option>
+                            <option value="Female">Female</option>
+                        </select>
+                    </div>
                 </div>
                 
                 <div id="passwordField">
@@ -357,6 +377,7 @@
     <script src="../shared/js/includes.js"></script>
 
     <script src="assets/js/sidebar.js"></script>
+    <script src="../shared/js/runtime-config.js"></script>
     <script src="../shared/js/config.js"></script>
     <script src="../shared/js/utils.js"></script>
     <script src="../shared/js/supabase.js"></script>
@@ -470,6 +491,7 @@
 
             const tabs = {
                 student: document.getElementById('studentsTab'),
+                pending: document.getElementById('pendingTab'),
                 teacher: document.getElementById('teachersTab'),
                 admin: document.getElementById('adminsTab')
             };
@@ -534,13 +556,16 @@
 
             const tabLabelMap = {
                 student: 'Students',
+                pending: 'Pending Approval',
                 teacher: 'Teachers',
                 admin: 'Admin'
             };
 
             document.getElementById('usersTableTitle').textContent = tabLabelMap[activeTab] || 'Users';
 
-            let filtered = allUsers.filter(user => user.role === activeTab);
+            let filtered = activeTab === 'pending'
+                ? allUsers.filter(user => user.role === 'student' && user.admin_review_status === 'pending')
+                : allUsers.filter(user => user.role === activeTab);
 
             if (searchTerm) {
                 filtered = filtered.filter(user =>
@@ -812,6 +837,9 @@
             document.getElementById('modalTitle').textContent = 'Create New User';
             document.getElementById('userForm').reset();
             document.getElementById('userId').value = '';
+            ['userLrn', 'userSchoolYear', 'userGender'].forEach(id => {
+                document.getElementById(id).required = true;
+            });
             document.getElementById('passwordField').style.display = 'block';
             document.getElementById('userPassword').required = true;
             updateRoleSpecificFields();
@@ -824,8 +852,14 @@
 
             document.getElementById('modalTitle').textContent = 'Edit User';
             document.getElementById('userId').value = user.id;
+            ['userLrn', 'userSchoolYear', 'userGender'].forEach(id => {
+                document.getElementById(id).required = false;
+            });
             document.getElementById('userFullName').value = user.full_name || '';
             document.getElementById('userEmail').value = user.email || '';
+            document.getElementById('userLrn').value = user.lrn || '';
+            document.getElementById('userSchoolYear').value = user.school_year || '';
+            document.getElementById('userGender').value = user.gender || '';
             document.getElementById('userRole').value = user.role || 'student';
             document.getElementById('userPassword').value = '';
             document.getElementById('passwordField').style.display = 'block';
@@ -939,6 +973,9 @@
             const fullName = document.getElementById('userFullName').value.trim();
             const email = document.getElementById('userEmail').value.trim();
             const password = document.getElementById('userPassword').value;
+            const lrn = document.getElementById('userLrn').value.trim();
+            const schoolYear = document.getElementById('userSchoolYear').value.trim();
+            const gender = document.getElementById('userGender').value;
             const role = document.getElementById('userRole').value;
             const gradeLevelId = document.getElementById('userGradeLevel').value;
             const sectionId = document.getElementById('userSection').value;
@@ -964,8 +1001,30 @@
                     await syncTeacherSectionAssignment(userId, role, sectionId || null);
                     showToast('User updated successfully', 'success');
                 } else {
-                    showToast('Direct account creation is unavailable until the trusted server-side provisioning service is configured.', 'error');
-                    return;
+                    if (!password || password.length < 6) {
+                        showToast('Password must be at least 6 characters', 'error');
+                        return;
+                    }
+
+                    const nameParts = fullName.split(/\s+/).filter(Boolean);
+                    const { data: provisioningData, error: provisioningError } = await getSupabase().functions.invoke('provision-user', {
+                        body: {
+                            email,
+                            password,
+                            role,
+                            first_name: nameParts.shift() || '',
+                            last_name: nameParts.join(' '),
+                            lrn,
+                            school_year: schoolYear,
+                            gender,
+                            grade_level_id: gradeLevelId || null,
+                            section_id: sectionId || null
+                        }
+                    });
+
+                    if (provisioningError) throw provisioningError;
+                    await syncTeacherSectionAssignment(provisioningData?.user?.id, role, sectionId || null);
+                    showToast('User created and activated successfully', 'success');
                 }
 
                 closeUserModal();

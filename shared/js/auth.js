@@ -81,7 +81,7 @@ async function login(email, password) {
     // Step 2: Get user role from the database
     let { data: userData, error: userError } = await supabase
       .from('users')
-      .select('id, email, role, full_name, first_name, last_name, approval_status, is_active')
+      .select('id, email, role, full_name, first_name, last_name, approval_status, is_active, is_archived')
       .eq('id', authData.user.id)
       .single();
 
@@ -90,6 +90,15 @@ async function login(email, password) {
       lastLoginError = {
         code: 'PROFILE_NOT_FOUND',
         message: 'Your account profile is not available. Please contact an administrator.'
+      };
+      return null;
+    }
+
+    if (userData.is_archived) {
+      await supabase.auth.signOut();
+      lastLoginError = {
+        code: 'ACCOUNT_ARCHIVED',
+        message: 'Your account has been archived. Please contact an administrator.'
       };
       return null;
     }
@@ -247,11 +256,17 @@ async function checkAuthSession() {
 
     const { data: userData, error: userError } = await supabase
       .from('users')
-      .select('id, email, role, full_name, first_name, last_name, approval_status, is_active')
+      .select('id, email, role, full_name, first_name, last_name, approval_status, is_active, is_archived')
       .eq('id', session.user.id)
       .single();
 
     if (userError || !userData) {
+      localStorage.removeItem('user');
+      await supabase.auth.signOut();
+      return null;
+    }
+
+    if (userData.is_archived) {
       localStorage.removeItem('user');
       await supabase.auth.signOut();
       return null;

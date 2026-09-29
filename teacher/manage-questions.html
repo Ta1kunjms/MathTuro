@@ -1,0 +1,733 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Manage quiz questions and assessment items for MathTuro LMS.">
+    <link rel="stylesheet" href="../dist/styles.css">
+    <script src="../shared/js/device.js"></script>
+    <link rel="icon" type="image/png" href="../Logo/MATHURO-LOGO-v2.png">
+    <title>Manage Questions - MathTuro LMS</title>
+    <script src="../shared/js/supabase-lib.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <style>
+        body { font-family: 'Inter', system-ui, sans-serif; }
+        .gradient-text {
+            background: linear-gradient(135deg, #005801 0%, #22c55e 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .glass-sidebar { background: rgba(255,255,255,0.95); backdrop-filter: blur(20px); }
+        .sidebar-link { transition: all 0.2s ease; }
+        .sidebar-link:hover, .sidebar-link.active {
+            background: linear-gradient(135deg, #005801 0%, #006B01 100%);
+            color: white;
+        }
+        .sidebar-link.active { box-shadow: 0 4px 15px rgba(0,88,1,0.3); }
+
+        .question-card {
+            transition: all 0.25s cubic-bezier(0.4,0,0.2,1);
+            border-left: 4px solid transparent;
+        }
+        .question-card:hover {
+            transform: translateX(4px);
+            border-left-color: #005801;
+            box-shadow: 0 8px 24px -8px rgba(0,88,1,0.18);
+        }
+        .q-type-badge { font-size: 11px; font-weight: 600; padding: 3px 10px; border-radius: 999px; }
+        .q-type-mc  { background: #dbeafe; color: #1d4ed8; }
+        .q-type-tf  { background: #fef3c7; color: #b45309; }
+        .q-type-id  { background: #f3e8ff; color: #7c3aed; }
+
+        .option-row { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+        .option-letter {
+            width: 32px; height: 32px;
+            background: #f0fdf4; border: 2px solid #86efac;
+            border-radius: 50%; display: flex; align-items: center; justify-content: center;
+            font-weight: 700; font-size: 13px; color: #16a34a; flex-shrink: 0; cursor: pointer;
+            transition: all 0.15s;
+        }
+        .option-letter.correct { background: #16a34a; color: white; border-color: #16a34a; }
+        .option-letter:hover { transform: scale(1.1); }
+
+        .type-option.selected-type { ring: 2px solid currentColor; opacity: 1; }
+        .type-option { opacity: 0.7; transition: all 0.15s; }
+        .type-option:hover { opacity: 1; }
+
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; }
+        ::-webkit-scrollbar-thumb { background: #005801; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: #004601; }
+
+        @keyframes shimmer { 0%{transform:translateX(-100%)} 100%{transform:translateX(100%)} }
+        .shimmer-card {
+            background: #f9fafb; border-radius: 16px; height: 110px;
+            overflow: hidden; position: relative;
+        }
+        .shimmer-card::after {
+            content: ''; position: absolute; inset: 0;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.6), transparent);
+            animation: shimmer 1.5s infinite;
+        }
+    </style>
+    <link rel="stylesheet" href="../shared/css/base.css">
+    <link rel="stylesheet" href="assets/css/teacher.css">
+</head>
+<body class="bg-gray-50 min-h-screen">
+
+    <div id="mobileOverlay" class="fixed inset-0 bg-black bg-opacity-50 z-40 hidden lg:hidden"></div>
+    <div id="sidebar"></div>
+
+    <main class="lg:ml-72 min-h-screen">
+        <!-- Header -->
+        <header class="bg-white border-b border-gray-200 sticky top-0 z-30">
+            <div class="flex items-center justify-between px-4 lg:px-8 py-4">
+                <button id="mobileMenuBtn" class="lg:hidden p-2 text-gray-600 hover:text-brand rounded-lg">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
+                    </svg>
+                </button>
+                <div class="flex-1 lg:flex-none min-w-0">
+                    <div class="flex items-center gap-2">
+                        <a href="manage-quizzes.html" class="text-sm text-gray-500 hover:text-brand transition-colors">
+                            <i class="fas fa-arrow-left mr-1"></i>Quizzes
+                        </a>
+                        <span class="text-gray-300">/</span>
+                        <h1 class="text-xl lg:text-2xl font-bold text-gray-800 truncate" id="pageTitle">Questions</h1>
+                    </div>
+                    <p class="text-sm text-gray-500 hidden sm:block" id="pageSubtitle">Loading…</p>
+                </div>
+                <div class="flex items-center space-x-3">
+                    <button id="btnAddQuestion"
+                        class="inline-flex items-center space-x-2 bg-brand text-white px-4 py-2 rounded-xl font-medium hover:bg-brand-dark transition-colors">
+                        <i class="fas fa-plus"></i>
+                        <span class="hidden sm:inline">Add Question</span>
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <div class="p-4 lg:p-8">
+            <!-- Context Banner -->
+            <div id="contextBanner" class="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 mb-6 hidden">
+                <div class="flex flex-wrap items-center gap-4">
+                    <div class="flex items-center gap-3">
+                        <div id="ctxIcon" class="w-12 h-12 rounded-xl flex items-center justify-center text-xl"></div>
+                        <div>
+                            <p class="font-semibold text-gray-900" id="ctxTitle">—</p>
+                            <p class="text-sm text-gray-500" id="ctxMeta">—</p>
+                        </div>
+                    </div>
+                    <div class="ml-auto flex items-center gap-3">
+                        <div class="text-center px-4 py-2 bg-gray-50 rounded-xl">
+                            <p class="text-xl font-bold text-gray-900" id="ctxTotal">0</p>
+                            <p class="text-xs text-gray-500">Questions</p>
+                        </div>
+                        <div class="text-center px-4 py-2 bg-brand/5 rounded-xl">
+                            <p class="text-xl font-bold text-brand" id="ctxPoints">0</p>
+                            <p class="text-xs text-gray-500">Total Points</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Legend -->
+            <div class="flex flex-wrap gap-3 mb-5">
+                <span class="q-type-badge q-type-mc"><i class="fas fa-list-ul mr-1"></i>Multiple Choice</span>
+                <span class="q-type-badge q-type-tf"><i class="fas fa-toggle-on mr-1"></i>True / False</span>
+                <span class="q-type-badge q-type-id"><i class="fas fa-pencil-alt mr-1"></i>Identification</span>
+                <span class="text-xs text-gray-400 self-center ml-auto hidden sm:block">
+                    <i class="fas fa-lock mr-1"></i>Answer keys are teacher-only and never exposed to students
+                </span>
+            </div>
+
+            <!-- Questions List -->
+            <div id="questionsContainer" class="space-y-4">
+                <div class="shimmer-card"></div>
+                <div class="shimmer-card"></div>
+                <div class="shimmer-card"></div>
+            </div>
+
+            <!-- Empty State -->
+            <div id="emptyState" class="hidden text-center py-20">
+                <div class="w-20 h-20 bg-brand/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <i class="fas fa-question-circle text-brand text-3xl"></i>
+                </div>
+                <h3 class="text-xl font-semibold text-gray-900 mb-2">No questions yet</h3>
+                <p class="text-gray-500 mb-6">Build your question bank for this quiz or assessment.</p>
+                <button id="btnAddFirst"
+                    class="inline-flex items-center space-x-2 bg-brand text-white px-6 py-3 rounded-xl font-medium hover:bg-brand-dark transition-colors">
+                    <i class="fas fa-plus mr-2"></i>Add First Question
+                </button>
+            </div>
+        </div>
+    </main>
+
+    <!-- ===== ADD / EDIT QUESTION MODAL ===== -->
+    <div id="questionModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-2xl w-full max-w-2xl max-h-[92vh] overflow-y-auto">
+            <div class="flex items-center justify-between p-6 border-b border-gray-100">
+                <h2 id="qModalTitle" class="text-xl font-bold text-gray-900">Add Question</h2>
+                <button id="btnCloseQModal" class="p-2 text-gray-500 hover:text-gray-700 rounded-lg hover:bg-gray-100">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <form id="questionForm" class="p-6 space-y-5">
+                <input type="hidden" id="qId">
+
+                <!-- Type Selector -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Question Type *</label>
+                    <div class="grid grid-cols-3 gap-3">
+                        <label class="cursor-pointer">
+                            <input type="radio" name="questionType" value="multiple_choice" class="sr-only" checked>
+                            <div class="type-option selected-type border-2 border-blue-300 bg-blue-50 text-blue-700 rounded-xl p-3 text-center text-sm font-medium">
+                                <i class="fas fa-list-ul block text-xl mb-1"></i>Multiple Choice
+                            </div>
+                        </label>
+                        <label class="cursor-pointer">
+                            <input type="radio" name="questionType" value="true_false" class="sr-only">
+                            <div class="type-option border-2 border-yellow-200 bg-yellow-50 text-yellow-700 rounded-xl p-3 text-center text-sm font-medium">
+                                <i class="fas fa-toggle-on block text-xl mb-1"></i>True / False
+                            </div>
+                        </label>
+                        <label class="cursor-pointer">
+                            <input type="radio" name="questionType" value="identification" class="sr-only">
+                            <div class="type-option border-2 border-purple-200 bg-purple-50 text-purple-700 rounded-xl p-3 text-center text-sm font-medium">
+                                <i class="fas fa-pencil-alt block text-xl mb-1"></i>Identification
+                            </div>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Question Text -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Question Text *</label>
+                    <textarea id="qText" rows="3" required
+                        class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-brand focus:border-transparent resize-none"
+                        placeholder="Type your question here…"></textarea>
+                </div>
+
+                <!-- Multiple Choice Options -->
+                <div id="optionsSection">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        Answer Choices *
+                        <span class="text-xs font-normal text-gray-500 ml-1">(Click the letter circle to mark the correct answer)</span>
+                    </label>
+                    <div id="optionsList" class="space-y-2"></div>
+                    <button type="button" id="btnAddOption"
+                        class="mt-2 text-sm text-brand hover:text-brand-dark font-medium flex items-center gap-1">
+                        <i class="fas fa-plus-circle"></i> Add Option
+                    </button>
+                </div>
+
+                <!-- True / False -->
+                <div id="tfSection" class="hidden">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Correct Answer *</label>
+                    <div class="flex gap-3">
+                        <label class="flex-1 cursor-pointer">
+                            <input type="radio" name="tfAnswer" value="True" class="sr-only">
+                            <div class="tf-opt border-2 border-gray-200 rounded-xl p-4 text-center font-semibold text-gray-700 transition-all hover:border-green-400 hover:bg-green-50">
+                                <i class="fas fa-check text-green-500 block text-xl mb-1"></i>True
+                            </div>
+                        </label>
+                        <label class="flex-1 cursor-pointer">
+                            <input type="radio" name="tfAnswer" value="False" class="sr-only">
+                            <div class="tf-opt border-2 border-gray-200 rounded-xl p-4 text-center font-semibold text-gray-700 transition-all hover:border-red-400 hover:bg-red-50">
+                                <i class="fas fa-times text-red-500 block text-xl mb-1"></i>False
+                            </div>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Identification -->
+                <div id="idSection" class="hidden">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Correct Answer *</label>
+                    <input type="text" id="idAnswer"
+                        class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-brand focus:border-transparent"
+                        placeholder="Exact expected answer (case-insensitive)">
+                    <p class="text-xs text-gray-500 mt-1">Student answers are compared case-insensitively with spaces stripped.</p>
+                </div>
+
+                <!-- Points & Order -->
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Points *</label>
+                        <input type="number" id="qPoints" value="1" min="1" max="100" required
+                            class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-brand focus:border-transparent">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Order Index *</label>
+                        <input type="number" id="qOrder" value="1" min="1" required
+                            class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-brand focus:border-transparent">
+                    </div>
+                </div>
+
+                <!-- Explanation -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">
+                        Explanation
+                        <span class="text-xs font-normal text-gray-400 ml-1">(Teacher-only — never shown to students)</span>
+                    </label>
+                    <textarea id="qExplanation" rows="2"
+                        class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-brand focus:border-transparent resize-none"
+                        placeholder="Why is this the correct answer?"></textarea>
+                </div>
+
+                <div class="flex gap-3 pt-2">
+                    <button type="submit" id="qSubmitBtn"
+                        class="flex-1 bg-brand text-white py-3 rounded-xl font-semibold hover:bg-brand-dark transition-colors">
+                        Save Question
+                    </button>
+                    <button type="button" id="btnCancelQ"
+                        class="px-6 py-3 border border-gray-300 text-gray-700 rounded-xl font-medium hover:bg-gray-50 transition-colors">
+                        Cancel
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ===== DELETE CONFIRM ===== -->
+    <div id="deleteModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-2xl w-full max-w-sm p-6 text-center">
+            <div class="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <i class="fas fa-trash text-red-500 text-2xl"></i>
+            </div>
+            <h3 class="text-lg font-bold text-gray-900 mb-2">Delete Question?</h3>
+            <p class="text-gray-500 text-sm mb-6">This permanently removes the question and all associated student answer records.</p>
+            <div class="flex gap-3">
+                <button id="btnConfirmDelete"
+                    class="flex-1 bg-red-500 text-white py-3 rounded-xl font-semibold hover:bg-red-600 transition-colors">
+                    Delete
+                </button>
+                <button id="btnCancelDelete"
+                    class="flex-1 border border-gray-300 text-gray-700 py-3 rounded-xl font-medium hover:bg-gray-50 transition-colors">
+                    Cancel
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast -->
+    <div id="toast" class="hidden fixed bottom-4 right-4 px-6 py-3 rounded-xl shadow-lg z-50 flex items-center space-x-2"></div>
+
+    <script src="../shared/js/runtime-config.js"></script>
+    <script src="../shared/js/config.js"></script>
+    <script src="../shared/js/supabase.js"></script>
+    <script src="../shared/js/auth.js"></script>
+    <script src="../shared/js/pathManager.js"></script>
+    <script src="assets/js/sidebar.js"></script>
+    <script>
+    /*
+      manage-questions.html — Phase 3 Teacher Question CMS
+      Owner: quiz_id OR assessment_id (from URL params)
+      Access: teacher/admin only (role-checked on load)
+      Security: Direct RLS-enforced table access; answer keys visible to teachers.
+                Student-facing RPCs (get_quiz_questions_for_student, etc.) never return correct_answer.
+    */
+
+    const params     = new URLSearchParams(location.search);
+    const QUIZ_ID    = params.get('quiz_id')      || null;
+    const ASMT_ID    = params.get('assessment_id') || null;
+    const OWNER_TYPE = QUIZ_ID ? 'quiz' : (ASMT_ID ? 'assessment' : null);
+    const OWNER_ID   = QUIZ_ID || ASMT_ID;
+
+    let currentUser    = null;
+    let questions      = [];
+    let editingQId     = null;
+    let deleteTargetId = null;
+    let mcOptions      = [];   // [{id, text}]
+    let mcCorrect      = 'A';
+
+    // ─── Boot ──────────────────────────────────────────────────────────
+    document.addEventListener('DOMContentLoaded', async () => {
+        if (!OWNER_ID || !OWNER_TYPE) {
+            showToast('Missing quiz_id or assessment_id in URL', 'error');
+            setTimeout(() => location.href = 'manage-quizzes.html', 2000);
+            return;
+        }
+        try {
+            currentUser = JSON.parse(localStorage.getItem('user'));
+            if (!currentUser || !['teacher','admin'].includes(currentUser.role)) {
+                location.href = '../public/login.html'; return;
+            }
+        } catch(e) { location.href = '../public/login.html'; return; }
+
+        setupTypeSelector();
+        setupOptionControls();
+        setupModalEvents();
+        setupTFSelector();
+        await loadContextMeta();
+        await loadQuestions();
+    });
+
+    // ─── Context Meta ──────────────────────────────────────────────────
+    async function loadContextMeta() {
+        const sb = getSupabase();
+        if (QUIZ_ID) {
+            const { data } = await sb.from('quizzes')
+                .select('title, is_published')
+                .eq('id', QUIZ_ID).maybeSingle();
+            if (data) {
+                document.getElementById('pageTitle').textContent    = data.title;
+                document.getElementById('pageSubtitle').textContent = 'Regular Quiz  \u2022  ' + (data.is_published ? 'Published' : 'Draft');
+                document.getElementById('ctxIcon').className        = 'w-12 h-12 rounded-xl flex items-center justify-center text-xl bg-blue-100';
+                document.getElementById('ctxIcon').innerHTML        = '<i class="fas fa-clipboard-list text-blue-600"></i>';
+                document.getElementById('ctxTitle').textContent     = data.title;
+                document.getElementById('ctxMeta').textContent      = 'Regular Quiz  \u2022  ' + (data.is_published ? 'Published' : 'Draft');
+                document.getElementById('contextBanner').classList.remove('hidden');
+            }
+        } else {
+            const { data } = await sb.from('module_assessments')
+                .select('assessment_type, is_published, passing_threshold')
+                .eq('id', ASMT_ID).maybeSingle();
+            if (data) {
+                const label = data.assessment_type === 'pre_test' ? 'Pre-Test' : 'Post-Test';
+                const color = data.assessment_type === 'pre_test' ? 'yellow' : 'green';
+                document.getElementById('pageTitle').textContent    = label + ' Questions';
+                document.getElementById('pageSubtitle').textContent = label + '  \u2022  ' + (data.is_published ? 'Published' : 'Draft') + '  \u2022  Passing: ' + data.passing_threshold + '%';
+                document.getElementById('ctxIcon').className        = 'w-12 h-12 rounded-xl flex items-center justify-center text-xl bg-' + color + '-100';
+                document.getElementById('ctxIcon').innerHTML        = '<i class="fas fa-' + (data.assessment_type === 'pre_test' ? 'play-circle' : 'flag-checkered') + ' text-' + color + '-600"></i>';
+                document.getElementById('ctxTitle').textContent     = label;
+                document.getElementById('ctxMeta').textContent      = (data.is_published ? 'Published' : 'Draft') + '  \u2022  Passing: ' + data.passing_threshold + '%';
+                document.getElementById('contextBanner').classList.remove('hidden');
+            }
+        }
+    }
+
+    // ─── Load Questions ────────────────────────────────────────────────
+    async function loadQuestions() {
+        document.getElementById('emptyState').classList.add('hidden');
+        document.getElementById('questionsContainer').innerHTML =
+            '<div class="shimmer-card"></div><div class="shimmer-card"></div><div class="shimmer-card"></div>';
+
+        const col = QUIZ_ID ? 'quiz_id' : 'assessment_id';
+        const { data, error } = await getSupabase()
+            .from('quiz_questions')
+            .select('id, order_index, question_text, question_type, options, correct_answer, points, explanation')
+            .eq(col, OWNER_ID)
+            .order('order_index', { ascending: true });
+
+        if (error) {
+            showToast('Failed to load questions: ' + error.message, 'error');
+            document.getElementById('questionsContainer').innerHTML = '';
+            return;
+        }
+        questions = data || [];
+        renderQuestions();
+    }
+
+    // ─── Render ────────────────────────────────────────────────────────
+    function renderQuestions() {
+        const container = document.getElementById('questionsContainer');
+        document.getElementById('ctxTotal').textContent  = questions.length;
+        document.getElementById('ctxPoints').textContent = questions.reduce((s,q) => s + (q.points||1), 0);
+
+        if (questions.length === 0) {
+            container.innerHTML = '';
+            document.getElementById('emptyState').classList.remove('hidden');
+            return;
+        }
+        document.getElementById('emptyState').classList.add('hidden');
+
+        container.innerHTML = questions.map(q => {
+            const typeClass = q.question_type === 'multiple_choice' ? 'q-type-mc'
+                            : q.question_type === 'true_false' ? 'q-type-tf' : 'q-type-id';
+            const typeLabel = q.question_type === 'multiple_choice' ? 'Multiple Choice'
+                            : q.question_type === 'true_false' ? 'True / False' : 'Identification';
+
+            let answerPreview = '';
+            if (q.question_type === 'multiple_choice' && Array.isArray(q.options)) {
+                answerPreview = '<div class="flex flex-wrap gap-1 mt-2">' +
+                    q.options.map(o => {
+                        const ok = o.id === q.correct_answer;
+                        return '<span class="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full ' +
+                            (ok ? 'bg-green-100 text-green-700 font-semibold' : 'bg-gray-100 text-gray-600') + '">' +
+                            (ok ? '<i class="fas fa-check text-green-600"></i> ' : '') +
+                            esc(o.id) + '. ' + esc(o.text) + '</span>';
+                    }).join(' ') + '</div>';
+            } else if (q.question_type === 'true_false') {
+                const isTrue = q.correct_answer === 'True';
+                answerPreview = '<div class="mt-2 text-xs flex gap-2">' +
+                    '<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full ' + (isTrue  ? 'bg-green-100 text-green-700 font-semibold' : 'bg-gray-100 text-gray-400') + '">' +
+                    (isTrue ? '<i class="fas fa-check"></i> ' : '') + 'True</span>' +
+                    '<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full ' + (!isTrue ? 'bg-red-100 text-red-700 font-semibold'   : 'bg-gray-100 text-gray-400') + '">' +
+                    (!isTrue ? '<i class="fas fa-check"></i> ' : '') + 'False</span></div>';
+            } else {
+                answerPreview = '<div class="mt-2 text-xs text-purple-700 bg-purple-50 px-3 py-1 rounded-lg inline-block">' +
+                    '<i class="fas fa-lock mr-1"></i>Answer: <em>' + esc(q.correct_answer) + '</em></div>';
+            }
+
+            return '<div class="question-card bg-white rounded-2xl border border-gray-100 shadow-sm p-5" data-id="' + q.id + '">' +
+                '<div class="flex items-start gap-4">' +
+                '<div class="w-9 h-9 bg-brand/10 rounded-lg flex items-center justify-center text-sm font-bold text-brand flex-shrink-0 mt-0.5">' + q.order_index + '</div>' +
+                '<div class="flex-1 min-w-0">' +
+                '<div class="flex flex-wrap items-center gap-2 mb-2">' +
+                '<span class="q-type-badge ' + typeClass + '">' + typeLabel + '</span>' +
+                '<span class="text-xs text-gray-500 bg-gray-100 px-2 py-0.5 rounded-full"><i class="fas fa-star text-yellow-400 mr-0.5"></i>' + q.points + ' pt' + (q.points !== 1 ? 's' : '') + '</span>' +
+                '</div>' +
+                '<p class="text-gray-900 font-medium leading-relaxed">' + esc(q.question_text) + '</p>' +
+                answerPreview +
+                (q.explanation ? '<p class="text-xs text-gray-400 mt-2 italic"><i class="fas fa-info-circle mr-1"></i>' + esc(q.explanation) + '</p>' : '') +
+                '</div>' +
+                '<div class="flex flex-col gap-1 flex-shrink-0">' +
+                '<button onclick="openEditQuestion(\'' + q.id + '\')" class="p-2 text-gray-400 hover:text-brand hover:bg-brand/5 rounded-lg transition-colors" title="Edit"><i class="fas fa-edit"></i></button>' +
+                '<button onclick="openDeleteConfirm(\'' + q.id + '\')" class="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors" title="Delete"><i class="fas fa-trash"></i></button>' +
+                '</div></div></div>';
+        }).join('');
+    }
+
+    // ─── Modal & Events ────────────────────────────────────────────────
+    function setupModalEvents() {
+        document.getElementById('btnAddQuestion').onclick   = openAddQuestion;
+        document.getElementById('btnAddFirst').onclick      = openAddQuestion;
+        document.getElementById('btnCloseQModal').onclick   = closeQModal;
+        document.getElementById('btnCancelQ').onclick       = closeQModal;
+        document.getElementById('questionForm').onsubmit    = handleSaveQuestion;
+        document.getElementById('btnConfirmDelete').onclick = confirmDelete;
+        document.getElementById('btnCancelDelete').onclick  = () =>
+            document.getElementById('deleteModal').classList.add('hidden');
+    }
+
+    function setupTypeSelector() {
+        document.querySelectorAll('input[name="questionType"]').forEach(r => {
+            r.addEventListener('change', () => {
+                document.querySelectorAll('.type-option').forEach(d => {
+                    d.classList.remove('selected-type');
+                    d.style.opacity = '0.7';
+                });
+                const sel = r.parentElement.querySelector('.type-option');
+                sel.classList.add('selected-type');
+                sel.style.opacity = '1';
+                applyTypeUI(r.value);
+            });
+        });
+    }
+
+    function applyTypeUI(type) {
+        document.getElementById('optionsSection').classList.toggle('hidden', type !== 'multiple_choice');
+        document.getElementById('tfSection').classList.toggle('hidden', type !== 'true_false');
+        document.getElementById('idSection').classList.toggle('hidden', type !== 'identification');
+        document.getElementById('idAnswer').required = (type === 'identification');
+    }
+
+    function setupTFSelector() {
+        document.querySelectorAll('input[name="tfAnswer"]').forEach(r => {
+            r.addEventListener('change', () => {
+                document.querySelectorAll('.tf-opt').forEach(d => {
+                    d.classList.remove('border-green-400','bg-green-50','border-red-400','bg-red-50','font-bold');
+                    d.classList.add('border-gray-200');
+                });
+                const sel = r.parentElement.querySelector('.tf-opt');
+                sel.classList.remove('border-gray-200');
+                if (r.value === 'True') sel.classList.add('border-green-400','bg-green-50','font-bold');
+                else sel.classList.add('border-red-400','bg-red-50','font-bold');
+            });
+        });
+    }
+
+    // ─── MC Options ────────────────────────────────────────────────────
+    function setupOptionControls() {
+        document.getElementById('btnAddOption').onclick = () => {
+            if (mcOptions.length >= 6) { showToast('Maximum 6 options', 'error'); return; }
+            const letter = String.fromCharCode(65 + mcOptions.length);
+            mcOptions.push({ id: letter, text: '' });
+            renderMcOptions();
+        };
+    }
+
+    function resetMcOptions() {
+        mcOptions = [{id:'A',text:''},{id:'B',text:''},{id:'C',text:''},{id:'D',text:''}];
+        mcCorrect = 'A';
+        renderMcOptions();
+    }
+
+    function renderMcOptions() {
+        document.getElementById('optionsList').innerHTML = mcOptions.map((opt) => {
+            const ok = opt.id === mcCorrect;
+            return '<div class="option-row">' +
+                '<button type="button" class="option-letter ' + (ok ? 'correct' : '') + '" onclick="setCorrectOption(\'' + opt.id + '\')" title="Set as correct answer">' + opt.id + '</button>' +
+                '<input type="text" value="' + escA(opt.text) + '" placeholder="Option ' + opt.id + '…" oninput="updateOptionText(\'' + opt.id + '\', this.value)" ' +
+                'class="flex-1 px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-brand focus:border-transparent" required>' +
+                (mcOptions.length > 2 ? '<button type="button" onclick="removeOption(\'' + opt.id + '\')" class="p-1.5 text-gray-400 hover:text-red-500 rounded transition-colors"><i class="fas fa-times text-xs"></i></button>' : '') +
+                '</div>';
+        }).join('');
+    }
+
+    function setCorrectOption(id) { mcCorrect = id; renderMcOptions(); }
+    function updateOptionText(id, text) { const o = mcOptions.find(x => x.id === id); if (o) o.text = text; }
+    function removeOption(id) {
+        mcOptions = mcOptions.filter(o => o.id !== id);
+        if (mcCorrect === id) mcCorrect = mcOptions[0]?.id || 'A';
+        renderMcOptions();
+    }
+
+    // ─── Open Add / Edit ───────────────────────────────────────────────
+    function openAddQuestion() {
+        editingQId = null;
+        document.getElementById('qModalTitle').textContent = 'Add Question';
+        document.getElementById('questionForm').reset();
+        document.getElementById('qId').value = '';
+        document.querySelectorAll('input[name="questionType"]')[0].checked = true;
+        document.querySelectorAll('.type-option').forEach((d,i) => { d.classList.toggle('selected-type', i===0); d.style.opacity = i===0 ? '1':'0.7'; });
+        applyTypeUI('multiple_choice');
+        resetMcOptions();
+        const maxOrder = questions.reduce((m,q) => Math.max(m, q.order_index), 0);
+        document.getElementById('qOrder').value  = maxOrder + 1;
+        document.getElementById('qPoints').value = 1;
+        document.getElementById('questionModal').classList.remove('hidden');
+    }
+
+    function openEditQuestion(id) {
+        const q = questions.find(x => x.id === id);
+        if (!q) return;
+        editingQId = id;
+        document.getElementById('qModalTitle').textContent   = 'Edit Question';
+        document.getElementById('qId').value                 = q.id;
+        document.getElementById('qText').value               = q.question_text;
+        document.getElementById('qPoints').value             = q.points;
+        document.getElementById('qOrder').value              = q.order_index;
+        document.getElementById('qExplanation').value        = q.explanation || '';
+
+        const r = document.querySelector('input[name="questionType"][value="' + q.question_type + '"]');
+        if (r) {
+            r.checked = true;
+            document.querySelectorAll('.type-option').forEach(d => { d.classList.remove('selected-type'); d.style.opacity='0.7'; });
+            const sel = r.parentElement.querySelector('.type-option');
+            sel.classList.add('selected-type'); sel.style.opacity='1';
+        }
+        applyTypeUI(q.question_type);
+
+        if (q.question_type === 'multiple_choice') {
+            mcOptions = Array.isArray(q.options) ? q.options.map(o => ({...o})) : [];
+            mcCorrect = q.correct_answer || (mcOptions[0]?.id || 'A');
+            renderMcOptions();
+        } else if (q.question_type === 'true_false') {
+            const tr = document.querySelector('input[name="tfAnswer"][value="' + q.correct_answer + '"]');
+            if (tr) { tr.checked = true; tr.dispatchEvent(new Event('change')); }
+        } else {
+            document.getElementById('idAnswer').value = q.correct_answer || '';
+        }
+        document.getElementById('questionModal').classList.remove('hidden');
+    }
+
+    function closeQModal() {
+        document.getElementById('questionModal').classList.add('hidden');
+        editingQId = null;
+    }
+
+    // ─── Save Question ─────────────────────────────────────────────────
+    async function handleSaveQuestion(e) {
+        e.preventDefault();
+        const btn = document.getElementById('qSubmitBtn');
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Saving…';
+        try {
+            const qType   = document.querySelector('input[name="questionType"]:checked').value;
+            const qText   = document.getElementById('qText').value.trim();
+            const qPoints = parseInt(document.getElementById('qPoints').value);
+            const qOrder  = parseInt(document.getElementById('qOrder').value);
+            const qExpl   = document.getElementById('qExplanation').value.trim() || null;
+
+            if (!qText)           throw new Error('Question text is required');
+            if (!qOrder||qOrder<1) throw new Error('Order index must be >= 1');
+            if (!qPoints||qPoints<1) throw new Error('Points must be >= 1');
+
+            let correctAnswer = '', options = null;
+
+            if (qType === 'multiple_choice') {
+                if (mcOptions.length < 2) throw new Error('Minimum 2 options required');
+                if (mcOptions.some(o => !o.text.trim())) throw new Error('All option texts must be filled');
+                if (!mcCorrect) throw new Error('Please mark the correct answer');
+                options       = mcOptions.map(o => ({ id: o.id, text: o.text.trim() }));
+                correctAnswer = mcCorrect;
+            } else if (qType === 'true_false') {
+                const tfR = document.querySelector('input[name="tfAnswer"]:checked');
+                if (!tfR) throw new Error('Please select True or False');
+                correctAnswer = tfR.value;
+                options       = [{id:'True',text:'True'},{id:'False',text:'False'}];
+            } else {
+                correctAnswer = document.getElementById('idAnswer').value.trim();
+                if (!correctAnswer) throw new Error('Please enter the correct answer');
+                options = null;
+            }
+
+            const payload = {
+                question_text:  qText,
+                question_type:  qType,
+                options:        options,
+                correct_answer: correctAnswer,
+                points:         qPoints,
+                order_index:    qOrder,
+                explanation:    qExpl,
+                updated_at:     new Date().toISOString(),
+            };
+
+            const sb = getSupabase();
+            if (editingQId) {
+                const { error } = await sb.from('quiz_questions').update(payload).eq('id', editingQId);
+                if (error) throw error;
+                showToast('Question updated!', 'success');
+            } else {
+                if (QUIZ_ID) payload.quiz_id = QUIZ_ID;
+                else payload.assessment_id = ASMT_ID;
+                payload.created_at = new Date().toISOString();
+                const { error } = await sb.from('quiz_questions').insert(payload);
+                if (error) throw error;
+                showToast('Question added!', 'success');
+            }
+            closeQModal();
+            await loadQuestions();
+        } catch(err) {
+            console.error(err);
+            showToast('Error: ' + err.message, 'error');
+        } finally {
+            btn.disabled = false;
+            btn.textContent = 'Save Question';
+        }
+    }
+
+    // ─── Delete ────────────────────────────────────────────────────────
+    function openDeleteConfirm(id) {
+        deleteTargetId = id;
+        document.getElementById('deleteModal').classList.remove('hidden');
+    }
+
+    async function confirmDelete() {
+        if (!deleteTargetId) return;
+        const btn = document.getElementById('btnConfirmDelete');
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Deleting…';
+        try {
+            const { error } = await getSupabase().from('quiz_questions').delete().eq('id', deleteTargetId);
+            if (error) throw error;
+            showToast('Question deleted', 'success');
+            document.getElementById('deleteModal').classList.add('hidden');
+            deleteTargetId = null;
+            await loadQuestions();
+        } catch(err) {
+            showToast('Failed to delete: ' + err.message, 'error');
+        } finally {
+            btn.disabled = false;
+            btn.textContent = 'Delete';
+        }
+    }
+
+    // ─── Helpers ───────────────────────────────────────────────────────
+    function esc(s)  { if (!s) return ''; return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+    function escA(s) { return esc(s); }
+
+    function showToast(msg, type) {
+        const t = document.getElementById('toast');
+        t.className = 'fixed bottom-4 right-4 px-6 py-3 rounded-xl shadow-lg z-50 flex items-center space-x-2 ' +
+            (type==='success'?'bg-green-500 text-white':type==='error'?'bg-red-500 text-white':'bg-gray-800 text-white');
+        t.innerHTML = '<i class="fas fa-' + (type==='success'?'check-circle':type==='error'?'exclamation-circle':'info-circle') + '"></i><span>' + msg + '</span>';
+        t.classList.remove('hidden');
+        setTimeout(() => t.classList.add('hidden'), 3500);
+    }
+    </script>
+</body>
+</html>

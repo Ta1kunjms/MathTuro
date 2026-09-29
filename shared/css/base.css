@@ -5,6 +5,29 @@
 */
 
 /* ============================================
+   ACCESSIBILITY: SELF-HOSTED DYSLEXIA-FRIENDLY FONT
+   Source: OpenDyslexic (SIL Open Font License 1.1), self-hosted under
+   shared/fonts/opendyslexic/ — no third-party runtime CDN.
+   ============================================ */
+@font-face {
+  font-family: 'OpenDyslexic';
+  src: url('../fonts/opendyslexic/opendyslexic-latin-400-normal.woff2') format('woff2'),
+       url('../fonts/opendyslexic/opendyslexic-latin-400-normal.woff') format('woff');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'OpenDyslexic';
+  src: url('../fonts/opendyslexic/opendyslexic-latin-700-normal.woff2') format('woff2'),
+       url('../fonts/opendyslexic/opendyslexic-latin-700-normal.woff') format('woff');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* ============================================
    CSS VARIABLES
    ============================================ */
 :root {
@@ -14,6 +37,9 @@
   --brand: #005801;
   --brand-dark: #004601;
   --brand-light: #006B01;
+
+  /* Font family: default vs. dyslexia-friendly, toggled via html[data-font="dyslexic"] */
+  --font-family-base: 'Inter', system-ui, sans-serif;
   
   /* Accent Colors */
   --accent-purple: #7C0058;
@@ -65,11 +91,16 @@
   --transition-slow: 500ms ease;
 }
 
+/* Dyslexia-friendly font override — set on <html> by the font-toggle control */
+html[data-font="dyslexic"] {
+  --font-family-base: 'OpenDyslexic', 'Inter', system-ui, sans-serif;
+}
+
 /* ============================================
    BASE STYLES
    ============================================ */
 body {
-  font-family: 'Inter', system-ui, sans-serif;
+  font-family: var(--font-family-base);
   background: var(--bg-light);
   color: var(--text-primary);
   line-height: 1.5;

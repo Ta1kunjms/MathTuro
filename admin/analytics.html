@@ -116,45 +116,72 @@
                 </div>
             </div>
 
+            <div class="bg-white rounded-2xl border border-gray-200 p-6 mb-8">
+                <h2 class="text-lg font-bold text-gray-800 mb-4">Filter Activity Metrics</h2>
+                <div class="flex flex-col md:flex-row gap-4 md:items-end">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">From</label>
+                        <input type="date" id="analyticsDateFrom" class="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-maroon/20 focus:border-maroon">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">To</label>
+                        <input type="date" id="analyticsDateTo" class="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-maroon/20 focus:border-maroon">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Role</label>
+                        <select id="analyticsRoleFilter" class="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-maroon/20 focus:border-maroon">
+                            <option value="all">All Roles</option>
+                            <option value="student">Student</option>
+                            <option value="teacher">Teacher</option>
+                            <option value="admin">Admin</option>
+                        </select>
+                    </div>
+                    <div class="flex gap-2">
+                        <button type="button" onclick="applyAnalyticsFilters()" class="px-4 py-2.5 rounded-xl bg-maroon text-white text-sm font-semibold hover:opacity-90">Apply</button>
+                        <button type="button" onclick="resetAnalyticsFilters()" class="px-4 py-2.5 rounded-xl border border-gray-200 text-gray-700 text-sm font-semibold hover:bg-gray-50">Reset</button>
+                    </div>
+                </div>
+            </div>
+
             <div class="bg-white rounded-2xl border border-gray-200 p-8 mb-8">
                 <h2 class="text-2xl font-bold text-gray-800 mb-6">User Activity Overview</h2>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
-                        <h3 class="text-lg font-semibold text-gray-800 mb-4">Daily Active Users</h3>
+                        <h3 class="text-lg font-semibold text-gray-800 mb-4">Daily Number of Active Users</h3>
                         <div id="dailyActivityChart" class="h-48 bg-gray-50 rounded-xl p-4 flex items-end justify-between gap-2"></div>
                         <p id="dailyActivitySummary" class="text-sm text-gray-500 mt-3">No activity data yet.</p>
                     </div>
 
                     <div>
-                        <h3 class="text-lg font-semibold text-gray-800 mb-4">Activity Completion Status</h3>
+                        <h3 class="text-lg font-semibold text-gray-800 mb-4">Quiz Completion Status</h3>
                         <div class="h-48 bg-gray-50 rounded-xl p-4 flex flex-col justify-center gap-4">
                             <div>
                                 <div class="flex items-center justify-between text-sm mb-1">
-                                    <span class="text-gray-700 font-medium">Approved</span>
-                                    <span id="approvedCompletionValue" class="text-gray-500">0 (0%)</span>
+                                    <span class="text-gray-700 font-medium">Passed</span>
+                                    <span id="passedCompletionValue" class="text-gray-500">0 (0%)</span>
                                 </div>
                                 <div class="h-3 bg-gray-200 rounded-full overflow-hidden">
-                                    <div id="approvedCompletionBar" class="h-full bg-green-500 rounded-full" style="width: 0%"></div>
+                                    <div id="passedCompletionBar" class="h-full bg-green-500 rounded-full" style="width: 0%"></div>
                                 </div>
                             </div>
 
                             <div>
                                 <div class="flex items-center justify-between text-sm mb-1">
-                                    <span class="text-gray-700 font-medium">Pending</span>
-                                    <span id="pendingCompletionValue" class="text-gray-500">0 (0%)</span>
+                                    <span class="text-gray-700 font-medium">Incomplete</span>
+                                    <span id="incompleteCompletionValue" class="text-gray-500">0 (0%)</span>
                                 </div>
                                 <div class="h-3 bg-gray-200 rounded-full overflow-hidden">
-                                    <div id="pendingCompletionBar" class="h-full bg-yellow-500 rounded-full" style="width: 0%"></div>
+                                    <div id="incompleteCompletionBar" class="h-full bg-yellow-500 rounded-full" style="width: 0%"></div>
                                 </div>
                             </div>
 
                             <div>
                                 <div class="flex items-center justify-between text-sm mb-1">
-                                    <span class="text-gray-700 font-medium">Rejected</span>
-                                    <span id="rejectedCompletionValue" class="text-gray-500">0 (0%)</span>
+                                    <span class="text-gray-700 font-medium">Failed</span>
+                                    <span id="failedCompletionValue" class="text-gray-500">0 (0%)</span>
                                 </div>
                                 <div class="h-3 bg-gray-200 rounded-full overflow-hidden">
-                                    <div id="rejectedCompletionBar" class="h-full bg-red-500 rounded-full" style="width: 0%"></div>
+                                    <div id="failedCompletionBar" class="h-full bg-red-500 rounded-full" style="width: 0%"></div>
                                 </div>
                             </div>
                         </div>
@@ -225,21 +252,29 @@
             return (name || 'Admin').split(' ').filter(Boolean).map(part => part[0]).join('').toUpperCase().substring(0, 2);
         }
 
+        // Raw datasets kept in memory so date-range/role filters can re-render
+        // the two activity widgets without re-querying Supabase.
+        let analyticsUsersById = new Map();
+        let analyticsSubmissions = [];
+        let analyticsActivityLog = [];
+
         async function loadAnalytics() {
             try {
                 const supabase = getSupabase();
 
-                const [usersResult, modulesResult, quizzesResult, submissionsResult] = await Promise.all([
+                const [usersResult, modulesResult, quizzesResult, submissionsResult, activityLogResult] = await Promise.all([
                     supabase.from('users').select('id, full_name, email, grade_level, grade_level_text, role'),
                     supabase.from('modules').select('id, title, name, grade_level, grade_level_text, status'),
                     supabase.from('quizzes').select('id, status, is_published'),
-                    supabase.from('quiz_submissions').select('module_id, user_id, student_score, total_items, status, submitted_at, created_at')
+                    supabase.from('quiz_submissions').select('module_id, user_id, student_score, total_items, status, assessment_result, submitted_at, created_at'),
+                    supabase.from('activity_log').select('user_id, action, created_at')
                 ]);
 
                 const usersData = usersResult.error ? [] : (usersResult.data || []);
                 if (!usersResult.error && usersResult.data) {
                     document.getElementById('totalUsers').textContent = usersData.length.toLocaleString();
                 }
+                analyticsUsersById = new Map(usersData.map(user => [user.id, user]));
 
                 const modulesData = modulesResult.error ? [] : (modulesResult.data || []);
                 const activeModules = modulesData.filter(module => {
@@ -262,11 +297,11 @@
                 });
                 document.getElementById('totalQuizzes').textContent = activeQuizzes.length;
 
-                const submissionsData = submissionsResult.error ? [] : (submissionsResult.data || []);
+                analyticsSubmissions = submissionsResult.error ? [] : (submissionsResult.data || []);
+                analyticsActivityLog = activityLogResult.error ? [] : (activityLogResult.data || []);
 
-                renderDailyActivityChart(submissionsData);
-                renderCompletionStatus(submissionsData);
-                loadStudentPerformance(usersData, submissionsData);
+                applyAnalyticsFilters();
+                loadStudentPerformance(usersData, analyticsSubmissions);
 
             } catch (error) {
                 console.error('Error loading analytics:', error);
@@ -274,43 +309,117 @@
             }
         }
 
-        function renderDailyActivityChart(submissionsData) {
+        // Resolves the inclusive list of calendar days to render, driven by the
+        // From/To filter inputs. Falls back to the trailing 7 days when both are
+        // empty. Capped so an intentionally wide range can't break the bar chart.
+        function getAnalyticsDateRange() {
+            const MAX_DAYS = 31;
+            const fallbackDays = 7;
+
+            const fromValue = document.getElementById('analyticsDateFrom')?.value;
+            const toValue = document.getElementById('analyticsDateTo')?.value;
+
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+
+            let start = fromValue ? new Date(fromValue + 'T00:00:00') : null;
+            let end = toValue ? new Date(toValue + 'T00:00:00') : null;
+
+            if (!start && !end) {
+                end = today;
+                start = new Date(today);
+                start.setDate(start.getDate() - (fallbackDays - 1));
+            } else if (start && !end) {
+                end = today;
+            } else if (!start && end) {
+                start = new Date(end);
+                start.setDate(start.getDate() - (fallbackDays - 1));
+            }
+
+            if (start > end) {
+                const temp = start;
+                start = end;
+                end = temp;
+            }
+
+            const days = [];
+            const cursor = new Date(start);
+            while (cursor <= end && days.length < MAX_DAYS) {
+                days.push(new Date(cursor));
+                cursor.setDate(cursor.getDate() + 1);
+            }
+            return days;
+        }
+
+        function getAnalyticsRoleFilter() {
+            return document.getElementById('analyticsRoleFilter')?.value || 'all';
+        }
+
+        function userMatchesRoleFilter(userId, roleFilter) {
+            if (roleFilter === 'all') return true;
+            const user = analyticsUsersById.get(userId);
+            return !!user && user.role === roleFilter;
+        }
+
+        // Re-renders both activity widgets from the in-memory datasets using the
+        // current date-range and role filter selections. Does not re-query Supabase.
+        function applyAnalyticsFilters() {
+            const days = getAnalyticsDateRange();
+            const roleFilter = getAnalyticsRoleFilter();
+
+            const filteredActivity = analyticsActivityLog.filter(entry =>
+                entry.user_id && userMatchesRoleFilter(entry.user_id, roleFilter)
+            );
+            const filteredSubmissions = analyticsSubmissions.filter(submission =>
+                submission.user_id && userMatchesRoleFilter(submission.user_id, roleFilter)
+            );
+
+            renderDailyActivityChart(filteredActivity, days);
+            renderCompletionStatus(filteredSubmissions, days);
+        }
+
+        function resetAnalyticsFilters() {
+            document.getElementById('analyticsDateFrom').value = '';
+            document.getElementById('analyticsDateTo').value = '';
+            document.getElementById('analyticsRoleFilter').value = 'all';
+            applyAnalyticsFilters();
+        }
+
+        // Counts distinct active users per day from activity_log (any logged
+        // action counts as activity), not raw quiz submission volume.
+        function renderDailyActivityChart(activityData, days) {
             const chart = document.getElementById('dailyActivityChart');
             const summary = document.getElementById('dailyActivitySummary');
             if (!chart || !summary) return;
 
-            const today = new Date();
-            const days = [];
-            for (let offset = 6; offset >= 0; offset -= 1) {
-                const date = new Date(today);
-                date.setHours(0, 0, 0, 0);
-                date.setDate(date.getDate() - offset);
-                days.push(date);
-            }
+            const dayUserSets = new Map(days.map(date => [date.toISOString().slice(0, 10), new Set()]));
 
-            const dayMap = new Map(days.map(date => [date.toISOString().slice(0, 10), 0]));
+            for (const entry of activityData) {
+                if (!entry.created_at || !entry.user_id) continue;
 
-            for (const submission of submissionsData) {
-                const timestamp = submission.submitted_at || submission.created_at;
-                if (!timestamp) continue;
-
-                const date = new Date(timestamp);
+                const date = new Date(entry.created_at);
                 if (Number.isNaN(date.getTime())) continue;
 
                 date.setHours(0, 0, 0, 0);
                 const key = date.toISOString().slice(0, 10);
-                if (dayMap.has(key)) {
-                    dayMap.set(key, dayMap.get(key) + 1);
+                if (dayUserSets.has(key)) {
+                    dayUserSets.get(key).add(entry.user_id);
                 }
             }
 
-            const points = days.map(date => ({
-                label: date.toLocaleDateString(undefined, { weekday: 'short' }),
-                value: dayMap.get(date.toISOString().slice(0, 10)) || 0
-            }));
+            const points = days.map(date => {
+                const key = date.toISOString().slice(0, 10);
+                return {
+                    label: date.toLocaleDateString(undefined, { weekday: 'short' }),
+                    value: dayUserSets.get(key)?.size || 0
+                };
+            });
 
             const maxValue = Math.max(...points.map(point => point.value), 1);
-            const weeklyTotal = points.reduce((sum, point) => sum + point.value, 0);
+            const totalActiveUsers = new Set();
+            for (const set of dayUserSets.values()) {
+                for (const userId of set) totalActiveUsers.add(userId);
+            }
 
             chart.innerHTML = points.map(point => {
                 const height = Math.max(Math.round((point.value / maxValue) * 100), point.value > 0 ? 18 : 8);
@@ -323,20 +432,40 @@
                 `;
             }).join('');
 
-            summary.textContent = `Last 7 days: ${weeklyTotal} submissions`;
+            const rangeLabel = days.length === 1
+                ? days[0].toLocaleDateString()
+                : `${days[0].toLocaleDateString()} - ${days[days.length - 1].toLocaleDateString()}`;
+            summary.textContent = `${rangeLabel}: ${totalActiveUsers.size} unique active user(s)`;
         }
 
-        function renderCompletionStatus(submissionsData) {
-            const statuses = { approved: 0, pending: 0, rejected: 0 };
+        // Buckets graded quiz submissions by assessment_result (passed / incomplete
+        // / failed), restricted to the selected date range. quiz_submissions.status
+        // is not used here: native-quiz submissions are always auto-set to
+        // 'approved' at grading time, so that field no longer reflects completion.
+        function renderCompletionStatus(submissionsData, days) {
+            const statuses = { passed: 0, incomplete: 0, failed: 0 };
+
+            const rangeStart = days[0];
+            const rangeEndExclusive = new Date(days[days.length - 1]);
+            rangeEndExclusive.setDate(rangeEndExclusive.getDate() + 1);
 
             for (const submission of submissionsData) {
-                const normalizedStatus = typeof submission.status === 'string' ? submission.status.toLowerCase() : '';
-                if (statuses[normalizedStatus] !== undefined) {
-                    statuses[normalizedStatus] += 1;
+                const timestamp = submission.submitted_at || submission.created_at;
+                if (!timestamp) continue;
+
+                const date = new Date(timestamp);
+                if (Number.isNaN(date.getTime())) continue;
+                if (date < rangeStart || date >= rangeEndExclusive) continue;
+
+                const result = typeof submission.assessment_result === 'string'
+                    ? submission.assessment_result.toLowerCase()
+                    : '';
+                if (statuses[result] !== undefined) {
+                    statuses[result] += 1;
                 }
             }
 
-            const total = statuses.approved + statuses.pending + statuses.rejected;
+            const total = statuses.passed + statuses.incomplete + statuses.failed;
 
             const updateStatusBar = (key, barId, valueId) => {
                 const count = statuses[key];
@@ -349,9 +478,9 @@
                 if (label) label.textContent = `${count} (${percent}%)`;
             };
 
-            updateStatusBar('approved', 'approvedCompletionBar', 'approvedCompletionValue');
-            updateStatusBar('pending', 'pendingCompletionBar', 'pendingCompletionValue');
-            updateStatusBar('rejected', 'rejectedCompletionBar', 'rejectedCompletionValue');
+            updateStatusBar('passed', 'passedCompletionBar', 'passedCompletionValue');
+            updateStatusBar('incomplete', 'incompleteCompletionBar', 'incompleteCompletionValue');
+            updateStatusBar('failed', 'failedCompletionBar', 'failedCompletionValue');
         }
 
         function loadStudentPerformance(usersData, submissionsData) {

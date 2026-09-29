@@ -42,32 +42,28 @@ function initSidebar() {
             </div>
             
             <!-- Navigation -->
+            <!-- Simplified to 3 destinations (Phase 6): Core Learning absorbs
+                 Dashboard, Modules, and Tutorial Videos (all remain reachable
+                 as cards/links from the Core Learning landing page itself). -->
             <nav class="p-4 space-y-2 overflow-y-auto" style="max-height: calc(100vh - 320px);">
                 <p class="text-xs text-gray-400 uppercase tracking-wider px-4 mb-2">Main Menu</p>
                 <a href="${studentPrefix}dashboard.html" class="sidebar-link active flex items-center space-x-3 px-4 py-3 rounded-xl text-gray-700">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
                     </svg>
-                    <span>Dashboard</span>
-                </a>
-                <a href="${studentPrefix}modules.html" class="sidebar-link flex items-center space-x-3 px-4 py-3 rounded-xl text-gray-700">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
-                    </svg>
-                    <span>Browse Modules</span>
-                </a>
-                <a href="${studentPrefix}tutorial-videos.html" class="sidebar-link flex items-center space-x-3 px-4 py-3 rounded-xl text-gray-700">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/>
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                    </svg>
-                    <span>Tutorial Videos</span>
+                    <span>Core Learning</span>
                 </a>
                 <a href="${studentPrefix}quizzes.html" class="sidebar-link flex items-center space-x-3 px-4 py-3 rounded-xl text-gray-700">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/>
                     </svg>
                     <span>Quizzes</span>
+                </a>
+                <a href="${studentPrefix}dashboard.html#progress" class="sidebar-link flex items-center space-x-3 px-4 py-3 rounded-xl text-gray-700">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 012-2h2a2 2 0 012 2v6m-9 0h10a2 2 0 002-2V9.5a1 1 0 00-.4-.8l-5-3.75a1 1 0 00-1.2 0l-5 3.75a1 1 0 00-.4.8V17a2 2 0 002 2z"/>
+                    </svg>
+                    <span>Progress</span>
                 </a>
             </nav>
         </div>
@@ -89,16 +85,28 @@ function initSidebar() {
     sidebarContainer.innerHTML = sidebarHTML;
   }
 
-  // Set active link based on current page
+  // Set active link based on current page.
+  // Core Learning absorbs Dashboard, Modules, and Tutorial Videos, so several
+  // pages should highlight it. Progress shares dashboard.html as a URL but is
+  // distinguished by the #progress hash, so it's checked separately rather
+  // than through the plain filename match used for the other links.
   const currentPage = window.location.pathname.split('/').pop().toLowerCase();
+  const currentHash = window.location.hash.toLowerCase();
+  const coreLearningPages = ['dashboard.html', 'modules.html', 'module-view.html', 'lesson-view.html', 'tutorial-videos.html', ''];
   const sidebarLinks = document.querySelectorAll('.sidebar-link');
   sidebarLinks.forEach(link => {
     const href = (link.getAttribute('href') || '').toLowerCase();
     const linkPage = href.split('#')[0].split('?')[0].split('/').pop();
-    const isActive =
-      currentPage === linkPage ||
-      (currentPage === '' && linkPage === 'dashboard.html') ||
-      ((currentPage === 'module-view.html' || currentPage === 'lesson-view.html') && linkPage === 'modules.html');
+    const linkIsProgress = href.includes('#progress');
+
+    let isActive;
+    if (linkIsProgress) {
+      isActive = currentPage === 'dashboard.html' && currentHash === '#progress';
+    } else if (linkPage === 'dashboard.html') {
+      isActive = coreLearningPages.includes(currentPage) && currentHash !== '#progress';
+    } else {
+      isActive = currentPage === linkPage;
+    }
 
     if (isActive) {
       link.classList.add('active');

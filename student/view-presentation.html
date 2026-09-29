@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="en" data-portal="student">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="View presentation slide deck on MathTuro LMS.">
+    <link rel="stylesheet" href="../dist/styles.css">
+    <script src="../shared/js/device.js"></script>
+    <link rel="icon" type="image/png" href="../Logo/MATHURO-LOGO-v2.png">
+    <title>View Presentation - MathTuro LMS</title>
+    <script src="../shared/js/supabase-lib.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <style>
+        body { font-family: 'Inter', system-ui, sans-serif; }
+        .glass-sidebar { background: rgba(255,255,255,0.95); backdrop-filter: blur(20px); }
+        .sidebar-link { transition: all 0.2s ease; }
+        .sidebar-link:hover, .sidebar-link.active {
+            background: linear-gradient(135deg, #005801 0%, #006B01 100%); color: white;
+        }
+        .sidebar-link.active { box-shadow: 0 4px 15px rgba(0,88,1,0.3); }
+
+        #pdfFrame {
+            width: 100%;
+            border: none;
+            border-radius: 16px;
+            background: #1a1a2e;
+        }
+        .pdf-toolbar {
+            background: white;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; }
+        ::-webkit-scrollbar-thumb { background: #005801; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: #004601; }
+
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .spin { animation: spin 1s linear infinite; }
+    </style>
+    <link rel="stylesheet" href="../shared/css/base.css">
+    <link rel="stylesheet" href="assets/css/student.css">
+</head>
+<body class="bg-gray-900 min-h-screen">
+
+    <div id="mobileOverlay" class="fixed inset-0 bg-black bg-opacity-50 z-40 hidden lg:hidden"></div>
+    <div id="sidebar"></div>
+
+    <main class="lg:ml-72 min-h-screen flex flex-col">
+        <!-- Header -->
+        <header class="pdf-toolbar sticky top-0 z-30 flex-shrink-0">
+            <div class="flex items-center justify-between px-4 lg:px-8 py-3">
+                <div class="flex items-center gap-3 min-w-0">
+                    <button id="mobileMenuBtn" class="lg:hidden p-2 text-gray-600 hover:text-brand rounded-lg">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
+                        </svg>
+                    </button>
+                    <a id="backLink" href="module-view.html" class="text-sm text-gray-500 hover:text-brand flex-shrink-0">
+                        <i class="fas fa-arrow-left mr-1"></i>Back
+                    </a>
+                    <div class="min-w-0">
+                        <h1 id="presTitle" class="text-base font-bold text-gray-800 truncate">Loading…</h1>
+                        <p id="presDesc" class="text-xs text-gray-500 truncate hidden sm:block"></p>
+                    </div>
+                </div>
+                <div class="flex items-center gap-2 flex-shrink-0">
+                    <button id="btnFullscreen"
+                        class="p-2 text-gray-500 hover:text-brand hover:bg-brand/5 rounded-lg transition-colors" title="Fullscreen">
+                        <i class="fas fa-expand"></i>
+                    </button>
+                    <button id="btnRefreshUrl"
+                        class="p-2 text-gray-500 hover:text-brand hover:bg-brand/5 rounded-lg transition-colors" title="Refresh (URL expires after 15 min)">
+                        <i class="fas fa-sync-alt"></i>
+                    </button>
+                    <a id="btnDownload" href="#" target="_blank"
+                        class="hidden px-3 py-2 text-sm bg-brand text-white rounded-lg hover:bg-brand-dark transition-colors">
+                        <i class="fas fa-download mr-1"></i>Open PDF
+                    </a>
+                </div>
+            </div>
+        </header>
+
+        <!-- PDF Viewer Area -->
+        <div class="flex-1 p-2 lg:p-4 flex flex-col">
+
+            <!-- Loading -->
+            <div id="loadingState" class="flex-1 flex flex-col items-center justify-center py-20 text-center">
+                <div class="w-16 h-16 bg-white/10 rounded-full flex items-center justify-center mb-4">
+                    <i class="fas fa-file-pdf text-red-400 text-2xl spin"></i>
+                </div>
+                <p class="text-gray-400">Loading presentation…</p>
+                <p class="text-gray-600 text-sm mt-1">Generating secure access link…</p>
+            </div>
+
+            <!-- Error -->
+            <div id="errorState" class="hidden flex-1 flex flex-col items-center justify-center py-20 text-center">
+                <div class="w-16 h-16 bg-red-900/30 rounded-full flex items-center justify-center mb-4">
+                    <i class="fas fa-lock text-red-400 text-2xl"></i>
+                </div>
+                <h3 id="errorTitle" class="text-lg font-semibold text-white mb-2">Access Denied</h3>
+                <p id="errorMsg" class="text-gray-400 mb-6 max-w-sm"></p>
+                <a href="module-view.html"
+                    class="inline-flex items-center gap-2 bg-brand text-white px-6 py-3 rounded-xl font-medium hover:bg-brand-dark transition-colors">
+                    <i class="fas fa-arrow-left"></i>Back to Module
+                </a>
+            </div>
+
+            <!-- PDF Frame -->
+            <div id="pdfContainer" class="hidden flex-1 flex flex-col">
+                <!-- Expiry notice -->
+                <div class="flex items-center justify-between bg-amber-900/20 border border-amber-800/40 rounded-xl px-4 py-2 mb-3">
+                    <span class="text-xs text-amber-300">
+                        <i class="fas fa-clock mr-1"></i>Secure link expires in <span id="expiryCountdown" class="font-bold">15:00</span>
+                    </span>
+                    <button onclick="refreshSignedUrl()" class="text-xs text-amber-400 hover:text-amber-200 font-medium">
+                        <i class="fas fa-sync-alt mr-1"></i>Refresh
+                    </button>
+                </div>
+                <!-- iframe PDF viewer -->
+                <div class="flex-1 rounded-2xl overflow-hidden shadow-2xl" style="min-height:75vh">
+                    <iframe id="pdfFrame" src="" title="PDF Presentation" style="height:calc(100vh - 220px);" allowfullscreen></iframe>
+                </div>
+                <!-- Fallback notice -->
+                <div class="mt-3 text-center">
+                    <p class="text-gray-500 text-xs">
+                        PDF not showing? <a id="directLink" href="#" target="_blank" class="text-brand hover:underline font-medium">Open in new tab</a>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Toast -->
+    <div id="toast" class="hidden fixed bottom-4 right-4 px-6 py-3 rounded-xl shadow-lg z-50 flex items-center space-x-2"></div>
+
+    <script src="../shared/js/runtime-config.js"></script>
+    <script src="../shared/js/config.js"></script>
+    <script src="../shared/js/supabase.js"></script>
+    <script src="../shared/js/auth.js"></script>
+    <script src="../shared/js/pathManager.js"></script>
+    <script src="assets/js/sidebar.js"></script>
+    <script>
+    /*
+      view-presentation.html — Phase 3 Student PDF Viewer
+      URL params: presentation_id
+      Access: calls get_presentation_signed_path RPC — enforces:
+        - published check
+        - module content unlock (is_module_content_unlocked)
+        - sequential module access (can_student_access_module)
+      Signed URL: 15 min expiry from private 'learning-materials' bucket
+      No getPublicUrl() used — all access via signed URLs only.
+    */
+
+    const params  = new URLSearchParams(location.search);
+    const PRES_ID = params.get('presentation_id') || null;
+    const BUCKET  = 'learning-materials';
+    const EXPIRY_SECONDS = 900; // 15 minutes
+
+    let currentUser   = null;
+    let signedUrl     = null;
+    let filePath      = null;
+    let expiryTimer   = null;
+    let countdownSecs = EXPIRY_SECONDS;
+
+    document.addEventListener('DOMContentLoaded', async () => {
+        if (!PRES_ID) {
+            showError('Invalid URL', 'Missing presentation_id in URL.'); return;
+        }
+        try {
+            currentUser = JSON.parse(localStorage.getItem('user'));
+            if (!currentUser || currentUser.role !== 'student') {
+                location.href = '../public/login.html'; return;
+            }
+        } catch(e) { location.href = '../public/login.html'; return; }
+
+        setupControls();
+        await loadPresentation();
+    });
+
+    async function loadPresentation() {
+        document.getElementById('loadingState').classList.remove('hidden');
+        document.getElementById('errorState').classList.add('hidden');
+        document.getElementById('pdfContainer').classList.add('hidden');
+
+        try {
+            const sb = getSupabase();
+
+            // Load metadata
+            const { data: pres } = await sb.from('presentations')
+                .select('id, title, description, file_path, module_id')
+                .eq('id', PRES_ID)
+                .maybeSingle();
+
+            if (!pres) throw new Error('Presentation not found.');
+
+            filePath = pres.file_path;
+            document.getElementById('presTitle').textContent = pres.title;
+            document.getElementById('presDesc').textContent  = pres.description || '';
+            document.getElementById('presDesc').classList.toggle('hidden', !pres.description);
+
+            // Update back link with module context
+            if (pres.module_id) {
+                document.getElementById('backLink').href = 'module-view.html?id=' + pres.module_id;
+            }
+            document.title = pres.title + ' - MathTuro LMS';
+
+            // Get signed URL via RPC (enforces content unlock + publish check)
+            await refreshSignedUrl();
+
+        } catch(err) {
+            showError('Access Denied', err.message || 'You do not have access to this presentation.');
+        }
+    }
+
+    async function refreshSignedUrl() {
+        if (!filePath) return;
+        try {
+            const sb = getSupabase();
+            const { data, error } = await sb.storage
+                .from(BUCKET)
+                .createSignedUrl(filePath, EXPIRY_SECONDS);
+
+            if (error) throw error;
+
+            signedUrl = data.signedUrl;
+
+            // Update iframe
+            document.getElementById('pdfFrame').src    = signedUrl;
+            document.getElementById('directLink').href  = signedUrl;
+            document.getElementById('btnDownload').href = signedUrl;
+            document.getElementById('btnDownload').classList.remove('hidden');
+
+            // Show PDF container
+            document.getElementById('loadingState').classList.add('hidden');
+            document.getElementById('pdfContainer').classList.remove('hidden');
+
+            // Restart countdown
+            startExpiryCountdown();
+        } catch(err) {
+            if (err.message.includes('locked') || err.message.includes('unpublished')) {
+                showError('Content Locked', 'This presentation is not yet accessible. Complete the required steps to unlock module content.');
+            } else {
+                showToast('Could not refresh link: ' + err.message, 'error');
+            }
+        }
+    }
+
+    function startExpiryCountdown() {
+        if (expiryTimer) clearInterval(expiryTimer);
+        countdownSecs = EXPIRY_SECONDS;
+        updateCountdownDisplay();
+        expiryTimer = setInterval(() => {
+            countdownSecs--;
+            updateCountdownDisplay();
+            if (countdownSecs <= 0) {
+                clearInterval(expiryTimer);
+                showToast('Signed URL has expired. Refreshing…', 'error');
+                refreshSignedUrl();
+            }
+        }, 1000);
+    }
+
+    function updateCountdownDisplay() {
+        const m = Math.floor(countdownSecs / 60).toString().padStart(2,'0');
+        const s = (countdownSecs % 60).toString().padStart(2,'0');
+        document.getElementById('expiryCountdown').textContent = m + ':' + s;
+        if (countdownSecs <= 120) {
+            document.getElementById('expiryCountdown').classList.add('text-red-300');
+        }
+    }
+
+    function setupControls() {
+        document.getElementById('btnFullscreen').onclick = () => {
+            const frame = document.getElementById('pdfFrame');
+            if (frame.requestFullscreen) frame.requestFullscreen();
+            else if (frame.webkitRequestFullscreen) frame.webkitRequestFullscreen();
+        };
+        document.getElementById('btnRefreshUrl').onclick = () => refreshSignedUrl();
+    }
+
+    function showError(title, msg) {
+        document.getElementById('loadingState').classList.add('hidden');
+        document.getElementById('pdfContainer').classList.add('hidden');
+        document.getElementById('errorState').classList.remove('hidden');
+        document.getElementById('errorTitle').textContent = title;
+        document.getElementById('errorMsg').textContent   = msg;
+    }
+
+    function showToast(msg, type) {
+        const t = document.getElementById('toast');
+        t.className = 'fixed bottom-4 right-4 px-6 py-3 rounded-xl shadow-lg z-50 flex items-center space-x-2 ' +
+            (type==='success'?'bg-green-500 text-white':type==='error'?'bg-red-500 text-white':'bg-gray-800 text-white');
+        t.innerHTML = '<i class="fas fa-' + (type==='success'?'check-circle':type==='error'?'exclamation-circle':'info-circle') + '"></i><span>' + msg + '</span>';
+        t.classList.remove('hidden');
+        setTimeout(() => t.classList.add('hidden'), 4000);
+    }
+    </script>
+</body>
+</html>

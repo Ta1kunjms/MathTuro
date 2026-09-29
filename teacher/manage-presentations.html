@@ -1,0 +1,709 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Manage PDF presentations and slide decks for MathTuro LMS modules.">
+    <link rel="stylesheet" href="../dist/styles.css">
+    <script src="../shared/js/device.js"></script>
+    <link rel="icon" type="image/png" href="../Logo/MATHURO-LOGO-v2.png">
+    <title>Manage Presentations - MathTuro LMS</title>
+    <script src="../shared/js/supabase-lib.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <style>
+        body { font-family: 'Inter', system-ui, sans-serif; }
+        .gradient-text {
+            background: linear-gradient(135deg, #005801 0%, #22c55e 100%);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+        }
+        .glass-sidebar { background: rgba(255,255,255,0.95); backdrop-filter: blur(20px); }
+        .sidebar-link { transition: all 0.2s ease; }
+        .sidebar-link:hover, .sidebar-link.active {
+            background: linear-gradient(135deg, #005801 0%, #006B01 100%); color: white;
+        }
+        .sidebar-link.active { box-shadow: 0 4px 15px rgba(0,88,1,0.3); }
+
+        .pres-card { transition: all 0.25s cubic-bezier(0.4,0,0.2,1); }
+        .pres-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 32px -8px rgba(0,88,1,0.18);
+        }
+        .drop-zone {
+            border: 2px dashed #86efac;
+            border-radius: 20px;
+            background: #f0fdf4;
+            transition: all 0.2s;
+        }
+        .drop-zone.drag-over {
+            border-color: #005801;
+            background: #dcfce7;
+        }
+        .upload-progress {
+            height: 6px;
+            border-radius: 999px;
+            background: #e2e8f0;
+            overflow: hidden;
+        }
+        .upload-progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #005801, #22c55e);
+            border-radius: 999px;
+            transition: width 0.3s ease;
+        }
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; }
+        ::-webkit-scrollbar-thumb { background: #005801; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: #004601; }
+        @keyframes shimmer { 0%{transform:translateX(-100%)} 100%{transform:translateX(100%)} }
+        .shimmer-card {
+            background: #f9fafb; border-radius: 16px; height: 100px;
+            overflow: hidden; position: relative;
+        }
+        .shimmer-card::after {
+            content: ''; position: absolute; inset: 0;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.6), transparent);
+            animation: shimmer 1.5s infinite;
+        }
+    </style>
+    <link rel="stylesheet" href="../shared/css/base.css">
+    <link rel="stylesheet" href="assets/css/teacher.css">
+</head>
+<body class="bg-gray-50 min-h-screen">
+
+    <div id="mobileOverlay" class="fixed inset-0 bg-black bg-opacity-50 z-40 hidden lg:hidden"></div>
+    <div id="sidebar"></div>
+
+    <main class="lg:ml-72 min-h-screen">
+        <!-- Header -->
+        <header class="bg-white border-b border-gray-200 sticky top-0 z-30">
+            <div class="flex items-center justify-between px-4 lg:px-8 py-4">
+                <button id="mobileMenuBtn" class="lg:hidden p-2 text-gray-600 hover:text-brand rounded-lg">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
+                    </svg>
+                </button>
+                <div class="flex-1 lg:flex-none min-w-0">
+                    <h1 class="text-xl lg:text-2xl font-bold text-gray-800">Presentations</h1>
+                    <p class="text-sm text-gray-500 hidden sm:block">Upload and manage PDF slide decks per module</p>
+                </div>
+                <div class="flex items-center space-x-3">
+                    <button id="btnUploadPres"
+                        class="inline-flex items-center space-x-2 bg-brand text-white px-4 py-2 rounded-xl font-medium hover:bg-brand-dark transition-colors">
+                        <i class="fas fa-upload"></i>
+                        <span class="hidden sm:inline">Upload PDF</span>
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <div class="p-4 lg:p-8">
+            <!-- Stats -->
+            <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+                <div class="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-12 h-12 bg-brand/10 rounded-xl flex items-center justify-center">
+                            <i class="fas fa-file-pdf text-brand text-xl"></i>
+                        </div>
+                        <div>
+                            <p class="text-2xl font-bold text-gray-900" id="statTotal">0</p>
+                            <p class="text-sm text-gray-500">Total PDFs</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center">
+                            <i class="fas fa-check-circle text-green-600 text-xl"></i>
+                        </div>
+                        <div>
+                            <p class="text-2xl font-bold text-gray-900" id="statPublished">0</p>
+                            <p class="text-sm text-gray-500">Published</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-12 h-12 bg-yellow-100 rounded-xl flex items-center justify-center">
+                            <i class="fas fa-eye-slash text-yellow-600 text-xl"></i>
+                        </div>
+                        <div>
+                            <p class="text-2xl font-bold text-gray-900" id="statDraft">0</p>
+                            <p class="text-sm text-gray-500">Drafts</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center">
+                            <i class="fas fa-cubes text-blue-600 text-xl"></i>
+                        </div>
+                        <div>
+                            <p class="text-2xl font-bold text-gray-900" id="statModules">0</p>
+                            <p class="text-sm text-gray-500">Modules Covered</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Module Filter -->
+            <div class="bg-white rounded-2xl p-4 mb-6 border border-gray-100 shadow-sm flex flex-col sm:flex-row gap-4">
+                <div class="flex-1">
+                    <div class="relative">
+                        <i class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                        <input type="text" id="searchInput" placeholder="Search presentations…"
+                            class="w-full pl-11 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-brand focus:border-transparent">
+                    </div>
+                </div>
+                <select id="moduleFilter"
+                    class="px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-brand bg-white min-w-[180px]">
+                    <option value="">All Modules</option>
+                </select>
+                <select id="statusFilter"
+                    class="px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-brand bg-white">
+                    <option value="">All Status</option>
+                    <option value="published">Published</option>
+                    <option value="draft">Draft</option>
+                </select>
+            </div>
+
+            <!-- Presentations List -->
+            <div id="presContainer" class="space-y-4">
+                <div class="shimmer-card"></div>
+                <div class="shimmer-card"></div>
+            </div>
+
+            <!-- Empty State -->
+            <div id="emptyState" class="hidden text-center py-20">
+                <div class="w-20 h-20 bg-brand/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <i class="fas fa-file-pdf text-brand text-3xl"></i>
+                </div>
+                <h3 class="text-xl font-semibold text-gray-900 mb-2">No presentations yet</h3>
+                <p class="text-gray-500 mb-6">Upload your first PDF slide deck for a module.</p>
+                <button id="btnUploadFirst"
+                    class="inline-flex items-center space-x-2 bg-brand text-white px-6 py-3 rounded-xl font-medium hover:bg-brand-dark transition-colors">
+                    <i class="fas fa-upload mr-2"></i>Upload PDF
+                </button>
+            </div>
+        </div>
+    </main>
+
+    <!-- ===== UPLOAD MODAL ===== -->
+    <div id="uploadModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-2xl w-full max-w-xl max-h-[92vh] overflow-y-auto">
+            <div class="flex items-center justify-between p-6 border-b border-gray-100">
+                <h2 id="uploadModalTitle" class="text-xl font-bold text-gray-900">Upload PDF Presentation</h2>
+                <button id="btnCloseUpload" class="p-2 text-gray-500 hover:text-gray-700 rounded-lg hover:bg-gray-100">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <form id="uploadForm" class="p-6 space-y-5">
+                <input type="hidden" id="presEditId">
+
+                <!-- PDF-only notice -->
+                <div class="bg-amber-50 border border-amber-200 rounded-xl p-3 flex items-start gap-3">
+                    <i class="fas fa-info-circle text-amber-500 mt-0.5 flex-shrink-0"></i>
+                    <div class="text-sm text-amber-700">
+                        <strong>PDF only</strong> — .ppt, .pptx and other formats are not supported. Max file size: 25 MB.
+                    </div>
+                </div>
+
+                <!-- Title -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Presentation Title *</label>
+                    <input type="text" id="presTitle" required
+                        class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-brand focus:border-transparent"
+                        placeholder="e.g., Term 1 Week 3 — Fractions">
+                </div>
+
+                <!-- Description -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                    <textarea id="presDescription" rows="2"
+                        class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-brand focus:border-transparent resize-none"
+                        placeholder="Brief description of the content…"></textarea>
+                </div>
+
+                <!-- Module -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Module *</label>
+                    <select id="presModule" required
+                        class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-brand">
+                        <option value="">Select module…</option>
+                    </select>
+                </div>
+
+                <!-- Lesson (optional) -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Lesson (optional)</label>
+                    <select id="presLesson"
+                        class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-brand">
+                        <option value="">No specific lesson</option>
+                    </select>
+                </div>
+
+                <!-- Order & Publish -->
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Display Order</label>
+                        <input type="number" id="presOrder" value="1" min="1"
+                            class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-brand focus:border-transparent">
+                    </div>
+                    <div class="flex items-end pb-1">
+                        <label class="flex items-center gap-2 cursor-pointer">
+                            <input type="checkbox" id="presPublished" class="w-5 h-5 rounded border-gray-300 text-brand focus:ring-brand">
+                            <span class="text-sm font-medium text-gray-700">Publish immediately</span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- File Drop Zone (only shown when adding new) -->
+                <div id="fileZoneWrapper">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">PDF File *</label>
+                    <div id="dropZone" class="drop-zone p-8 text-center cursor-pointer" onclick="document.getElementById('pdfFileInput').click()">
+                        <i class="fas fa-cloud-upload-alt text-4xl text-brand/50 mb-3"></i>
+                        <p class="text-gray-600 font-medium">Drop PDF here or <span class="text-brand font-semibold">browse</span></p>
+                        <p class="text-xs text-gray-400 mt-1">PDF only  •  Max 25 MB</p>
+                        <input type="file" id="pdfFileInput" accept=".pdf,application/pdf" class="hidden">
+                    </div>
+                    <div id="filePreview" class="hidden mt-3 bg-green-50 border border-green-200 rounded-xl p-3 flex items-center gap-3">
+                        <i class="fas fa-file-pdf text-red-500 text-2xl"></i>
+                        <div class="flex-1 min-w-0">
+                            <p id="filePreviewName" class="text-sm font-medium text-gray-900 truncate"></p>
+                            <p id="filePreviewSize" class="text-xs text-gray-500"></p>
+                        </div>
+                        <button type="button" onclick="clearFile()" class="text-gray-400 hover:text-red-500"><i class="fas fa-times"></i></button>
+                    </div>
+                </div>
+
+                <!-- Upload Progress -->
+                <div id="uploadProgressWrapper" class="hidden">
+                    <div class="flex justify-between text-sm mb-1">
+                        <span class="text-gray-600">Uploading…</span>
+                        <span id="uploadPct" class="font-medium text-brand">0%</span>
+                    </div>
+                    <div class="upload-progress">
+                        <div id="uploadBar" class="upload-progress-bar" style="width:0%"></div>
+                    </div>
+                </div>
+
+                <div class="flex gap-3 pt-2">
+                    <button type="submit" id="uploadSubmitBtn"
+                        class="flex-1 bg-brand text-white py-3 rounded-xl font-semibold hover:bg-brand-dark transition-colors">
+                        Upload & Save
+                    </button>
+                    <button type="button" id="btnCancelUpload"
+                        class="px-6 py-3 border border-gray-300 text-gray-700 rounded-xl font-medium hover:bg-gray-50 transition-colors">
+                        Cancel
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ===== DELETE CONFIRM ===== -->
+    <div id="deleteModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-2xl w-full max-w-sm p-6 text-center">
+            <div class="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <i class="fas fa-trash text-red-500 text-2xl"></i>
+            </div>
+            <h3 class="text-lg font-bold text-gray-900 mb-2">Delete Presentation?</h3>
+            <p class="text-gray-500 text-sm mb-6">This removes the metadata record. The PDF file in storage must be removed separately if needed.</p>
+            <div class="flex gap-3">
+                <button id="btnConfirmDelete"
+                    class="flex-1 bg-red-500 text-white py-3 rounded-xl font-semibold hover:bg-red-600 transition-colors">Delete</button>
+                <button id="btnCancelDelete"
+                    class="flex-1 border border-gray-300 text-gray-700 py-3 rounded-xl font-medium hover:bg-gray-50 transition-colors">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast -->
+    <div id="toast" class="hidden fixed bottom-4 right-4 px-6 py-3 rounded-xl shadow-lg z-50 flex items-center space-x-2"></div>
+
+    <script src="../shared/js/runtime-config.js"></script>
+    <script src="../shared/js/config.js"></script>
+    <script src="../shared/js/supabase.js"></script>
+    <script src="../shared/js/auth.js"></script>
+    <script src="../shared/js/pathManager.js"></script>
+    <script src="assets/js/sidebar.js"></script>
+    <script>
+    /*
+      manage-presentations.html — Phase 3 PDF Presentation Manager
+      Storage: private bucket 'learning-materials', path: presentations/<module_id>/<id>.pdf
+      RLS: teacher/admin INSERT/UPDATE/DELETE on public.presentations
+      Student access: via get_presentation_signed_path RPC (signed URL, content-unlock gated)
+      PDF-only: enforced client-side and at CHECK in DB (file_path ends with .pdf implied by upload flow)
+      Max size: 25 MB
+    */
+
+    const BUCKET         = 'learning-materials';
+    const MAX_SIZE_BYTES = 25 * 1024 * 1024; // 25 MB
+    const ALLOWED_TYPE   = 'application/pdf';
+
+    let currentUser    = null;
+    let presentations  = [];
+    let modules        = [];
+    let lessons        = [];
+    let editingPresId  = null;
+    let deleteTargetId = null;
+    let selectedFile   = null;
+
+    // ─── Boot ──────────────────────────────────────────────────────────
+    document.addEventListener('DOMContentLoaded', async () => {
+        try {
+            currentUser = JSON.parse(localStorage.getItem('user'));
+            if (!currentUser || !['teacher','admin'].includes(currentUser.role)) {
+                location.href = '../public/login.html'; return;
+            }
+        } catch(e) { location.href = '../public/login.html'; return; }
+
+        setupDrop();
+        setupModalEvents();
+        await loadModules();
+        await loadPresentations();
+        setupFilters();
+    });
+
+    // ─── Modules ───────────────────────────────────────────────────────
+    async function loadModules() {
+        const { data } = await getSupabase().from('modules').select('id, title').order('title');
+        modules = data || [];
+        const sel = document.getElementById('presModule');
+        const flt = document.getElementById('moduleFilter');
+        modules.forEach(m => {
+            sel.insertAdjacentHTML('beforeend', '<option value="' + m.id + '">' + esc(m.title) + '</option>');
+            flt.insertAdjacentHTML('beforeend', '<option value="' + m.id + '">' + esc(m.title) + '</option>');
+        });
+        sel.addEventListener('change', () => loadLessonsForModule(sel.value));
+    }
+
+    async function loadLessonsForModule(moduleId) {
+        const sel = document.getElementById('presLesson');
+        sel.innerHTML = '<option value="">No specific lesson</option>';
+        if (!moduleId) return;
+        const { data } = await getSupabase().from('lessons').select('id, title').eq('module_id', moduleId).order('title');
+        (data || []).forEach(l => {
+            sel.insertAdjacentHTML('beforeend', '<option value="' + l.id + '">' + esc(l.title) + '</option>');
+        });
+    }
+
+    // ─── Load Presentations ────────────────────────────────────────────
+    async function loadPresentations() {
+        document.getElementById('emptyState').classList.add('hidden');
+        document.getElementById('presContainer').innerHTML =
+            '<div class="shimmer-card"></div><div class="shimmer-card"></div>';
+        const { data, error } = await getSupabase()
+            .from('presentations')
+            .select('id, title, description, module_id, lesson_id, file_path, file_size_bytes, order_index, is_published, created_at')
+            .order('created_at', { ascending: false });
+        if (error) { showToast('Failed to load: ' + error.message, 'error'); return; }
+        presentations = data || [];
+        renderPresentations();
+        updateStats();
+    }
+
+    // ─── Render ────────────────────────────────────────────────────────
+    function renderPresentations() {
+        const search   = document.getElementById('searchInput').value.toLowerCase();
+        const modFlt   = document.getElementById('moduleFilter').value;
+        const statusFlt= document.getElementById('statusFilter').value;
+
+        let filtered = presentations.filter(p => {
+            if (search && !p.title.toLowerCase().includes(search)) return false;
+            if (modFlt && p.module_id !== modFlt) return false;
+            if (statusFlt === 'published' && !p.is_published) return false;
+            if (statusFlt === 'draft'     && p.is_published)  return false;
+            return true;
+        });
+
+        const container = document.getElementById('presContainer');
+        if (filtered.length === 0) {
+            container.innerHTML = '';
+            document.getElementById('emptyState').classList.remove('hidden');
+            return;
+        }
+        document.getElementById('emptyState').classList.add('hidden');
+
+        container.innerHTML = filtered.map(p => {
+            const mod    = modules.find(m => m.id === p.module_id);
+            const sizeMB = p.file_size_bytes ? (p.file_size_bytes / 1024 / 1024).toFixed(1) + ' MB' : '—';
+            return '<div class="pres-card bg-white rounded-2xl border border-gray-100 shadow-sm p-5">' +
+                '<div class="flex items-start gap-4">' +
+                '<div class="w-14 h-14 bg-red-50 border border-red-100 rounded-xl flex items-center justify-center flex-shrink-0">' +
+                '<i class="fas fa-file-pdf text-red-500 text-2xl"></i></div>' +
+                '<div class="flex-1 min-w-0">' +
+                '<div class="flex flex-wrap items-center gap-2 mb-1">' +
+                '<h3 class="font-semibold text-gray-900 truncate">' + esc(p.title) + '</h3>' +
+                '<span class="text-xs px-2 py-0.5 rounded-full font-medium ' + (p.is_published ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700') + '">' +
+                (p.is_published ? 'Published' : 'Draft') + '</span></div>' +
+                (p.description ? '<p class="text-sm text-gray-500 truncate">' + esc(p.description) + '</p>' : '') +
+                '<div class="flex flex-wrap gap-3 mt-2 text-xs text-gray-400">' +
+                (mod ? '<span><i class="fas fa-cubes mr-1"></i>' + esc(mod.title) + '</span>' : '') +
+                '<span><i class="fas fa-database mr-1"></i>' + sizeMB + '</span>' +
+                '<span><i class="fas fa-sort-numeric-up mr-1"></i>Order ' + p.order_index + '</span>' +
+                '<span><i class="fas fa-calendar mr-1"></i>' + new Date(p.created_at).toLocaleDateString() + '</span>' +
+                '</div></div>' +
+                '<div class="flex flex-col gap-1 flex-shrink-0">' +
+                '<button onclick="previewPresentation(\'' + p.id + '\')" class="p-2 text-gray-400 hover:text-blue-500 hover:bg-blue-50 rounded-lg transition-colors" title="Preview"><i class="fas fa-eye"></i></button>' +
+                '<button onclick="openEditPres(\'' + p.id + '\')" class="p-2 text-gray-400 hover:text-brand hover:bg-brand/5 rounded-lg transition-colors" title="Edit"><i class="fas fa-edit"></i></button>' +
+                '<button onclick="togglePublish(\'' + p.id + '\',' + p.is_published + ')" class="p-2 text-gray-400 hover:text-green-500 hover:bg-green-50 rounded-lg transition-colors" title="' + (p.is_published ? 'Unpublish' : 'Publish') + '">' +
+                '<i class="fas fa-' + (p.is_published ? 'eye-slash' : 'check-circle') + '"></i></button>' +
+                '<button onclick="openDeleteConfirm(\'' + p.id + '\')" class="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors" title="Delete"><i class="fas fa-trash"></i></button>' +
+                '</div></div></div>';
+        }).join('');
+    }
+
+    function updateStats() {
+        document.getElementById('statTotal').textContent     = presentations.length;
+        document.getElementById('statPublished').textContent = presentations.filter(p => p.is_published).length;
+        document.getElementById('statDraft').textContent     = presentations.filter(p => !p.is_published).length;
+        const uniqueMods = new Set(presentations.map(p => p.module_id));
+        document.getElementById('statModules').textContent   = uniqueMods.size;
+    }
+
+    function setupFilters() {
+        document.getElementById('searchInput').addEventListener('input', renderPresentations);
+        document.getElementById('moduleFilter').addEventListener('change', renderPresentations);
+        document.getElementById('statusFilter').addEventListener('change', renderPresentations);
+    }
+
+    // ─── Drop Zone ──────────────────────────────────────────────────────
+    function setupDrop() {
+        const dz = document.getElementById('dropZone');
+        const inp = document.getElementById('pdfFileInput');
+        dz.addEventListener('dragover', e => { e.preventDefault(); dz.classList.add('drag-over'); });
+        dz.addEventListener('dragleave', () => dz.classList.remove('drag-over'));
+        dz.addEventListener('drop', e => {
+            e.preventDefault(); dz.classList.remove('drag-over');
+            if (e.dataTransfer.files.length) handleFileSelect(e.dataTransfer.files[0]);
+        });
+        inp.addEventListener('change', () => { if (inp.files.length) handleFileSelect(inp.files[0]); });
+    }
+
+    function handleFileSelect(file) {
+        if (file.type !== ALLOWED_TYPE && !file.name.toLowerCase().endsWith('.pdf')) {
+            showToast('Only PDF files are supported. .ppt and .pptx are not allowed.', 'error');
+            return;
+        }
+        if (file.size > MAX_SIZE_BYTES) {
+            showToast('File exceeds 25 MB limit. Please compress the PDF.', 'error');
+            return;
+        }
+        selectedFile = file;
+        document.getElementById('dropZone').classList.add('hidden');
+        document.getElementById('filePreview').classList.remove('hidden');
+        document.getElementById('filePreviewName').textContent = file.name;
+        document.getElementById('filePreviewSize').textContent = (file.size / 1024 / 1024).toFixed(2) + ' MB';
+    }
+
+    function clearFile() {
+        selectedFile = null;
+        document.getElementById('dropZone').classList.remove('hidden');
+        document.getElementById('filePreview').classList.add('hidden');
+        document.getElementById('pdfFileInput').value = '';
+    }
+
+    // ─── Modal Events ───────────────────────────────────────────────────
+    function setupModalEvents() {
+        document.getElementById('btnUploadPres').onclick    = openUploadModal;
+        document.getElementById('btnUploadFirst').onclick   = openUploadModal;
+        document.getElementById('btnCloseUpload').onclick   = closeUploadModal;
+        document.getElementById('btnCancelUpload').onclick  = closeUploadModal;
+        document.getElementById('uploadForm').onsubmit      = handleUploadSubmit;
+        document.getElementById('btnConfirmDelete').onclick = confirmDelete;
+        document.getElementById('btnCancelDelete').onclick  = () =>
+            document.getElementById('deleteModal').classList.add('hidden');
+    }
+
+    function openUploadModal() {
+        editingPresId = null;
+        selectedFile  = null;
+        document.getElementById('uploadModalTitle').textContent = 'Upload PDF Presentation';
+        document.getElementById('uploadForm').reset();
+        document.getElementById('presEditId').value = '';
+        document.getElementById('fileZoneWrapper').classList.remove('hidden');
+        document.getElementById('uploadSubmitBtn').textContent = 'Upload & Save';
+        clearFile();
+        document.getElementById('uploadModal').classList.remove('hidden');
+    }
+
+    function openEditPres(id) {
+        const p = presentations.find(x => x.id === id);
+        if (!p) return;
+        editingPresId = id;
+        document.getElementById('uploadModalTitle').textContent = 'Edit Presentation';
+        document.getElementById('presEditId').value  = id;
+        document.getElementById('presTitle').value   = p.title;
+        document.getElementById('presDescription').value = p.description || '';
+        document.getElementById('presModule').value  = p.module_id || '';
+        document.getElementById('presOrder').value   = p.order_index;
+        document.getElementById('presPublished').checked = p.is_published;
+        // Load lessons for module, then set lesson
+        loadLessonsForModule(p.module_id).then(() => {
+            document.getElementById('presLesson').value = p.lesson_id || '';
+        });
+        document.getElementById('fileZoneWrapper').classList.add('hidden'); // No re-upload in edit mode
+        document.getElementById('uploadSubmitBtn').textContent = 'Save Changes';
+        document.getElementById('uploadModal').classList.remove('hidden');
+    }
+
+    function closeUploadModal() {
+        document.getElementById('uploadModal').classList.add('hidden');
+        editingPresId = null;
+        selectedFile  = null;
+    }
+
+    // ─── Submit Upload ──────────────────────────────────────────────────
+    async function handleUploadSubmit(e) {
+        e.preventDefault();
+        const btn = document.getElementById('uploadSubmitBtn');
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>' + (editingPresId ? 'Saving…' : 'Uploading…');
+
+        try {
+            const title    = document.getElementById('presTitle').value.trim();
+            const desc     = document.getElementById('presDescription').value.trim() || null;
+            const moduleId = document.getElementById('presModule').value;
+            const lessonId = document.getElementById('presLesson').value || null;
+            const order    = parseInt(document.getElementById('presOrder').value) || 1;
+            const publish  = document.getElementById('presPublished').checked;
+
+            if (!title)    throw new Error('Title is required');
+            if (!moduleId) throw new Error('Module is required');
+
+            const sb = getSupabase();
+
+            if (editingPresId) {
+                // Edit mode: update metadata only
+                const { error } = await sb.from('presentations').update({
+                    title, description: desc, module_id: moduleId, lesson_id: lessonId,
+                    order_index: order, is_published: publish, updated_at: new Date().toISOString()
+                }).eq('id', editingPresId);
+                if (error) throw error;
+                showToast('Presentation updated!', 'success');
+            } else {
+                // New upload
+                if (!selectedFile) throw new Error('Please select a PDF file');
+
+                // Show progress
+                document.getElementById('uploadProgressWrapper').classList.remove('hidden');
+
+                // Generate a temporary ID for storage path
+                const tempId  = crypto.randomUUID();
+                const filePath = 'presentations/' + moduleId + '/' + tempId + '.pdf';
+
+                // Upload file to private bucket
+                const { error: uploadError } = await sb.storage
+                    .from(BUCKET)
+                    .upload(filePath, selectedFile, {
+                        contentType: 'application/pdf',
+                        upsert: false,
+                    });
+                if (uploadError) throw uploadError;
+
+                document.getElementById('uploadBar').style.width = '80%';
+                document.getElementById('uploadPct').textContent = '80%';
+
+                // Insert metadata
+                const { error: insertError } = await sb.from('presentations').insert({
+                    id:             tempId,
+                    module_id:      moduleId,
+                    lesson_id:      lessonId,
+                    title,
+                    description:    desc,
+                    file_path:      filePath,
+                    file_size_bytes: selectedFile.size,
+                    order_index:    order,
+                    is_published:   publish,
+                    uploaded_by:    currentUser.id,
+                    created_at:     new Date().toISOString(),
+                    updated_at:     new Date().toISOString(),
+                });
+                if (insertError) {
+                    // Rollback storage if DB insert fails
+                    await sb.storage.from(BUCKET).remove([filePath]);
+                    throw insertError;
+                }
+
+                document.getElementById('uploadBar').style.width = '100%';
+                document.getElementById('uploadPct').textContent = '100%';
+                showToast('Presentation uploaded!', 'success');
+            }
+
+            closeUploadModal();
+            await loadPresentations();
+        } catch(err) {
+            console.error(err);
+            showToast('Error: ' + err.message, 'error');
+        } finally {
+            btn.disabled = false;
+            btn.textContent = editingPresId ? 'Save Changes' : 'Upload & Save';
+            document.getElementById('uploadProgressWrapper').classList.add('hidden');
+        }
+    }
+
+    // ─── Toggle Publish ─────────────────────────────────────────────────
+    async function togglePublish(id, current) {
+        const { error } = await getSupabase().from('presentations')
+            .update({ is_published: !current, updated_at: new Date().toISOString() }).eq('id', id);
+        if (error) { showToast('Failed: ' + error.message, 'error'); return; }
+        showToast(!current ? 'Published!' : 'Unpublished', 'success');
+        await loadPresentations();
+    }
+
+    // ─── Preview ────────────────────────────────────────────────────────
+    async function previewPresentation(id) {
+        try {
+            const p = presentations.find(x => x.id === id);
+            if (!p) return;
+            const { data, error } = await getSupabase().storage.from(BUCKET).createSignedUrl(p.file_path, 900); // 15 min
+            if (error) throw error;
+            window.open(data.signedUrl, '_blank');
+        } catch(err) {
+            showToast('Could not generate preview: ' + err.message, 'error');
+        }
+    }
+
+    // ─── Delete ──────────────────────────────────────────────────────────
+    function openDeleteConfirm(id) {
+        deleteTargetId = id;
+        document.getElementById('deleteModal').classList.remove('hidden');
+    }
+
+    async function confirmDelete() {
+        if (!deleteTargetId) return;
+        const btn = document.getElementById('btnConfirmDelete');
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Deleting…';
+        try {
+            const { error } = await getSupabase().from('presentations').delete().eq('id', deleteTargetId);
+            if (error) throw error;
+            showToast('Presentation deleted', 'success');
+            document.getElementById('deleteModal').classList.add('hidden');
+            deleteTargetId = null;
+            await loadPresentations();
+        } catch(err) {
+            showToast('Failed: ' + err.message, 'error');
+        } finally {
+            btn.disabled = false;
+            btn.textContent = 'Delete';
+        }
+    }
+
+    // ─── Helpers ───────────────────────────────────────────────────────
+    function esc(s) {
+        if (!s) return '';
+        return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
+    function showToast(msg, type) {
+        const t = document.getElementById('toast');
+        t.className = 'fixed bottom-4 right-4 px-6 py-3 rounded-xl shadow-lg z-50 flex items-center space-x-2 ' +
+            (type==='success'?'bg-green-500 text-white':type==='error'?'bg-red-500 text-white':'bg-gray-800 text-white');
+        t.innerHTML = '<i class="fas fa-' + (type==='success'?'check-circle':type==='error'?'exclamation-circle':'info-circle') + '"></i><span>' + msg + '</span>';
+        t.classList.remove('hidden');
+        setTimeout(() => t.classList.add('hidden'), 3500);
+    }
+    </script>
+</body>
+</html>

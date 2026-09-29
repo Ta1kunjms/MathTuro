@@ -223,11 +223,12 @@
             </div>
 
             <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-2 mb-6">
-                <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                <div class="grid grid-cols-2 sm:grid-cols-5 gap-2">
                     <button id="studentsTab" onclick="setActiveTab('student')" class="px-4 py-3 rounded-xl text-sm font-semibold bg-red-600 text-white">Students</button>
                     <button id="pendingTab" onclick="setActiveTab('pending')" class="px-4 py-3 rounded-xl text-sm font-semibold text-gray-700 hover:bg-gray-100">Pending Approval</button>
                     <button id="teachersTab" onclick="setActiveTab('teacher')" class="px-4 py-3 rounded-xl text-sm font-semibold text-gray-700 hover:bg-gray-100">Teachers</button>
                     <button id="adminsTab" onclick="setActiveTab('admin')" class="px-4 py-3 rounded-xl text-sm font-semibold text-gray-700 hover:bg-gray-100">Admin</button>
+                    <button id="archivedTab" onclick="setActiveTab('archived')" class="px-4 py-3 rounded-xl text-sm font-semibold text-gray-700 hover:bg-gray-100">Archived</button>
                 </div>
             </div>
 
@@ -355,11 +356,11 @@
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
                     </svg>
                 </div>
-                <h3 class="text-xl font-bold text-gray-800 mb-2">Delete User?</h3>
-                <p class="text-gray-500 mb-6">Are you sure you want to delete this user? This action cannot be undone.</p>
+                <h3 class="text-xl font-bold text-gray-800 mb-2">Archive User?</h3>
+                <p class="text-gray-500 mb-6">The user will be archived and blocked from logging in. Their records are kept and can be restored later from the Archived tab.</p>
                 <div class="flex space-x-3">
                     <button onclick="closeDeleteModal()" class="flex-1 py-3 border border-gray-200 text-gray-700 rounded-xl font-semibold hover:bg-gray-50 transition-colors">Cancel</button>
-                    <button id="confirmDeleteBtn" class="flex-1 py-3 bg-red-600 text-white rounded-xl font-semibold hover:bg-red-700 transition-colors">Delete</button>
+                    <button id="confirmDeleteBtn" class="flex-1 py-3 bg-red-600 text-white rounded-xl font-semibold hover:bg-red-700 transition-colors">Archive</button>
                 </div>
             </div>
         </div>
@@ -480,10 +481,11 @@
         }
 
         function updateStats() {
-            document.getElementById('totalUsersStat').textContent = allUsers.length;
-            document.getElementById('studentsStat').textContent = allUsers.filter(user => user.role === 'student').length;
-            document.getElementById('teachersStat').textContent = allUsers.filter(user => user.role === 'teacher').length;
-            document.getElementById('adminsStat').textContent = allUsers.filter(user => user.role === 'admin').length;
+            const active = allUsers.filter(user => !user.is_archived);
+            document.getElementById('totalUsersStat').textContent = active.length;
+            document.getElementById('studentsStat').textContent = active.filter(user => user.role === 'student').length;
+            document.getElementById('teachersStat').textContent = active.filter(user => user.role === 'teacher').length;
+            document.getElementById('adminsStat').textContent = active.filter(user => user.role === 'admin').length;
         }
 
         function setActiveTab(tab) {
@@ -493,7 +495,8 @@
                 student: document.getElementById('studentsTab'),
                 pending: document.getElementById('pendingTab'),
                 teacher: document.getElementById('teachersTab'),
-                admin: document.getElementById('adminsTab')
+                admin: document.getElementById('adminsTab'),
+                archived: document.getElementById('archivedTab')
             };
 
             Object.entries(tabs).forEach(([key, button]) => {
@@ -512,6 +515,19 @@
 
         function renderTableHead() {
             const head = document.getElementById('usersTableHead');
+
+            if (activeTab === 'archived') {
+                head.innerHTML = `
+                    <tr>
+                        <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Name</th>
+                        <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Role</th>
+                        <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Email</th>
+                        <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Archived On</th>
+                        <th class="px-6 py-4 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">Actions</th>
+                    </tr>
+                `;
+                return;
+            }
 
             if (activeTab === 'admin') {
                 head.innerHTML = `
@@ -558,14 +574,20 @@
                 student: 'Students',
                 pending: 'Pending Approval',
                 teacher: 'Teachers',
-                admin: 'Admin'
+                admin: 'Admin',
+                archived: 'Archived'
             };
 
             document.getElementById('usersTableTitle').textContent = tabLabelMap[activeTab] || 'Users';
 
-            let filtered = activeTab === 'pending'
-                ? allUsers.filter(user => user.role === 'student' && user.admin_review_status === 'pending')
-                : allUsers.filter(user => user.role === activeTab);
+            let filtered;
+            if (activeTab === 'archived') {
+                filtered = allUsers.filter(user => user.is_archived);
+            } else if (activeTab === 'pending') {
+                filtered = allUsers.filter(user => !user.is_archived && user.role === 'student' && user.admin_review_status === 'pending');
+            } else {
+                filtered = allUsers.filter(user => !user.is_archived && user.role === activeTab);
+            }
 
             if (searchTerm) {
                 filtered = filtered.filter(user =>
@@ -593,6 +615,32 @@
                 teacher: { bg: 'bg-purple-100', text: 'text-purple-700' },
                 admin: { bg: 'bg-red-100', text: 'text-red-700' }
             };
+
+            if (activeTab === 'archived') {
+                tbody.innerHTML = filtered.map(user => {
+                    const colors = roleColors[user.role] || roleColors.student;
+                    const archivedOn = user.archived_at ? new Date(user.archived_at).toLocaleDateString() : 'N/A';
+                    return `
+                        <tr class="user-row">
+                            <td class="px-6 py-4">
+                                <div class="flex items-center space-x-3">
+                                    <div class="w-10 h-10 ${colors.bg} rounded-full flex items-center justify-center">
+                                        <span class="${colors.text} font-semibold text-sm">${getInitials(user.full_name || 'User')}</span>
+                                    </div>
+                                    <span class="font-medium text-gray-800">${escapeHtml(user.full_name || 'Unknown')}</span>
+                                </div>
+                            </td>
+                            <td class="px-6 py-4 text-gray-600 capitalize">${escapeHtml(user.role || 'N/A')}</td>
+                            <td class="px-6 py-4 text-gray-600">${escapeHtml(user.email || 'N/A')}</td>
+                            <td class="px-6 py-4 text-gray-500 text-sm">${escapeHtml(archivedOn)}</td>
+                            <td class="px-6 py-4 text-right">
+                                <button onclick="restoreUser('${user.id}')" class="px-3 py-1.5 text-xs bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors">Restore</button>
+                            </td>
+                        </tr>
+                    `;
+                }).join('');
+                return;
+            }
 
             if (activeTab === 'admin') {
                 tbody.innerHTML = filtered.map(user => {
@@ -625,7 +673,7 @@
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
                                         </svg>
                                     </button>
-                                    <button onclick="confirmDelete('${user.id}')" class="p-2 text-red-600 hover:bg-red-50 rounded-lg" title="Delete">
+                                    <button onclick="confirmDelete('${user.id}')" class="p-2 text-red-600 hover:bg-red-50 rounded-lg" title="Archive">
                                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
                                         </svg>
@@ -666,7 +714,7 @@
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
                                     </svg>
                                 </button>
-                                <button onclick="confirmDelete('${user.id}')" class="p-2 text-red-600 hover:bg-red-50 rounded-lg" title="Delete">
+                                <button onclick="confirmDelete('${user.id}')" class="p-2 text-red-600 hover:bg-red-50 rounded-lg" title="Archive">
                                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
                                     </svg>
@@ -902,7 +950,7 @@
 
             try {
                 const supabase = getSupabase();
-                const { data, error } = await supabase.rpc('admin_delete_user', {
+                const { data, error } = await supabase.rpc('admin_archive_user', {
                     target_user_id: deleteUserId
                 });
 
@@ -911,21 +959,53 @@
                 }
 
                 if (data === true) {
-                    showToast('User deleted from both app data and Supabase Auth.', 'success');
+                    showToast('User archived. Records preserved; restore anytime from the Archived tab.', 'success');
                 } else {
-                    showToast('Delete completed.', 'success');
+                    showToast('Archive completed.', 'success');
                 }
 
                 closeDeleteModal();
                 await loadUsers();
             } catch (error) {
-                console.error('Error deleting user:', error);
+                console.error('Error archiving user:', error);
                 const message = (error?.message || '').toLowerCase();
 
-                if (message.includes('admin_delete_user') || message.includes('function') || message.includes('rpc')) {
-                    showToast('Delete RPC is not installed yet. Run database/create_admin_delete_user_rpc.sql in Supabase SQL Editor.', 'error');
+                if (message.includes('admin_archive_user') || message.includes('function') || message.includes('rpc')) {
+                    showToast('Archive RPC is not installed yet. Run database/migration_phase4_admin_analytics_and_soft_delete.sql in Supabase SQL Editor.', 'error');
                 } else {
-                    showToast(error.message || 'Failed to delete user', 'error');
+                    showToast(error.message || 'Failed to archive user', 'error');
+                }
+            }
+        }
+
+        async function restoreUser(id) {
+            if (!id) return;
+
+            try {
+                const supabase = getSupabase();
+                const { data, error } = await supabase.rpc('admin_unarchive_user', {
+                    target_user_id: id
+                });
+
+                if (error) {
+                    throw error;
+                }
+
+                if (data === true) {
+                    showToast('User restored.', 'success');
+                } else {
+                    showToast('Restore completed.', 'success');
+                }
+
+                await loadUsers();
+            } catch (error) {
+                console.error('Error restoring user:', error);
+                const message = (error?.message || '').toLowerCase();
+
+                if (message.includes('admin_unarchive_user') || message.includes('function') || message.includes('rpc')) {
+                    showToast('Restore RPC is not installed yet. Run database/migration_phase4_admin_analytics_and_soft_delete.sql in Supabase SQL Editor.', 'error');
+                } else {
+                    showToast(error.message || 'Failed to restore user', 'error');
                 }
             }
         }

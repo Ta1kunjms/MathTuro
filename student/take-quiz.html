@@ -1,0 +1,571 @@
+<!DOCTYPE html>
+<html lang="en" data-portal="student">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Take a quiz or assessment on MathTuro LMS.">
+    <link rel="stylesheet" href="../dist/styles.css">
+    <script src="../shared/js/device.js"></script>
+    <link rel="icon" type="image/png" href="../Logo/MATHURO-LOGO-v2.png">
+    <title>Take Quiz - MathTuro LMS</title>
+    <script src="../shared/js/supabase-lib.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <style>
+        body { font-family: 'Inter', system-ui, sans-serif; }
+        .gradient-text {
+            background: linear-gradient(135deg, #005801 0%, #22c55e 100%);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+        }
+        .glass-sidebar { background: rgba(255,255,255,0.95); backdrop-filter: blur(20px); }
+        .sidebar-link { transition: all 0.2s ease; }
+        .sidebar-link:hover, .sidebar-link.active {
+            background: linear-gradient(135deg, #005801 0%, #006B01 100%); color: white;
+        }
+        .sidebar-link.active { box-shadow: 0 4px 15px rgba(0,88,1,0.3); }
+
+        /* Quiz question card */
+        .question-card {
+            background: white;
+            border: 2px solid #e5e7eb;
+            border-radius: 20px;
+            transition: border-color 0.2s;
+        }
+        .question-card.answered { border-color: #86efac; }
+
+        /* Option button */
+        .opt-btn {
+            width: 100%;
+            text-align: left;
+            padding: 14px 18px;
+            border: 2px solid #e5e7eb;
+            border-radius: 14px;
+            font-size: 15px;
+            font-weight: 500;
+            color: #374151;
+            background: white;
+            cursor: pointer;
+            transition: all 0.15s;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .opt-btn:hover { border-color: #005801; background: #f0fdf4; }
+        .opt-btn.selected {
+            border-color: #005801;
+            background: linear-gradient(135deg, #f0fdf4, #dcfce7);
+            color: #14532d;
+        }
+        .opt-letter {
+            width: 30px; height: 30px;
+            border-radius: 50%;
+            background: #f3f4f6;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 13px; font-weight: 700;
+            color: #6b7280;
+            flex-shrink: 0;
+            transition: all 0.15s;
+        }
+        .opt-btn.selected .opt-letter {
+            background: #005801; color: white;
+        }
+
+        /* Identification input */
+        .id-input {
+            width: 100%;
+            padding: 14px 18px;
+            border: 2px solid #e5e7eb;
+            border-radius: 14px;
+            font-size: 15px;
+            font-family: inherit;
+            transition: border-color 0.2s;
+        }
+        .id-input:focus { outline: none; border-color: #005801; box-shadow: 0 0 0 3px rgba(0,88,1,0.1); }
+        .id-input.filled { border-color: #86efac; }
+
+        /* Progress bar */
+        .quiz-progress-bar {
+            height: 6px;
+            background: #e2e8f0;
+            border-radius: 999px;
+            overflow: hidden;
+        }
+        .quiz-progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #005801, #22c55e);
+            border-radius: 999px;
+            transition: width 0.4s ease;
+        }
+
+        /* Result card */
+        .result-ring {
+            width: 160px; height: 160px;
+            border-radius: 50%;
+            border: 12px solid #e2e8f0;
+            display: flex; align-items: center; justify-content: center;
+            flex-direction: column;
+            position: relative;
+        }
+        .result-ring.pass { border-color: #22c55e; }
+        .result-ring.fail { border-color: #ef4444; }
+
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; }
+        ::-webkit-scrollbar-thumb { background: #005801; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: #004601; }
+    </style>
+    <link rel="stylesheet" href="../shared/css/base.css">
+    <link rel="stylesheet" href="assets/css/student.css">
+</head>
+<body class="bg-gray-50 min-h-screen">
+
+    <div id="mobileOverlay" class="fixed inset-0 bg-black bg-opacity-50 z-40 hidden lg:hidden"></div>
+    <div id="sidebar"></div>
+
+    <main class="lg:ml-72 min-h-screen">
+        <!-- Header -->
+        <header class="bg-white border-b border-gray-200 sticky top-0 z-30">
+            <div class="flex items-center justify-between px-4 lg:px-8 py-4">
+                <button id="mobileMenuBtn" class="lg:hidden p-2 text-gray-600 hover:text-brand rounded-lg">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
+                    </svg>
+                </button>
+                <div class="flex-1 min-w-0">
+                    <a id="backLink" href="quizzes.html" class="text-sm text-gray-500 hover:text-brand transition-colors">
+                        <i class="fas fa-arrow-left mr-1"></i>Back
+                    </a>
+                    <h1 id="quizTitle" class="text-xl font-bold text-gray-800 truncate mt-0.5">Loading…</h1>
+                </div>
+                <!-- Timer (shown if time limit set) -->
+                <div id="timerDisplay" class="hidden bg-amber-50 border border-amber-200 rounded-xl px-4 py-2 text-sm font-bold text-amber-700">
+                    <i class="fas fa-clock mr-1"></i><span id="timerText">--:--</span>
+                </div>
+            </div>
+            <!-- Progress Bar -->
+            <div class="px-4 lg:px-8 pb-3" id="progressBarWrapper">
+                <div class="flex justify-between text-xs text-gray-500 mb-1">
+                    <span id="progressLabel">0 / 0 answered</span>
+                    <span id="progressPct">0%</span>
+                </div>
+                <div class="quiz-progress-bar">
+                    <div id="progressFill" class="quiz-progress-fill" style="width:0%"></div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Quiz Content -->
+        <div class="p-4 lg:p-8 max-w-3xl mx-auto">
+
+            <!-- Loading State -->
+            <div id="loadingState" class="text-center py-20">
+                <div class="w-16 h-16 bg-brand/10 rounded-full flex items-center justify-center mx-auto mb-4 animate-pulse">
+                    <i class="fas fa-brain text-brand text-2xl"></i>
+                </div>
+                <p class="text-gray-500">Loading questions…</p>
+            </div>
+
+            <!-- Error State -->
+            <div id="errorState" class="hidden text-center py-20">
+                <div class="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <i class="fas fa-lock text-red-500 text-2xl"></i>
+                </div>
+                <h3 id="errorTitle" class="text-xl font-semibold text-gray-900 mb-2">Access Locked</h3>
+                <p id="errorMsg" class="text-gray-500 mb-6"></p>
+                <a href="module-view.html" class="inline-flex items-center gap-2 bg-brand text-white px-6 py-3 rounded-xl font-medium hover:bg-brand-dark transition-colors">
+                    <i class="fas fa-arrow-left"></i>Back to Module
+                </a>
+            </div>
+
+            <!-- Questions -->
+            <div id="questionsSection" class="hidden space-y-6">
+                <div id="questionsList"></div>
+
+                <!-- Submit -->
+                <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 text-center">
+                    <p id="submitHint" class="text-sm text-gray-500 mb-4">Answer all questions before submitting.</p>
+                    <button id="btnSubmitQuiz"
+                        class="inline-flex items-center gap-2 bg-brand text-white px-8 py-3 rounded-xl font-semibold hover:bg-brand-dark transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                        disabled>
+                        <i class="fas fa-paper-plane"></i>Submit Quiz
+                    </button>
+                </div>
+            </div>
+
+            <!-- Result State -->
+            <div id="resultSection" class="hidden">
+                <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-8 text-center">
+                    <div class="flex justify-center mb-6">
+                        <div id="resultRing" class="result-ring">
+                            <p id="resultPct" class="text-3xl font-bold text-gray-900">0%</p>
+                            <p class="text-xs text-gray-500 mt-1">Score</p>
+                        </div>
+                    </div>
+                    <h2 id="resultTitle" class="text-2xl font-bold text-gray-900 mb-2">Quiz Submitted</h2>
+                    <p id="resultSubtitle" class="text-gray-500 mb-6"></p>
+                    <div class="grid grid-cols-2 gap-4 max-w-xs mx-auto mb-8">
+                        <div class="bg-gray-50 rounded-xl p-4 text-center">
+                            <p id="resultScore" class="text-2xl font-bold text-gray-900">—</p>
+                            <p class="text-xs text-gray-500">Score</p>
+                        </div>
+                        <div class="bg-gray-50 rounded-xl p-4 text-center">
+                            <p id="resultRemaining" class="text-2xl font-bold text-gray-900">—</p>
+                            <p class="text-xs text-gray-500">Remaining Attempts</p>
+                        </div>
+                    </div>
+                    <!-- Student Feedback Contract: ONLY aggregate data, no item-level details -->
+                    <div class="bg-amber-50 border border-amber-200 rounded-xl p-3 text-sm text-amber-700 mb-6 max-w-sm mx-auto text-left">
+                        <i class="fas fa-info-circle mr-1"></i>
+                        Detailed question results are reviewed by your teacher only.
+                    </div>
+                    <div class="flex flex-col sm:flex-row gap-3 justify-center">
+                        <a id="resultBackBtn" href="quizzes.html"
+                            class="inline-flex items-center gap-2 border border-gray-300 text-gray-700 px-6 py-3 rounded-xl font-medium hover:bg-gray-50 transition-colors">
+                            <i class="fas fa-list"></i>Back to Quizzes
+                        </a>
+                        <button id="btnRetryQuiz" class="hidden inline-flex items-center gap-2 bg-brand text-white px-6 py-3 rounded-xl font-medium hover:bg-brand-dark transition-colors">
+                            <i class="fas fa-redo"></i>Try Again
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Submit Confirm Modal -->
+    <div id="confirmModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-2xl w-full max-w-sm p-6 text-center">
+            <div class="w-16 h-16 bg-brand/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                <i class="fas fa-paper-plane text-brand text-2xl"></i>
+            </div>
+            <h3 class="text-lg font-bold text-gray-900 mb-2">Submit Quiz?</h3>
+            <p id="confirmMsg" class="text-gray-500 text-sm mb-6">Make sure you've reviewed all your answers before submitting.</p>
+            <div class="flex gap-3">
+                <button id="btnConfirmSubmit"
+                    class="flex-1 bg-brand text-white py-3 rounded-xl font-semibold hover:bg-brand-dark transition-colors">
+                    Submit
+                </button>
+                <button id="btnCancelSubmit"
+                    class="flex-1 border border-gray-300 text-gray-700 py-3 rounded-xl font-medium hover:bg-gray-50 transition-colors">
+                    Review
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast -->
+    <div id="toast" class="hidden fixed bottom-4 right-4 px-6 py-3 rounded-xl shadow-lg z-50 flex items-center space-x-2"></div>
+
+    <script src="../shared/js/runtime-config.js"></script>
+    <script src="../shared/js/config.js"></script>
+    <script src="../shared/js/supabase.js"></script>
+    <script src="../shared/js/auth.js"></script>
+    <script src="../shared/js/pathManager.js"></script>
+    <script src="assets/js/sidebar.js"></script>
+    <script>
+    /*
+      take-quiz.html — Phase 3 Student Native Quiz Taking
+      URL params: quiz_id OR assessment_id
+      Questions: fetched via RPC (no answer keys in payload)
+      Submission: submit_and_grade_regular_quiz OR submit_and_grade_assessment
+      Result display: AGGREGATE ONLY — score, total_items, percentage, is_passing,
+                      status, remaining_attempts. No item-level correctness per v1 policy.
+    */
+
+    const params     = new URLSearchParams(location.search);
+    const QUIZ_ID    = params.get('quiz_id')      || null;
+    const ASMT_ID    = params.get('assessment_id') || null;
+    const OWNER_TYPE = QUIZ_ID ? 'quiz' : (ASMT_ID ? 'assessment' : null);
+
+    let currentUser  = null;
+    let questions    = [];       // [{id, order_index, question_text, question_type, options, points}]
+    let answers      = {};       // {question_id: answer_value}
+    let timerInterval= null;
+    let secondsLeft  = 0;
+
+    // ─── Boot ────────────────────────────────────────────────────────────
+    document.addEventListener('DOMContentLoaded', async () => {
+        if (!OWNER_TYPE) {
+            showError('Invalid URL', 'Missing quiz_id or assessment_id in URL.');
+            return;
+        }
+        try {
+            currentUser = JSON.parse(localStorage.getItem('user'));
+            if (!currentUser || currentUser.role !== 'student') {
+                location.href = '../public/login.html'; return;
+            }
+        } catch(e) { location.href = '../public/login.html'; return; }
+
+        await loadAndRenderQuestions();
+        setupSubmitEvents();
+    });
+
+    // ─── Load Questions via RPC ─────────────────────────────────────────
+    async function loadAndRenderQuestions() {
+        try {
+            const sb = getSupabase();
+            let rpcName, rpcParams;
+
+            if (QUIZ_ID) {
+                rpcName   = 'get_quiz_questions_for_student';
+                rpcParams = { p_quiz_id: QUIZ_ID };
+                // Load quiz title
+                const { data: qMeta } = await sb.from('quizzes')
+                    .select('title, time_limit_minutes').eq('id', QUIZ_ID).maybeSingle();
+                if (qMeta) {
+                    document.getElementById('quizTitle').textContent = qMeta.title;
+                    if (qMeta.time_limit_minutes > 0) startTimer(qMeta.time_limit_minutes * 60);
+                }
+            } else {
+                rpcName   = 'get_assessment_questions_for_student';
+                rpcParams = { p_assessment_id: ASMT_ID };
+                // Load assessment type for title
+                const { data: aMeta } = await sb.from('module_assessments')
+                    .select('assessment_type').eq('id', ASMT_ID).maybeSingle();
+                if (aMeta) {
+                    document.getElementById('quizTitle').textContent =
+                        aMeta.assessment_type === 'pre_test' ? 'Pre-Test' : 'Post-Test';
+                }
+            }
+
+            const { data, error } = await sb.rpc(rpcName, rpcParams);
+
+            if (error) {
+                showError(
+                    'Access Locked',
+                    error.message.includes('locked') ? 'This quiz is not yet accessible. Complete the required steps to unlock it.' : error.message
+                );
+                return;
+            }
+
+            questions = data || [];
+
+            if (questions.length === 0) {
+                showError('No Questions', 'This quiz has no questions configured yet. Please check back later.');
+                return;
+            }
+
+            renderQuestions();
+            document.getElementById('loadingState').classList.add('hidden');
+            document.getElementById('questionsSection').classList.remove('hidden');
+        } catch(err) {
+            showError('Error', err.message);
+        }
+    }
+
+    // ─── Render Questions ────────────────────────────────────────────────
+    function renderQuestions() {
+        const list = document.getElementById('questionsList');
+        list.innerHTML = questions.map((q, idx) => {
+            let inputHtml = '';
+            if (q.question_type === 'multiple_choice') {
+                inputHtml = '<div class="space-y-2 mt-4">' +
+                    (q.options || []).map(opt =>
+                        '<button type="button" class="opt-btn" data-qid="' + q.id + '" data-val="' + esc(opt.id) + '" onclick="selectMC(this)">' +
+                        '<span class="opt-letter">' + opt.id + '</span>' +
+                        '<span>' + esc(opt.text) + '</span></button>'
+                    ).join('') + '</div>';
+            } else if (q.question_type === 'true_false') {
+                inputHtml = '<div class="flex gap-3 mt-4">' +
+                    '<button type="button" class="opt-btn flex-1 justify-center" data-qid="' + q.id + '" data-val="True" onclick="selectMC(this)">' +
+                    '<span class="opt-letter">T</span><span>True</span></button>' +
+                    '<button type="button" class="opt-btn flex-1 justify-center" data-qid="' + q.id + '" data-val="False" onclick="selectMC(this)">' +
+                    '<span class="opt-letter">F</span><span>False</span></button>' +
+                    '</div>';
+            } else {
+                // Identification
+                inputHtml = '<div class="mt-4">' +
+                    '<input type="text" class="id-input" data-qid="' + q.id + '" ' +
+                    'placeholder="Type your answer here…" oninput="updateIdAnswer(this)" ' +
+                    'autocomplete="off">' +
+                    '<p class="text-xs text-gray-400 mt-1">Case-insensitive matching.</p></div>';
+            }
+
+            return '<div class="question-card p-5 lg:p-6" data-qid="' + q.id + '" id="qcard-' + q.id + '">' +
+                '<div class="flex items-start gap-3">' +
+                '<div class="w-8 h-8 bg-brand/10 rounded-lg flex items-center justify-center text-sm font-bold text-brand flex-shrink-0 mt-0.5">' + (idx + 1) + '</div>' +
+                '<div class="flex-1 min-w-0">' +
+                '<p class="font-medium text-gray-900 leading-relaxed text-base">' + esc(q.question_text) + '</p>' +
+                '<div class="flex items-center gap-2 mt-1">' +
+                '<span class="text-xs text-gray-400"><i class="fas fa-star text-yellow-400 mr-0.5"></i>' + q.points + ' pt' + (q.points !== 1 ? 's' : '') + '</span>' +
+                '</div>' +
+                inputHtml +
+                '</div></div></div>';
+        }).join('');
+
+        updateProgress();
+    }
+
+    // ─── Answer Handling ─────────────────────────────────────────────────
+    function selectMC(btn) {
+        const qid = btn.dataset.qid;
+        const val = btn.dataset.val;
+        // Deselect siblings
+        document.querySelectorAll('.opt-btn[data-qid="' + qid + '"]').forEach(b => b.classList.remove('selected'));
+        btn.classList.add('selected');
+        answers[qid] = val;
+        document.getElementById('qcard-' + qid).classList.add('answered');
+        updateProgress();
+    }
+
+    function updateIdAnswer(input) {
+        const qid = input.dataset.qid;
+        const val = input.value.trim();
+        answers[qid] = val;
+        input.classList.toggle('filled', val.length > 0);
+        document.getElementById('qcard-' + qid).classList.toggle('answered', val.length > 0);
+        updateProgress();
+    }
+
+    function updateProgress() {
+        const total     = questions.length;
+        const answered  = Object.keys(answers).filter(k => answers[k] && answers[k].trim() !== '').length;
+        const pct       = total > 0 ? Math.round((answered / total) * 100) : 0;
+        document.getElementById('progressLabel').textContent = answered + ' / ' + total + ' answered';
+        document.getElementById('progressPct').textContent   = pct + '%';
+        document.getElementById('progressFill').style.width  = pct + '%';
+
+        const allAnswered = answered === total;
+        const submitBtn   = document.getElementById('btnSubmitQuiz');
+        submitBtn.disabled = !allAnswered;
+        document.getElementById('submitHint').textContent = allAnswered
+            ? 'All questions answered. Ready to submit!'
+            : (total - answered) + ' question' + (total - answered !== 1 ? 's' : '') + ' remaining.';
+    }
+
+    // ─── Timer ───────────────────────────────────────────────────────────
+    function startTimer(seconds) {
+        secondsLeft = seconds;
+        document.getElementById('timerDisplay').classList.remove('hidden');
+        updateTimerDisplay();
+        timerInterval = setInterval(() => {
+            secondsLeft--;
+            updateTimerDisplay();
+            if (secondsLeft <= 0) {
+                clearInterval(timerInterval);
+                showToast('Time is up! Submitting automatically…', 'error');
+                submitQuiz(true);
+            }
+        }, 1000);
+    }
+
+    function updateTimerDisplay() {
+        const m = Math.floor(secondsLeft / 60).toString().padStart(2,'0');
+        const s = (secondsLeft % 60).toString().padStart(2,'0');
+        document.getElementById('timerText').textContent = m + ':' + s;
+        if (secondsLeft <= 60) {
+            document.getElementById('timerDisplay').className =
+                'bg-red-50 border border-red-200 rounded-xl px-4 py-2 text-sm font-bold text-red-700';
+        }
+    }
+
+    // ─── Submit Events ───────────────────────────────────────────────────
+    function setupSubmitEvents() {
+        document.getElementById('btnSubmitQuiz').onclick = () =>
+            document.getElementById('confirmModal').classList.remove('hidden');
+        document.getElementById('btnConfirmSubmit').onclick = () => {
+            document.getElementById('confirmModal').classList.add('hidden');
+            submitQuiz(false);
+        };
+        document.getElementById('btnCancelSubmit').onclick = () =>
+            document.getElementById('confirmModal').classList.add('hidden');
+        document.getElementById('btnRetryQuiz').onclick = () => location.reload();
+    }
+
+    // ─── Submit Quiz ──────────────────────────────────────────────────────
+    async function submitQuiz(autoSubmit = false) {
+        if (timerInterval) clearInterval(timerInterval);
+
+        const submitBtn = document.getElementById('btnSubmitQuiz');
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Submitting…';
+
+        // Build answers payload: [{question_id, answer}]
+        const payload = questions.map(q => ({
+            question_id: q.id,
+            answer:      (answers[q.id] || '').trim(),
+        }));
+
+        try {
+            const sb = getSupabase();
+            let result;
+
+            if (QUIZ_ID) {
+                const { data, error } = await sb.rpc('submit_and_grade_regular_quiz', {
+                    p_quiz_id:  QUIZ_ID,
+                    p_answers:  payload,
+                });
+                if (error) throw error;
+                result = data;
+            } else {
+                const { data, error } = await sb.rpc('submit_and_grade_assessment', {
+                    p_assessment_id: ASMT_ID,
+                    p_answers:       payload,
+                });
+                if (error) throw error;
+                result = data;
+            }
+
+            showResult(result);
+        } catch(err) {
+            console.error(err);
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = '<i class="fas fa-paper-plane mr-2"></i>Submit Quiz';
+            showToast('Submission failed: ' + err.message, 'error');
+        }
+    }
+
+    // ─── Show Result (aggregate-only per v1 contract) ─────────────────────
+    function showResult(result) {
+        document.getElementById('questionsSection').classList.add('hidden');
+        document.getElementById('progressBarWrapper').classList.add('hidden');
+        document.getElementById('resultSection').classList.remove('hidden');
+
+        const isPassing   = result.is_passing;
+        const pct         = parseFloat(result.percentage || 0).toFixed(1);
+        const score       = result.score;
+        const total       = result.total_items;
+        const remaining   = result.remaining_attempts;
+        const status      = result.status;
+
+        const ring = document.getElementById('resultRing');
+        ring.classList.add(isPassing ? 'pass' : 'fail');
+
+        document.getElementById('resultPct').textContent       = pct + '%';
+        document.getElementById('resultTitle').textContent     = status === 'Passed' ? '🎉 Passed!' : status === 'Failed' ? 'Max Attempts Reached' : 'Submitted';
+        document.getElementById('resultSubtitle').textContent  = isPassing
+            ? 'Great job! You passed this quiz.'
+            : (remaining > 0 ? 'You have ' + remaining + ' attempt' + (remaining !== 1 ? 's' : '') + ' remaining.' : 'You have used all attempts for this quiz.');
+        document.getElementById('resultScore').textContent     = score + ' / ' + total;
+        document.getElementById('resultRemaining').textContent = remaining;
+
+        // Show retry button only if attempts remain and not passed
+        if (!isPassing && remaining > 0) {
+            document.getElementById('btnRetryQuiz').classList.remove('hidden');
+        }
+    }
+
+    // ─── Error State ─────────────────────────────────────────────────────
+    function showError(title, msg) {
+        document.getElementById('loadingState').classList.add('hidden');
+        document.getElementById('errorState').classList.remove('hidden');
+        document.getElementById('errorTitle').textContent = title;
+        document.getElementById('errorMsg').textContent   = msg;
+    }
+
+    // ─── Helpers ─────────────────────────────────────────────────────────
+    function esc(s) {
+        if (!s) return '';
+        return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
+    function showToast(msg, type) {
+        const t = document.getElementById('toast');
+        t.className = 'fixed bottom-4 right-4 px-6 py-3 rounded-xl shadow-lg z-50 flex items-center space-x-2 ' +
+            (type==='success'?'bg-green-500 text-white':type==='error'?'bg-red-500 text-white':'bg-gray-800 text-white');
+        t.innerHTML = '<i class="fas fa-' + (type==='success'?'check-circle':type==='error'?'exclamation-circle':'info-circle') + '"></i><span>' + msg + '</span>';
+        t.classList.remove('hidden');
+        setTimeout(() => t.classList.add('hidden'), 4000);
+    }
+    </script>
+</body>
+</html>

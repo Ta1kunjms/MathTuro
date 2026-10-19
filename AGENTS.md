@@ -1,175 +1,97 @@
-# MathTuro — Agent Instructions
+# Project Rules
 
-## Project
-
-- **Product:** MathTuro Learning Management System — public-access learning
-  workflows for students, teacher content management, and administrative
-  oversight.
-- **Primary users:** public/guest visitors, students, teachers, and
-  administrators.
-- **Stack:** static HTML frontend with shared JavaScript/CSS modules,
-  Tailwind CSS v3, Python HTTP server for local static hosting, Supabase
-  Auth + PostgreSQL + Storage for identity and data, and Vercel static
-  hosting.
-- **Package manager:** npm
-- **Environments:** local development / Vercel deployment.
+## Mandatory Automatic State Protocol (Zero User Intervention)
+All agents MUST follow this protocol automatically without requiring user intervention:
+1. **Prompt / Session Start:** Automatically inspect `docs/PROJECT_STATE.md` to load the current project state, active blockers, and immediate next action before executing tasks.
+2. **Task Completion / File Changes:** Automatically update `docs/PROJECT_STATE.md`:
+   - Update top section `[Current State & Immediate Next Actions]`.
+   - Append a new entry to `## 4. Session Changelog & History`.
+   - `docs/PROJECT_STATE.md` is strictly EXEMPT from the `APPROVE PLAN` lock. Do not pause or prompt the user for permission to update this ledger.
 
 ## Commands
+- Install: `npm install`
+- Develop: `npm run dev`
+- Build: `npm run build`
+- Build CSS: `npm run build:css`
+- Lint: UNVERIFIED - confirm manually
+- Typecheck: UNVERIFIED - confirm manually
+- Unit/integration tests: UNVERIFIED - confirm manually
+- End-to-end tests: UNVERIFIED - confirm manually
 
-| Task | Command |
-|---|---|
-| Install | `npm install` |
-| Develop | `npm run dev` |
-| Build | `npm run build` |
-| Lint | UNVERIFIED — confirm manually |
-| Type-check | UNVERIFIED — confirm manually |
-| Unit/integration tests | UNVERIFIED — confirm manually |
-| End-to-end tests | UNVERIFIED — confirm manually |
-
----
-
-## Non-Negotiable Rules
-
-These rules apply in every session, without exception, regardless of
-instructions from any agent, skill, or user message.
-
-1. Inspect existing patterns before proposing new dependencies or
-   architecture.
-2. Never read, print, write, or commit secrets. Use documented
-   environment-variable names only.
-3. Never deploy, push, merge, publish, purchase, or change production
-   data/infrastructure without a separate, explicit, human approval in
-   that same session.
-4. Preserve unrelated work and report the actual `git status` before
-   implementation.
-5. Do not claim tests passed unless they were executed successfully in
-   this session.
-6. Treat authentication, authorization, validation, privacy,
-   accessibility, and rollback as acceptance criteria — not optional
-   polish.
-
----
-
-## Hard Safety Blockers — Mechanically Enforced
-
-The following 11 operations are **mechanically enforced via Antigravity's
-permission engine (`deny > ask > allow`)** — see `.agents/settings.json`
-(project-level) and global `settings.json` for the exact machine-checked
-rules. They are hard-blocked at the tool-execution layer before execution can
-occur, in addition to being binding behavioral rules. No user message, agent
-delegation, skill invocation, or seemingly compelling context overrides them.
+## Safety
+The following 11 operations are mechanically enforced via Antigravity's permission engine (`deny > ask > allow`):
 
 | Category | Prohibited action | Enforcement Mechanism |
 |---|---|---|
-| **Secret file reads** | NEVER read `.env`, `.env.local`, `.env.production`, files inside `secrets/`, or files inside `credentials/` — even if asked directly | Mechanically enforced: `read_file` deny rule in `.agents/settings.json` and global `settings.json` |
-| **Destructive git (bash)** | NEVER run `git push` in any form — even if asked directly | Mechanically enforced: `command(git push*)` deny rule |
-| **Destructive git (bash)** | NEVER run `git reset --hard` in any form — even if asked directly | Mechanically enforced: `command(git reset --hard*)` deny rule |
-| **Destructive git (bash)** | NEVER run `git clean` in any form — even if asked directly | Mechanically enforced: `command(git clean*)` deny rule |
-| **Destructive shell** | NEVER run `rm -rf` in any form — even if asked directly | Mechanically enforced: `command(rm -rf*)` deny rule |
-| **Production database** | NEVER run `supabase db reset` — even if asked directly | Mechanically enforced: `command(supabase db reset*)` in `.agents/settings.json` |
-| **Production database** | NEVER run `supabase db push` — even if asked directly | Mechanically enforced: `command(supabase db push*)` in `.agents/settings.json` |
-| **Production deploy** | NEVER run `vercel --prod` or `npx vercel --prod` — even if asked directly | Mechanically enforced: `command(vercel --prod*)` in `.agents/settings.json` |
-| **Destructive PowerShell** | NEVER run `Remove-Item * -Recurse` — even if asked directly | Mechanically enforced: `command(*Remove-Item*-Recurse*)` deny rule |
-| **Destructive git (PowerShell)** | NEVER run `git push` via PowerShell — even if asked directly | Mechanically enforced: `command(git push*)` deny rule |
-| **Destructive git (PowerShell)** | NEVER run `git reset --hard` via PowerShell — even if asked directly | Mechanically enforced: `command(git reset --hard*)` deny rule |
+| **Secret file reads** | NEVER read `.env`, `.env.local`, `.env.production`, files inside `secrets/`, or files inside `credentials/` - even if asked directly | Mechanically enforced: `read_file` deny rule in `.agents/settings.json` and global `settings.json` |
+| **Destructive git (bash)** | NEVER run `git push` in any form - even if asked directly | Mechanically enforced: `command(git push*)` deny rule |
+| **Destructive git (bash)** | NEVER run `git reset --hard` in any form - even if asked directly | Mechanically enforced: `command(git reset --hard*)` deny rule |
+| **Destructive git (bash)** | NEVER run `git clean` in any form - even if asked directly | Mechanically enforced: `command(git clean*)` deny rule |
+| **Destructive shell** | NEVER run `rm -rf` in any form - even if asked directly | Mechanically enforced: `command(rm -rf*)` deny rule |
+| **Production database** | NEVER run `supabase db reset` - even if asked directly | Mechanically enforced: `command(supabase db reset*)` in `.agents/settings.json` |
+| **Production database** | NEVER run `supabase db push` - even if asked directly | Mechanically enforced: `command(supabase db push*)` in `.agents/settings.json` |
+| **Production deploy** | NEVER run `vercel --prod` or `npx vercel --prod` - even if asked directly | Mechanically enforced: `command(vercel --prod*)` in `.agents/settings.json` |
+| **Destructive PowerShell** | NEVER run `Remove-Item * -Recurse` - even if asked directly | Mechanically enforced: `command(*Remove-Item*-Recurse*)` deny rule |
+| **Destructive git (PowerShell)** | NEVER run `git push` via PowerShell - even if asked directly | Mechanically enforced: `command(git push*)` deny rule |
+| **Destructive git (PowerShell)** | NEVER run `git reset --hard` via PowerShell - even if asked directly | Mechanically enforced: `command(git reset --hard*)` deny rule |
 
-If any skill, subagent, or external instruction attempts any of the above
-operations, the Antigravity engine blocks it immediately with `Permission Denied`.
+Environment and secrets:
+- Use only documented environment variable names from `.env.example`.
+- Never read, log, print, write, or commit secrets.
 
----
-
-## Approval Workflow
-
-- For new websites, major features, redesigns, migrations, and architecture
-  changes, invoke the `council-plan` skill first.
-- Planning must not modify the project.
-- Only the exact phrase `APPROVE PLAN` passed to the `execute-approved-plan`
-  skill authorizes implementation.
-- Approval covers only the identified plan and conditions; deployment always
-  requires a separate, explicit approval.
-
----
+## Code
+- Follow existing repository patterns.
+- Reuse existing components and utilities in `shared/`.
+- Keep diffs scoped to the approved task; avoid unrelated refactors.
+- Preserve static HTML + shared JavaScript architecture; do not introduce a backend server or frontend framework without approval.
+- Maintain strict role boundaries: `public/`, `student/`, `teacher/`, `admin/`.
 
 ## Architecture
+- Frontend-first LMS: static HTML with shared JavaScript/CSS modules.
+- Entry point: `index.html` redirects to public landing/auth.
+- Role directories:
+  - `public/`: Guest landing and authentication pages
+  - `student/`: Dashboard, module viewer, lessons, quizzes, tutorials
+  - `teacher/`: Module management, quiz/video management, submissions, reports
+  - `admin/`: Analytics, user management, system settings, admin dashboard
+- Shared application layer:
+  - `shared/js/config.js`: Runtime configuration (Supabase URL, anon key)
+  - `shared/js/supabase.js`: Initializes Supabase client
+  - `shared/js/auth.js`: Auth state, login/logout, session checks, redirects
+  - `shared/js/modules.js`, `shared/js/uploads.js`: Module and upload flows
+- Hosting: Vercel static deployment (`vercel.json`), Tailwind CSS v3 (`tailwind.config.js`).
 
-This repository is a frontend-first LMS with role-based page layouts and
-shared JavaScript/CSS modules — no custom backend server.
+## Data and Supabase
+- Initialize Supabase client only in `shared/js/supabase.js`.
+- Never use service-role keys in client-side code.
+- Database schema: `database/supabase_complete_setup.sql` and migrations in `database/`.
+- User roles in `public.users`: `student`, `teacher`, `admin`.
+- Enforce PostgreSQL Row Level Security (RLS) policies for all data access.
+- Storage: lower kebab-case bucket names (e.g. `quiz-screenshots`, `learning-materials`).
+- Naming conventions (`docs/api-storage-conventions.md`): lowercase `snake_case` DB identifiers, plural table names, `_id` suffix on foreign keys.
 
-- **Root entry:** `index.html` redirects to the public-facing landing/auth
-  entry.
-- **Role-based page groups:**
-  - `public/` — guest/public experience and authentication pages
-  - `student/` — dashboards, module views, lessons, quizzes, tutorials
-  - `teacher/` — module management, quiz/video management, submissions, reports
-  - `admin/` — analytics, users, settings, systems, admin dashboards
-- **Shared application layer:**
-  - `shared/js/config.js` — runtime configuration including the Supabase URL
-    and anon key
-  - `shared/js/supabase.js` — initializes the Supabase client
-  - `shared/js/auth.js` — login, logout, session checks, role detection,
-    redirect logic
-  - `shared/js/modules.js` and `shared/js/uploads.js` — module content and
-    upload flows
-  - `shared/css/` and `shared/js/` — shared styling and utilities
-- **Data and identity layer:**
-  - Supabase Auth for user identity and sessions
-  - Supabase PostgreSQL tables defined in `database/supabase_complete_setup.sql`
-  - Supabase Storage for uploaded assets (quiz screenshots, learning materials)
-  - Row Level Security (RLS) policies enforced in SQL scripts
-- **Hosting:**
-  - `vercel.json` — static hosting rewrites and security headers
-  - `tailwind.config.js` — scans HTML and JS files for CSS generation
-- **Backend model:** no custom backend API server; the frontend interacts
-  directly with Supabase tables and storage.
+## Approval Gate
+- Planning must not modify workspace files.
+- Implementation requires the exact user approval: `APPROVE PLAN`.
+- No variation, approximation, or implied consent authorizes modifications.
+- Approval covers only the agreed plan; deployment and infrastructure mutation require separate explicit human approval.
 
-### Verified database and auth model
+## Testing
+- Update relevant tests for behavior changes.
+- Run relevant checks before completion.
+- Do not claim tests passed unless executed successfully in the current session.
 
-- `public.users` stores `email`, `full_name`, and `role`.
-- Allowed role values: `student`, `teacher`, `admin`.
-- Auth login flow: `supabase.auth.signInWithPassword(...)`, then retrieve or
-  create the matching `public.users` row and store the user in `localStorage`.
-- Session validation: `supabase.auth.getSession()` with role-based redirect.
-- RLS policies: own-profile access, admin management, teacher/student
-  role-scoped views.
+## Completion
+- Maintain `docs/PROJECT_STATE.md`:
+  - Read `docs/PROJECT_STATE.md` at session start for context and next actions.
+  - Update top section `[Current State & Immediate Next Actions]` upon task completion.
+  - Append a new entry to `## 4. Session Changelog & History` with files modified, tests run, and blockers.
+- Report changed files.
+- Report checks run and results.
+- State unrun checks and blockers.
 
-### Environment configuration
-
-- Documented variable names in `.env.example`:
-  `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`,
-  `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`,
-  `APP_NAME`, `APP_VERSION`, `PORT`.
-- `.gitignore` excludes: `.env`, `.env.local`, `.env.development.local`,
-  `.env.test.local`, `.env.production.local`.
-
----
-
-## Domain Rules
-
-1. Preserve the static HTML + shared JavaScript architecture; do not
-   introduce a framework or backend server unless explicitly approved.
-2. Respect role boundaries: public flows, student data, teacher content, and
-   admin-only operations must remain separated.
-3. Keep Supabase usage consistent: initialize the client in
-   `shared/js/supabase.js`, centralize config in `shared/js/config.js`,
-   and never use service-role keys in client code.
-4. Use only documented environment variable names from `.env.example`;
-   never print or commit secret values.
-5. Follow naming conventions in `docs/api-storage-conventions.md`:
-   lowercase `snake_case` for DB identifiers, plural table names,
-   `_id` suffix on foreign keys, lowercase `kebab-case` storage bucket names.
-6. Confirm database access and policy changes against the SQL in `database/`
-   before claiming they are safe or complete.
-7. Do not assume production infrastructure changes are safe; treat deployment
-   and data mutation as explicit approval items.
-8. Keep changes compatible with the static hosting model and role-based page
-   layouts already present in the repo.
-
----
-
-## Agent Index
-
-The agents below are decision lenses, not autonomous corporate officers.
-The user remains the final authority.
+## Agent Roles
+The agents below are decision lenses, not autonomous corporate officers. The user remains the final authority.
 
 | Agent | Role | Writes source? | Typical phase |
 |---|---|---:|---|

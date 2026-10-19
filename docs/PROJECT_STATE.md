@@ -12,14 +12,14 @@
 
 * **Current Date / Last Updated:** 2026-10-20
 * **Highest Completed & Evidenced Phase:** **Phase 3 assessment security & gating**: authenticated staging suite **40/40 PASS** (2026-10-20 04:23). Phase 2 was verified earlier (`c245b0a`).
-* **Highest Code-Staged Phase:** **Phases 4, 5, 6**: SQL migrations executed on staging and frontend committed in `43e04ce`; authenticated QA for these is still pending.
+* **Highest Code-Staged Phase:** **Phases 4, 5, 6**: SQL migrations executed on staging and frontend committed in `f7b8435`; authenticated QA for these is still pending.
 * **Verified on staging (Claude Code, `scripts/qa/verify_phase3_authenticated_api.ps1`, rejection reasons confirmed by direct probes):**
   - Zero answer-key leakage: pre-test, post-test and regular-quiz payloads carry only `id, order_index, question_text, question_type, options, points`. Students and anon can't read `quiz_questions` directly.
   - Option B: pre-test is reachable while content is locked. One 0% pre-test attempt unlocks the regular quiz and the post-test.
   - Option A: M2 stays locked after post-test scores of 0% and 50% and unlocks at exactly 75%. Resubmitting after a pass is rejected ("already passed").
   - 3-attempt limit: 4th attempt rejected ("Maximum attempts (3) already reached").
   - Submission bypass closed: a direct submit to a locked M2 pre-test is rejected ("Assessment locked by module progression").
-* **Staging DB fixes applied by the user (SQL Editor, 2026-10-20), now captured in `database/migration_phase3_remediation_grants_and_rpc_gating.sql` (written, not committed):**
+* **Staging DB fixes applied by the user (SQL Editor, 2026-10-20), captured in `database/migration_phase3_remediation_grants_and_rpc_gating.sql` (commit `e4ccf9b`):**
   1. `GRANT SELECT ... TO authenticated` on `module_assessments`, `presentations`, `quiz_questions` (plus INSERT/UPDATE/DELETE), `module_assessment_attempts`, `quiz_attempt_answers`.
   2. `get_assessment_questions_for_student`: fixed the ambiguous `id` (`42702`) with a `ma.` alias.
   3. `submit_and_grade_assessment` / `submit_and_grade_regular_quiz` renamed to `*_core` (EXECUTE revoked) and wrapped with `can_student_access_pre_test/_post_test/_quiz` checks.
@@ -27,7 +27,7 @@
 * **Staging Target:** `jlmdvcmdvkvdxpfkqivh.supabase.co`
 
 ### 🎯 The Immediate Next Action (Do This First)
-1. **Git-commit** `database/migration_phase3_remediation_grants_and_rpc_gating.sql` and `scripts/qa/verify_phase3_authenticated_api.ps1` (user decision). Run this migration after Phase 5 on any production or fresh database, and re-run it if the Phase 3 or 5 migrations are ever re-applied.
+1. ✅ Committed on `develop` as `e4ccf9b` (migration + QA suite + ledger). Run this migration after Phase 5 on any production or fresh database, and re-run it if the Phase 3 or 5 migrations are ever re-applied.
 2. Upload a small PDF to M1 via `teacher/manage-presentations.html` to cover the signed-URL check.
 3. Authenticated QA for Phases 4–6.
 
@@ -63,10 +63,10 @@
 | **Phase 0** | Staging Audit & Config Engine | ✅ Committed | N/A | ✅ Passed | `.env.local` precedence in `generate-runtime-config.mjs` |
 | **Phase 1** | Accounts, Demographics & RLS | ✅ Committed (`4ee9576`) | ✅ Applied | ✅ Passed | LRN (12 digits), S.Y., Gender, pending approval queue, teacher roster RLS |
 | **Phase 2** | Assessments & Progression Gating | ✅ Committed (`c245b0a`) | ✅ Applied | ✅ Passed | Pre-test unlock (Option B), Post-test gating (Option A), 3-attempt limit, 75% pass |
-| **Phase 3** | Native Quiz CMS & Presentations | ✅ Committed (`43e04ce`) | ✅ Applied | ⚠️ Code staged; Auth QA pending | `take-quiz.html`, `manage-questions.html`, `view-presentation.html`, private bucket |
-| **Phase 4** | Admin Archiving & Analytics | ✅ Committed (`43e04ce`) | ✅ Applied | ⚠️ Code staged; Auth QA pending | Soft-delete `is_archived`, active user query fix, archived login block |
-| **Phase 5** | EXP Gamification & Leaderboard | ✅ Committed (`43e04ce`) | ✅ Applied | ⚠️ Code staged; Auth QA pending | `student_exp_ledger`, first-attempt award, section-scoped leaderboard RPC |
-| **Phase 6** | Accessibility & Navigation | ✅ Committed (`43e04ce`) | N/A (UI) | ⚠️ Code staged; Smoke QA pending | OpenDyslexic self-hosted font toggle, 3-destination mobile navigation |
+| **Phase 3** | Native Quiz CMS & Presentations | ✅ Committed (`f7b8435`) | ✅ Applied | ⚠️ Code staged; Auth QA pending | `take-quiz.html`, `manage-questions.html`, `view-presentation.html`, private bucket |
+| **Phase 4** | Admin Archiving & Analytics | ✅ Committed (`f7b8435`) | ✅ Applied | ⚠️ Code staged; Auth QA pending | Soft-delete `is_archived`, active user query fix, archived login block |
+| **Phase 5** | EXP Gamification & Leaderboard | ✅ Committed (`f7b8435`) | ✅ Applied | ⚠️ Code staged; Auth QA pending | `student_exp_ledger`, first-attempt award, section-scoped leaderboard RPC |
+| **Phase 6** | Accessibility & Navigation | ✅ Committed (`f7b8435`) | N/A (UI) | ⚠️ Code staged; Smoke QA pending | OpenDyslexic self-hosted font toggle, 3-destination mobile navigation |
 | **Working Tree** | Aesthetic Polish & Multi-Agent | ⚠️ Uncommitted | N/A | ⏳ In review | Glassmorphism, CSS spacing, `.agents/` role definitions |
 
 ---
@@ -78,13 +78,13 @@
 * **Context:** Established unified handover ledger (`docs/PROJECT_STATE.md`) so Claude Code and Antigravity share continuous context, next steps, and change history across sessions.
 * **Changes Made:**
   - Compiled exhaustive program reference artifact: `mathturo_full_program_history.md`.
-  - Audited full git tree: 49 modified working tree files, 4 baseline commits (`4ee9576`, `c245b0a`, `43e04ce`).
+  - Audited full git tree: 49 modified working tree files, 4 baseline commits (`4ee9576`, `c245b0a`, `f7b8435`).
   - Documented staging test account requirements for unblocking Phase 3 verification.
 * **Next Action:** User provisions 3 staging accounts in Supabase Dashboard; agent runs `scratch/verify_phase3_authenticated_api.ps1`.
 
-### [2026-09-29] — Commit `43e04ce`: Native Quiz CMS, Archiving, EXP & Accessibility
+### [2026-09-29] — Commit `f7b8435`: Native Quiz CMS, Archiving, EXP & Accessibility
 * **Author / Agent:** Claude Sonnet & Project Lead
-* **Commit:** `43e04ced348131d06e4444ff0410e125d2757e61`
+* **Commit:** `f7b8435d897f827fd3ab69908f0410234eb6f47b`
 * **Changes Made (4,617 insertions, 21 files):**
   - **Phase 3:** Built `student/take-quiz.html`, `student/view-presentation.html`, `teacher/manage-questions.html`, `teacher/manage-presentations.html`, and `migration_phase3_native_quiz_cms_and_presentations.sql`.
   - **Phase 4:** Implemented user archiving in `admin/users.html`, analytics distinct active users in `admin/analytics.html`, and `migration_phase4_admin_analytics_and_soft_delete.sql`.
@@ -207,6 +207,31 @@
 * **Blockers / Open Questions:** None.
 * **Next Immediate Action:** User decides on the git commit; optional PDF upload for the signed-URL check; Phase 4–6 authenticated QA.
 
+### [2026-10-20 04:45] — Commit Attribution Policy: No AI Co-Authors
+* **Author / Agent:** Claude Code
+* **Goal / Context:** User wants only "Tycoon James Flores" credited. No `Co-Authored-By: Claude …` trailers and no "Generated with Claude Code" lines, in future or past commits.
+* **Files Modified:** `docs/PROJECT_STATE.md` only. Policy saved in Claude Code memory (`no-claude-coauthor`).
+* **Findings:** 3 pushed commits carry Claude trailers: `43e04ce` and `3e74aa8` (on `origin/develop`), and `c40d5d9` (on `origin/main`). Removing them means rewriting history and force-pushing `develop` and `main`. CLAUDE.md requires the user's separate explicit approval for that, and git push is denied in this session, so the user was given manual commands (stash → backup branches → `git filter-branch --msg-filter` → `push --force-with-lease`).
+* **Blockers / Open Questions:** The rewrite must be run by the user. Commit hashes in this ledger (`3e74aa8`, `43e04ce`) will change afterwards.
+* **Next Immediate Action:** User runs the rewrite and shares the new hashes; the agent updates the hash references in this ledger.
+
+### [2026-10-20 05:00] — Claude Co-Author Trailers Removed from History
+* **Author / Agent:** User ran the rewrite; Claude Code verified it and updated the ledger.
+* **Actions:** `git filter-branch --msg-filter` (sed via a script file; PowerShell 5.1 strips inner quotes from inline args) over `^4562f20 develop main`, then `git push --force-with-lease origin develop main`.
+* **Hash map:** `43e04ce` → `f7b8435`, `3e74aa8` → `e4ccf9b` (develop), `c40d5d9` → `064f00a` (main). References in this ledger updated, except the 04:45 entry, which describes the old commits.
+* **Verification:** 0 `Co-Authored-By` trailers on develop/main/origin. All 5 rewritten commits authored by Tycoon James Flores. Trees match the backup branches exactly (no content change).
+* **Leftovers:** local branches `backup-develop` and `backup-main`, plus `refs/original/` from filter-branch, kept until the user confirms.
+* **Next Immediate Action:** Optional cleanup of the backups; PDF upload for the signed-URL check; Phase 4–6 authenticated QA.
+
+### [2026-10-20 05:15] — Pending Working Tree Triaged & Committed
+* **Author / Agent:** Claude Code (user asked to sort pending changes and commit them automatically)
+* **Triage of 62 pending paths:**
+  - **Ignored (`.gitignore`):** `Files/` (`users_rows.csv` = 50 real users' emails/names; `Answer.txt` AI log; `Mathturo.ai` design source), `opencode.json`, `skills-lock.json` (local AI tool configs).
+  - **Committed:** 51 modified tracked files (UI polish across `public/`, `student/`, `admin/`, `shared/`, `tailwind.config.js`; `.agents/` role docs, `AGENTS.md`); new `Logo/1-3.png` and `Logo/Adviser.png` (used by `public/index|login|register.html`); `student/presentations.html` (linked from `nav-mobile-student.html`); `supabase/functions/provision-user/index.ts`; `.github/copilot-instructions.md`; `docs/mathturo-staging-program-status.md`.
+* **Verification:** Secret scan over all pending text: no JWTs, service_role literals or `sk_`/`sb_secret_` keys (the edge function reads keys from `Deno.env`). `tailwindcss` build OK. `node --check` OK on the changed JS. Browser QA of the redesigned pages was NOT done.
+* **Blockers:** `git push` is denied in this Claude Code session, so the user must push.
+* **Next Immediate Action:** User runs `git push origin develop`; then visual QA of the redesigned pages.
+
 ---
 
 ## 5. Agent Instructions for Appending New Entries
@@ -226,3 +251,13 @@ Whenever making changes in a session, append a new subsection under `## 4. Sessi
 ```
 
 And update the top section (`## 1. Quick Orientation: "Where We Left Off"`) with any new status, blocker, or next step!
+
+### [2026-10-20 04:35] — Git Commit e4ccf9b
+* **Author:** Tycoon James Flores
+* **Commit Message:** fix(phase3): table grants, assessment question RPC fix, submission-path gating
+* **Commit Hash:** `e4ccf9b`
+
+### [2026-10-20 04:57] — Git Commit 3197813
+* **Author:** Tycoon James Flores
+* **Commit Message:** chore: ignore local data exports and AI tool configs
+* **Commit Hash:** `3197813`

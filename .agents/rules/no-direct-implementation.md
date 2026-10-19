@@ -54,4 +54,9 @@ No variation, approximation, or implied consent (e.g., "looks good", "proceed", 
 | `multi_replace_file_content` | ❌ **DENIED** | ❌ **DENIED** | 🔒 **REQUIRES EXACT `APPROVE PLAN`** |
 | `run_command` (build/migrate/write) | ❌ **DENIED** | ❌ **DENIED** | 🔒 **REQUIRES EXACT `APPROVE PLAN`** |
 
-Any attempt to bypass this gate is a direct violation of repository security and workflow policy.
+### Autonomous State Ledger Exemption
+- **Target File:** `docs/PROJECT_STATE.md`
+- **Exemption:** Updating `docs/PROJECT_STATE.md` (recording session changelogs, test outcomes, blockers, and next steps) is strictly **EXEMPT** from the `APPROVE PLAN` lock.
+- **Mandate:** Agents MUST automatically read `docs/PROJECT_STATE.md` at the start of any prompt or task, and MUST automatically update `docs/PROJECT_STATE.md` upon completing work, without pausing for human permission.
+
+Any attempt to bypass the gate for other source/config files is a direct violation of repository security and workflow policy.

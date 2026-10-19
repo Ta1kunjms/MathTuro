@@ -11,43 +11,18 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
         body { font-family: 'Inter', system-ui, sans-serif; }
-        
-        .gradient-text {
-            background: linear-gradient(135deg, #005801 0%, #22c55e 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
-        
-        .glass-sidebar {
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(20px);
-        }
-        
-        .sidebar-link {
-            transition: all 0.2s ease;
-        }
-        
-        .sidebar-link:hover, .sidebar-link.active {
-            background: linear-gradient(135deg, #dc2626 0%, #ef4444 100%);
-            color: white;
-        }
-        
-        .sidebar-link.active {
-            box-shadow: 0 4px 15px rgba(220, 38, 38, 0.3);
-        }
-        
+
         .activity-item {
             transition: all 0.2s ease;
         }
-        
+
         .activity-item:hover {
             background-color: #f9fafb;
         }
-        
+
         ::-webkit-scrollbar { width: 6px; }
         ::-webkit-scrollbar-track { background: #f1f1f1; }
-        ::-webkit-scrollbar-thumb { background: #dc2626; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb { background: #9ca3af; border-radius: 3px; }
     </style>
     <link rel="stylesheet" href="../shared/css/base.css">
     <link rel="stylesheet" href="assets/css/admin.css">
@@ -58,91 +33,15 @@
     <!-- Mobile Menu Overlay -->
     <div id="mobileOverlay" class="fixed inset-0 bg-black bg-opacity-50 z-40 hidden lg:hidden"></div>
     
-    <!-- Sidebar -->
-    <aside id="sidebar" class="fixed left-0 top-0 h-full w-72 glass-sidebar border-r border-gray-200 z-50 transform -translate-x-full lg:translate-x-0 transition-transform duration-300">
-        <!-- Logo -->
-        <div class="p-6 border-b border-gray-100">
-            <a href="../public/index.html" class="flex items-center space-x-3">
-                <div class="w-12 h-12 bg-white rounded-xl flex items-center justify-center shadow-lg">
-                    <img src="../Logo/MATHURO-LOGO-v2.png" alt="MathTuro" class="w-10 h-10 object-contain">
-                </div>
-                <div>
-                    <span class="text-xl font-bold gradient-text">MathTuro</span>
-                    <p class="text-xs text-gray-500">Admin Portal</p>
-                </div>
-            </a>
-        </div>
-        
-        <!-- User Info -->
-        <div class="p-6 border-b border-gray-100">
-            <div class="flex items-center space-x-3">
-                <div class="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center">
-                    <span id="userInitials" class="text-red-600 font-bold text-lg">--</span>
-                </div>
-                <div>
-                    <p id="sidebarUserName" class="font-semibold text-gray-800">Loading...</p>
-                    <p class="text-sm text-red-600 font-medium">Administrator</p>
-                </div>
-            </div>
-        </div>
-        
-        <!-- Navigation -->
-        <nav class="p-4 space-y-2">
-            <a href="dashboard.html" class="sidebar-link flex items-center space-x-3 px-4 py-3 rounded-xl text-gray-700">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
-                </svg>
-                <span>Dashboard</span>
-            </a>
-            <a href="users.html" class="sidebar-link flex items-center space-x-3 px-4 py-3 rounded-xl text-gray-700">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
-                </svg>
-                <span>User Management</span>
-            </a>
-            <a href="manage-modules.html" class="sidebar-link flex items-center space-x-3 px-4 py-3 rounded-xl text-gray-700">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
-                </svg>
-                <span>Modules</span>
-            </a>
-            <a href="activity.html" class="sidebar-link flex items-center space-x-3 px-4 py-3 rounded-xl text-gray-700">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/>
-                </svg>
-                <span>Activity Log</span>
-            </a>
-            <a href="activity.html" class="sidebar-link active flex items-center space-x-3 px-4 py-3 rounded-xl text-gray-700">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                </svg>
-                <span>Activity Log</span>
-            </a>
-        </nav>
-        
-        <!-- Bottom Actions -->
-        <div class="absolute bottom-0 left-0 right-0 p-4 border-t border-gray-100 bg-white">
-            <a href="../public/index.html" class="flex items-center space-x-3 px-4 py-3 text-gray-600 hover:text-brand transition-colors">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
-                </svg>
-                <span>Back to Home</span>
-            </a>
-            <button id="logoutButton" class="w-full flex items-center space-x-3 px-4 py-3 text-red-600 hover:bg-red-50 rounded-xl transition-colors">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
-                </svg>
-                <span>Logout</span>
-            </button>
-        </div>
-    </aside>
+    <!-- Sidebar (populated by assets/js/sidebar.js) -->
+    <div id="sidebar"></div>
 
     <!-- Main Content -->
     <main class="lg:ml-72 min-h-screen">
         <!-- Top Header -->
         <header class="bg-white border-b border-gray-200 sticky top-0 z-30">
             <div class="flex items-center justify-between px-4 lg:px-8 py-4">
-                <button id="mobileMenuBtn" class="lg:hidden p-2 text-gray-600 hover:text-red-600 rounded-lg">
+                <button id="mobileMenuBtn" class="lg:hidden p-2 text-gray-600 hover:text-gray-900 rounded-lg">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
                     </svg>
@@ -154,7 +53,7 @@
                 </div>
                 
                 <div class="flex items-center space-x-4">
-                    <button onclick="refreshActivity()" class="inline-flex items-center space-x-2 bg-red-600 text-white px-4 py-2 rounded-xl font-medium hover:bg-red-700 transition-colors">
+                    <button onclick="refreshActivity()" class="inline-flex items-center space-x-2 bg-gray-900 text-white px-4 py-2 rounded-xl font-medium hover:bg-gray-800 transition-colors">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
                         </svg>
@@ -169,42 +68,42 @@
             <!-- Stats Cards -->
             <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6 mb-8">
                 <div class="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm">
-                    <div class="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center mb-3">
-                        <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <div class="w-12 h-12 bg-gray-100 rounded-xl flex items-center justify-center mb-3">
+                        <svg class="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
                         </svg>
                     </div>
-                    <div class="text-3xl font-bold text-blue-600" id="totalActivityStat">0</div>
+                    <div class="text-3xl font-bold text-gray-900" id="totalActivityStat">0</div>
                     <div class="text-sm text-gray-500">Total Activities</div>
                 </div>
                 
                 <div class="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm">
-                    <div class="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center mb-3">
-                        <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <div class="w-12 h-12 bg-forest-100 rounded-xl flex items-center justify-center mb-3">
+                        <svg class="w-6 h-6 text-forest-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"/>
                         </svg>
                     </div>
-                    <div class="text-3xl font-bold text-green-600" id="loginsStat">0</div>
+                    <div class="text-3xl font-bold text-forest-600" id="loginsStat">0</div>
                     <div class="text-sm text-gray-500">Logins Today</div>
                 </div>
                 
                 <div class="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm">
-                    <div class="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center mb-3">
-                        <svg class="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <div class="w-12 h-12 bg-gray-100 rounded-xl flex items-center justify-center mb-3">
+                        <svg class="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
                         </svg>
                     </div>
-                    <div class="text-3xl font-bold text-purple-600" id="submissionsStat">0</div>
+                    <div class="text-3xl font-bold text-gray-900" id="submissionsStat">0</div>
                     <div class="text-sm text-gray-500">Submissions</div>
                 </div>
                 
                 <div class="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm">
-                    <div class="w-12 h-12 bg-orange-100 rounded-xl flex items-center justify-center mb-3">
-                        <svg class="w-6 h-6 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <div class="w-12 h-12 bg-gray-100 rounded-xl flex items-center justify-center mb-3">
+                        <svg class="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/>
                         </svg>
                     </div>
-                    <div class="text-3xl font-bold text-orange-600" id="changesStat">0</div>
+                    <div class="text-3xl font-bold text-gray-900" id="changesStat">0</div>
                     <div class="text-sm text-gray-500">Changes Today</div>
                 </div>
             </div>
@@ -215,7 +114,7 @@
                     <div class="flex-1">
                         <label class="block text-sm font-medium text-gray-700 mb-2">Search</label>
                         <div class="relative">
-                            <input type="text" id="searchInput" placeholder="Search activity..." class="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-red-500/20 focus:border-red-500">
+                            <input type="text" id="searchInput" placeholder="Search activity..." class="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-forest-600 focus:border-forest-600">
                             <svg class="w-5 h-5 absolute left-3 top-3.5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
                             </svg>
@@ -223,7 +122,7 @@
                     </div>
                     <div class="md:w-48">
                         <label class="block text-sm font-medium text-gray-700 mb-2">Activity Type</label>
-                        <select id="typeFilter" class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-red-500/20 focus:border-red-500">
+                        <select id="typeFilter" class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-forest-600 focus:border-forest-600">
                             <option value="all">All Types</option>
                             <option value="login">Logins</option>
                             <option value="submission">Submissions</option>
@@ -233,7 +132,7 @@
                     </div>
                     <div class="md:w-48">
                         <label class="block text-sm font-medium text-gray-700 mb-2">Time Period</label>
-                        <select id="periodFilter" class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-red-500/20 focus:border-red-500">
+                        <select id="periodFilter" class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-forest-600 focus:border-forest-600">
                             <option value="all">All Time</option>
                             <option value="today">Today</option>
                             <option value="week">This Week</option>
@@ -251,7 +150,7 @@
                 </div>
                 <div id="activityList" class="divide-y divide-gray-100">
                     <div class="p-12 text-center">
-                        <div class="inline-block animate-spin rounded-full h-8 w-8 border-4 border-red-600 border-t-transparent mb-4"></div>
+                        <div class="inline-block animate-spin rounded-full h-8 w-8 border-4 border-gray-400 border-t-transparent mb-4"></div>
                         <p class="text-gray-500">Loading activities...</p>
                     </div>
                 </div>
@@ -262,7 +161,7 @@
     <!-- Loading Overlay -->
     <div id="loadingOverlay" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
         <div class="bg-white rounded-2xl p-8 text-center">
-            <div class="inline-block animate-spin rounded-full h-12 w-12 border-4 border-red-600 border-t-transparent mb-4"></div>
+            <div class="inline-block animate-spin rounded-full h-12 w-12 border-4 border-gray-400 border-t-transparent mb-4"></div>
             <p class="text-gray-600 font-medium">Loading...</p>
         </div>
     </div>
@@ -500,10 +399,10 @@
             }
 
             const typeConfig = {
-                login: { icon: '🔐', color: 'bg-green-100 text-green-600' },
-                submission: { icon: '📝', color: 'bg-purple-100 text-purple-600' },
-                module: { icon: '📚', color: 'bg-blue-100 text-blue-600' },
-                user: { icon: '👤', color: 'bg-orange-100 text-orange-600' }
+                login: { icon: '🔐', color: 'bg-forest-100 text-forest-600' },
+                submission: { icon: '📝', color: 'bg-gray-100 text-gray-600' },
+                module: { icon: '📚', color: 'bg-gray-100 text-gray-600' },
+                user: { icon: '👤', color: 'bg-gray-100 text-gray-600' }
             };
 
             container.innerHTML = filtered.map(activity => {
@@ -554,13 +453,18 @@
         }
 
         function setupEventListeners() {
+            // sidebar.js injects the real <aside> inside #sidebar on DOMContentLoaded
+            // (which runs before this handler); resolve it here rather than the
+            // empty wrapper div, so the drawer toggle targets the actual element.
+            const sidebarAside = sidebar.querySelector('aside') || sidebar;
+
             mobileMenuBtn.addEventListener('click', () => {
-                sidebar.classList.toggle('-translate-x-full');
+                sidebarAside.classList.toggle('-translate-x-full');
                 mobileOverlay.classList.toggle('hidden');
             });
 
             mobileOverlay.addEventListener('click', () => {
-                sidebar.classList.add('-translate-x-full');
+                sidebarAside.classList.add('-translate-x-full');
                 mobileOverlay.classList.add('hidden');
             });
 

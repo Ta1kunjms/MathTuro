@@ -12,55 +12,30 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
     <style>
         body { font-family: 'Inter', system-ui, sans-serif; }
-        
-        .gradient-text {
-            background: linear-gradient(135deg, #800000 0%, #990000 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
-        
-        .glass-sidebar {
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(20px);
-        }
-        
-        .sidebar-link {
-            transition: all 0.2s ease;
-        }
-        
-        .sidebar-link:hover, .sidebar-link.active {
-            background: linear-gradient(135deg, #800000 0%, #990000 100%);
-            color: white;
-        }
-        
-        .sidebar-link.active {
-            box-shadow: 0 4px 15px rgba(128, 0, 0, 0.3);
-        }
-        
+
         .module-card {
             transition: all 0.3s ease;
         }
-        
+
         .module-card:hover {
             transform: translateY(-4px);
             box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
         }
-        
+
         .upload-zone:hover {
-            border-color: #800000;
-            background: rgba(128, 0, 0, 0.05);
+            border-color: #4b5563;
+            background: rgba(75, 85, 99, 0.05);
         }
-        
+
         .upload-zone.drag-over {
-            border-color: #800000;
-            background: rgba(128, 0, 0, 0.1);
+            border-color: #4b5563;
+            background: rgba(75, 85, 99, 0.1);
         }
-        
+
         /* Custom scrollbar */
         ::-webkit-scrollbar { width: 6px; }
         ::-webkit-scrollbar-track { background: #f1f1f1; }
-        ::-webkit-scrollbar-thumb { background: #800000; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb { background: #9ca3af; border-radius: 3px; }
     </style>
     <link rel="stylesheet" href="../shared/css/base.css">
     <link rel="stylesheet" href="assets/css/admin.css">
@@ -85,11 +60,11 @@
                 </button>
                 
                 <!-- Page Title -->
-                <h1 class="text-2xl font-bold gradient-text">Manage Modules</h1>
-                
+                <h1 class="text-2xl font-bold text-gray-800">Manage Modules</h1>
+
                 <!-- Header Actions -->
                 <div class="flex items-center space-x-4">
-                    <button onclick="openAddModuleModal()" class="bg-red-700 text-white px-4 py-2 rounded-lg hover:bg-red-800 transition-colors">
+                    <button onclick="openAddModuleModal()" class="bg-forest-600 text-white px-4 py-2 rounded-lg hover:bg-forest-800 transition-colors">
                         <i class="fas fa-plus mr-2"></i>Add Module
                     </button>
                 </div>
@@ -103,11 +78,11 @@
                 <div class="p-6">
                     <h2 class="text-lg font-semibold mb-4">All Modules</h2>
                     <div class="flex flex-wrap gap-2 mb-6" id="quarterTabs">
-                        <button type="button" class="quarter-tab px-4 py-2 rounded-lg text-sm font-medium bg-maroon text-white" data-quarter="all">All Modules</button>
-                        <button type="button" class="quarter-tab px-4 py-2 rounded-lg text-sm font-medium bg-white text-gray-700 border border-gray-200 hover:border-maroon/40" data-quarter="1">Quarter 1</button>
-                        <button type="button" class="quarter-tab px-4 py-2 rounded-lg text-sm font-medium bg-white text-gray-700 border border-gray-200 hover:border-maroon/40" data-quarter="2">Quarter 2</button>
-                        <button type="button" class="quarter-tab px-4 py-2 rounded-lg text-sm font-medium bg-white text-gray-700 border border-gray-200 hover:border-maroon/40" data-quarter="3">Quarter 3</button>
-                        <button type="button" class="quarter-tab px-4 py-2 rounded-lg text-sm font-medium bg-white text-gray-700 border border-gray-200 hover:border-maroon/40" data-quarter="4">Quarter 4</button>
+                        <button type="button" class="quarter-tab px-4 py-2 rounded-lg text-sm font-medium bg-gray-900 text-white" data-quarter="all">All Modules</button>
+                        <button type="button" class="quarter-tab px-4 py-2 rounded-lg text-sm font-medium bg-white text-gray-700 border border-gray-200 hover:border-gray-400" data-quarter="1">Quarter 1</button>
+                        <button type="button" class="quarter-tab px-4 py-2 rounded-lg text-sm font-medium bg-white text-gray-700 border border-gray-200 hover:border-gray-400" data-quarter="2">Quarter 2</button>
+                        <button type="button" class="quarter-tab px-4 py-2 rounded-lg text-sm font-medium bg-white text-gray-700 border border-gray-200 hover:border-gray-400" data-quarter="3">Quarter 3</button>
+                        <button type="button" class="quarter-tab px-4 py-2 rounded-lg text-sm font-medium bg-white text-gray-700 border border-gray-200 hover:border-gray-400" data-quarter="4">Quarter 4</button>
                     </div>
                     <div id="modulesList" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                         <!-- Modules will be dynamically loaded here -->
@@ -129,18 +104,18 @@
                     
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-2">Module Name</label>
-                        <input type="text" id="moduleName" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-maroon focus:border-transparent" placeholder="Enter module name">
+                        <input type="text" id="moduleName" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-forest-600 focus:border-transparent" placeholder="Enter module name">
                     </div>
                     
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-2">Description</label>
-                        <textarea id="moduleDescription" required rows="3" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-maroon focus:border-transparent" placeholder="Enter module description"></textarea>
+                        <textarea id="moduleDescription" required rows="3" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-forest-600 focus:border-transparent" placeholder="Enter module description"></textarea>
                     </div>
                     
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-2">Grade Level</label>
-                            <select id="moduleGradeLevel" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-maroon focus:border-transparent">
+                            <select id="moduleGradeLevel" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-forest-600 focus:border-transparent">
                                 <option value="">Select grade level</option>
                                 <option value="1">Grade 1</option>
                                 <option value="2">Grade 2</option>
@@ -153,7 +128,7 @@
 
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-2">Quarter</label>
-                            <select id="moduleQuarter" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-maroon focus:border-transparent">
+                            <select id="moduleQuarter" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-forest-600 focus:border-transparent">
                                 <option value="">Select quarter</option>
                                 <option value="1">Quarter 1</option>
                                 <option value="2">Quarter 2</option>
@@ -164,7 +139,7 @@
                         
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-2">Status</label>
-                            <select id="moduleStatus" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-maroon focus:border-transparent">
+                            <select id="moduleStatus" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-forest-600 focus:border-transparent">
                                 <option value="active">Active</option>
                                 <option value="archived">Archived</option>
                             </select>
@@ -173,7 +148,7 @@
                     
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-2">Module Cover Image (Optional)</label>
-                        <input type="file" id="moduleImage" accept="image/*" class="w-full px-3 py-2 border border-gray-300 rounded-lg file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-maroon file:text-white hover:file:bg-maroon-dark">
+                        <input type="file" id="moduleImage" accept="image/*" class="w-full px-3 py-2 border border-gray-300 rounded-lg file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-gray-700 file:text-white hover:file:bg-gray-800">
                     </div>
 
                     <div class="border border-amber-200 bg-amber-50 rounded-lg p-4">
@@ -186,21 +161,21 @@
                         <div class="space-y-4">
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-2">Quiz URL</label>
-                                <input type="url" id="moduleQuizUrl" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-maroon focus:border-transparent" placeholder="https://forms.google.com/...">
+                                <input type="url" id="moduleQuizUrl" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-forest-600 focus:border-transparent" placeholder="https://forms.google.com/...">
                                 <p class="text-xs text-gray-500 mt-1">Leave blank if no quiz is needed yet.</p>
                             </div>
                             <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700 mb-2">Quiz Title</label>
-                                    <input type="text" id="moduleQuizTitle" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-maroon focus:border-transparent" placeholder="Auto: Module Quiz">
+                                    <input type="text" id="moduleQuizTitle" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-forest-600 focus:border-transparent" placeholder="Auto: Module Quiz">
                                 </div>
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700 mb-2">Total Items</label>
-                                    <input type="number" id="moduleQuizTotalItems" min="1" value="10" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-maroon focus:border-transparent" placeholder="10">
+                                    <input type="number" id="moduleQuizTotalItems" min="1" value="10" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-forest-600 focus:border-transparent" placeholder="10">
                                 </div>
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700 mb-2">Passing Score</label>
-                                    <input type="number" id="moduleQuizPassingScore" min="0" value="0" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-maroon focus:border-transparent" placeholder="0">
+                                    <input type="number" id="moduleQuizPassingScore" min="0" value="0" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-forest-600 focus:border-transparent" placeholder="0">
                                 </div>
                             </div>
                         </div>
@@ -209,7 +184,7 @@
                 
                 <div style="padding:16px 24px; border-top:1px solid #e5e7eb; display:flex; justify-content:flex-end; gap:12px; background:white; flex-shrink:0;">
                     <button type="button" onclick="closeModuleModal()" class="px-4 py-2 text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50">Cancel</button>
-                    <button type="submit" style="background:#b91c1c; color:white; padding:8px 20px; border-radius:8px; border:none; cursor:pointer; font-weight:600; font-size:14px; display:inline-flex; align-items:center; gap:8px;">
+                    <button type="submit" class="bg-forest-600 hover:bg-forest-800 text-white px-5 py-2 rounded-lg font-semibold text-sm inline-flex items-center gap-2 transition-colors">
                         <i id="submitIcon" class="fas fa-save"></i>
                         <span id="submitText">Save Module</span>
                     </button>
@@ -486,7 +461,7 @@
                 const modulesList = document.getElementById('modulesList');
                 modulesList.innerHTML = `
                     <div class="col-span-full text-center py-12">
-                        <div class="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-maroon"></div>
+                        <div class="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-gray-400"></div>
                         <p class="mt-4 text-gray-600">Loading modules...</p>
                     </div>
                 `;
@@ -532,7 +507,7 @@
                             <i class="fas fa-book-open text-6xl text-gray-300 mb-4"></i>
                             <h3 class="text-lg font-medium text-gray-900 mb-2">No Modules Found</h3>
                             <p class="text-gray-500 mb-6">Get started by creating your first module</p>
-                            <button onclick="openAddModuleModal()" class="bg-maroon text-white px-4 py-2 rounded-lg hover:bg-maroon-dark">
+                            <button onclick="openAddModuleModal()" class="bg-forest-600 text-white px-4 py-2 rounded-lg hover:bg-forest-800">
                                 <i class="fas fa-plus mr-2"></i>Add First Module
                             </button>
                         </div>
@@ -556,31 +531,31 @@
                 }
 
                 modulesList.innerHTML = filteredModules.map(module => `
-                    <div class="module-card bg-white border-2 border-maroon/20 rounded-xl p-6 hover:shadow-xl hover:border-maroon/40 transition-all duration-300">
+                    <div class="module-card bg-white border-2 border-gray-200 rounded-xl p-6 hover:shadow-xl hover:border-gray-300 transition-all duration-300">
                         <div class="flex justify-between items-start mb-4">
-                            <h3 class="text-lg font-bold text-maroon">${module.title || module.name || 'Untitled Module'}</h3>
+                            <h3 class="text-lg font-bold text-gray-900">${module.title || module.name || 'Untitled Module'}</h3>
                             <span class="px-3 py-1 text-xs font-semibold rounded-full ${
-                                (module.status === 'active' || module.status === 'published') ? 'bg-maroon text-white' : 'bg-gray-100 text-gray-600'
+                                (module.status === 'active' || module.status === 'published') ? 'bg-forest-600 text-white' : 'bg-gray-100 text-gray-600'
                             }">${module.status || 'draft'}</span>
                         </div>
-                        
+
                         <p class="text-gray-700 text-sm mb-4 leading-relaxed">${module.description || 'No description'}</p>
-                        
+
                         <div class="space-y-2 text-sm text-gray-600 mb-6">
                             <div class="flex items-center">
-                                <i class="fas fa-calendar-alt mr-2 text-maroon"></i>
+                                <i class="fas fa-calendar-alt mr-2 text-gray-500"></i>
                                 <span>${getQuarterLabel(module)}</span>
                             </div>
                             <div class="flex items-center">
-                                <i class="fas fa-graduation-cap mr-2 text-maroon"></i>
+                                <i class="fas fa-graduation-cap mr-2 text-gray-500"></i>
                                 <span>${resolveModuleGradeLabel(module, gradeLevelMap)}</span>
                             </div>
                             <div class="flex items-center">
-                                <i class="fas fa-user mr-2 text-maroon"></i>
+                                <i class="fas fa-user mr-2 text-gray-500"></i>
                                 <span>Created by: ${teacherMap[module.teacher_id]?.full_name || 'Unknown'}</span>
                             </div>
                             <div class="flex items-center">
-                                <i class="fas fa-calendar mr-2 text-maroon"></i>
+                                <i class="fas fa-calendar mr-2 text-gray-500"></i>
                                 <span>${new Date(module.created_at).toLocaleDateString()}</span>
                             </div>
                         </div>

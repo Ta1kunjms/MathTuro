@@ -97,6 +97,88 @@ html[data-font="dyslexic"] {
 }
 
 /* ============================================
+   DESIGN SYSTEM v2 — REDESIGN TOKENS (additive)
+   New primitive + semantic tokens for the ongoing UI redesign
+   (approved palette: dark/light green + dark/light purple, warm
+   neutral "paper/ink" scale). Added alongside the legacy tokens
+   above — existing pages are unaffected until each portal is
+   migrated to these tokens in a later phase.
+   ============================================ */
+:root {
+  /* Primitives — green */
+  --ds-green-900: #122d22;
+  --ds-green-800: #1b4332;
+  --ds-green-600: #2f7756;
+  --ds-green-100: #dcece3;
+  --ds-green-50:  #f0f7f3;
+
+  /* Primitives — purple */
+  --ds-purple-900: #4d0339;
+  --ds-purple-800: #720455;
+  --ds-purple-600: #9a0573;
+  --ds-purple-100: #f5dced;
+  --ds-purple-50:  #fbf1f8;
+
+  /* Primitives — warm neutrals ("paper/ink") */
+  --ds-ink-900: #1c1b1a;
+  --ds-ink-700: #3f3d3a;
+  --ds-ink-500: #6b6862;
+  --ds-ink-300: #a8a49c;
+  --ds-paper-0: #ffffff;
+  --ds-paper-50: #faf9f7;
+  --ds-paper-100: #f2f0ec;
+  --ds-line-200: #e4e1da;
+
+  /* Semantic — brand / interactive */
+  --ds-color-primary: var(--ds-green-600);
+  --ds-color-primary-hover: var(--ds-green-800);
+  --ds-color-accent: var(--ds-purple-600);
+  --ds-color-accent-hover: var(--ds-purple-800);
+
+  /* Semantic — surfaces & text */
+  --ds-surface-app: var(--ds-paper-50);
+  --ds-surface-card: var(--ds-paper-0);
+  --ds-border-default: var(--ds-line-200);
+  --ds-text-primary: var(--ds-ink-900);
+  --ds-text-secondary: var(--ds-ink-500);
+  --ds-text-muted: var(--ds-ink-300);
+  --ds-text-on-color: #ffffff;
+
+  /* Semantic — status (kept independent from brand green/purple
+     so status meaning never collides with portal identity color) */
+  --ds-color-success: var(--ds-green-600);
+  --ds-color-success-bg: var(--ds-green-100);
+  --ds-color-danger: #b3261e;
+  --ds-color-danger-bg: #fbe9e7;
+  --ds-color-warning: #a35d00;
+  --ds-color-warning-bg: #fbf0e0;
+
+  /* Focus ring */
+  --ds-focus-ring: var(--ds-green-600);
+
+  /* Spacing scale */
+  --ds-space-1: 4px;
+  --ds-space-2: 8px;
+  --ds-space-3: 12px;
+  --ds-space-4: 16px;
+  --ds-space-6: 24px;
+  --ds-space-8: 32px;
+  --ds-space-12: 48px;
+  --ds-space-16: 64px;
+
+  /* Radius scale — deliberately capped, no rounded-2xl/3xl/full by default */
+  --ds-radius-xs: 4px;
+  --ds-radius-sm: 6px;
+  --ds-radius-md: 8px;
+  --ds-radius-lg: 12px;
+
+  /* Shadows — tinted to the palette, subtle, never glowing */
+  --ds-shadow-xs: 0 1px 2px rgba(27, 67, 50, 0.06);
+  --ds-shadow-sm: 0 2px 6px rgba(27, 67, 50, 0.08);
+  --ds-shadow-md: 0 6px 16px rgba(27, 67, 50, 0.10);
+}
+
+/* ============================================
    BASE STYLES
    ============================================ */
 body {
@@ -140,27 +222,6 @@ body {
 
 .stat-card:hover {
   transform: translateY(-4px);
-}
-
-/* Neumorphic Effects */
-.neu-flat {
-  background: linear-gradient(135deg, #E8E8E8 0%, #FFFFFF 100%);
-  box-shadow: -6px 6px 12px rgba(166, 166, 166, 0.2),
-              6px -6px 12px rgba(166, 166, 166, 0.2),
-              -6px -6px 12px rgba(255, 255, 255, 0.9),
-              6px 6px 15px rgba(166, 166, 166, 0.9),
-              inset 1px 1px 2px rgba(255, 255, 255, 0.3),
-              inset -1px -1px 2px rgba(166, 166, 166, 0.5);
-}
-
-.neu-card {
-  background: #E7F4E7;
-  box-shadow: -6px 6px 12px rgba(92, 98, 92, 0.2),
-              6px -6px 12px rgba(92, 98, 92, 0.2),
-              -6px -6px 12px rgba(255, 255, 255, 0.9),
-              6px 6px 15px rgba(92, 98, 92, 0.9),
-              inset 1px 1px 2px rgba(255, 255, 255, 0.3),
-              inset -1px -1px 2px rgba(92, 98, 92, 0.5);
 }
 
 /* ============================================
@@ -254,6 +315,10 @@ body {
 
 /* ============================================
    MOBILE BOTTOM NAV TAB BAR STYLES
+   Flat forest-800 surface with a hard ink-900 border + offset shadow —
+   the same "flat fill + hard border + hard shadow" family used for
+   primary actionable elements elsewhere, replacing the previous
+   translucent/backdrop-filter glass treatment.
    ============================================ */
 html[data-portal="student"] #mobileTabBar {
   left: 16px !important;
@@ -263,43 +328,53 @@ html[data-portal="student"] #mobileTabBar {
   max-width: 480px !important;
   border-radius: 28px !important;
   height: 64px !important;
-  background: rgba(0, 70, 1, 0.96) !important; /* System Brand Dark Green (#004601) with opacity */
-  border: 1px solid rgba(255, 255, 255, 0.1) !important;
-  box-shadow: 0 12px 30px -6px rgba(0, 0, 0, 0.4), 0 8px 16px -8px rgba(0, 0, 0, 0.4) !important;
-  backdrop-filter: blur(12px) !important;
+  background: #1b4332 !important; /* forest-800, flat, no translucency */
+  border: 2px solid #1c1b1a !important; /* ink-900 */
+  box-shadow: 3px 3px 0 0 #1c1b1a !important;
   padding-bottom: 0 !important;
-  align-items: center !important;
+  align-items: stretch !important;
   justify-content: space-around !important;
-  padding-left: 8px !important;
-  padding-right: 8px !important;
+  padding-left: 6px !important;
+  padding-right: 6px !important;
 }
 
 html[data-portal="student"] .mobile-tab {
-  min-height: auto !important;
-  height: 48px !important;
-  flex: 0 1 auto !important;
-  width: 56px !important;
+  min-height: 44px !important;
+  min-width: 44px !important;
+  flex: 1 1 0 !important;
+  width: auto !important;
   border-radius: 20px !important;
-  padding: 0 !important;
+  padding: 6px 2px !important;
   display: flex !important;
   flex-direction: column !important;
   align-items: center !important;
   justify-content: center !important;
-  color: rgba(255, 255, 255, 0.5) !important;
-  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  color: rgba(255, 255, 255, 0.72) !important;
+  background: transparent !important;
+  border: none !important;
+  transition: background-color 0.2s ease, color 0.2s ease !important;
   position: relative !important;
   -webkit-tap-highlight-color: transparent;
+  cursor: pointer;
 }
 
-html[data-portal="student"] .mobile-tab span {
-  display: none !important;
+/* Labels stay visibly rendered — this is the tab's real accessible name,
+   not a decorative extra. Do not hide with display:none. */
+html[data-portal="student"] .mobile-tab-label {
+  display: block !important;
+  font-size: 10px !important;
+  line-height: 1.15 !important;
+  font-weight: 600 !important;
+  white-space: nowrap !important;
+  margin-top: 2px !important;
 }
 
 html[data-portal="student"] .mobile-tab svg {
-  width: 24px !important;
-  height: 24px !important;
+  width: 22px !important;
+  height: 22px !important;
   stroke-width: 2.2 !important;
-  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), color 0.2s ease !important;
+  flex-shrink: 0 !important;
+  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
 }
 
 html[data-portal="student"] .mobile-tab:focus {
@@ -308,17 +383,120 @@ html[data-portal="student"] .mobile-tab:focus {
 
 html[data-portal="student"] .mobile-tab.active,
 html[data-portal="student"] .mobile-tab[aria-current="page"] {
-  background: rgba(255, 255, 255, 0.15) !important;
+  background: #2f7756 !important; /* forest-600, flat active fill */
   color: #ffffff !important;
 }
 
 html[data-portal="student"] .mobile-tab.active svg,
 html[data-portal="student"] .mobile-tab[aria-current="page"] svg {
-  transform: scale(1.1) !important;
+  transform: scale(1.08) !important;
 }
 
 html[data-portal="student"] .mobile-tab:active svg {
-  transform: scale(0.9) !important;
+  transform: scale(0.92) !important;
+}
+
+/* Small restrained purple cue on the More tab only, only when a sheet
+   destination (Presentations/Progress) is the active page — never a
+   competing dominant color. */
+html[data-portal="student"] .more-indicator-dot {
+  position: absolute;
+  top: 4px;
+  right: calc(50% - 14px);
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #9a0573; /* plum-600 */
+}
+
+/* ============================================
+   MORE SHEET (Presentations, Progress)
+   Flat paper surface, dark border, same neo-brutalist card family as the
+   rest of the redesigned student UI — not a glass panel.
+   ============================================ */
+html[data-portal="student"] .more-sheet-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(28, 27, 26, 0.5); /* ink-900 scrim, not a blur */
+  z-index: 55;
+}
+
+html[data-portal="student"] .more-sheet {
+  position: fixed;
+  left: 16px;
+  right: 16px;
+  bottom: calc(20px + 64px + 12px);
+  max-width: 480px;
+  margin: 0 auto;
+  background: #ffffff; /* paper-0 */
+  border: 2px solid #1c1b1a; /* ink-900 */
+  border-radius: 24px;
+  box-shadow: 4px 4px 0 0 #1c1b1a;
+  z-index: 60;
+  padding: 14px 16px calc(16px + env(safe-area-inset-bottom, 0px));
+}
+
+html[data-portal="student"] .more-sheet-handle {
+  display: none;
+}
+
+html[data-portal="student"] .more-sheet-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+html[data-portal="student"] .more-sheet-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: #1c1b1a;
+}
+
+html[data-portal="student"] .more-sheet-close {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  min-width: 44px;
+  min-height: 44px;
+  border-radius: 12px;
+  color: #3f3d3a; /* ink-700 */
+  background: transparent;
+  border: none;
+  cursor: pointer;
+}
+
+html[data-portal="student"] .more-sheet-close:hover {
+  background: #f0f7f3; /* forest-50 */
+}
+
+html[data-portal="student"] .more-sheet-links {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+html[data-portal="student"] .more-sheet-link {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  min-height: 44px;
+  border-radius: 14px;
+  color: #1c1b1a;
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 14px;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+html[data-portal="student"] .more-sheet-link:hover,
+html[data-portal="student"] .more-sheet-link.active,
+html[data-portal="student"] .more-sheet-link[aria-current="page"] {
+  background: #2f7756; /* forest-600 */
+  color: #ffffff;
 }
 
 /* Push page content above bottom tab bar on mobile — student portal only */
@@ -374,5 +552,40 @@ html[data-portal="student"][data-native-mobile="true"] #modalContent::before {
   }
   to {
     transform: translateY(0);
+  }
+}
+
+/* ============================================
+   ACCESSIBILITY: GLOBAL FOCUS-VISIBLE RING
+   Applies to every page that loads this file. Purely additive —
+   only affects keyboard/programmatic focus appearance, not mouse
+   or touch interaction.
+   ============================================ */
+:focus-visible {
+  outline: 2px solid var(--ds-focus-ring);
+  outline-offset: 2px;
+}
+
+/* .mobile-tab explicitly removes the default outline on :focus — replace
+   it with a visible ring on keyboard focus so it isn't a focus trap. */
+html[data-portal="student"] .mobile-tab:focus-visible {
+  outline: 2px solid #ffffff;
+  outline-offset: 2px;
+}
+
+/* ============================================
+   ACCESSIBILITY: REDUCED MOTION
+   ============================================ */
+@media (prefers-reduced-motion: reduce) {
+  .notification-badge {
+    animation: none;
+  }
+
+  html[data-portal="student"] .mobile-tab svg,
+  html[data-portal="student"] .mobile-tab.active svg,
+  html[data-portal="student"] .mobile-tab[aria-current="page"] svg,
+  html[data-portal="student"] .mobile-tab:active svg {
+    transition: none !important;
+    transform: none !important;
   }
 }

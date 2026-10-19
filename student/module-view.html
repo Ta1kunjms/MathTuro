@@ -11,47 +11,28 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
         body { font-family: 'Inter', system-ui, sans-serif; }
-                @media (max-width: 768px) {
-                    .video-card,
-                    .quiz-card,
-                    .lesson-card,
-                    .module-card {
-                        max-width: 100% !important;
-                        min-width: 0 !important;
-                        width: 100% !important;
-                        margin: 0 0 1.5rem 0 !important;
-                        padding: 1.25rem !important;
-                        box-sizing: border-box;
-                    }
-                    .cards-row,
-                    .videos-grid,
-                    .lessons-grid,
-                    .quizzes-grid {
-                        display: flex !important;
-                        flex-direction: column !important;
-                        gap: 1.5rem !important;
-                    }
-                }
         .gradient-text {
             background: linear-gradient(135deg, #005801 0%, #22c55e 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
         }
-        .video-card:hover { transform: translateY(-2px); box-shadow: 0 10px 40px -12px rgba(0, 0, 0, 0.15); }
-        .quiz-card:hover { transform: translateY(-2px); box-shadow: 0 10px 40px -12px rgba(0, 0, 0, 0.15); }
         .upload-zone:hover { border-color: #005801; background: rgba(0, 88, 1, 0.05); }
         .upload-zone.drag-over { border-color: #005801; background: rgba(0, 88, 1, 0.1); }
-        
+
         /* PDF Viewer */
         .pdf-container { height: 70vh; }
-        
+
         /* Image Gallery */
         .image-gallery img { cursor: pointer; transition: transform 0.3s; }
         .image-gallery img:hover { transform: scale(1.02); }
-        
+
         /* Lightbox */
         .lightbox { background: rgba(0, 0, 0, 0.95); }
+
+        @media (prefers-reduced-motion: reduce) {
+            .image-gallery img { transition: none; }
+        }
     </style>
     <link rel="stylesheet" href="../shared/css/base.css">
     <link rel="stylesheet" href="assets/css/student.css">
@@ -72,22 +53,22 @@
         <header class="bg-white border-b border-gray-200 sticky top-0 z-30">
             <div class="flex items-center justify-between px-4 lg:px-8 py-4">
                 <!-- Mobile Menu Button -->
-                <button id="mobileMenuBtn" class="lg:hidden p-2 text-gray-600 hover:text-brand rounded-lg">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <button id="mobileMenuBtn" class="lg:hidden p-2 text-gray-600 hover:text-brand rounded-lg" aria-label="Open menu">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
                     </svg>
                 </button>
-                
+
                 <!-- Page Title -->
                 <div class="flex-1 lg:flex-none">
                     <h1 id="moduleTitle" class="text-xl lg:text-2xl font-bold text-gray-800">Module View</h1>
                     <p class="text-sm text-gray-500 hidden sm:block">View module content and complete activities</p>
                 </div>
-                
+
                 <!-- Right Actions -->
                 <div class="flex items-center space-x-3">
-                    <a href="dashboard.html" class="p-2 text-gray-600 hover:text-brand rounded-lg hover:bg-gray-100">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <a href="dashboard.html" class="p-2 text-gray-600 hover:text-brand rounded-lg hover:bg-gray-100" aria-label="Back to dashboard">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
                         </svg>
                     </a>
@@ -98,7 +79,7 @@
         <!-- Loading State -->
         <div id="loadingState" class="flex items-center justify-center min-h-[60vh]">
             <div class="text-center">
-                <div class="inline-block animate-spin rounded-full h-12 w-12 border-4 border-brand border-t-transparent"></div>
+                <div class="inline-block animate-spin rounded-full h-12 w-12 border-4 border-forest-100 border-t-forest-600" aria-hidden="true"></div>
                 <p class="mt-4 text-gray-600">Loading module...</p>
             </div>
         </div>
@@ -109,18 +90,18 @@
             <!-- Left Column - Module Content -->
             <div class="lg:col-span-2 space-y-6">
                 <!-- Module Info Card -->
-                <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
-                    <div class="flex items-start justify-between mb-4">
+                <div class="learn-module-banner">
+                    <div class="flex items-start justify-between mb-0">
                         <div>
                             <h2 id="moduleName" class="text-2xl font-bold text-gray-800 mb-2"></h2>
                             <p id="moduleDescription" class="text-gray-600"></p>
                         </div>
-                        <span id="moduleType" class="px-3 py-1 bg-gray-100 text-gray-600 rounded-full text-sm"></span>
+                        <span id="moduleType" class="learn-count-chip"></span>
                     </div>
                 </div>
 
-                <!-- Content Section -->
-                <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+                <!-- Content Section: the primary element on this page -->
+                <div class="learn-content-card">
                     <div class="p-6 border-b border-gray-100">
                         <h3 class="text-lg font-bold text-gray-800">Module Content</h3>
                     </div>
@@ -130,7 +111,7 @@
                 </div>
 
                 <!-- Videos Section -->
-                <div id="videosSection" class="hidden bg-white rounded-2xl border border-gray-100 shadow-sm">
+                <div id="videosSection" class="hidden bg-white rounded-2xl border-2 border-ink-900">
                     <div class="p-6 border-b border-gray-100">
                         <h3 class="text-lg font-bold text-gray-800">Video Lessons</h3>
                     </div>
@@ -143,36 +124,36 @@
             <!-- Right Column - Quizzes & Progress -->
             <div class="space-y-6">
                 <!-- Progress Card -->
-                <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
+                <div class="bg-white rounded-2xl border-2 border-ink-900 p-6">
                     <h3 class="text-lg font-bold text-gray-800 mb-4">Your Progress</h3>
                     <div class="space-y-4">
                         <div>
                             <div class="flex justify-between text-sm mb-1">
                                 <span class="text-gray-600">Content Viewed</span>
-                                <span id="contentProgress" class="font-semibold text-brand">0%</span>
+                                <span id="contentProgress" class="font-semibold text-forest-800">0%</span>
                             </div>
-                            <div class="h-2 bg-gray-200 rounded-full overflow-hidden">
-                                <div id="contentProgressBar" class="h-full bg-brand rounded-full transition-all" style="width: 0%"></div>
+                            <div class="learn-progress-track">
+                                <div id="contentProgressBar" class="learn-progress-fill" style="width: 0%"></div>
                             </div>
                         </div>
                         <div>
                             <div class="flex justify-between text-sm mb-1">
                                 <span class="text-gray-600">Quizzes Completed</span>
-                                <span id="quizProgress" class="font-semibold text-green-600">0/0</span>
+                                <span id="quizProgress" class="font-semibold text-forest-800">0/0</span>
                             </div>
-                            <div class="h-2 bg-gray-200 rounded-full overflow-hidden">
-                                <div id="quizProgressBar" class="h-full bg-green-500 rounded-full transition-all" style="width: 0%"></div>
+                            <div class="learn-progress-track">
+                                <div id="quizProgressBar" class="learn-progress-fill" style="width: 0%"></div>
                             </div>
                         </div>
                     </div>
                 </div>
 
                 <!-- Formal Assessments Card (Phase 2 Pre-Test & Post-Test) -->
-                <div class="bg-white rounded-2xl border border-gray-100 shadow-sm">
+                <div class="bg-white rounded-2xl border-2 border-ink-900">
                     <div class="p-6 border-b border-gray-100">
                         <div class="flex items-center justify-between">
                             <h3 class="text-lg font-bold text-gray-800">Formal Assessments</h3>
-                            <span class="px-2.5 py-0.5 bg-brand/10 text-brand text-xs font-semibold rounded-full">Gated</span>
+                            <span class="px-2.5 py-0.5 bg-plum-50 text-plum-800 text-xs font-semibold rounded-full">Gated</span>
                         </div>
                         <p class="text-xs text-gray-500 mt-1">Pre-test unlocks content; verified post-test unlocks next module</p>
                     </div>
@@ -184,7 +165,7 @@
                 </div>
 
                 <!-- Quizzes Card -->
-                <div class="bg-white rounded-2xl border border-gray-100 shadow-sm">
+                <div class="bg-white rounded-2xl border-2 border-ink-900">
                     <div class="p-6 border-b border-gray-100">
                         <h3 class="text-lg font-bold text-gray-800">Quizzes</h3>
                         <p class="text-sm text-gray-500 mt-1">Complete the external quiz and submit your score</p>
@@ -198,7 +179,7 @@
                 </div>
 
                 <!-- My Submissions -->
-                <div class="bg-white rounded-2xl border border-gray-100 shadow-sm">
+                <div class="bg-white rounded-2xl border-2 border-ink-900">
                     <div class="p-6 border-b border-gray-100">
                         <h3 class="text-lg font-bold text-gray-800">My Submissions</h3>
                     </div>
@@ -308,18 +289,18 @@
 
     <!-- Image Lightbox -->
     <div id="lightbox" class="hidden fixed inset-0 lightbox z-50 flex items-center justify-center p-4">
-        <button onclick="closeLightbox()" class="absolute top-4 right-4 p-2 text-white hover:bg-white/10 rounded-full">
-            <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <button type="button" onclick="closeLightbox()" class="absolute top-4 right-4 p-2 text-white hover:bg-white/10 rounded-full" aria-label="Close image viewer">
+            <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
             </svg>
         </button>
-        <button id="prevImage" onclick="navigateLightbox(-1)" class="absolute left-4 p-2 text-white hover:bg-white/10 rounded-full">
-            <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <button type="button" id="prevImage" onclick="navigateLightbox(-1)" class="absolute left-4 p-2 text-white hover:bg-white/10 rounded-full" aria-label="Previous image">
+            <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
             </svg>
         </button>
-        <button id="nextImage" onclick="navigateLightbox(1)" class="absolute right-4 p-2 text-white hover:bg-white/10 rounded-full">
-            <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <button type="button" id="nextImage" onclick="navigateLightbox(1)" class="absolute right-4 p-2 text-white hover:bg-white/10 rounded-full" aria-label="Next image">
+            <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
             </svg>
         </button>
@@ -709,15 +690,15 @@
 
             if (!isContentUnlocked) {
                 section.innerHTML = `
-                    <div class="text-center py-12 px-6 bg-amber-50 border border-amber-200 rounded-2xl">
-                        <div class="w-16 h-16 bg-amber-100 text-amber-700 rounded-full flex items-center justify-center mx-auto mb-4">
-                            <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <div class="learn-lock-banner">
+                        <div class="learn-lock-banner-icon">
+                            <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
                             </svg>
                         </div>
                         <h3 class="text-xl font-bold text-gray-900 mb-2">Pre-Test Required</h3>
                         <p class="text-gray-600 mb-6 max-w-md mx-auto">Please submit your pre-test score to unlock this module's learning materials and videos. Any attempt unlocks the content.</p>
-                        <button onclick="openPreTestModal()" class="px-6 py-3 bg-brand text-white font-semibold rounded-xl hover:bg-brand-dark transition-colors">
+                        <button type="button" onclick="openPreTestModal()" class="learn-module-card-cta" style="width: auto; display: inline-block; padding: 0.75rem 1.5rem;">
                             Take Pre-Test / Enter Score
                         </button>
                     </div>
@@ -729,27 +710,27 @@
                 const isMobile = window.innerWidth <= 768;
                 if (isMobile) {
                     section.innerHTML = `
-                        <div class="text-center py-4 bg-gray-50 border border-gray-100 rounded-xl p-4">
-                            <div class="w-12 h-12 bg-red-100 text-red-600 rounded-full flex items-center justify-center mx-auto mb-3">
-                                <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+                        <div class="text-center py-4 learn-content-card p-4" style="box-shadow: none;">
+                            <div class="w-12 h-12 bg-forest-50 text-forest-800 rounded-full flex items-center justify-center mx-auto mb-3">
+                                <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                                     <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8l-6-6z"/>
                                 </svg>
                             </div>
                             <h4 class="font-bold text-gray-800 mb-1 text-sm">PDF Learning Material</h4>
                             <p class="text-xs text-gray-500 mb-4">View or download the learning document.</p>
-                            <a href="${module.pdf_url}" target="_blank" class="w-full inline-flex items-center justify-center space-x-2 px-4 py-3 bg-red-600 text-white rounded-xl hover:bg-red-700 transition-colors font-medium text-sm shadow-sm">
+                            <a href="${module.pdf_url}" target="_blank" class="learn-module-card-cta" style="width: 100%; display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem;">
                                 <span>Open PDF Document</span>
                             </a>
                         </div>
                     `;
                 } else {
                     section.innerHTML = `
-                        <div class="pdf-container rounded-xl overflow-hidden bg-gray-100">
-                            <iframe src="${module.pdf_url}" class="w-full h-full" frameborder="0"></iframe>
+                        <div class="learn-doc-frame">
+                            <iframe src="${module.pdf_url}" class="w-full h-full pdf-container" frameborder="0" title="Module PDF document"></iframe>
                         </div>
                         <div class="mt-4 flex justify-center">
-                            <a href="${module.pdf_url}" target="_blank" class="inline-flex items-center space-x-2 px-6 py-3 bg-red-50 text-red-600 rounded-xl hover:bg-red-100 transition-colors">
-                                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                            <a href="${module.pdf_url}" target="_blank" class="inline-flex items-center space-x-2 px-6 py-3 bg-forest-50 text-forest-800 rounded-xl hover:bg-forest-100 transition-colors font-medium">
+                                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                                     <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8l-6-6z"/>
                                 </svg>
                                 <span>Open PDF in New Tab</span>
@@ -762,12 +743,12 @@
                 section.innerHTML = `
                     <div class="image-gallery grid grid-cols-2 md:grid-cols-3 gap-4">
                         ${module.image_urls.map((url, index) => `
-                            <div class="relative aspect-video rounded-xl overflow-hidden bg-gray-100 cursor-pointer" onclick="openLightbox(${index})">
+                            <button type="button" class="learn-gallery-item aspect-video bg-gray-100" onclick="openLightbox(${index})" aria-label="View page ${index + 1} full size">
                                 <img src="${url}" alt="Page ${index + 1}" class="w-full h-full object-cover">
-                                <div class="absolute inset-0 bg-black/0 hover:bg-black/20 transition-colors flex items-center justify-center">
+                                <div class="absolute inset-0 bg-black/0 hover:bg-black/20 transition-colors flex items-center justify-center" aria-hidden="true">
                                     <span class="opacity-0 hover:opacity-100 bg-white/90 px-3 py-1 rounded-full text-sm font-medium">View</span>
                                 </div>
-                            </div>
+                            </button>
                         `).join('')}
                     </div>
                     <p class="text-center text-sm text-gray-500 mt-4">Click any image to view full size</p>
@@ -796,20 +777,20 @@
 
             section.classList.remove('hidden');
             list.innerHTML = module.videos.map(video => `
-                <div class="video-card bg-gray-50 rounded-xl overflow-hidden transition-all">
-                    <a href="${video.video_url}" target="_blank" class="block relative">
-                        <img src="${video.thumbnail_url || getYouTubeThumbnail(video.video_url) || 'https://via.placeholder.com/320x180?text=Video'}" alt="${video.title}" class="w-full h-36 object-cover">
-                        <div class="absolute inset-0 flex items-center justify-center bg-black/30 hover:bg-black/50 transition-colors">
-                            <div class="w-14 h-14 bg-white rounded-full flex items-center justify-center shadow-lg">
-                                <svg class="w-7 h-7 text-brand ml-1" fill="currentColor" viewBox="0 0 24 24">
+                <div class="learn-video-tile">
+                    <a href="${video.video_url}" target="_blank" class="block relative" aria-label="Open video: ${escapeHtml(video.title)} (opens in new tab)">
+                        <img src="${video.thumbnail_url || getYouTubeThumbnail(video.video_url) || 'https://via.placeholder.com/320x180?text=Video'}" alt="" class="w-full h-36 object-cover">
+                        <div class="absolute inset-0 flex items-center justify-center bg-black/30 hover:bg-black/50 transition-colors" aria-hidden="true">
+                            <div class="w-14 h-14 bg-white border-2 border-ink-900 rounded-full flex items-center justify-center">
+                                <svg class="w-7 h-7 text-forest-600 ml-1" fill="currentColor" viewBox="0 0 24 24">
                                     <path d="M8 5v14l11-7z"/>
                                 </svg>
                             </div>
                         </div>
                     </a>
                     <div class="p-4">
-                        <h4 class="font-semibold text-gray-800 mb-1 line-clamp-1">${video.title}</h4>
-                        <p class="text-sm text-gray-500 line-clamp-2">${video.description || 'No description'}</p>
+                        <h4 class="font-semibold text-gray-800 mb-1 line-clamp-1">${escapeHtml(video.title)}</h4>
+                        <p class="text-sm text-gray-500 line-clamp-2">${escapeHtml(video.description || 'No description')}</p>
                     </div>
                 </div>
             `).join('');

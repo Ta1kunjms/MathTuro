@@ -26,7 +26,7 @@ function createAdminSidebar() {
         <aside class="w-64 bg-gray-900 text-white h-screen fixed left-0 top-0 z-50 transform -translate-x-full lg:transform-none transition-transform duration-300 ease-in-out flex flex-col">
             <div class="p-6 border-b border-gray-800">
                 <div class="flex items-center space-x-3">
-                    <div class="w-10 h-10 bg-maroon rounded-lg flex items-center justify-center">
+                    <div class="w-10 h-10 bg-gray-800 border border-gray-700 rounded-lg flex items-center justify-center">
                         <i class="fas fa-book"></i>
                     </div>
                     <div>
@@ -153,8 +153,15 @@ function createAdminSidebar() {
          const isGradeSectionPair = section === 'grade-levels' && currentPath.includes('sections.html');
 
          if (isSectionMatch || isGradeSectionPair) {
+             // Neutral-dark active state with a restrained green indicator —
+             // green is the primary admin action color; it marks "you are here"
+             // without competing with purple (reserved for secondary emphasis).
+             // forest-100 (not forest-600) is used for the border specifically because
+             // it's the shade in this family that clears the 3:1 non-text contrast
+             // minimum against the gray-800 active-row background (11.98:1 computed);
+             // forest-600 remains the one consistent "primary action" shade everywhere else.
              link.classList.remove('text-gray-300', 'hover:bg-gray-800', 'hover:text-white');
-             link.classList.add('bg-maroon', 'text-white');
+             link.classList.add('bg-gray-800', 'text-white', 'border-l-4', 'border-forest-100', 'pl-2');
          }
      });
 

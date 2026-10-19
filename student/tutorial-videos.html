@@ -16,27 +16,10 @@
             font-family: 'Inter', system-ui, sans-serif;
         }
 
-        @media (max-width: 768px) {
-
-            .video-card,
-            .lesson-card,
-            .tutorial-card {
-                max-width: 100% !important;
-                min-width: 0 !important;
-                width: 100% !important;
-                margin: 0 0 1.5rem 0 !important;
-                padding: 1.25rem !important;
-                box-sizing: border-box;
-            }
-
-            .videos-grid,
-            .cards-row {
-                display: flex !important;
-                flex-direction: column !important;
-                gap: 1.5rem !important;
-            }
-        }
-
+        /* Sidebar chrome (injected by sidebar.js) — out of scope for this
+           content-page redesign, left exactly as every other student page
+           defines it. A dedicated "Student Sidebar Visual Pass" is planned
+           after all four content chains are done. */
         .gradient-text {
             background: linear-gradient(135deg, #005801 0%, #22c55e 100%);
             -webkit-background-clip: text;
@@ -61,45 +44,6 @@
 
         .sidebar-link.active {
             box-shadow: 0 4px 15px rgba(0, 88, 1, 0.3);
-        }
-
-        .video-card {
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-
-        .video-card:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 20px 40px -12px rgba(0, 88, 1, 0.15);
-        }
-
-        .video-card:hover .play-overlay {
-            opacity: 1;
-        }
-
-        .play-overlay {
-            opacity: 0;
-            transition: opacity 0.3s ease;
-        }
-
-        .play-button {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-        }
-
-        .category-tab {
-            transition: all 0.2s ease;
-        }
-
-        .category-tab.active {
-            background: linear-gradient(135deg, #005801 0%, #006B01 100%);
-            color: white;
-            box-shadow: 0 4px 15px rgba(0, 88, 1, 0.3);
-        }
-
-        .video-player-container {
-            background: linear-gradient(135deg, #1a1a2e 0%, #0f0f1a 100%);
         }
 
         ::-webkit-scrollbar {
@@ -140,8 +84,8 @@
         <header class="bg-white border-b border-gray-200 sticky top-0 z-30">
             <div class="flex items-center justify-between px-4 lg:px-8 py-4">
                 <!-- Mobile Menu Button -->
-                <button id="mobileMenuBtn" class="lg:hidden p-2 text-gray-600 hover:text-brand rounded-lg">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <button id="mobileMenuBtn" class="lg:hidden p-2 text-gray-600 hover:text-brand rounded-lg" aria-label="Open menu">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                             d="M4 6h16M4 12h16M4 18h16" />
                     </svg>
@@ -156,7 +100,8 @@
                 <!-- Search -->
                 <div class="flex items-center space-x-3">
                     <div class="hidden md:flex items-center space-x-2 bg-gray-100 rounded-xl px-4 py-2">
-                        <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <label for="searchInput" class="sr-only">Search videos</label>
+                        <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                 d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                         </svg>
@@ -165,9 +110,9 @@
                     </div>
 
                     <!-- Back button -->
-                    <a href="dashboard.html" id="backBtn"
+                    <a href="dashboard.html" id="backBtn" aria-label="Back to dashboard"
                         class="flex items-center space-x-2 px-4 py-2 bg-gray-100 rounded-xl text-gray-600 hover:bg-gray-200 transition-colors">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                 d="M10 19l-7-7m0 0l7-7m-7 7h18" />
                         </svg>
@@ -181,16 +126,16 @@
         <div class="p-4 lg:p-8">
             <!-- Featured Video Player -->
             <div id="videoPlayerSection" class="hidden mb-8">
-                <div class="bg-white rounded-2xl overflow-hidden border border-gray-100 shadow-sm">
-                    <div class="video-player-container aspect-video relative">
+                <div class="learn-player-shell">
+                    <div class="learn-player-canvas aspect-video relative">
                         <iframe id="videoPlayer" class="w-full h-full" frameborder="0" allowfullscreen
                             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"></iframe>
                         <div id="videoPlaceholder"
-                            class="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-brand/10 to-green-500/10">
+                            class="absolute inset-0 flex items-center justify-center" style="background: #f0f7f3;">
                             <div class="text-center">
                                 <div
-                                    class="w-20 h-20 bg-white rounded-full flex items-center justify-center shadow-lg mb-4 mx-auto">
-                                    <svg class="w-10 h-10 text-brand ml-2" fill="currentColor" viewBox="0 0 24 24">
+                                    class="w-20 h-20 bg-white border-2 border-ink-900 rounded-full flex items-center justify-center mb-4 mx-auto">
+                                    <svg class="w-10 h-10 text-forest-600 ml-2" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                                         <path d="M8 5v14l11-7z" />
                                     </svg>
                                 </div>
@@ -202,10 +147,10 @@
                         <h2 id="videoTitle" class="text-xl font-bold text-gray-800 mb-2">Video Title</h2>
                         <p id="videoDescription" class="text-gray-600 mb-4">Video description will appear here.</p>
                         <div class="flex items-center space-x-4 text-sm text-gray-500">
-                            <span id="videoQuarter" class="px-3 py-1 bg-blue-50 text-blue-700 rounded-full">All
+                            <span id="videoQuarter" class="learn-video-badge-quarter px-3 py-1 rounded-full">All
                                 Quarters</span>
                             <span id="videoDuration" class="flex items-center space-x-1">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                         d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                                 </svg>
@@ -217,29 +162,19 @@
             </div>
 
             <div class="flex flex-wrap gap-2 mb-6" id="quarterTabs">
-                <button onclick="filterByQuarter('all')"
-                    class="quarter-tab active px-4 py-2 rounded-xl text-sm font-medium bg-brand text-white hover:bg-brand-dark"
-                    data-quarter="all">
+                <button onclick="filterByQuarter('all')" class="learn-quarter-tab active" data-quarter="all">
                     All Videos
                 </button>
-                <button onclick="filterByQuarter('1')"
-                    class="quarter-tab px-4 py-2 rounded-xl text-sm font-medium bg-gray-100 text-gray-600 hover:bg-gray-200"
-                    data-quarter="1">
+                <button onclick="filterByQuarter('1')" class="learn-quarter-tab" data-quarter="1">
                     Quarter 1
                 </button>
-                <button onclick="filterByQuarter('2')"
-                    class="quarter-tab px-4 py-2 rounded-xl text-sm font-medium bg-gray-100 text-gray-600 hover:bg-gray-200"
-                    data-quarter="2">
+                <button onclick="filterByQuarter('2')" class="learn-quarter-tab" data-quarter="2">
                     Quarter 2
                 </button>
-                <button onclick="filterByQuarter('3')"
-                    class="quarter-tab px-4 py-2 rounded-xl text-sm font-medium bg-gray-100 text-gray-600 hover:bg-gray-200"
-                    data-quarter="3">
+                <button onclick="filterByQuarter('3')" class="learn-quarter-tab" data-quarter="3">
                     Quarter 3
                 </button>
-                <button onclick="filterByQuarter('4')"
-                    class="quarter-tab px-4 py-2 rounded-xl text-sm font-medium bg-gray-100 text-gray-600 hover:bg-gray-200"
-                    data-quarter="4">
+                <button onclick="filterByQuarter('4')" class="learn-quarter-tab" data-quarter="4">
                     Quarter 4
                 </button>
             </div>
@@ -250,17 +185,16 @@
             </div>
 
             <!-- Empty State -->
-            <div id="emptyState" class="hidden text-center py-16">
-                <div class="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <svg class="w-10 h-10 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div id="emptyState" class="hidden learn-state-block">
+                <div class="learn-state-icon" style="background: #f0f7f3; color: #1b4332;" aria-hidden="true">
+                    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                             d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
                     </svg>
                 </div>
-                <h3 class="text-xl font-bold text-gray-800 mb-2">No videos found</h3>
-                <p class="text-gray-500 mb-4">Try adjusting your search or filter criteria</p>
-                <button onclick="filterByQuarter('all')"
-                    class="px-6 py-2 bg-brand text-white rounded-xl hover:bg-brand-dark">View All Videos</button>
+                <h3 class="learn-state-title">No videos found</h3>
+                <p class="learn-state-text">Try adjusting your search or filter criteria</p>
+                <button type="button" onclick="filterByQuarter('all')" class="learn-state-action">View All Videos</button>
             </div>
 
             <!-- Add Video Section (Admin/Teacher Only) -->
@@ -328,10 +262,10 @@
 
     <!-- Loading Overlay -->
     <div id="loadingOverlay" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-        <div class="bg-white rounded-2xl p-8 text-center shadow-2xl">
+        <div class="bg-white rounded-2xl p-8 text-center border-2 border-ink-900">
             <div class="relative w-16 h-16 mx-auto mb-4">
-                <div class="absolute inset-0 border-4 border-brand/20 rounded-full"></div>
-                <div class="absolute inset-0 border-4 border-brand border-t-transparent rounded-full animate-spin">
+                <div class="absolute inset-0 border-4 border-forest-100 rounded-full" aria-hidden="true"></div>
+                <div class="absolute inset-0 border-4 border-forest-600 border-t-transparent rounded-full animate-spin" aria-hidden="true">
                 </div>
             </div>
             <p class="text-gray-600 font-medium">Loading videos...</p>
@@ -599,29 +533,27 @@
             emptyState.classList.add('hidden');
 
             grid.innerHTML = filteredVideos.map(video => {
-                const gradient = 'from-brand/10 to-green-500/10';
-
                 return `
-                    <div class="video-card bg-white rounded-xl overflow-hidden border border-gray-100 cursor-pointer" onclick="playVideo(${JSON.stringify(video).replace(/"/g, '&quot;')})">
-                        <div class="aspect-video relative bg-gradient-to-br ${gradient}">
+                    <button type="button" class="learn-video-card w-full text-left" onclick="playVideo(${JSON.stringify(video).replace(/"/g, '&quot;')})">
+                        <div class="aspect-video relative" style="background: #f0f7f3;">
                             ${video.thumbnail_url ?
                         `<img src="${video.thumbnail_url}" alt="${escapeHtml(video.title)}" class="w-full h-full object-cover">` :
                         `<div class="absolute inset-0 flex items-center justify-center">
-                                    <svg class="w-12 h-12 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <svg class="w-12 h-12 text-forest-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/>
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
                                     </svg>
                                 </div>`
                     }
-                            <div class="play-overlay absolute inset-0 bg-black/40">
-                                <div class="play-button w-14 h-14 bg-white rounded-full flex items-center justify-center shadow-lg">
-                                    <svg class="w-6 h-6 text-brand" fill="currentColor" viewBox="0 0 24 24">
+                            <div class="learn-play-overlay absolute inset-0" aria-hidden="true">
+                                <div class="learn-play-button w-14 h-14 bg-white border-2 border-ink-900 rounded-full flex items-center justify-center">
+                                    <svg class="w-6 h-6 text-forest-600" fill="currentColor" viewBox="0 0 24 24">
                                         <path d="M8 5v14l11-7z"/>
                                     </svg>
                                 </div>
                             </div>
                             ${video.duration ? `<span class="absolute bottom-2 right-2 bg-black/70 text-white text-xs px-2 py-1 rounded">${video.duration}</span>` : ''}
-                            ${video.is_featured ? `<span class="absolute top-2 left-2 bg-yellow-500 text-white text-xs px-2 py-1 rounded-full">⭐ Featured</span>` : ''}
+                            ${video.is_featured ? `<span class="learn-video-badge-featured absolute top-2 left-2 text-xs px-2 py-1 rounded-full">Featured</span>` : ''}
                         </div>
                         <div class="p-4">
                             <div class="flex items-start justify-between mb-2">
@@ -629,12 +561,12 @@
                             </div>
                             <p class="text-sm text-gray-500 line-clamp-2 mb-3">${escapeHtml(video.description || '')}</p>
                             <div class="flex items-center justify-start gap-2 flex-wrap">
-                                <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-50 text-blue-700">
+                                <span class="learn-video-badge-quarter inline-flex items-center px-2 py-1 rounded-full text-xs font-medium">
                                     ${getQuarterLabel(video.quarter)}
                                 </span>
                             </div>
                         </div>
-                    </div>
+                    </button>
                 `;
             }).join('');
         }
@@ -691,15 +623,9 @@
         function filterByQuarter(quarter) {
             currentQuarter = quarter || 'all';
 
-            document.querySelectorAll('.quarter-tab').forEach(tab => {
+            document.querySelectorAll('.learn-quarter-tab').forEach(tab => {
                 const isActive = (tab.dataset.quarter || 'all') === currentQuarter;
                 tab.classList.toggle('active', isActive);
-                tab.classList.toggle('bg-brand', isActive);
-                tab.classList.toggle('text-white', isActive);
-                tab.classList.toggle('hover:bg-brand-dark', isActive);
-                tab.classList.toggle('bg-gray-100', !isActive);
-                tab.classList.toggle('text-gray-600', !isActive);
-                tab.classList.toggle('hover:bg-gray-200', !isActive);
             });
 
             renderVideos();
@@ -707,20 +633,11 @@
 
         // Setup event listeners
         function setupEventListeners() {
-            // Mobile menu toggle
-            if (mobileMenuBtn) {
-                mobileMenuBtn.addEventListener('click', () => {
-                    sidebar.classList.toggle('-translate-x-full');
-                    if (mobileOverlay) mobileOverlay.classList.toggle('hidden');
-                });
-            }
-
-            if (mobileOverlay) {
-                mobileOverlay.addEventListener('click', () => {
-                    sidebar.classList.add('-translate-x-full');
-                    mobileOverlay.classList.add('hidden');
-                });
-            }
+            // Mobile drawer open/close is owned solely by sidebar.js's
+            // initSidebar() — it binds the same #mobileMenuBtn/#mobileOverlay
+            // elements. A page-local duplicate here previously caused both
+            // listeners to fire per click, and two toggle() calls on the
+            // same class canceled out, so the drawer never visibly opened.
 
             // Search
             if (searchInput) {

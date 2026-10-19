@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="en" data-portal="student">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="../dist/styles.css">
+    <script src="../shared/js/device.js"></script>
+    <link rel="icon" type="image/png" href="../Logo/MATHURO-LOGO-v2.png">
+    <title>Presentations - MathTuro LMS</title>
+    <script src="../shared/js/supabase-lib.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', system-ui, sans-serif; }
+
+        /* Sidebar chrome (injected by sidebar.js) — out of scope for this
+           content-page redesign, left exactly as every other student page
+           defines it. */
+        .gradient-text {
+            background: linear-gradient(135deg, #005801 0%, #22c55e 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .glass-sidebar {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+        }
+
+        .sidebar-link {
+            transition: all 0.2s ease;
+        }
+
+        .sidebar-link:hover, .sidebar-link.active {
+            background: linear-gradient(135deg, #005801 0%, #006B01 100%);
+            color: white;
+        }
+
+        .sidebar-link.active {
+            box-shadow: 0 4px 15px rgba(0, 88, 1, 0.3);
+        }
+
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; }
+        ::-webkit-scrollbar-thumb { background: #005801; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: #004601; }
+    </style>
+    <link rel="stylesheet" href="../shared/css/base.css">
+    <link rel="stylesheet" href="assets/css/student.css">
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <!-- Mobile bottom navigation -->
+    <div data-include="nav-mobile-student" data-depth="../"></div>
+
+    <!-- Mobile Menu Overlay -->
+    <div id="mobileOverlay" class="fixed inset-0 bg-black bg-opacity-50 z-40 hidden lg:hidden"></div>
+
+    <!-- Sidebar -->
+    <aside id="sidebar" class="fixed left-0 top-0 h-full w-72 glass-sidebar border-r border-gray-200 z-50 transform -translate-x-full lg:translate-x-0 transition-transform duration-300 overflow-y-auto"></aside>
+
+    <!-- Main Content -->
+    <main class="lg:ml-72 min-h-screen">
+        <!-- Top Header -->
+        <header class="bg-white border-b border-gray-200 sticky top-0 z-30">
+            <div class="flex items-center justify-between px-4 lg:px-8 py-4">
+                <!-- Mobile Menu Button -->
+                <button id="mobileMenuBtn" class="lg:hidden p-2 text-gray-600 hover:text-brand rounded-lg" aria-label="Open menu">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
+                    </svg>
+                </button>
+
+                <!-- Page Title -->
+                <div class="flex-1 lg:flex-none">
+                    <h1 class="text-xl lg:text-2xl font-bold text-gray-800">Presentations</h1>
+                </div>
+
+                <!-- Right Actions -->
+                <div class="flex items-center space-x-3">
+                    <a href="dashboard.html" class="p-2 text-gray-600 hover:text-brand rounded-lg hover:bg-gray-100" aria-label="Back to dashboard">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
+                        </svg>
+                    </a>
+                </div>
+            </div>
+        </header>
+
+        <!-- Dashboard Content -->
+        <div class="p-4 lg:p-8">
+            <!-- Page Header (replaces gradient hero) -->
+            <div class="learn-page-header">
+                <div class="learn-page-header-icon" aria-hidden="true">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2zm4.75 3l.75-3h4l.75 3M3 13h18"/>
+                    </svg>
+                </div>
+                <div>
+                    <h2 class="learn-page-header-title">Class Presentations</h2>
+                    <p class="learn-page-header-subtitle">Slide decks your teacher has shared, grouped by module</p>
+                </div>
+            </div>
+
+            <!-- Presentation Groups -->
+            <div id="presentationGroups" class="space-y-8">
+                <!-- Groups loaded dynamically -->
+            </div>
+
+            <!-- Loading State -->
+            <div id="loadingState" class="learn-state-block">
+                <div class="inline-block animate-spin rounded-full h-12 w-12 border-4 border-forest-600 border-t-transparent" aria-hidden="true"></div>
+                <p class="learn-state-text mt-4">Loading presentations...</p>
+            </div>
+
+            <!-- Empty State -->
+            <div id="emptyState" class="hidden learn-state-block">
+                <div class="learn-state-icon" style="background: #f0f7f3; color: #1b4332;" aria-hidden="true">
+                    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2zm4.75 3l.75-3h4l.75 3M3 13h18"/>
+                    </svg>
+                </div>
+                <h3 class="learn-state-title">No presentations yet</h3>
+                <p class="learn-state-text">Your teacher hasn't shared any slide decks for your modules yet. Check back soon.</p>
+            </div>
+
+            <!-- Error State -->
+            <div id="errorState" class="hidden learn-state-block">
+                <div class="learn-state-icon" style="background: #fee2e2; color: #dc2626;" aria-hidden="true">
+                    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                </div>
+                <h3 class="learn-state-title">Couldn't load presentations</h3>
+                <p class="learn-state-text">Something went wrong loading your presentations.</p>
+                <button type="button" onclick="loadData()" class="learn-state-action">
+                    Try Again
+                </button>
+            </div>
+        </div>
+    </main>
+
+    <!-- Toast -->
+    <div id="toast" class="hidden fixed bottom-4 right-4 px-6 py-3 rounded-xl shadow-lg z-50 flex items-center space-x-2"></div>
+
+    <!-- Scripts -->
+    <script src="../shared/js/includes.js"></script>
+
+    <script src="../shared/js/runtime-config.js"></script>
+    <script src="../shared/js/config.js"></script>
+    <script src="../shared/js/utils.js"></script>
+    <script src="../shared/js/supabase.js"></script>
+    <script src="../shared/js/auth.js"></script>
+    <script src="assets/js/sidebar.js"></script>
+
+    <script>
+        let currentUser = null;
+        let presentations = [];
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', async () => {
+            const isAuthenticated = await checkAuth();
+            if (!isAuthenticated) return;
+            await loadData();
+        });
+
+        async function checkAuth() {
+            try {
+                currentUser = await checkAuthSession();
+                if (!currentUser || currentUser.role !== 'student') {
+                    redirectToLogin();
+                    return false;
+                }
+                updateUserInfo(currentUser);
+                return true;
+            } catch (error) {
+                console.error('Auth error:', error);
+                redirectToLogin();
+                return false;
+            }
+        }
+
+        function updateUserInfo(user) {
+            const displayName = user.fullName || user.email || 'Student';
+            const initials = displayName ? displayName.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2) : '--';
+            const initialsEl = document.getElementById('userInitials');
+            const nameEl = document.getElementById('sidebarUserName');
+            if (initialsEl) initialsEl.textContent = initials;
+            if (nameEl) nameEl.textContent = displayName;
+        }
+
+        async function loadData() {
+            document.getElementById('emptyState').classList.add('hidden');
+            document.getElementById('errorState').classList.add('hidden');
+            document.getElementById('loadingState').classList.remove('hidden');
+
+            try {
+                // RLS (pres_select_student) already restricts rows to
+                // published presentations whose parent module is accessible
+                // and unlocked for this student — no extra client-side
+                // grade/section filtering is applied on top of it.
+                const { data, error } = await getSupabase()
+                    .from('presentations')
+                    .select('*, modules(id, title), lessons(id, title)')
+                    .eq('is_published', true)
+                    .order('order_index', { ascending: true });
+
+                if (error) throw error;
+
+                presentations = data || [];
+                document.getElementById('loadingState').classList.add('hidden');
+                renderPresentations();
+            } catch (error) {
+                console.error('Error loading presentations:', error);
+                document.getElementById('loadingState').classList.add('hidden');
+                document.getElementById('errorState').classList.remove('hidden');
+            }
+        }
+
+        function renderPresentations() {
+            const container = document.getElementById('presentationGroups');
+            const emptyState = document.getElementById('emptyState');
+
+            if (!presentations.length) {
+                container.innerHTML = '';
+                emptyState.classList.remove('hidden');
+                return;
+            }
+            emptyState.classList.add('hidden');
+
+            // Group by module, preserving first-seen module order.
+            const groups = [];
+            const groupsByModuleId = {};
+            presentations.forEach(pres => {
+                const moduleId = pres.module_id;
+                const moduleTitle = pres.modules?.title || 'Untitled Module';
+                if (!groupsByModuleId[moduleId]) {
+                    const group = { moduleId, moduleTitle, items: [] };
+                    groupsByModuleId[moduleId] = group;
+                    groups.push(group);
+                }
+                groupsByModuleId[moduleId].items.push(pres);
+            });
+
+            container.innerHTML = groups.map(group => `
+                <section>
+                    <h3 class="learn-module-group-title">${escapeHtml(group.moduleTitle)}</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        ${group.items.map(renderPresentationCard).join('')}
+                    </div>
+                </section>
+            `).join('');
+        }
+
+        function renderPresentationCard(pres) {
+            const lessonTag = pres.lessons?.title
+                ? `<span class="learn-presentation-tag">${escapeHtml(pres.lessons.title)}</span>`
+                : '';
+            const description = pres.description
+                ? `<p class="text-sm text-gray-500 mt-1 line-clamp-2">${escapeHtml(pres.description)}</p>`
+                : '';
+            const pageCount = pres.page_count > 0
+                ? `<span class="text-xs text-gray-400">${pres.page_count} slide${pres.page_count === 1 ? '' : 's'}</span>`
+                : '';
+
+            return `
+                <div class="learn-presentation-card">
+                    ${lessonTag}
+                    <h4 class="font-semibold text-gray-900">${escapeHtml(pres.title)}</h4>
+                    ${description}
+                    <div class="flex items-center justify-between mt-4">
+                        ${pageCount || '<span></span>'}
+                        <a href="view-presentation.html?presentation_id=${encodeURIComponent(pres.id)}"
+                            class="learn-presentation-cta">
+                            <span>View Presentation</span>
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/>
+                            </svg>
+                        </a>
+                    </div>
+                </div>
+            `;
+        }
+
+        function escapeHtml(value) {
+            const div = document.createElement('div');
+            div.textContent = value == null ? '' : String(value);
+            return div.innerHTML;
+        }
+    </script>
+</body>
+</html>

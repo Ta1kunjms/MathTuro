@@ -284,173 +284,192 @@
         </header>
 
         <!-- Dashboard Content -->
-        <div class="p-4 lg:p-8">
-            <!-- Welcome Banner with Streak -->
-            <div
-                class="bg-gradient-to-r from-brand to-brand-light rounded-2xl p-6 lg:p-8 text-white mb-8 relative overflow-hidden">
-                <div class="absolute right-0 top-0 w-64 h-64 bg-white/5 rounded-full -translate-y-1/2 translate-x-1/2">
-                </div>
-                <div class="absolute left-1/2 bottom-0 w-32 h-32 bg-white/5 rounded-full translate-y-1/2"></div>
-
-                <div class="relative flex flex-col lg:flex-row lg:items-center lg:justify-between">
-                    <div>
-                        <div class="flex items-center space-x-2 mb-2">
-                            <span id="greetingTime" class="text-white/80 text-sm">Good morning</span>
-                            <span class="text-white/60">•</span>
-                            <span id="currentDate" class="text-white/80 text-sm"></span>
-                        </div>
-                        <h2 class="text-2xl lg:text-3xl font-bold mb-2">Welcome back, <span
-                                id="welcomeName">Student</span>! 👋</h2>
-                        <p class="text-white/80 mb-4">Continue your learning journey and achieve your goals today.</p>
-
-                        <!-- Daily Goal / Streak -->
-                        <div class="flex items-center space-x-4">
-                            <div class="flex items-center space-x-2 bg-white/20 px-4 py-2 rounded-xl">
-                                <span class="streak-flame text-xl">🔥</span>
-                                <div>
-                                    <p class="text-sm font-medium"><span id="dailyStreak">0</span> day streak</p>
-                                    <p class="text-xs text-white/70">Keep it going!</p>
-                                </div>
-                            </div>
-                        </div>
+        <div class="p-4 lg:p-8 xl:max-w-6xl xl:mx-auto">
+            <!-- Greeting + Streak Strip -->
+            <div class="dash-hero-strip mb-6">
+                <div class="dash-hero-strip-text">
+                    <div class="dash-hero-eyebrow-row">
+                        <span id="greetingTime" class="dash-hero-eyebrow">Good morning</span>
+                        <span class="dash-hero-eyebrow-dot" aria-hidden="true">•</span>
+                        <span id="currentDate" class="dash-hero-eyebrow"></span>
                     </div>
-                    <div class="mt-6 lg:mt-0 flex flex-col sm:flex-row gap-3">
-                        <a href="modules.html"
-                            class="inline-flex items-center justify-center space-x-2 bg-white text-brand px-6 py-3 rounded-xl font-semibold hover:bg-gray-100 transition-colors">
-                            <span>Browse Modules</span>
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M14 5l7 7m0 0l-7 7m7-7H3" />
-                            </svg>
-                        </a>
-                        <a href="tutorial-videos.html"
-                            class="inline-flex items-center justify-center space-x-2 bg-white/20 text-white px-6 py-3 rounded-xl font-semibold hover:bg-white/30 transition-colors border border-white/30">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                            </svg>
-                            <span>Watch Tutorials</span>
-                        </a>
+                    <h2 class="dash-hero-title">Welcome back, <span id="welcomeName">Student</span></h2>
+                </div>
+                <div class="dash-streak-chip">
+                    <span class="streak-flame dash-streak-flame" aria-hidden="true">🔥</span>
+                    <div>
+                        <p class="dash-streak-count"><span id="dailyStreak">0</span> day streak</p>
+                        <p id="streakContext" class="dash-streak-context">Keep it going!</p>
                     </div>
                 </div>
             </div>
 
-            <!-- Stats Grid -->
-            <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6 mb-8">
+            <!-- Stat Strip (compact, visually subordinate to Continue Learning) -->
+            <div class="dash-stat-strip mb-6">
                 <!-- Modules Completed -->
-                <div class="stat-card bg-white rounded-2xl p-5 lg:p-6 border border-gray-100 shadow-sm">
-                    <div class="flex items-center justify-between mb-4">
-                        <div class="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center">
-                            <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
-                            </svg>
-                        </div>
-                        <span class="text-xs text-green-600 bg-green-50 px-2 py-1 rounded-full hidden"
-                            id="modulesChange">+0</span>
+                <div class="dash-stat-card">
+                    <div class="dash-stat-icon">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                        </svg>
                     </div>
-                    <div class="text-3xl font-bold text-gray-800" id="modulesCompletedStat">0</div>
-                    <div class="text-sm text-gray-500">Modules Completed</div>
+                    <div class="dash-stat-value" id="modulesCompletedStat">0</div>
+                    <div class="dash-stat-label">Modules Completed</div>
+                    <span class="hidden" id="modulesChange">+0</span>
                 </div>
 
                 <!-- Lessons Completed -->
-                <div class="stat-card bg-white rounded-2xl p-5 lg:p-6 border border-gray-100 shadow-sm">
-                    <div class="flex items-center justify-between mb-4">
-                        <div class="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center">
-                            <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                            </svg>
-                        </div>
+                <div class="dash-stat-card">
+                    <div class="dash-stat-icon">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
                     </div>
-                    <div class="text-3xl font-bold text-gray-800" id="lessonsCompletedStat">0</div>
-                    <div class="text-sm text-gray-500">Lessons Completed</div>
+                    <div class="dash-stat-value" id="lessonsCompletedStat">0</div>
+                    <div class="dash-stat-label">Lessons Completed</div>
                 </div>
 
                 <!-- Quiz Average -->
-                <div class="stat-card bg-white rounded-2xl p-5 lg:p-6 border border-gray-100 shadow-sm">
-                    <div class="flex items-center justify-between mb-4">
-                        <div class="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center">
-                            <svg class="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                            </svg>
-                        </div>
+                <div class="dash-stat-card">
+                    <div class="dash-stat-icon">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                        </svg>
                     </div>
-                    <div class="text-3xl font-bold text-gray-800" id="averageScoreStat">0%</div>
-                    <div class="text-sm text-gray-500">Average Quiz Score</div>
+                    <div class="dash-stat-value" id="averageScoreStat">0%</div>
+                    <div class="dash-stat-label">Average Quiz Score</div>
                 </div>
 
                 <!-- Total XP -->
-                <div class="stat-card bg-white rounded-2xl p-5 lg:p-6 border border-gray-100 shadow-sm">
-                    <div class="flex items-center justify-between mb-4">
-                        <div class="w-12 h-12 bg-yellow-100 rounded-xl flex items-center justify-center">
-                            <svg class="w-6 h-6 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
-                            </svg>
-                        </div>
+                <div class="dash-stat-card">
+                    <div class="dash-stat-icon">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
+                        </svg>
                     </div>
-                    <div class="text-3xl font-bold text-gray-800" id="totalXpStat">0</div>
-                    <div class="text-sm text-gray-500">Total XP Earned</div>
+                    <div class="dash-stat-value" id="totalXpStat">0</div>
+                    <div class="dash-stat-label">Total XP Earned</div>
                 </div>
             </div>
 
-            <!-- Main Content Grid -->
-            <div class="grid lg:grid-cols-3 gap-6 lg:gap-8">
-                <!-- Left Column - Modules & Progress -->
-                <div class="lg:col-span-2 space-y-6">
-                    <!-- Continue Learning -->
-                    <div class="bg-white rounded-2xl border border-gray-100 shadow-sm">
-                        <div class="p-6 border-b border-gray-100">
-                            <div class="flex items-center justify-between">
-                                <div>
-                                    <h3 class="text-lg font-bold text-gray-800">Continue Learning</h3>
-                                    <p class="text-sm text-gray-500">Pick up where you left off</p>
-                                </div>
-                                <a href="modules.html"
-                                    class="text-brand hover:text-brand-dark text-sm font-medium flex items-center space-x-1">
-                                    <span>View All</span>
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                            d="M9 5l7 7-7 7" />
-                                    </svg>
-                                </a>
+            <!-- Continue Learning: the strongest visual card on the page -->
+            <div class="dash-primary-panel mb-6">
+                <div class="dash-primary-panel-header">
+                    <div>
+                        <h3 class="dash-primary-panel-title">Continue Learning</h3>
+                        <p class="dash-primary-panel-subtitle">Pick up where you left off</p>
+                    </div>
+                    <a href="modules.html" class="dash-view-all-link">
+                        <span>View All</span>
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                        </svg>
+                    </a>
+                </div>
+                <div id="continueLearningSections" class="dash-primary-panel-body">
+                    <!-- Content loaded dynamically by loadContinueLearning() -->
+                    <div class="dash-loading-block">
+                        <div class="dash-spinner" aria-hidden="true"></div>
+                        <p>Loading your modules...</p>
+                    </div>
+                </div>
+
+                <!-- Progress snapshot: static shell, populated by loadDashboardStats()/updateProgressCircle().
+                     Kept as its own static region (not part of #continueLearningSections' dynamic innerHTML)
+                     so these ids exist in the DOM from page load, independent of module-data load timing. -->
+                <div class="dash-progress-panel">
+                    <div class="dash-progress-ring-wrap">
+                        <svg viewBox="0 0 120 120" class="dash-progress-ring" aria-hidden="true" focusable="false">
+                            <circle cx="60" cy="60" r="54" class="dash-progress-ring-track" fill="none" stroke-width="10"></circle>
+                            <circle id="progressCircle" cx="60" cy="60" r="54" class="dash-progress-ring-fill" fill="none"
+                                stroke-width="10" stroke-dasharray="339.292" stroke-dashoffset="339.292"
+                                transform="rotate(-90 60 60)"></circle>
+                        </svg>
+                        <div class="dash-progress-ring-label">
+                            <span id="overallProgressPercent">0%</span>
+                            <span class="dash-progress-ring-caption">Overall</span>
+                        </div>
+                    </div>
+                    <div class="dash-progress-stats">
+                        <div class="dash-progress-stat">
+                            <p class="dash-progress-stat-label">Modules completed</p>
+                            <p class="dash-progress-stat-value" id="completedModulesText">0 of 0</p>
+                        </div>
+                        <div class="dash-progress-stat">
+                            <div class="dash-progress-stat-row">
+                                <p class="dash-progress-stat-label">Lessons completed</p>
+                                <p class="dash-progress-stat-value-sm" id="lessonProgressText">0/0</p>
+                            </div>
+                            <div class="dash-progress-stat-bar">
+                                <div id="lessonProgressBar" class="dash-progress-stat-bar-fill" style="width: 0%"></div>
                             </div>
                         </div>
-                        <div id="continueLearningSections" class="p-6 space-y-4">
-                            <!-- Content loaded dynamically -->
-                            <div class="text-center py-8 text-gray-500">
-                                <div
-                                    class="w-12 h-12 mx-auto mb-4 rounded-full bg-gray-100 flex items-center justify-center">
-                                    <div
-                                        class="w-6 h-6 border-2 border-gray-300 border-t-brand rounded-full animate-spin">
+                        <div class="dash-progress-stat">
+                            <p class="dash-progress-stat-label">Today's goal</p>
+                            <p class="dash-progress-stat-value"><span id="dailyGoalProgress">0</span> / <span
+                                    id="dailyGoalTarget">3</span> activities</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Supporting Content Grid -->
+            <div class="grid lg:grid-cols-3 gap-6 lg:gap-8">
+                <!-- Left Column - Activity, results & discovery -->
+                <div class="lg:col-span-2 space-y-6">
+                    <!-- Recent Activity & Results (shared visual wrapper only —
+                         each side keeps its own existing container id and load function) -->
+                    <div class="dash-support-panel">
+                        <div class="dash-support-panel-header">
+                            <div>
+                                <h3 class="dash-support-panel-title">Recent Activity &amp; Results</h3>
+                                <p class="dash-support-panel-subtitle">Your latest quiz results and learning activity</p>
+                            </div>
+                        </div>
+                        <div class="dash-support-panel-split">
+                            <div class="dash-support-panel-col">
+                                <div class="dash-support-panel-col-header">
+                                    <h4 class="dash-support-panel-col-title">Quiz Results</h4>
+                                    <a href="quizzes.html" class="dash-view-all-link dash-view-all-link-sm">View All</a>
+                                </div>
+                                <div id="recentSubmissions" class="divide-y divide-gray-100">
+                                    <!-- Content loaded dynamically -->
+                                    <div class="p-4 text-center text-gray-500 text-sm">
+                                        <p>Loading submissions...</p>
                                     </div>
                                 </div>
-                                <p>Loading your modules...</p>
+                            </div>
+                            <div class="dash-support-panel-col">
+                                <div class="dash-support-panel-col-header">
+                                    <h4 class="dash-support-panel-col-title">Activity Timeline</h4>
+                                </div>
+                                <div id="recentActivity" class="divide-y divide-gray-100 max-h-72 overflow-y-auto">
+                                    <!-- Content loaded dynamically -->
+                                    <div class="p-4 text-center text-gray-500 text-sm">
+                                        <p>Loading activity...</p>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
 
                     <!-- Featured Tutorial Videos -->
-                    <div class="bg-white rounded-2xl border border-gray-100 shadow-sm">
-                        <div class="p-6 border-b border-gray-100">
-                            <div class="flex items-center justify-between">
-                                <div>
-                                    <h3 class="text-lg font-bold text-gray-800">Featured Tutorials</h3>
-                                    <p class="text-sm text-gray-500">Learn with video guides</p>
-                                </div>
-                                <a href="tutorial-videos.html"
-                                    class="text-brand hover:text-brand-dark text-sm font-medium flex items-center space-x-1">
-                                    <span>View All</span>
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                            d="M9 5l7 7-7 7" />
-                                    </svg>
-                                </a>
+                    <div class="dash-support-panel">
+                        <div class="dash-support-panel-header">
+                            <div>
+                                <h3 class="dash-support-panel-title">Featured Tutorials</h3>
+                                <p class="dash-support-panel-subtitle">Learn with video guides</p>
                             </div>
+                            <a href="tutorial-videos.html" class="dash-view-all-link">
+                                <span>View All</span>
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                                </svg>
+                            </a>
                         </div>
                         <div id="featuredVideos" class="p-6">
                             <div class="grid sm:grid-cols-2 gap-4">
@@ -458,41 +477,34 @@
                             </div>
                         </div>
                     </div>
-
-                    <!-- Recent Submissions -->
-                    <div class="bg-white rounded-2xl border border-gray-100 shadow-sm">
-                        <div class="p-6 border-b border-gray-100">
-                            <div class="flex items-center justify-between">
-                                <div>
-                                    <h3 class="text-lg font-bold text-gray-800">Recent Submissions</h3>
-                                    <p class="text-sm text-gray-500">Your quiz submission history</p>
-                                </div>
-                                <a href="quizzes.html"
-                                    class="text-brand hover:text-brand-dark text-sm font-medium flex items-center space-x-1">
-                                    <span>View All</span>
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                            d="M9 5l7 7-7 7" />
-                                    </svg>
-                                </a>
-                            </div>
-                        </div>
-                        <div id="recentSubmissions" class="divide-y divide-gray-100">
-                            <!-- Content loaded dynamically -->
-                            <div class="p-6 text-center text-gray-500">
-                                <p>Loading submissions...</p>
-                            </div>
-                        </div>
-                    </div>
                 </div>
 
-                <!-- Right Column - Activity & Achievements -->
+                <!-- Right Column - Recognition & momentum -->
                 <div class="space-y-6">
-
+                    <!-- Achievements Preview (promoted ahead of Weekly Activity) -->
+                    <div class="dash-support-panel p-6">
+                        <div class="flex items-center justify-between mb-4">
+                            <h3 class="dash-support-panel-title">Achievements</h3>
+                            <a href="#" onclick="showAchievements(); return false;"
+                                class="dash-view-all-link dash-view-all-link-sm">View All</a>
+                        </div>
+                        <div id="achievementAcknowledgment" class="dash-achievement-alert hidden" role="status">
+                            <span id="achievementAcknowledgmentText"></span>
+                            <button type="button" id="achievementAcknowledgmentClose" class="dash-achievement-alert-close"
+                                aria-label="Dismiss achievement notice">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                            </button>
+                        </div>
+                        <div id="achievementsPreview" class="dash-badge-grid">
+                            <!-- Achievement badges loaded dynamically -->
+                        </div>
+                    </div>
 
                     <!-- Weekly Activity -->
-                    <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
-                        <h3 class="text-lg font-bold text-gray-800 mb-4">This Week's Activity</h3>
+                    <div class="dash-support-panel p-6">
+                        <h3 class="dash-support-panel-title mb-4">This Week's Activity</h3>
                         <div id="weeklyActivity" class="grid grid-cols-7 gap-1">
                             <!-- Days will be populated -->
                         </div>
@@ -505,31 +517,7 @@
                             <span>Sat</span>
                             <span>Sun</span>
                         </div>
-                    </div>
-
-                    <!-- Recent Activity -->
-                    <div class="bg-white rounded-2xl border border-gray-100 shadow-sm">
-                        <div class="p-6 border-b border-gray-100">
-                            <h3 class="text-lg font-bold text-gray-800">Recent Activity</h3>
-                        </div>
-                        <div id="recentActivity" class="divide-y divide-gray-100 max-h-80 overflow-y-auto">
-                            <!-- Content loaded dynamically -->
-                            <div class="p-6 text-center text-gray-500">
-                                <p>Loading activity...</p>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Achievements Preview -->
-                    <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
-                        <div class="flex items-center justify-between mb-4">
-                            <h3 class="text-lg font-bold text-gray-800">Achievements</h3>
-                            <a href="#" onclick="showAchievements(); return false;"
-                                class="text-brand hover:text-brand-dark text-sm font-medium">View All</a>
-                        </div>
-                        <div id="achievementsPreview" class="grid grid-cols-4 gap-3">
-                            <!-- Achievement badges loaded dynamically -->
-                        </div>
+                        <p id="weeklyActivityCaption" class="dash-weekly-caption"></p>
                     </div>
                 </div>
             </div>
@@ -621,7 +609,12 @@
             activityTimeline: [],
             streak: 0,
             xp: 0,
-            achievements: []
+            achievements: [],
+            newlyEarnedAchievementIds: [],
+            // In-memory only, per page load — never persisted to storage.
+            // Prevents the same achievement-unlocked acknowledgment from
+            // being announced more than once if sync/load reruns.
+            announcedAchievementIds: new Set()
         };
 
         // DOM Elements
@@ -885,6 +878,8 @@
                     .filter(item => item.condition() && !persistedMap[item.id])
                     .map(item => item.id);
 
+                dashboardData.newlyEarnedAchievementIds = newlyEarnedIds;
+
                 if (newlyEarnedIds.length > 0) {
                     const nowIso = new Date().toISOString();
                     const insertPayload = newlyEarnedIds.map(achievementId => ({
@@ -917,6 +912,7 @@
             } catch (error) {
                 console.warn('Failed to sync persistent achievements:', error);
                 dashboardData.persistedAchievements = {};
+                dashboardData.newlyEarnedAchievementIds = [];
             }
         }
 
@@ -1028,8 +1024,12 @@
                 }
 
                 let dbStreak = 0;
+                let dbLongestStreak = 0;
                 if (streakResponse && !streakResponse.error && streakResponse.data) {
                     dbStreak = streakResponse.data.current_streak || 0;
+                    // Already returned by the existing select('*') — just reading a
+                    // field that was previously discarded, no new query.
+                    dbLongestStreak = streakResponse.data.longest_streak || 0;
                 }
 
                 const scopedModules = (modulesResponse.data || []).filter(module => isInStudentScope(module, studentAssignment));
@@ -1116,6 +1116,7 @@
                 const xp = (completedLessons * 10) + (completedModules * 50) + (approvedSubmissions.length * 20);
 
                 dashboardData.streak = dbStreak;
+                dashboardData.longestStreak = dbLongestStreak;
                 dashboardData.modules = scopedModules;
                 dashboardData.lessons = scopedModules.flatMap(module => module.lessons || []);
                 dashboardData.progress = normalizedProgress;
@@ -1147,6 +1148,22 @@
             try {
                 const dailyStreakEl = document.getElementById('dailyStreak');
                 if (dailyStreakEl) dailyStreakEl.textContent = dashboardData.streak || 0;
+
+                // Real, truthful context only — derived from current_streak vs.
+                // longest_streak, both already fetched from student_streaks.
+                const streakContextEl = document.getElementById('streakContext');
+                if (streakContextEl) {
+                    const current = dashboardData.streak || 0;
+                    const longest = dashboardData.longestStreak || 0;
+                    if (current === 0) {
+                        streakContextEl.textContent = 'Start today to begin a streak';
+                    } else if (longest > current) {
+                        const remaining = longest - current;
+                        streakContextEl.textContent = `${remaining} more day${remaining !== 1 ? 's' : ''} to match your best (${longest})`;
+                    } else {
+                        streakContextEl.textContent = 'Keep it going!';
+                    }
+                }
             } catch (error) {
                 console.log('No streak data yet');
             }
@@ -1219,6 +1236,60 @@
         }
 
         // Load continue learning section
+        function renderPrimaryModuleCard(module) {
+            const totalLessons = getModuleLessonIds(module).length;
+            const completedLessons = getCompletedLessonCountForModule(module);
+            const progressPercent = getModuleProgressPercent(module);
+            const isCompleted = progressPercent === 100;
+            const hasStarted = completedLessons > 0;
+            const actionLabel = isCompleted ? 'Review Module' : (hasStarted ? 'Resume Module' : 'Start Module');
+            const statusLabel = isCompleted ? 'Completed' : (hasStarted ? 'In Progress' : 'Not Started');
+
+            return `
+                <a href="module-view.html?id=${module.id}" class="dash-primary-module">
+                    <span class="dash-primary-module-badge ${isCompleted ? 'is-complete' : ''}">${statusLabel}</span>
+                    <h4 class="dash-primary-module-title">${escapeHtml(module.title)}</h4>
+                    <p class="dash-primary-module-meta">${completedLessons} of ${totalLessons} lesson${totalLessons !== 1 ? 's' : ''} complete</p>
+                    <div class="dash-primary-module-track">
+                        <div class="dash-primary-module-fill" style="width: ${progressPercent}%"></div>
+                    </div>
+                    <div class="dash-primary-module-footer">
+                        <span class="dash-primary-module-percent">${progressPercent}% complete</span>
+                        <span class="dash-primary-module-cta">
+                            <span>${actionLabel}</span>
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                            </svg>
+                        </span>
+                    </div>
+                </a>
+            `;
+        }
+
+        function renderOverflowModuleItem(module) {
+            const totalLessons = getModuleLessonIds(module).length;
+            const progressPercent = getModuleProgressPercent(module);
+            const isCompleted = progressPercent === 100;
+
+            return `
+                <a href="module-view.html?id=${module.id}" class="dash-overflow-item">
+                    <div class="dash-overflow-item-icon ${isCompleted ? 'is-complete' : ''}" aria-hidden="true">
+                        ${isCompleted ?
+                    '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>' :
+                    '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>'
+                }
+                    </div>
+                    <div class="dash-overflow-item-body">
+                        <p class="dash-overflow-item-title">${escapeHtml(module.title)}</p>
+                        <p class="dash-overflow-item-meta">${progressPercent}% &middot; ${totalLessons} lesson${totalLessons !== 1 ? 's' : ''}</p>
+                        <div class="dash-overflow-item-track">
+                            <div class="dash-overflow-item-fill" style="width: ${progressPercent}%"></div>
+                        </div>
+                    </div>
+                </a>
+            `;
+        }
+
         function loadContinueLearning() {
             const container = document.getElementById('continueLearningSections');
 
@@ -1233,8 +1304,8 @@
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
                                 </svg>
                             </div>
-                            <h4 class="font-semibold text-gray-800 mb-1">No Modules Yet</h4>
-                            <p class="text-gray-500 text-sm">Check back later for new content</p>
+                            <h4 class="font-semibold text-gray-800 mb-1">Ready when you are</h4>
+                            <p class="text-gray-500 text-sm">Pick your first module and we'll pick up right where you left off next time.</p>
                         </div>
                     `;
                     return;
@@ -1257,40 +1328,14 @@
                     return rightProgress - leftProgress;
                 });
 
-                const moduleCards = sortedModules.slice(0, 4).map((module) => {
-                    const totalLessons = getModuleLessonIds(module).length;
-                    const progressPercent = getModuleProgressPercent(module);
-                    const isCompleted = progressPercent === 100;
+                const primaryModule = sortedModules[0];
+                const overflowModules = sortedModules.slice(1, 4);
 
-                    return `
-                        <a href="module-view.html?id=${module.id}" class="module-card block bg-gray-50 rounded-xl p-4 border border-gray-100 hover:border-brand/30">
-                            <div class="flex items-start space-x-4">
-                                <div class="w-12 h-12 ${isCompleted ? 'bg-green-100' : 'bg-brand/10'} rounded-xl flex items-center justify-center flex-shrink-0">
-                                    ${isCompleted ?
-                            '<svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>' :
-                            '<svg class="w-6 h-6 text-brand" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>'
-                        }
-                                </div>
-                                <div class="flex-1 min-w-0">
-                                    <div class="flex items-center justify-between mb-1">
-                                        <h4 class="font-semibold text-gray-800 truncate">${escapeHtml(module.title)}</h4>
-                                        ${isCompleted ? '<span class="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full">Done</span>' : ''}
-                                    </div>
-                                    <p class="text-sm text-gray-500 mb-3">${totalLessons} lesson${totalLessons !== 1 ? 's' : ''}</p>
-                                    <div class="flex items-center justify-between text-sm mb-1">
-                                        <span class="text-gray-500">Progress</span>
-                                        <span class="font-medium ${isCompleted ? 'text-green-600' : 'text-brand'}">${progressPercent}%</span>
-                                    </div>
-                                    <div class="h-2 bg-gray-200 rounded-full overflow-hidden">
-                                        <div class="h-full ${isCompleted ? 'bg-green-500' : 'bg-brand'} rounded-full transition-all duration-500" style="width: ${progressPercent}%"></div>
-                                    </div>
-                                </div>
-                            </div>
-                        </a>
-                    `;
-                });
+                const overflowMarkup = overflowModules.length
+                    ? `<div class="dash-overflow-list">${overflowModules.map(renderOverflowModuleItem).join('')}</div>`
+                    : '';
 
-                container.innerHTML = moduleCards.join('');
+                container.innerHTML = renderPrimaryModuleCard(primaryModule) + overflowMarkup;
 
             } catch (error) {
                 console.error('Error loading modules:', error);
@@ -1437,6 +1482,12 @@
 
             } catch (error) {
                 console.error('Error loading submissions:', error);
+                container.innerHTML = `
+                    <div class="dash-inline-error">
+                        <p>Couldn't load your quiz results right now.</p>
+                        <button type="button" onclick="location.reload()" class="dash-inline-error-action">Refresh page</button>
+                    </div>
+                `;
             }
         }
 
@@ -1472,12 +1523,20 @@
 
             } catch (error) {
                 console.error('Error loading activity:', error);
+                container.innerHTML = `
+                    <div class="dash-inline-error">
+                        <p>Couldn't load your activity right now.</p>
+                        <button type="button" onclick="location.reload()" class="dash-inline-error-action">Refresh page</button>
+                    </div>
+                `;
             }
         }
 
         // Load weekly activity heatmap
         function loadWeeklyActivity() {
             const container = document.getElementById('weeklyActivity');
+            const captionEl = document.getElementById('weeklyActivityCaption');
+            const dayNames = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 
             try {
                 const startOfWeek = new Date();
@@ -1503,39 +1562,100 @@
                     else if (count >= 1) intensity = 'bg-green-300';
 
                     const isToday = i === adjustedToday;
+                    const dayLabel = `${dayNames[i]}: ${count} activit${count === 1 ? 'y' : 'ies'}`;
 
-                    return `<div class="h-8 rounded ${intensity} ${isToday ? 'ring-2 ring-brand ring-offset-1' : ''}" title="${count} activities"></div>`;
+                    return `<div class="h-8 rounded ${intensity} ${isToday ? 'ring-2 ring-brand ring-offset-1' : ''}" title="${dayLabel}"><span class="sr-only">${dayLabel}</span></div>`;
                 }).join('');
+
+                if (captionEl) {
+                    const weekTotal = dayCounts.reduce((sum, count) => sum + count, 0);
+                    captionEl.textContent = weekTotal === 0
+                        ? 'No activity logged this week yet — complete a lesson or quiz to begin your streak.'
+                        : `${weekTotal} activit${weekTotal === 1 ? 'y' : 'ies'} logged this week`;
+                }
 
             } catch (error) {
                 console.error('Error loading weekly activity:', error);
+                container.innerHTML = `
+                    <div class="dash-inline-error dash-inline-error-span-7">
+                        <p>Couldn't load your weekly activity right now.</p>
+                        <button type="button" onclick="location.reload()" class="dash-inline-error-action">Refresh page</button>
+                    </div>
+                `;
+                if (captionEl) captionEl.textContent = '';
             }
+        }
+
+        // Announce achievements earned for the first time this page load only.
+        // dashboardData.announcedAchievementIds is an in-memory Set (never
+        // localStorage/sessionStorage) that guards against re-announcing the
+        // same id if achievement loading ever reruns within the same load.
+        function renderAchievementAcknowledgment(catalog) {
+            const banner = document.getElementById('achievementAcknowledgment');
+            const textEl = document.getElementById('achievementAcknowledgmentText');
+            if (!banner || !textEl) return;
+
+            const newIds = dashboardData.newlyEarnedAchievementIds || [];
+            const idsToAnnounce = newIds.filter(id => !dashboardData.announcedAchievementIds.has(id));
+            if (idsToAnnounce.length === 0) return;
+
+            idsToAnnounce.forEach(id => dashboardData.announcedAchievementIds.add(id));
+
+            const names = idsToAnnounce
+                .map(id => catalog.find(item => item.id === id)?.name)
+                .filter(Boolean);
+            if (!names.length) return;
+
+            textEl.textContent = `Achievement unlocked: ${names.join(', ')}`;
+            banner.classList.remove('hidden');
         }
 
         // Load achievements
         async function loadAchievements() {
             const container = document.getElementById('achievementsPreview');
-            const allAchievements = getAchievementCatalog();
-            await syncStudentAchievements(allAchievements);
+            const acknowledgmentBanner = document.getElementById('achievementAcknowledgment');
 
-            const earned = allAchievements.filter(a => {
-                return Boolean(dashboardData.persistedAchievements[a.id]) || a.condition();
-            });
-            const achievementCountEl = document.getElementById('achievementCount');
-            if (achievementCountEl) achievementCountEl.textContent = earned.length;
-            dashboardData.achievements = earned;
+            try {
+                const allAchievements = getAchievementCatalog();
+                await syncStudentAchievements(allAchievements);
 
-            container.innerHTML = allAchievements.slice(0, 4).map(a => {
-                const isEarned = Boolean(dashboardData.persistedAchievements[a.id]) || a.condition();
-                return `
-                    <div class="text-center ${!isEarned ? 'opacity-30 grayscale' : ''}" title="${a.name}">
-                        <div class="w-12 h-12 mx-auto ${isEarned ? 'bg-yellow-100' : 'bg-gray-100'} rounded-full flex items-center justify-center mb-1">
-                            <span class="text-xl">${a.emoji}</span>
+                const earned = allAchievements.filter(a => {
+                    return Boolean(dashboardData.persistedAchievements[a.id]) || a.condition();
+                });
+                const achievementCountEl = document.getElementById('achievementCount');
+                if (achievementCountEl) achievementCountEl.textContent = earned.length;
+                dashboardData.achievements = earned;
+
+                // Rare/tier-3 achievements get the restrained purple accent when
+                // earned — never used for routine completions or locked states.
+                const rareAchievementIds = ['xp_1000', 'module_master'];
+
+                container.innerHTML = allAchievements.slice(0, 6).map(a => {
+                    const isEarned = Boolean(dashboardData.persistedAchievements[a.id]) || a.condition();
+                    const isRare = rareAchievementIds.includes(a.id);
+                    const badgeClass = !isEarned ? 'is-locked' : (isRare ? 'is-earned is-rare' : 'is-earned');
+                    return `
+                        <div class="dash-badge ${badgeClass}">
+                            <div class="dash-badge-icon" aria-hidden="true">${a.emoji}</div>
+                            <p class="dash-badge-name">${escapeHtml(a.name)}</p>
+                            <p class="dash-badge-desc">${escapeHtml(a.desc)}</p>
+                            <span class="dash-badge-status">${isEarned ? 'Unlocked' : 'Locked'}</span>
                         </div>
-                        <p class="text-xs text-gray-600 truncate">${a.name}</p>
+                    `;
+                }).join('');
+
+                renderAchievementAcknowledgment(allAchievements);
+
+            } catch (error) {
+                console.error('Error loading achievements:', error);
+                if (acknowledgmentBanner) acknowledgmentBanner.classList.add('hidden');
+                container.innerHTML = `
+                    <div class="dash-inline-error">
+                        <p>Couldn't load your achievements right now.</p>
+                        <button type="button" onclick="location.reload()" class="dash-inline-error-action">Refresh page</button>
                     </div>
                 `;
-            }).join('');
+            }
         }
 
         function getNotificationSeenStorageKey() {
@@ -1637,16 +1757,19 @@
 
         // Setup event listeners
         function setupEventListeners() {
-            // Mobile menu toggle
-            mobileMenuBtn.addEventListener('click', () => {
-                sidebar.classList.toggle('-translate-x-full');
-                mobileOverlay.classList.toggle('hidden');
-            });
+            // Mobile drawer open/close is owned solely by sidebar.js's
+            // initSidebar() — it binds the same #mobileMenuBtn/#mobileOverlay
+            // elements. A page-local duplicate here previously caused both
+            // listeners to fire per click, and two toggle() calls on the
+            // same class canceled out, so the drawer never visibly opened.
 
-            mobileOverlay.addEventListener('click', () => {
-                sidebar.classList.add('-translate-x-full');
-                mobileOverlay.classList.add('hidden');
-            });
+            // Achievement-unlocked acknowledgment dismiss
+            const achievementAcknowledgmentClose = document.getElementById('achievementAcknowledgmentClose');
+            if (achievementAcknowledgmentClose) {
+                achievementAcknowledgmentClose.addEventListener('click', () => {
+                    document.getElementById('achievementAcknowledgment')?.classList.add('hidden');
+                });
+            }
 
             // User menu dropdown
             userMenuBtn.addEventListener('click', (e) => {

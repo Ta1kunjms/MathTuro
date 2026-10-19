@@ -42,24 +42,45 @@ function initSidebar() {
             </div>
             
             <!-- Navigation -->
-            <!-- Simplified to 3 destinations (Phase 6): Core Learning absorbs
-                 Dashboard, Modules, and Tutorial Videos (all remain reachable
-                 as cards/links from the Core Learning landing page itself). -->
+            <!-- Six distinct destinations: Dashboard, Modules, Quizzes,
+                 Videos, Presentations, Progress. Each link carries its own
+                 data-nav-key used by the active-link matching below —
+                 do not rely on href/filename parsing alone, since Progress
+                 shares dashboard.html's URL but is distinguished by hash. -->
             <nav class="p-4 space-y-2 overflow-y-auto" style="max-height: calc(100vh - 320px);">
                 <p class="text-xs text-gray-400 uppercase tracking-wider px-4 mb-2">Main Menu</p>
-                <a href="${studentPrefix}dashboard.html" class="sidebar-link active flex items-center space-x-3 px-4 py-3 rounded-xl text-gray-700">
+                <a href="${studentPrefix}dashboard.html" data-nav-key="dashboard" class="sidebar-link flex items-center space-x-3 px-4 py-3 rounded-xl text-gray-700">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
                     </svg>
-                    <span>Core Learning</span>
+                    <span>Dashboard</span>
                 </a>
-                <a href="${studentPrefix}quizzes.html" class="sidebar-link flex items-center space-x-3 px-4 py-3 rounded-xl text-gray-700">
+                <a href="${studentPrefix}modules.html" data-nav-key="modules" class="sidebar-link flex items-center space-x-3 px-4 py-3 rounded-xl text-gray-700">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/>
+                    </svg>
+                    <span>Modules</span>
+                </a>
+                <a href="${studentPrefix}quizzes.html" data-nav-key="quizzes" class="sidebar-link flex items-center space-x-3 px-4 py-3 rounded-xl text-gray-700">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/>
                     </svg>
                     <span>Quizzes</span>
                 </a>
-                <a href="${studentPrefix}dashboard.html#progress" class="sidebar-link flex items-center space-x-3 px-4 py-3 rounded-xl text-gray-700">
+                <a href="${studentPrefix}tutorial-videos.html" data-nav-key="videos" class="sidebar-link flex items-center space-x-3 px-4 py-3 rounded-xl text-gray-700">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                    <span>Videos</span>
+                </a>
+                <a href="${studentPrefix}presentations.html" data-nav-key="presentations" class="sidebar-link flex items-center space-x-3 px-4 py-3 rounded-xl text-gray-700">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+                    </svg>
+                    <span>Presentations</span>
+                </a>
+                <a href="${studentPrefix}dashboard.html#progress" data-nav-key="progress" class="sidebar-link flex items-center space-x-3 px-4 py-3 rounded-xl text-gray-700">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 012-2h2a2 2 0 012 2v6m-9 0h10a2 2 0 002-2V9.5a1 1 0 00-.4-.8l-5-3.75a1 1 0 00-1.2 0l-5 3.75a1 1 0 00-.4.8V17a2 2 0 002 2z"/>
                     </svg>
@@ -85,28 +106,31 @@ function initSidebar() {
     sidebarContainer.innerHTML = sidebarHTML;
   }
 
-  // Set active link based on current page.
-  // Core Learning absorbs Dashboard, Modules, and Tutorial Videos, so several
-  // pages should highlight it. Progress shares dashboard.html as a URL but is
-  // distinguished by the #progress hash, so it's checked separately rather
-  // than through the plain filename match used for the other links.
+  // Set active link based on current page, matched by the data-nav-key each
+  // link declares rather than by parsing hrefs. Each real destination file
+  // maps to exactly one nav key; drill-down pages (module-view/lesson-view,
+  // take-quiz, view-presentation) map to their parent section's key so that
+  // section stays highlighted while browsing within it. Progress shares
+  // dashboard.html's URL but is distinguished by the #progress hash, so it's
+  // checked separately and wins over the plain dashboard match when present.
   const currentPage = window.location.pathname.split('/').pop().toLowerCase();
   const currentHash = window.location.hash.toLowerCase();
-  const coreLearningPages = ['dashboard.html', 'modules.html', 'module-view.html', 'lesson-view.html', 'tutorial-videos.html', ''];
+  const pageNavKeyMap = {
+    'dashboard.html': 'dashboard',
+    '': 'dashboard',
+    'modules.html': 'modules',
+    'module-view.html': 'modules',
+    'lesson-view.html': 'modules',
+    'quizzes.html': 'quizzes',
+    'take-quiz.html': 'quizzes',
+    'tutorial-videos.html': 'videos',
+    'presentations.html': 'presentations',
+    'view-presentation.html': 'presentations'
+  };
+  const activeNavKey = currentHash === '#progress' ? 'progress' : (pageNavKeyMap[currentPage] || null);
   const sidebarLinks = document.querySelectorAll('.sidebar-link');
   sidebarLinks.forEach(link => {
-    const href = (link.getAttribute('href') || '').toLowerCase();
-    const linkPage = href.split('#')[0].split('?')[0].split('/').pop();
-    const linkIsProgress = href.includes('#progress');
-
-    let isActive;
-    if (linkIsProgress) {
-      isActive = currentPage === 'dashboard.html' && currentHash === '#progress';
-    } else if (linkPage === 'dashboard.html') {
-      isActive = coreLearningPages.includes(currentPage) && currentHash !== '#progress';
-    } else {
-      isActive = currentPage === linkPage;
-    }
+    const isActive = !!activeNavKey && link.dataset.navKey === activeNavKey;
 
     if (isActive) {
       link.classList.add('active');

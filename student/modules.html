@@ -11,88 +11,33 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
         body { font-family: 'Inter', system-ui, sans-serif; }
-        @media (max-width: 768px) {
-            #modulesGrid {
-                display: flex !important;
-                flex-direction: column !important;
-                gap: 1.5rem !important;
-            }
-            .module-card {
-                max-width: 100% !important;
-                min-width: 0 !important;
-                width: 100% !important;
-                margin: 0 0 1.5rem 0 !important;
-                padding: 0 !important;
-                box-sizing: border-box;
-                border-radius: 1.5rem !important;
-            }
-            .module-card .module-preview-container {
-                display: none !important;
-            }
-            .module-card a {
-                height: auto !important;
-                display: block !important;
-            }
-            .lesson-card,
-            .quiz-card {
-                max-width: 100% !important;
-                min-width: 0 !important;
-                width: 100% !important;
-                margin: 0 0 1.5rem 0 !important;
-                padding: 1.25rem !important;
-                box-sizing: border-box;
-            }
-            .cards-row {
-                display: flex !important;
-                flex-direction: column !important;
-                gap: 1.5rem !important;
-            }
-        }
-        
+
+        /* Sidebar chrome (injected by sidebar.js) — out of scope for this
+           content-page redesign; see the backlog "Student Sidebar Visual
+           Pass" planned after all four chains are done. */
         .gradient-text {
             background: linear-gradient(135deg, #005801 0%, #22c55e 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
         }
-        
+
         .glass-sidebar {
             background: rgba(255, 255, 255, 0.95);
             backdrop-filter: blur(20px);
         }
-        
+
         .sidebar-link {
             transition: all 0.2s ease;
         }
-        
+
         .sidebar-link:hover, .sidebar-link.active {
             background: linear-gradient(135deg, #005801 0%, #16a34a 100%);
             color: white;
         }
-        
+
         .sidebar-link.active {
             box-shadow: 0 4px 15px rgba(0, 88, 1, 0.3);
-        }
-        
-        .module-card {
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            max-width: 380px;
-            width: 100%;
-        }
-        
-        .module-card:hover {
-            transform: translateY(-6px);
-            box-shadow: 0 20px 40px -14px rgba(0, 88, 1, 0.25);
-        }
-        
-        .module-card a {
-            text-decoration: none;
-            color: inherit;
-        }
-        
-        .module-card iframe {
-            border: none;
-            background: white;
         }
 
         .module-preview-image {
@@ -114,7 +59,7 @@
             -webkit-box-orient: vertical;
             overflow: hidden;
         }
-        
+
         ::-webkit-scrollbar { width: 6px; }
         ::-webkit-scrollbar-track { background: #f1f1f1; }
         ::-webkit-scrollbar-thumb { background: #005801; border-radius: 3px; }
@@ -139,21 +84,21 @@
         <header class="bg-white border-b border-gray-200 sticky top-0 z-30">
             <div class="flex items-center justify-between px-4 lg:px-8 py-4">
                 <!-- Mobile Menu Button -->
-                <button id="mobileMenuBtn" class="lg:hidden p-2 text-gray-600 hover:text-brand rounded-lg">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <button id="mobileMenuBtn" class="lg:hidden p-2 text-gray-600 hover:text-brand rounded-lg" aria-label="Open menu">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
                     </svg>
                 </button>
-                
+
                 <!-- Page Title -->
                 <div class="flex-1 lg:flex-none">
                      <h1 class="text-xl lg:text-2xl font-bold text-gray-800">Browse Modules</h1>
                     <p class="text-sm text-gray-500 hidden sm:block">Explore available learning modules</p>
                 </div>
-                
+
                 <!-- Module Count -->
                 <div class="flex items-center space-x-4">
-                    <span class="px-4 py-2 bg-brand/10 text-brand rounded-xl text-sm font-medium">
+                    <span class="learn-count-chip">
                         <span id="moduleCount">0</span> modules
                     </span>
                 </div>
@@ -165,25 +110,26 @@
             <!-- Search Bar -->
             <div class="mb-8">
                 <div class="relative max-w-xl">
-                    <input type="text" id="searchInput" placeholder="Search modules by title or description..." 
-                        class="w-full pl-12 pr-4 py-4 border border-gray-200 rounded-2xl focus:ring-2 focus:ring-brand focus:border-transparent bg-white shadow-sm">
-                    <svg class="w-5 h-5 text-gray-400 absolute left-4 top-1/2 transform -translate-y-1/2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <label for="searchInput" class="sr-only">Search modules</label>
+                    <input type="text" id="searchInput" placeholder="Search modules by title or description..."
+                        class="w-full pl-12 pr-4 py-4 border-2 border-ink-900 rounded-2xl focus:ring-2 focus:ring-forest-600 focus:border-transparent bg-white">
+                    <svg class="w-5 h-5 text-gray-400 absolute left-4 top-1/2 transform -translate-y-1/2" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
                     </svg>
                 </div>
             </div>
 
             <div class="flex flex-wrap gap-2 mb-8" id="quarterTabs">
-                <button type="button" class="quarter-tab px-4 py-2 rounded-xl text-sm font-medium bg-brand text-white" data-quarter="all">All Modules</button>
-                <button type="button" class="quarter-tab px-4 py-2 rounded-xl text-sm font-medium bg-white text-gray-700 border border-gray-200 hover:border-brand/40" data-quarter="1">Quarter 1</button>
-                <button type="button" class="quarter-tab px-4 py-2 rounded-xl text-sm font-medium bg-white text-gray-700 border border-gray-200 hover:border-brand/40" data-quarter="2">Quarter 2</button>
-                <button type="button" class="quarter-tab px-4 py-2 rounded-xl text-sm font-medium bg-white text-gray-700 border border-gray-200 hover:border-brand/40" data-quarter="3">Quarter 3</button>
-                <button type="button" class="quarter-tab px-4 py-2 rounded-xl text-sm font-medium bg-white text-gray-700 border border-gray-200 hover:border-brand/40" data-quarter="4">Quarter 4</button>
+                <button type="button" class="learn-quarter-tab active" data-quarter="all">All Modules</button>
+                <button type="button" class="learn-quarter-tab" data-quarter="1">Quarter 1</button>
+                <button type="button" class="learn-quarter-tab" data-quarter="2">Quarter 2</button>
+                <button type="button" class="learn-quarter-tab" data-quarter="3">Quarter 3</button>
+                <button type="button" class="learn-quarter-tab" data-quarter="4">Quarter 4</button>
             </div>
 
             <!-- Loading State -->
             <div id="loadingState" class="text-center py-16">
-                <div class="inline-block animate-spin rounded-full h-12 w-12 border-4 border-brand border-t-transparent"></div>
+                <div class="inline-block animate-spin rounded-full h-12 w-12 border-4 border-forest-100 border-t-forest-600" aria-hidden="true"></div>
                 <p class="mt-4 text-gray-600">Loading modules...</p>
             </div>
 
@@ -192,18 +138,15 @@
             </div>
 
             <!-- Empty State -->
-            <div id="emptyState" class="hidden text-center py-16">
-                <div class="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-6">
-                    <svg class="w-12 h-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div id="emptyState" class="hidden learn-state-block">
+                <div class="learn-state-icon" style="background: #f0f7f3; color: #1b4332;" aria-hidden="true">
+                    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
                     </svg>
                 </div>
-                <h3 class="text-xl font-bold text-gray-800 mb-2">No Modules Available</h3>
-                <p class="text-gray-600 mb-6">Check back later for new learning materials.</p>
-                <a href="dashboard.html" class="inline-flex items-center space-x-2 px-6 py-3 bg-brand text-white rounded-xl hover:bg-brand-dark transition-colors">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 17l-5-5m0 0l5-5m-5 5h12"/>
-                    </svg>
+                <h3 class="learn-state-title">No Modules Available</h3>
+                <p class="learn-state-text">Check back later for new learning materials.</p>
+                <a href="dashboard.html" class="learn-state-action">
                     <span>Back to Dashboard</span>
                 </a>
             </div>
@@ -342,7 +285,7 @@
             // Search
             document.getElementById('searchInput').addEventListener('input', handleSearch);
 
-            document.querySelectorAll('.quarter-tab').forEach(tab => {
+            document.querySelectorAll('.learn-quarter-tab').forEach(tab => {
                 tab.addEventListener('click', () => setQuarterFilter(tab.dataset.quarter || 'all'));
             });
             updateQuarterTabs();
@@ -355,14 +298,9 @@
         }
 
         function updateQuarterTabs() {
-            document.querySelectorAll('.quarter-tab').forEach(tab => {
+            document.querySelectorAll('.learn-quarter-tab').forEach(tab => {
                 const isActive = (tab.dataset.quarter || 'all') === activeQuarterFilter;
-                tab.classList.toggle('bg-brand', isActive);
-                tab.classList.toggle('text-white', isActive);
-                tab.classList.toggle('bg-white', !isActive);
-                tab.classList.toggle('text-gray-700', !isActive);
-                tab.classList.toggle('border', !isActive);
-                tab.classList.toggle('border-gray-200', !isActive);
+                tab.classList.toggle('active', isActive);
             });
         }
 
@@ -490,28 +428,31 @@
                     previewMedia = `<img src="${thumbnail}" class="module-preview-image" alt="${module.title}" onerror="this.onerror=null; this.src='../Logo/MATHURO-LOGO-v2.png';">`;
                 }
                 const isLocked = Boolean(module.is_locked);
+                const statusLabel = isLocked ? 'Locked' : 'Available';
                 return `
-                <div class="module-card ${isLocked ? 'bg-gray-100 opacity-75' : 'bg-primary-100'} rounded-[2rem] shadow-xl overflow-hidden mx-auto min-w-[260px] max-w-[300px] flex flex-col relative">
-                    ${isLocked ? `
-                        <div class="absolute top-4 right-4 z-10 bg-gray-900/80 text-white p-2 rounded-full shadow">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div class="learn-module-card ${isLocked ? 'is-locked' : ''} mx-auto min-w-[260px] max-w-[300px] flex flex-col relative">
+                    <span class="learn-module-card-badge ${isLocked ? 'is-locked' : ''}">
+                        ${isLocked ? `
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
                             </svg>
-                        </div>
-                    ` : ''}
-                    <a href="${isLocked ? 'javascript:void(0)' : `module-view.html?id=${module.id}`}" 
+                        ` : ''}
+                        <span>${statusLabel}</span>
+                    </span>
+                    <a href="${isLocked ? 'javascript:void(0)' : `module-view.html?id=${module.id}`}"
                        onclick="${isLocked ? `alert('This module is locked. Please pass the previous module post-test first.')` : ''}"
+                       aria-label="${escapeHtml(module.title)} — ${statusLabel}"
                        class="flex flex-col h-[360px] ${isLocked ? 'cursor-not-allowed' : ''}">
-                        <div class="module-preview-container h-[46%] bg-gray-200 overflow-hidden flex items-center justify-center">
+                        <div class="module-preview-container h-[46%] bg-gray-100 overflow-hidden flex items-center justify-center">
                             ${previewMedia}
                         </div>
                         <div class="px-5 py-4 flex flex-col flex-1">
-                            <h3 class="text-2xl font-extrabold text-gray-900 mb-1 line-clamp-1">${module.title}</h3>
-                            <p class="text-xl font-semibold text-gray-900 mb-1 line-clamp-1">${subtitle}</p>
-                            ${quarterLabel ? `<p class="text-sm font-medium text-brand mb-2">${quarterLabel}</p>` : ''}
-                            <p class="module-description text-[12px] text-gray-700 italic leading-snug mb-4 flex-1">${description}</p>
-                            <div class="w-full py-2.5 ${isLocked ? 'bg-gray-400' : 'bg-brand hover:bg-brand-dark'} text-white rounded-full text-center text-2xl font-bold transition-colors">
-                                ${isLocked ? 'Locked' : 'Open'}
+                            <h3 class="text-lg font-bold text-gray-900 mb-1 line-clamp-1">${escapeHtml(module.title)}</h3>
+                            <p class="text-sm font-medium text-gray-600 mb-1 line-clamp-1">${escapeHtml(subtitle)}</p>
+                            ${quarterLabel ? `<p class="text-xs font-semibold text-forest-800 mb-2">${quarterLabel}</p>` : ''}
+                            <p class="module-description text-xs text-gray-500 leading-snug mb-4 flex-1">${escapeHtml(description)}</p>
+                            <div class="learn-module-card-cta ${isLocked ? 'is-locked' : ''}">
+                                ${statusLabel}
                             </div>
                         </div>
                     </a>

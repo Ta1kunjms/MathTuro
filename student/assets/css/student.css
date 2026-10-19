@@ -101,9 +101,1160 @@
 /* ============================================
    STUDENT CUSTOM SCROLLBAR
    ============================================ */
-::-webkit-scrollbar-thumb { 
-  background: #005801; 
+::-webkit-scrollbar-thumb {
+  background: #005801;
 }
-::-webkit-scrollbar-thumb:hover { 
-  background: #004601; 
+::-webkit-scrollbar-thumb:hover {
+  background: #004601;
+}
+
+/* ============================================
+   STUDENT DASHBOARD — PHASE 1 (dashboard.html only)
+   All classes below are new and distinctly named (dash- prefix).
+   Nothing above this line was changed — .module-card, .stat-card,
+   .progress-bar, .lesson-item, .activity-item, .quiz-status-*, and
+   .badge-student keep their existing rules untouched, so every other
+   student page that uses them is visually unaffected by this section.
+   ============================================ */
+
+/* --- Greeting + streak strip --- */
+.dash-hero-strip {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  align-items: flex-start;
+  justify-content: space-between;
+  padding: 1.25rem 1.5rem;
+  background: #ffffff;
+  border: 2px solid #1c1b1a;
+  border-radius: 1.25rem;
+}
+
+@media (min-width: 640px) {
+  .dash-hero-strip {
+    flex-direction: row;
+    align-items: center;
+  }
+}
+
+.dash-hero-eyebrow-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.25rem;
+}
+
+.dash-hero-eyebrow {
+  font-size: 0.8125rem;
+  color: #6b6862;
+  font-weight: 500;
+}
+
+.dash-hero-eyebrow-dot {
+  color: #a8a49c;
+}
+
+.dash-hero-title {
+  font-size: 1.375rem;
+  font-weight: 700;
+  color: #1c1b1a;
+  line-height: 1.2;
+}
+
+.dash-streak-chip {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.625rem 1rem;
+  background: #1b4332;
+  border: 2px solid #1c1b1a;
+  border-radius: 1rem;
+  flex-shrink: 0;
+}
+
+.dash-streak-flame {
+  font-size: 1.375rem;
+  line-height: 1;
+}
+
+.dash-streak-count {
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: #ffffff;
+}
+
+.dash-streak-context {
+  font-size: 0.75rem;
+  color: #dcece3;
+}
+
+/* --- Stat strip (compact, subordinate to Continue Learning) --- */
+.dash-stat-strip {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.75rem;
+}
+
+@media (min-width: 640px) {
+  .dash-stat-strip { grid-template-columns: repeat(2, 1fr); }
+}
+
+@media (min-width: 768px) {
+  .dash-stat-strip { grid-template-columns: repeat(4, 1fr); }
+}
+
+.dash-stat-card {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  grid-template-rows: auto auto;
+  align-items: center;
+  column-gap: 0.75rem;
+  background: #ffffff;
+  border: 2px solid #1c1b1a;
+  border-radius: 0.875rem;
+  padding: 0.875rem 1rem;
+}
+
+.dash-stat-icon {
+  grid-row: 1 / 3;
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 0.625rem;
+  background: #f0f7f3;
+  color: #1b4332;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.dash-stat-value {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #1c1b1a;
+  line-height: 1.1;
+}
+
+.dash-stat-label {
+  font-size: 0.75rem;
+  color: #6b6862;
+}
+
+/* --- Continue Learning: the strongest visual card on the page --- */
+.dash-primary-panel {
+  background: #ffffff;
+  border: 2px solid #1c1b1a;
+  border-radius: 1.25rem;
+  box-shadow: 4px 4px 0 0 #1c1b1a;
+}
+
+.dash-primary-panel-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1.25rem 1.5rem;
+  border-bottom: 2px solid #e4e1da;
+}
+
+.dash-primary-panel-title {
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: #1c1b1a;
+}
+
+.dash-primary-panel-subtitle {
+  font-size: 0.8125rem;
+  color: #6b6862;
+  margin-top: 0.125rem;
+}
+
+.dash-primary-panel-body {
+  padding: 1.5rem;
+}
+
+.dash-view-all-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: #1b4332;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.dash-view-all-link:hover {
+  color: #2f7756;
+}
+
+.dash-view-all-link-sm {
+  font-size: 0.75rem;
+}
+
+.dash-loading-block {
+  text-align: center;
+  padding: 2rem 0;
+  color: #6b6862;
+}
+
+.dash-spinner {
+  width: 2rem;
+  height: 2rem;
+  margin: 0 auto 0.75rem;
+  border: 3px solid #dcece3;
+  border-top-color: #2f7756;
+  border-radius: 50%;
+  animation: dash-spin 0.8s linear infinite;
+}
+
+@keyframes dash-spin {
+  to { transform: rotate(360deg); }
+}
+
+/* --- Primary module card (sortedModules[0]) --- */
+.dash-primary-module {
+  display: block;
+  padding: 1.25rem;
+  background: #f0f7f3;
+  border: 2px solid #1b4332;
+  border-radius: 1rem;
+  text-decoration: none;
+  transition: border-color 0.15s ease;
+}
+
+.dash-primary-module:hover {
+  border-color: #2f7756;
+}
+
+.dash-primary-module-badge {
+  display: inline-block;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: #ffffff;
+  background: #2f7756;
+  padding: 0.25rem 0.625rem;
+  border-radius: 0.5rem;
+  margin-bottom: 0.625rem;
+}
+
+.dash-primary-module-badge.is-complete {
+  background: #1b4332;
+}
+
+.dash-primary-module-title {
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: #1c1b1a;
+  margin-bottom: 0.25rem;
+}
+
+.dash-primary-module-meta {
+  font-size: 0.8125rem;
+  color: #3f3d3a;
+  margin-bottom: 0.875rem;
+}
+
+.dash-primary-module-track {
+  height: 0.625rem;
+  background: #dcece3;
+  border-radius: 9999px;
+  overflow: hidden;
+  margin-bottom: 0.875rem;
+}
+
+.dash-primary-module-fill {
+  height: 100%;
+  background: #2f7756;
+  border-radius: 9999px;
+  transition: width 0.5s ease;
+}
+
+.dash-primary-module-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.dash-primary-module-percent {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: #1b4332;
+}
+
+.dash-primary-module-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.5rem 1rem;
+  min-height: 44px;
+  background: #1b4332;
+  color: #ffffff;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  border-radius: 0.75rem;
+  border: 2px solid #1c1b1a;
+}
+
+/* --- Overflow module list (sortedModules[1..3]) --- */
+.dash-overflow-list {
+  margin-top: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+}
+
+.dash-overflow-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem;
+  border-radius: 0.75rem;
+  border: 1px solid #e4e1da;
+  text-decoration: none;
+  transition: border-color 0.15s ease, background-color 0.15s ease;
+}
+
+.dash-overflow-item:hover {
+  border-color: #2f7756;
+  background: #f0f7f3;
+}
+
+.dash-overflow-item-icon {
+  width: 2.25rem;
+  height: 2.25rem;
+  flex-shrink: 0;
+  border-radius: 0.625rem;
+  background: #f0f7f3;
+  color: #1b4332;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.dash-overflow-item-icon.is-complete {
+  background: #dcece3;
+}
+
+.dash-overflow-item-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.dash-overflow-item-title {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #1c1b1a;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.dash-overflow-item-meta {
+  font-size: 0.75rem;
+  color: #6b6862;
+  margin-bottom: 0.375rem;
+}
+
+.dash-overflow-item-track {
+  height: 0.375rem;
+  background: #f2f0ec;
+  border-radius: 9999px;
+  overflow: hidden;
+}
+
+.dash-overflow-item-fill {
+  height: 100%;
+  background: #2f7756;
+  border-radius: 9999px;
+}
+
+/* --- Progress snapshot panel (progressCircle / daily goal) --- */
+.dash-progress-panel {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.25rem;
+  padding: 1.5rem;
+  border-top: 2px solid #e4e1da;
+}
+
+@media (min-width: 640px) {
+  .dash-progress-panel {
+    flex-direction: row;
+  }
+}
+
+.dash-progress-ring-wrap {
+  position: relative;
+  width: 120px;
+  height: 120px;
+  flex-shrink: 0;
+}
+
+.dash-progress-ring {
+  width: 100%;
+  height: 100%;
+}
+
+.dash-progress-ring-track {
+  stroke: #dcece3;
+}
+
+.dash-progress-ring-fill {
+  stroke: #2f7756;
+  stroke-linecap: round;
+  transition: stroke-dashoffset 0.6s ease;
+}
+
+.dash-progress-ring-label {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.dash-progress-ring-label span:first-child {
+  font-size: 1.375rem;
+  font-weight: 700;
+  color: #1c1b1a;
+}
+
+.dash-progress-ring-caption {
+  font-size: 0.6875rem;
+  color: #6b6862;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.dash-progress-stats {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.875rem;
+  width: 100%;
+}
+
+@media (min-width: 480px) {
+  .dash-progress-stats { grid-template-columns: repeat(3, 1fr); }
+}
+
+.dash-progress-stat-label {
+  font-size: 0.75rem;
+  color: #6b6862;
+  margin-bottom: 0.125rem;
+}
+
+.dash-progress-stat-value {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #1c1b1a;
+}
+
+.dash-progress-stat-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.dash-progress-stat-value-sm {
+  font-size: 0.8125rem;
+  font-weight: 700;
+  color: #1b4332;
+}
+
+.dash-progress-stat-bar {
+  height: 0.375rem;
+  background: #f2f0ec;
+  border-radius: 9999px;
+  overflow: hidden;
+  margin-top: 0.375rem;
+}
+
+.dash-progress-stat-bar-fill {
+  height: 100%;
+  background: #2f7756;
+  border-radius: 9999px;
+  transition: width 0.5s ease;
+}
+
+/* --- Supporting content panels (Activity/Results, Featured Videos) --- */
+.dash-support-panel {
+  background: #ffffff;
+  border: 2px solid #1c1b1a;
+  border-radius: 1.25rem;
+}
+
+.dash-support-panel-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1.25rem 1.5rem;
+  border-bottom: 2px solid #e4e1da;
+}
+
+.dash-support-panel-title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #1c1b1a;
+}
+
+.dash-support-panel-subtitle {
+  font-size: 0.8125rem;
+  color: #6b6862;
+  margin-top: 0.125rem;
+}
+
+.dash-support-panel-split {
+  display: grid;
+  grid-template-columns: 1fr;
+}
+
+@media (min-width: 640px) {
+  .dash-support-panel-split {
+    grid-template-columns: 1fr 1fr;
+  }
+  .dash-support-panel-col:first-child {
+    border-right: 1px solid #e4e1da;
+  }
+}
+
+.dash-support-panel-col-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 1.25rem 0.5rem;
+}
+
+.dash-support-panel-col-title {
+  font-size: 0.8125rem;
+  font-weight: 700;
+  color: #3f3d3a;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+/* --- Achievement badges --- */
+.dash-badge-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.75rem;
+}
+
+@media (min-width: 480px) {
+  .dash-badge-grid { grid-template-columns: repeat(3, 1fr); }
+}
+
+.dash-badge {
+  padding: 0.875rem 0.75rem;
+  border-radius: 0.875rem;
+  border: 2px solid #e4e1da;
+  text-align: center;
+}
+
+.dash-badge.is-locked {
+  filter: grayscale(1);
+  opacity: 0.6;
+}
+
+.dash-badge.is-earned {
+  border-color: #1b4332;
+  background: #f0f7f3;
+  box-shadow: 3px 3px 0 0 #1c1b1a;
+}
+
+.dash-badge.is-earned.is-rare {
+  border-color: #720455;
+  background: #fbf1f8;
+}
+
+.dash-badge-icon {
+  font-size: 1.75rem;
+  line-height: 1;
+  margin-bottom: 0.375rem;
+}
+
+.dash-badge-name {
+  font-size: 0.8125rem;
+  font-weight: 700;
+  color: #1c1b1a;
+  margin-bottom: 0.125rem;
+}
+
+.dash-badge-desc {
+  font-size: 0.6875rem;
+  color: #6b6862;
+  line-height: 1.3;
+  margin-bottom: 0.375rem;
+}
+
+.dash-badge-status {
+  display: inline-block;
+  font-size: 0.625rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: #ffffff;
+  background: #2f7756;
+  padding: 0.125rem 0.5rem;
+  border-radius: 9999px;
+}
+
+.dash-badge.is-locked .dash-badge-status {
+  background: #a8a49c;
+}
+
+.dash-badge.is-earned.is-rare .dash-badge-status {
+  background: #720455;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dash-spinner {
+    animation: none;
+    border-top-color: #dcece3;
+  }
+  .dash-progress-ring-fill,
+  .dash-primary-module-fill,
+  .dash-overflow-item-fill,
+  .dash-progress-stat-bar-fill {
+    transition: none;
+  }
+}
+
+/* ============================================
+   STUDENT DASHBOARD — PHASE 2 (dashboard.html only)
+   Same isolation rule as Phase 1: dash-* prefix only, nothing
+   above this line touched.
+   ============================================ */
+
+/* --- Scoped inline error states (per-section, not global) --- */
+.dash-inline-error {
+  padding: 1.5rem;
+  text-align: center;
+  color: #6b6862;
+}
+
+.dash-inline-error p {
+  margin-bottom: 0.75rem;
+  font-size: 0.875rem;
+}
+
+.dash-inline-error-action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  padding: 0.5rem 1.25rem;
+  background: #1b4332;
+  color: #ffffff;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  border-radius: 0.75rem;
+  border: 2px solid #1c1b1a;
+}
+
+.dash-inline-error-span-7 {
+  grid-column: 1 / -1;
+}
+
+/* --- Weekly activity caption --- */
+.dash-weekly-caption {
+  margin-top: 0.75rem;
+  font-size: 0.75rem;
+  color: #6b6862;
+}
+
+/* --- Achievement-unlocked acknowledgment banner --- */
+.dash-achievement-alert {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  margin-bottom: 1rem;
+  background: #f0f7f3;
+  border: 2px solid #1b4332;
+  border-radius: 0.875rem;
+}
+
+.dash-achievement-alert span:first-child {
+  font-size: 0.8125rem;
+  font-weight: 700;
+  color: #1b4332;
+}
+
+.dash-achievement-alert-close {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  flex-shrink: 0;
+  color: #1b4332;
+  background: transparent;
+  border: none;
+  border-radius: 0.5rem;
+  cursor: pointer;
+}
+
+.dash-achievement-alert-close:hover {
+  background: #dcece3;
+}
+
+/* ============================================
+   STUDENT CONTENT PAGES — learn-* (Chain 1: Presentations)
+   Separate namespace from dash-* (dashboard-only). Additions only —
+   .module-card, .progress-bar, .activity-item, .stat-card,
+   .quiz-status-*, .badge-student, .lesson-item, and every dash-*
+   class are untouched.
+   ============================================ */
+
+/* --- Page header (replaces gradient hero bands) --- */
+.learn-page-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1.25rem 1.5rem;
+  background: #ffffff;
+  border: 2px solid #1c1b1a;
+  border-radius: 1.25rem;
+  margin-bottom: 1.5rem;
+}
+
+.learn-page-header-icon {
+  width: 3rem;
+  height: 3rem;
+  flex-shrink: 0;
+  border-radius: 0.875rem;
+  background: #f0f7f3;
+  color: #1b4332;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.learn-page-header-title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #1c1b1a;
+}
+
+.learn-page-header-subtitle {
+  font-size: 0.8125rem;
+  color: #6b6862;
+  margin-top: 0.125rem;
+}
+
+/* --- Module group + presentation cards --- */
+.learn-module-group-title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #1c1b1a;
+  margin-bottom: 1rem;
+}
+
+.learn-presentation-card {
+  background: #ffffff;
+  border: 2px solid #1c1b1a;
+  border-radius: 1rem;
+  padding: 1.25rem;
+  transition: border-color 0.15s ease;
+}
+
+.learn-presentation-card:hover {
+  border-color: #2f7756;
+}
+
+.learn-presentation-tag {
+  display: inline-block;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  color: #720455;
+  background: #fbf1f8;
+  border: 1px solid #f5dced;
+  padding: 0.1875rem 0.5rem;
+  border-radius: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.learn-presentation-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  min-height: 44px;
+  padding: 0.5rem 1rem;
+  background: #1b4332;
+  color: #ffffff;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  border-radius: 0.75rem;
+  border: 2px solid #1c1b1a;
+}
+
+/* --- Shared state block (empty / error / loading) --- */
+.learn-state-block {
+  text-align: center;
+  padding: 3rem 1.5rem;
+}
+
+.learn-state-icon {
+  width: 3.5rem;
+  height: 3.5rem;
+  margin: 0 auto 1rem;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.learn-state-title {
+  font-size: 1.0625rem;
+  font-weight: 700;
+  color: #1c1b1a;
+  margin-bottom: 0.375rem;
+}
+
+.learn-state-text {
+  font-size: 0.875rem;
+  color: #6b6862;
+}
+
+.learn-state-action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  margin-top: 1rem;
+  padding: 0.5rem 1.25rem;
+  background: #1b4332;
+  color: #ffffff;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  border-radius: 0.75rem;
+  border: 2px solid #1c1b1a;
+}
+
+/* --- PDF viewer toolbar (view-presentation.html) --- */
+.learn-pdf-toolbar {
+  background: #ffffff;
+  border-bottom: 2px solid #1c1b1a;
+}
+
+.learn-toolbar-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  color: #3f3d3a;
+  background: transparent;
+  border: none;
+  border-radius: 0.625rem;
+}
+
+.learn-toolbar-btn:hover {
+  color: #1b4332;
+  background: #f0f7f3;
+}
+
+.learn-toolbar-link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0.5rem 1rem;
+  background: #1b4332;
+  color: #ffffff;
+  font-size: 0.875rem;
+  font-weight: 600;
+  border-radius: 0.75rem;
+  border: 2px solid #1c1b1a;
+}
+
+.learn-expiry-notice {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.5rem 1rem;
+  background: rgba(217, 119, 6, 0.12);
+  border: 1px solid rgba(217, 119, 6, 0.35);
+  border-radius: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .learn-presentation-card {
+    transition: none;
+  }
+}
+
+/* ============================================
+   STUDENT CONTENT PAGES — learn-* (Chain 2: Videos)
+   Additions only — tutorial-videos.html's own former .video-card/
+   .play-overlay/.play-button/.category-tab/.video-player-container
+   rules were page-local (not shared via this file) and have been
+   retired in that page; nothing shared is affected.
+   ============================================ */
+
+.learn-video-card {
+  display: block;
+  background: #ffffff;
+  border: 2px solid #1c1b1a;
+  border-radius: 1rem;
+  overflow: hidden;
+  cursor: pointer;
+  transition: border-color 0.15s ease;
+}
+
+.learn-video-card:hover,
+.learn-video-card:focus-visible {
+  border-color: #2f7756;
+}
+
+.learn-play-overlay {
+  opacity: 0;
+  background: rgba(18, 45, 34, 0.55);
+  transition: opacity 0.2s ease;
+}
+
+.learn-video-card:hover .learn-play-overlay,
+.learn-video-card:focus-visible .learn-play-overlay {
+  opacity: 1;
+}
+
+.learn-play-button {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.learn-video-badge-featured {
+  background: #720455;
+  color: #ffffff;
+  font-weight: 700;
+}
+
+.learn-video-badge-quarter {
+  background: #f0f7f3;
+  color: #1b4332;
+}
+
+.learn-player-shell {
+  background: #ffffff;
+  border: 2px solid #1c1b1a;
+  border-radius: 1.25rem;
+  overflow: hidden;
+  box-shadow: 4px 4px 0 0 #1c1b1a;
+}
+
+.learn-player-canvas {
+  background: #122d22;
+}
+
+.learn-quarter-tab {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  border-radius: 0.75rem;
+  border: 2px solid #1c1b1a;
+  background: #ffffff;
+  color: #3f3d3a;
+}
+
+.learn-quarter-tab.active {
+  background: #1b4332;
+  color: #ffffff;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .learn-video-card,
+  .learn-play-overlay {
+    transition: none;
+  }
+}
+
+/* ============================================
+   STUDENT CONTENT PAGES — learn-* (Chain 3: Modules)
+   Additions only. .module-card itself (in this file and in
+   modules.html's own former local <style>) is left completely
+   untouched — quizzes.html (Chain 4) keeps reading the exact same
+   unmodified rule. modules.html/module-view.html/lesson-view.html
+   simply stop applying that class and use learn-module-card etc.
+   instead.
+   ============================================ */
+
+.learn-count-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.5rem 1rem;
+  background: #f0f7f3;
+  color: #1b4332;
+  border-radius: 0.75rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.learn-module-card {
+  background: #ffffff;
+  border: 2px solid #1c1b1a;
+  border-radius: 1.25rem;
+  overflow: hidden;
+  transition: border-color 0.15s ease;
+}
+
+.learn-module-card:hover,
+.learn-module-card:focus-within {
+  border-color: #2f7756;
+}
+
+.learn-module-card.is-locked {
+  opacity: 0.85;
+}
+
+.learn-module-card a {
+  text-decoration: none;
+  color: inherit;
+}
+
+.learn-module-card-badge {
+  position: absolute;
+  top: 0.75rem;
+  right: 0.75rem;
+  z-index: 10;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.25rem 0.625rem;
+  background: #1b4332;
+  color: #ffffff;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  border-radius: 0.5rem;
+}
+
+.learn-module-card-badge.is-locked {
+  background: #3f3d3a;
+}
+
+.learn-module-card-cta {
+  width: 100%;
+  padding: 0.625rem;
+  min-height: 44px;
+  background: #1b4332;
+  color: #ffffff;
+  border-radius: 0.75rem;
+  text-align: center;
+  font-weight: 700;
+  transition: background-color 0.15s ease;
+}
+
+.learn-module-card-cta.is-locked {
+  background: #a8a49c;
+}
+
+/* --- Shared content-page primary card (module-view.html / lesson-view.html) --- */
+.learn-content-card {
+  background: #ffffff;
+  border: 2px solid #1c1b1a;
+  border-radius: 1.25rem;
+  overflow: hidden;
+  box-shadow: 4px 4px 0 0 #1c1b1a;
+}
+
+.learn-module-banner {
+  background: #ffffff;
+  border: 2px solid #1c1b1a;
+  border-radius: 1.25rem;
+  padding: 1.25rem 1.5rem;
+}
+
+.learn-lock-banner {
+  text-align: center;
+  padding: 2.5rem 1.5rem;
+  background: #fffbeb;
+  border: 2px solid #fcd34d;
+  border-radius: 1.25rem;
+}
+
+.learn-lock-banner-icon {
+  width: 3.5rem;
+  height: 3.5rem;
+  margin: 0 auto 1rem;
+  border-radius: 50%;
+  background: #fef3c7;
+  color: #92400e;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.learn-doc-frame {
+  border-radius: 1rem;
+  overflow: hidden;
+  background: #f0f0f0;
+  border: 2px solid #1c1b1a;
+}
+
+.learn-gallery-item {
+  display: block;
+  position: relative;
+  padding: 0;
+  border: none;
+  background: none;
+  border-radius: 1rem;
+  overflow: hidden;
+  cursor: pointer;
+}
+
+.learn-gallery-item:focus-visible {
+  outline: 2px solid #2f7756;
+  outline-offset: 2px;
+}
+
+.learn-video-tile {
+  background: #ffffff;
+  border: 2px solid #1c1b1a;
+  border-radius: 1rem;
+  overflow: hidden;
+}
+
+.learn-quiz-callout {
+  background: #fbf1f8;
+  border: 2px solid #f5dced;
+  border-radius: 1rem;
+  padding: 1.5rem;
+}
+
+.learn-progress-track {
+  height: 0.5rem;
+  background: #f2f0ec;
+  border-radius: 9999px;
+  overflow: hidden;
+}
+
+.learn-progress-fill {
+  height: 100%;
+  background: #2f7756;
+  border-radius: 9999px;
+  transition: width 0.5s ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .learn-module-card,
+  .learn-module-card-cta,
+  .learn-progress-fill {
+    transition: none;
+  }
 }

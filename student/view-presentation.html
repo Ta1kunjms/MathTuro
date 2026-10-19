@@ -24,11 +24,7 @@
             width: 100%;
             border: none;
             border-radius: 16px;
-            background: #1a1a2e;
-        }
-        .pdf-toolbar {
-            background: white;
-            border-bottom: 1px solid #e5e7eb;
+            background: #122d22;
         }
         ::-webkit-scrollbar { width: 6px; }
         ::-webkit-scrollbar-track { background: #f1f1f1; }
@@ -43,21 +39,24 @@
 </head>
 <body class="bg-gray-900 min-h-screen">
 
+    <!-- Mobile bottom navigation -->
+    <div data-include="nav-mobile-student" data-depth="../"></div>
+
     <div id="mobileOverlay" class="fixed inset-0 bg-black bg-opacity-50 z-40 hidden lg:hidden"></div>
     <div id="sidebar"></div>
 
     <main class="lg:ml-72 min-h-screen flex flex-col">
         <!-- Header -->
-        <header class="pdf-toolbar sticky top-0 z-30 flex-shrink-0">
+        <header class="learn-pdf-toolbar sticky top-0 z-30 flex-shrink-0">
             <div class="flex items-center justify-between px-4 lg:px-8 py-3">
                 <div class="flex items-center gap-3 min-w-0">
-                    <button id="mobileMenuBtn" class="lg:hidden p-2 text-gray-600 hover:text-brand rounded-lg">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <button id="mobileMenuBtn" class="lg:hidden learn-toolbar-btn" aria-label="Open menu">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
                         </svg>
                     </button>
                     <a id="backLink" href="module-view.html" class="text-sm text-gray-500 hover:text-brand flex-shrink-0">
-                        <i class="fas fa-arrow-left mr-1"></i>Back
+                        <i class="fas fa-arrow-left mr-1" aria-hidden="true"></i>Back
                     </a>
                     <div class="min-w-0">
                         <h1 id="presTitle" class="text-base font-bold text-gray-800 truncate">Loading…</h1>
@@ -65,17 +64,14 @@
                     </div>
                 </div>
                 <div class="flex items-center gap-2 flex-shrink-0">
-                    <button id="btnFullscreen"
-                        class="p-2 text-gray-500 hover:text-brand hover:bg-brand/5 rounded-lg transition-colors" title="Fullscreen">
-                        <i class="fas fa-expand"></i>
+                    <button id="btnFullscreen" class="learn-toolbar-btn" aria-label="Fullscreen" title="Fullscreen">
+                        <i class="fas fa-expand" aria-hidden="true"></i>
                     </button>
-                    <button id="btnRefreshUrl"
-                        class="p-2 text-gray-500 hover:text-brand hover:bg-brand/5 rounded-lg transition-colors" title="Refresh (URL expires after 15 min)">
-                        <i class="fas fa-sync-alt"></i>
+                    <button id="btnRefreshUrl" class="learn-toolbar-btn" aria-label="Refresh presentation link" title="Refresh (URL expires after 15 min)">
+                        <i class="fas fa-sync-alt" aria-hidden="true"></i>
                     </button>
-                    <a id="btnDownload" href="#" target="_blank"
-                        class="hidden px-3 py-2 text-sm bg-brand text-white rounded-lg hover:bg-brand-dark transition-colors">
-                        <i class="fas fa-download mr-1"></i>Open PDF
+                    <a id="btnDownload" href="#" target="_blank" class="hidden learn-toolbar-link">
+                        <i class="fas fa-download mr-1" aria-hidden="true"></i>Open PDF
                     </a>
                 </div>
             </div>
@@ -87,7 +83,7 @@
             <!-- Loading -->
             <div id="loadingState" class="flex-1 flex flex-col items-center justify-center py-20 text-center">
                 <div class="w-16 h-16 bg-white/10 rounded-full flex items-center justify-center mb-4">
-                    <i class="fas fa-file-pdf text-red-400 text-2xl spin"></i>
+                    <i class="fas fa-file-pdf text-red-400 text-2xl spin" aria-hidden="true"></i>
                 </div>
                 <p class="text-gray-400">Loading presentation…</p>
                 <p class="text-gray-600 text-sm mt-1">Generating secure access link…</p>
@@ -96,25 +92,24 @@
             <!-- Error -->
             <div id="errorState" class="hidden flex-1 flex flex-col items-center justify-center py-20 text-center">
                 <div class="w-16 h-16 bg-red-900/30 rounded-full flex items-center justify-center mb-4">
-                    <i class="fas fa-lock text-red-400 text-2xl"></i>
+                    <i class="fas fa-lock text-red-400 text-2xl" aria-hidden="true"></i>
                 </div>
                 <h3 id="errorTitle" class="text-lg font-semibold text-white mb-2">Access Denied</h3>
                 <p id="errorMsg" class="text-gray-400 mb-6 max-w-sm"></p>
-                <a href="module-view.html"
-                    class="inline-flex items-center gap-2 bg-brand text-white px-6 py-3 rounded-xl font-medium hover:bg-brand-dark transition-colors">
-                    <i class="fas fa-arrow-left"></i>Back to Module
+                <a href="module-view.html" class="learn-toolbar-link">
+                    <i class="fas fa-arrow-left" aria-hidden="true"></i>&nbsp;Back to Module
                 </a>
             </div>
 
             <!-- PDF Frame -->
             <div id="pdfContainer" class="hidden flex-1 flex flex-col">
                 <!-- Expiry notice -->
-                <div class="flex items-center justify-between bg-amber-900/20 border border-amber-800/40 rounded-xl px-4 py-2 mb-3">
-                    <span class="text-xs text-amber-300">
-                        <i class="fas fa-clock mr-1"></i>Secure link expires in <span id="expiryCountdown" class="font-bold">15:00</span>
+                <div class="learn-expiry-notice">
+                    <span class="text-xs text-amber-200">
+                        <i class="fas fa-clock mr-1" aria-hidden="true"></i>Secure link expires in <span id="expiryCountdown" class="font-bold">15:00</span>
                     </span>
-                    <button onclick="refreshSignedUrl()" class="text-xs text-amber-400 hover:text-amber-200 font-medium">
-                        <i class="fas fa-sync-alt mr-1"></i>Refresh
+                    <button type="button" onclick="refreshSignedUrl()" class="inline-flex items-center text-xs text-amber-200 hover:text-amber-50 font-medium px-2" style="min-height: 44px;">
+                        <i class="fas fa-sync-alt mr-1" aria-hidden="true"></i>Refresh
                     </button>
                 </div>
                 <!-- iframe PDF viewer -->
@@ -134,6 +129,7 @@
     <!-- Toast -->
     <div id="toast" class="hidden fixed bottom-4 right-4 px-6 py-3 rounded-xl shadow-lg z-50 flex items-center space-x-2"></div>
 
+    <script src="../shared/js/includes.js"></script>
     <script src="../shared/js/runtime-config.js"></script>
     <script src="../shared/js/config.js"></script>
     <script src="../shared/js/supabase.js"></script>

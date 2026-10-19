@@ -12,45 +12,20 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
     <style>
         body { font-family: 'Inter', system-ui, sans-serif; }
-        
-        .gradient-text {
-            background: linear-gradient(135deg, #800000 0%, #990000 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
-        
-        .glass-sidebar {
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(20px);
-        }
-        
-        .sidebar-link {
-            transition: all 0.2s ease;
-        }
-        
-        .sidebar-link:hover, .sidebar-link.active {
-            background: linear-gradient(135deg, #800000 0%, #990000 100%);
-            color: white;
-        }
-        
-        .sidebar-link.active {
-            box-shadow: 0 4px 15px rgba(128, 0, 0, 0.3);
-        }
-        
+
         .lesson-card {
             transition: all 0.3s ease;
         }
-        
+
         .lesson-card:hover {
             transform: translateY(-4px);
             box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
         }
-        
+
         /* Custom scrollbar */
         ::-webkit-scrollbar { width: 6px; }
         ::-webkit-scrollbar-track { background: #f1f1f1; }
-        ::-webkit-scrollbar-thumb { background: #800000; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb { background: #9ca3af; border-radius: 3px; }
     </style>
     <link rel="stylesheet" href="../shared/css/base.css">
     <link rel="stylesheet" href="assets/css/admin.css">
@@ -75,11 +50,11 @@
                 </button>
                 
                 <!-- Page Title -->
-                <h1 class="text-2xl font-bold gradient-text">Lesson Plans</h1>
-                
+                <h1 class="text-2xl font-bold text-gray-800">Lesson Plans</h1>
+
                 <!-- Header Actions -->
                 <div class="flex items-center space-x-4">
-                    <button onclick="openAddLessonModal()" class="bg-maroon text-white px-4 py-2 rounded-lg hover:bg-maroon-dark transition-colors">
+                    <button onclick="openAddLessonModal()" class="bg-forest-600 text-white px-4 py-2 rounded-lg hover:bg-forest-800 transition-colors">
                         <i class="fas fa-plus mr-2"></i>Add Lesson Plan
                     </button>
                 </div>
@@ -112,30 +87,30 @@
                     
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-2">File Name</label>
-                        <input type="text" id="lessonTitle" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-maroon focus:border-transparent" placeholder="Enter file name">
+                        <input type="text" id="lessonTitle" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-forest-600 focus:border-transparent" placeholder="Enter file name">
                     </div>
                     
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-2">Description</label>
-                        <textarea id="lessonDescription" rows="3" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-maroon focus:border-transparent" placeholder="Enter lesson description"></textarea>
+                        <textarea id="lessonDescription" rows="3" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-forest-600 focus:border-transparent" placeholder="Enter lesson description"></textarea>
                     </div>
                     
                     <div class="grid grid-cols-2 gap-4">
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-2">Module</label>
-                            <input type="text" id="lessonModule" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-maroon focus:border-transparent" placeholder="e.g. Module 1">
+                            <input type="text" id="lessonModule" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-forest-600 focus:border-transparent" placeholder="e.g. Module 1">
                         </div>
 
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-2">Lesson (optional)</label>
-                            <input type="text" id="lessonName" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-maroon focus:border-transparent" placeholder="e.g. Lesson 1">
+                            <input type="text" id="lessonName" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-forest-600 focus:border-transparent" placeholder="e.g. Lesson 1">
                         </div>
                     </div>
 
                     <div class="grid grid-cols-2 gap-4">
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-2">Period Type</label>
-                            <select id="lessonPeriodType" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-maroon focus:border-transparent">
+                            <select id="lessonPeriodType" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-forest-600 focus:border-transparent">
                                 <option value="">Select type</option>
                                 <option value="week">Week</option>
                                 <option value="month">Month</option>
@@ -145,19 +120,19 @@
 
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-2">Period Value</label>
-                            <input type="text" id="lessonPeriodValue" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-maroon focus:border-transparent" placeholder="e.g. 1, Jan, Q1">
+                            <input type="text" id="lessonPeriodValue" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-forest-600 focus:border-transparent" placeholder="e.g. 1, Jan, Q1">
                         </div>
                     </div>
                     
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-2">Lesson Plan File</label>
-                        <input type="file" id="lessonFile" accept=".pdf,.doc,.docx" class="w-full px-3 py-2 border border-gray-300 rounded-lg file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-maroon file:text-white hover:file:bg-maroon-dark">
+                        <input type="file" id="lessonFile" accept=".pdf,.doc,.docx" class="w-full px-3 py-2 border border-gray-300 rounded-lg file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-forest-600 file:text-white hover:file:bg-forest-800">
                     </div>
                 </div>
                 
                 <div class="p-6 border-t border-gray-200 flex justify-end space-x-3">
                     <button type="button" onclick="closeLessonModal()" class="px-4 py-2 text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50">Cancel</button>
-                    <button type="submit" class="px-4 py-2 bg-maroon text-white rounded-lg hover:bg-maroon-dark">
+                    <button type="submit" class="px-4 py-2 bg-forest-600 text-white rounded-lg hover:bg-forest-800">
                         <i id="submitIcon" class="fas fa-save mr-2"></i>
                         <span id="submitText">Save Lesson Plan File</span>
                     </button>
@@ -223,7 +198,7 @@
                 const lessonsList = document.getElementById('lessonsList');
                 lessonsList.innerHTML = `
                     <div class="col-span-full text-center py-12">
-                        <div class="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-maroon"></div>
+                        <div class="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-gray-400"></div>
                         <p class="mt-4 text-gray-600">Loading lesson plans...</p>
                     </div>
                 `;
@@ -253,7 +228,7 @@
                             <i class="fas fa-file-alt text-6xl text-gray-300 mb-4"></i>
                             <h3 class="text-lg font-medium text-gray-900 mb-2">No Lesson Plans Found</h3>
                             <p class="text-gray-500 mb-6">Get started by uploading your first lesson plan</p>
-                            <button onclick="openAddLessonModal()" class="bg-maroon text-white px-4 py-2 rounded-lg hover:bg-maroon-dark">
+                            <button onclick="openAddLessonModal()" class="bg-forest-600 text-white px-4 py-2 rounded-lg hover:bg-forest-800">
                                 <i class="fas fa-plus mr-2"></i>Add First Lesson Plan
                             </button>
                         </div>
@@ -265,7 +240,7 @@
                     <div class="lesson-card bg-white border border-gray-200 rounded-lg p-6 hover:shadow-lg">
                         <div class="flex justify-between items-start mb-4">
                             <h3 class="text-lg font-semibold text-gray-900">${escapeHtml(lesson.file_name)}</h3>
-                            <span class="px-3 py-1 text-xs font-medium rounded-full bg-maroon/10 text-maroon">Lesson File</span>
+                            <span class="px-3 py-1 text-xs font-medium rounded-full bg-gray-100 text-gray-700">Lesson File</span>
                         </div>
                         
                         <p class="text-gray-600 text-sm mb-4">${escapeHtml(lesson.description || 'No description')}</p>
@@ -298,10 +273,10 @@
                         </div>
                         
                         <div class="flex space-x-3">
-                            <a href="${lesson.file_url}" target="_blank" class="flex-1 px-3 py-2 text-sm bg-blue-100 text-blue-800 rounded-lg hover:bg-blue-200">
+                            <a href="${lesson.file_url}" target="_blank" class="flex-1 px-3 py-2 text-sm bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200">
                                 <i class="fas fa-download mr-1"></i>Download
                             </a>
-                            <button onclick="editLesson('${lesson.id}')" class="flex-1 px-3 py-2 text-sm bg-green-100 text-green-800 rounded-lg hover:bg-green-200">
+                            <button onclick="editLesson('${lesson.id}')" class="flex-1 px-3 py-2 text-sm bg-blue-100 text-blue-800 rounded-lg hover:bg-blue-200">
                                 <i class="fas fa-edit mr-1"></i>Edit
                             </button>
                             <button onclick="deleteLesson('${lesson.id}')" class="flex-1 px-3 py-2 text-sm bg-red-100 text-red-800 rounded-lg hover:bg-red-200">

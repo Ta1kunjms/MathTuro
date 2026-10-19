@@ -12,59 +12,34 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
         body { font-family: 'Inter', system-ui, sans-serif; }
-        
-        .gradient-text {
-            background: linear-gradient(135deg, #005801 0%, #22c55e 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
-        
-        .glass-sidebar {
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(20px);
-        }
-        
+
         .stat-card {
             transition: all 0.3s ease;
         }
-        
+
         .stat-card:hover {
             transform: translateY(-4px);
         }
-        
-        .sidebar-link {
-            transition: all 0.2s ease;
-        }
-        
-        .sidebar-link:hover, .sidebar-link.active {
-            background: linear-gradient(135deg, #dc2626 0%, #ef4444 100%);
-            color: white;
-        }
-        
-        .sidebar-link.active {
-            box-shadow: 0 4px 15px rgba(220, 38, 38, 0.3);
-        }
-        
+
         .action-card {
             transition: all 0.3s ease;
         }
-        
+
         .action-card:hover {
             transform: translateY(-4px);
             box-shadow: 0 15px 30px -10px rgba(0, 0, 0, 0.15);
         }
-        
+
         /* Custom scrollbar */
         ::-webkit-scrollbar { width: 6px; }
         ::-webkit-scrollbar-track { background: #f1f1f1; }
-        ::-webkit-scrollbar-thumb { background: #dc2626; border-radius: 3px; }
-        ::-webkit-scrollbar-thumb:hover { background: #b91c1c; }
+        ::-webkit-scrollbar-thumb { background: #9ca3af; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: #6b7280; }
 
         .chart-bar {
             transition: height 0.5s ease, background-color 0.3s ease;
         }
-        
+
         .chart-bar:hover {
             filter: brightness(1.1);
         }
@@ -78,91 +53,8 @@
     <!-- Mobile Menu Overlay -->
     <div id="mobileOverlay" class="fixed inset-0 bg-black bg-opacity-50 z-40 hidden lg:hidden"></div>
     
-    <!-- Sidebar -->
-    <aside id="sidebar" class="fixed left-0 top-0 h-full w-72 glass-sidebar border-r border-gray-200 z-50 transform -translate-x-full lg:translate-x-0 transition-transform duration-300">
-        <!-- Logo -->
-        <div class="p-6 border-b border-gray-100">
-            <a href="../public/index.html" class="flex items-center space-x-3">
-                <div class="w-12 h-12 bg-white rounded-xl flex items-center justify-center shadow-lg">
-                    <img src="../Logo/MATHURO-LOGO-v2.png" alt="MathTuro" class="w-10 h-10 object-contain">
-                </div>
-                <div>
-                    <span class="text-xl font-bold gradient-text">MathTuro</span>
-                    <p class="text-xs text-gray-500">Admin Portal</p>
-                </div>
-            </a>
-        </div>
-        
-        <!-- User Info -->
-        <div class="p-6 border-b border-gray-100">
-            <div class="flex items-center space-x-3">
-                <div class="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center">
-                    <span id="userInitials" class="text-red-600 font-bold text-lg">--</span>
-                </div>
-                <div>
-                    <p id="sidebarUserName" class="font-semibold text-gray-800">Loading...</p>
-                    <p class="text-sm text-red-600 font-medium">Administrator</p>
-                </div>
-            </div>
-        </div>
-        
-        <!-- Navigation -->
-        <nav class="p-4 space-y-2">
-            <a href="dashboard.html" class="sidebar-link active flex items-center space-x-3 px-4 py-3 rounded-xl text-gray-700">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
-                </svg>
-                <span>Dashboard</span>
-            </a>
-            <a href="users.html" class="sidebar-link flex items-center space-x-3 px-4 py-3 rounded-xl text-gray-700">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
-                </svg>
-                <span>User Management</span>
-            </a>
-            <a href="manage-modules.html" class="sidebar-link flex items-center space-x-3 px-4 py-3 rounded-xl text-gray-700">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
-                </svg>
-                <span>Modules</span>
-            </a>
-            <a href="activity.html" class="sidebar-link flex items-center space-x-3 px-4 py-3 rounded-xl text-gray-700">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/>
-                </svg>
-                <span>Activity Log</span>
-            </a>
-            <a href="activity.html" class="sidebar-link flex items-center space-x-3 px-4 py-3 rounded-xl text-gray-700">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                </svg>
-                <span>Activity Log</span>
-            </a>
-            <a href="#" onclick="showSettings()" class="sidebar-link flex items-center space-x-3 px-4 py-3 rounded-xl text-gray-700">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
-                </svg>
-                <span>Settings</span>
-            </a>
-        </nav>
-        
-        <!-- Bottom Actions -->
-        <div class="absolute bottom-0 left-0 right-0 p-4 border-t border-gray-100 bg-white">
-            <a href="../public/index.html" class="flex items-center space-x-3 px-4 py-3 text-gray-600 hover:text-brand transition-colors">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
-                </svg>
-                <span>Back to Home</span>
-            </a>
-            <button id="logoutButton" class="w-full flex items-center space-x-3 px-4 py-3 text-red-600 hover:bg-red-50 rounded-xl transition-colors">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
-                </svg>
-                <span>Logout</span>
-            </button>
-        </div>
-    </aside>
+    <!-- Sidebar (populated by assets/js/sidebar.js — see admin/assets/js/sidebar.js) -->
+    <div id="sidebar"></div>
 
     <!-- Main Content -->
     <main class="lg:ml-72 min-h-screen">
@@ -170,8 +62,8 @@
         <header class="bg-white border-b border-gray-200 sticky top-0 z-30">
             <div class="flex items-center justify-between px-4 lg:px-8 py-4">
                 <!-- Mobile Menu Button -->
-                <button id="mobileMenuBtn" class="lg:hidden p-2 text-gray-600 hover:text-red-600 rounded-lg">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <button id="mobileMenuBtn" class="lg:hidden p-2 text-gray-600 hover:text-red-600 rounded-lg" aria-label="Open navigation" aria-expanded="false" aria-controls="sidebar">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
                     </svg>
                 </button>
@@ -194,11 +86,11 @@
                     
                     <!-- User Menu -->
                     <div class="relative">
-                        <button id="userMenuBtn" class="flex items-center space-x-2 p-2 rounded-lg hover:bg-gray-100">
+                        <button id="userMenuBtn" class="flex items-center space-x-2 p-2 rounded-lg hover:bg-gray-100" aria-label="Open user menu" aria-haspopup="true">
                             <div class="w-8 h-8 bg-red-100 rounded-full flex items-center justify-center">
                                 <span id="headerUserInitials" class="text-red-600 font-semibold text-sm">--</span>
                             </div>
-                            <svg class="w-4 h-4 text-gray-500 hidden sm:block" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg class="w-4 h-4 text-gray-500 hidden sm:block" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
                             </svg>
                         </button>
@@ -218,112 +110,127 @@
 
         <!-- Dashboard Content -->
         <div class="p-4 lg:p-8">
-            <!-- Welcome Banner -->
-            <div class="bg-gradient-to-r from-red-600 to-red-800 rounded-2xl p-6 lg:p-8 text-white mb-8">
-                <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between">
-                    <div>
-                        <h2 class="text-2xl lg:text-3xl font-bold mb-2">Welcome, <span id="welcomeName">Admin</span>! 🔒</h2>
-                        <p class="text-white/80">You have full administrative access to the system.</p>
+            <!-- Tier 1: Pending Account Approvals — the one thing that actually needs
+                 an admin decision right now. Amber when action is needed, calm neutral
+                 when there's nothing waiting. Source: users.approval_status = 'pending',
+                 computed client-side from the same users fetch loadDashboardStats()
+                 already makes — not the quiz_submissions 'pending' count below, which
+                 is a separate, unrelated workflow (see "Pending Quiz Reviews" in Tier 2). -->
+            <div id="pendingApprovalsCard" class="rounded-2xl p-5 sm:p-6 border mb-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                <div class="flex items-start gap-4">
+                    <div id="pendingApprovalsIconWrap" class="w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0">
+                        <svg id="pendingApprovalsIcon" class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
                     </div>
-                    <div class="mt-4 lg:mt-0 flex space-x-3">
-                        <a href="users.html" class="inline-flex items-center space-x-2 bg-white text-red-600 px-6 py-3 rounded-xl font-semibold hover:bg-gray-100 transition-colors">
-                            <span>Manage Users</span>
-                        </a>
+                    <div>
+                        <h2 class="font-bold text-gray-900">
+                            <span id="pendingApprovalsCount">0</span> Pending Account Approval<span id="pendingApprovalsPlural">s</span>
+                        </h2>
+                        <p id="pendingApprovalsMessage" class="text-sm text-gray-600 mt-0.5">Checking for accounts awaiting review…</p>
                     </div>
                 </div>
+                <a id="pendingApprovalsCta" href="users.html" class="hidden inline-flex items-center justify-center space-x-2 bg-forest-600 text-white px-5 py-2.5 rounded-xl font-semibold hover:bg-forest-800 transition-colors flex-shrink-0">
+                    <span>Review accounts</span>
+                </a>
             </div>
 
-            <!-- Stats Grid -->
-            <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6 mb-8">
+            <!-- Tier 2: Core operational metrics -->
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 lg:gap-6 mb-8">
                 <!-- Total Users -->
                 <div class="stat-card bg-white rounded-2xl p-6 border border-gray-100 shadow-sm">
                     <div class="flex items-center justify-between mb-4">
-                        <div class="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center">
-                            <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <div class="w-12 h-12 bg-gray-100 rounded-xl flex items-center justify-center">
+                            <svg class="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
                             </svg>
                         </div>
                     </div>
-                    <div class="text-3xl font-bold text-blue-600" id="totalUsersStat">0</div>
+                    <div class="text-3xl font-bold text-gray-900" id="totalUsersStat">0</div>
                     <div class="text-sm text-gray-500">Total Users</div>
                 </div>
 
                 <!-- Students -->
                 <div class="stat-card bg-white rounded-2xl p-6 border border-gray-100 shadow-sm">
                     <div class="flex items-center justify-between mb-4">
-                        <div class="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center">
-                            <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <div class="w-12 h-12 bg-forest-100 rounded-xl flex items-center justify-center">
+                            <svg class="w-6 h-6 text-forest-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
                             </svg>
                         </div>
                     </div>
-                    <div class="text-3xl font-bold text-green-600" id="studentsStat">0</div>
+                    <div class="text-3xl font-bold text-forest-600" id="studentsStat">0</div>
                     <div class="text-sm text-gray-500">Students</div>
                 </div>
 
                 <!-- Teachers -->
                 <div class="stat-card bg-white rounded-2xl p-6 border border-gray-100 shadow-sm">
                     <div class="flex items-center justify-between mb-4">
-                        <div class="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center">
-                            <svg class="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <div class="w-12 h-12 bg-plum-100 rounded-xl flex items-center justify-center">
+                            <svg class="w-6 h-6 text-plum-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z"/>
                             </svg>
                         </div>
                     </div>
-                    <div class="text-3xl font-bold text-purple-600" id="teachersStat">0</div>
+                    <div class="text-3xl font-bold text-plum-600" id="teachersStat">0</div>
                     <div class="text-sm text-gray-500">Teachers</div>
                 </div>
 
                 <!-- Modules -->
                 <div class="stat-card bg-white rounded-2xl p-6 border border-gray-100 shadow-sm">
                     <div class="flex items-center justify-between mb-4">
-                        <div class="w-12 h-12 bg-orange-100 rounded-xl flex items-center justify-center">
-                            <svg class="w-6 h-6 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <div class="w-12 h-12 bg-gray-100 rounded-xl flex items-center justify-center">
+                            <svg class="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
                             </svg>
                         </div>
                     </div>
-                    <div class="text-3xl font-bold text-orange-600" id="modulesStat">0</div>
+                    <div class="text-3xl font-bold text-gray-900" id="modulesStat">0</div>
                     <div class="text-sm text-gray-500">Modules</div>
                 </div>
-            </div>
 
-            <!-- Secondary Stats -->
-            <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6 mb-8">
+                <!-- Lesson Plan Files -->
                 <div class="stat-card bg-white rounded-2xl p-6 border border-gray-100 shadow-sm">
                     <div class="flex items-center justify-between mb-3">
-                        <div class="w-10 h-10 bg-teal-100 rounded-xl flex items-center justify-center">
-                            <svg class="w-5 h-5 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                        <div class="w-10 h-10 bg-gray-100 rounded-xl flex items-center justify-center">
+                            <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
                         </div>
                     </div>
-                    <div class="text-2xl font-bold text-teal-600" id="lessonPlanFilesStat">0</div>
+                    <div class="text-2xl font-bold text-gray-900" id="lessonPlanFilesStat">0</div>
                     <div class="text-sm text-gray-500">Lesson Plan Files</div>
                 </div>
+
+                <!-- Pending Quiz Reviews (legacy screenshot-review workflow — distinct
+                     from the Tier-1 Pending Account Approvals card above) -->
                 <div class="stat-card bg-white rounded-2xl p-6 border border-gray-100 shadow-sm">
                     <div class="flex items-center justify-between mb-3">
-                        <div class="w-10 h-10 bg-yellow-100 rounded-xl flex items-center justify-center">
-                            <svg class="w-5 h-5 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                        <div class="w-10 h-10 bg-amber-100 rounded-xl flex items-center justify-center">
+                            <svg class="w-5 h-5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                         </div>
                     </div>
-                    <div class="text-2xl font-bold text-yellow-600" id="pendingStat">0</div>
-                    <div class="text-sm text-gray-500">Pending Reviews</div>
+                    <div class="text-2xl font-bold text-amber-600" id="pendingStat">0</div>
+                    <div class="text-sm text-gray-500">Pending Quiz Reviews</div>
                 </div>
+
+                <!-- Approved -->
                 <div class="stat-card bg-white rounded-2xl p-6 border border-gray-100 shadow-sm">
                     <div class="flex items-center justify-between mb-3">
-                        <div class="w-10 h-10 bg-green-100 rounded-xl flex items-center justify-center">
-                            <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                        <div class="w-10 h-10 bg-forest-100 rounded-xl flex items-center justify-center">
+                            <svg class="w-5 h-5 text-forest-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                         </div>
                     </div>
-                    <div class="text-2xl font-bold text-green-600" id="approvedStat">0</div>
+                    <div class="text-2xl font-bold text-forest-600" id="approvedStat">0</div>
                     <div class="text-sm text-gray-500">Approved</div>
                 </div>
+
+                <!-- Active Users -->
                 <div class="stat-card bg-white rounded-2xl p-6 border border-gray-100 shadow-sm">
                     <div class="flex items-center justify-between mb-3">
-                        <div class="w-10 h-10 bg-emerald-100 rounded-xl flex items-center justify-center">
-                            <svg class="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.121 17.804A13.937 13.937 0 0112 16c2.5 0 4.847.655 6.879 1.804M15 10a3 3 0 11-6 0 3 3 0 016 0zm6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                        <div class="w-10 h-10 bg-gray-100 rounded-xl flex items-center justify-center">
+                            <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.121 17.804A13.937 13.937 0 0112 16c2.5 0 4.847.655 6.879 1.804M15 10a3 3 0 11-6 0 3 3 0 016 0zm6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                         </div>
                     </div>
-                    <div class="text-2xl font-bold text-emerald-600" id="activeUsersStat">0</div>
+                    <div class="text-2xl font-bold text-gray-900" id="activeUsersStat">0</div>
                     <div class="text-sm text-gray-500">Active Users (7d)</div>
                 </div>
             </div>
@@ -335,42 +242,26 @@
                     <!-- Quick Actions -->
                     <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
                         <h3 class="text-lg font-bold text-gray-800 mb-6">Quick Actions</h3>
-                        <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
-                            <a href="users.html" class="action-card p-4 bg-blue-50 rounded-xl text-center hover:bg-blue-100">
-                                <div class="w-12 h-12 mx-auto bg-blue-100 rounded-xl flex items-center justify-center mb-3">
-                                    <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                            <a href="users.html" class="action-card p-4 bg-forest-50 rounded-xl text-center hover:bg-forest-100">
+                                <div class="w-12 h-12 mx-auto bg-forest-100 rounded-xl flex items-center justify-center mb-3">
+                                    <svg class="w-6 h-6 text-forest-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"/>
                                     </svg>
                                 </div>
                                 <p class="font-medium text-gray-700">Add User</p>
                             </a>
-                            <a href="manage-modules.html" class="action-card p-4 bg-green-50 rounded-xl text-center hover:bg-green-100">
-                                <div class="w-12 h-12 mx-auto bg-green-100 rounded-xl flex items-center justify-center mb-3">
-                                    <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <a href="manage-modules.html" class="action-card p-4 bg-gray-50 rounded-xl text-center hover:bg-gray-100">
+                                <div class="w-12 h-12 mx-auto bg-gray-100 rounded-xl flex items-center justify-center mb-3">
+                                    <svg class="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
                                     </svg>
                                 </div>
                                 <p class="font-medium text-gray-700">New Module</p>
                             </a>
-                            <a href="activity.html" class="action-card p-4 bg-yellow-50 rounded-xl text-center hover:bg-yellow-100">
-                                <div class="w-12 h-12 mx-auto bg-yellow-100 rounded-xl flex items-center justify-center mb-3">
-                                    <svg class="w-6 h-6 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/>
-                                    </svg>
-                                </div>
-                                <p class="font-medium text-gray-700">Activity</p>
-                            </a>
-                            <a href="activity.html" class="action-card p-4 bg-purple-50 rounded-xl text-center hover:bg-purple-100">
-                                <div class="w-12 h-12 mx-auto bg-purple-100 rounded-xl flex items-center justify-center mb-3">
-                                    <svg class="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                                    </svg>
-                                </div>
-                                <p class="font-medium text-gray-700">Activity Log</p>
-                            </a>
-                            <a href="#" onclick="exportData()" class="action-card p-4 bg-teal-50 rounded-xl text-center hover:bg-teal-100">
-                                <div class="w-12 h-12 mx-auto bg-teal-100 rounded-xl flex items-center justify-center mb-3">
-                                    <svg class="w-6 h-6 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <a href="#" onclick="exportData()" class="action-card p-4 bg-gray-50 rounded-xl text-center hover:bg-gray-100">
+                                <div class="w-12 h-12 mx-auto bg-gray-100 rounded-xl flex items-center justify-center mb-3">
+                                    <svg class="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
                                     </svg>
                                 </div>
@@ -388,18 +279,16 @@
                         </div>
                     </div>
 
-
-
                     <!-- Recent Users -->
                     <div class="bg-white rounded-2xl border border-gray-100 shadow-sm">
                         <div class="p-6 border-b border-gray-100 flex items-center justify-between">
                             <h3 class="text-lg font-bold text-gray-800">Recent Users</h3>
-                            <a href="users.html" class="text-red-600 hover:text-red-700 text-sm font-medium">View All</a>
+                            <a href="users.html" class="text-gray-600 hover:text-gray-900 text-sm font-medium">View All</a>
                         </div>
                         <div id="recentUsersList" class="divide-y divide-gray-100">
                             <!-- Content loaded dynamically -->
                             <div class="p-6 text-center text-gray-500">
-                                <p>Loading users...</p>
+                                <p>Loading recent users…</p>
                             </div>
                         </div>
                     </div>
@@ -407,9 +296,14 @@
 
                 <!-- Right Column -->
                 <div class="space-y-6">
-                    <!-- System Status -->
+                    <!-- System Status — static display, not a live health check (no
+                         monitoring backend exists); labeled honestly rather than
+                         implying real-time checks. -->
                     <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
-                        <h3 class="text-lg font-bold text-gray-800 mb-4">System Status</h3>
+                        <div class="flex items-center justify-between mb-1">
+                            <h3 class="text-lg font-bold text-gray-800">System Status</h3>
+                        </div>
+                        <p class="text-xs text-gray-400 mb-4">Static reference — not live-monitored</p>
                         <div class="space-y-4">
                             <div class="flex items-center justify-between">
                                 <span class="text-gray-600">Database</span>
@@ -450,7 +344,7 @@
                         <div id="recentActivity" class="divide-y divide-gray-100 max-h-80 overflow-y-auto">
                             <!-- Content loaded dynamically -->
                             <div class="p-6 text-center text-gray-500">
-                                <p>No recent activity</p>
+                                <p>Loading recent activity…</p>
                             </div>
                         </div>
                     </div>
@@ -551,12 +445,10 @@
         // Update user information across the UI
         function updateUserInfo(user) {
             const initials = getInitials(user.fullName);
-            const firstName = user.fullName.split(' ')[0];
-            
+
             document.getElementById('sidebarUserName').textContent = user.fullName;
             document.getElementById('userInitials').textContent = initials;
             document.getElementById('headerUserInitials').textContent = initials;
-            document.getElementById('welcomeName').textContent = firstName;
             document.getElementById('dropdownUserName').textContent = user.fullName;
             document.getElementById('dropdownUserEmail').textContent = user.email;
         }
@@ -568,10 +460,13 @@
         // Load dashboard statistics
         async function loadDashboardStats() {
             try {
-                // Get user counts and last_login for active users
+                // Get user counts, last_login for active users, and approval_status
+                // for the Tier-1 pending-account-approvals card. This is the same
+                // users fetch already used for the role counts below — widened by
+                // one column rather than issuing a second query.
                 const { data: users } = await getSupabase()
                     .from('users')
-                    .select('role, last_login');
+                    .select('role, last_login, approval_status');
 
                 const students = users ? users.filter(u => u.role === 'student').length : 0;
                 const teachers = users ? users.filter(u => u.role === 'teacher').length : 0;
@@ -582,11 +477,16 @@
                 const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
                 const activeUsers = users ? users.filter(u => u.last_login && u.last_login >= sevenDaysAgo).length : 0;
 
+                // Pending ACCOUNT approvals (registration workflow) — distinct from
+                // "Pending Quiz Reviews" below, which is a separate quiz_submissions
+                // workflow. Never conflate the two labels or counts.
+                const pendingApprovals = users ? users.filter(u => u.approval_status === 'pending').length : 0;
+
                 // Get module and lesson plan file counts
                 const { data: modules } = await getSupabase()
                     .from('modules')
                     .select('id');
-                
+
                 const { data: lessonPlanFiles } = await getSupabase()
                     .from('lesson_plan_files')
                     .select('id');
@@ -610,21 +510,64 @@
                 document.getElementById('approvedStat').textContent = approved;
                 document.getElementById('activeUsersStat').textContent = activeUsers;
 
-
+                renderPendingApprovalsCard(pendingApprovals);
 
             } catch (error) {
                 console.error('Error loading stats:', error);
             }
         }
 
-        // Role-specific SVG icons for recent users
+        // Tier-1 card: pending ACCOUNT approvals only (users.approval_status='pending').
+        // Amber = needs a decision now. Calm neutral = nothing waiting. The count and
+        // the card's icon/shape both change (not color alone) so the state reads
+        // correctly without relying on color perception.
+        const PENDING_APPROVALS_ICON = 'M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z';
+        const ALL_CAUGHT_UP_ICON = 'M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z';
+
+        function renderPendingApprovalsCard(count) {
+            const card = document.getElementById('pendingApprovalsCard');
+            const iconWrap = document.getElementById('pendingApprovalsIconWrap');
+            const icon = document.getElementById('pendingApprovalsIcon');
+            const iconPath = icon.querySelector('path');
+            const countEl = document.getElementById('pendingApprovalsCount');
+            const pluralEl = document.getElementById('pendingApprovalsPlural');
+            const messageEl = document.getElementById('pendingApprovalsMessage');
+            const cta = document.getElementById('pendingApprovalsCta');
+
+            countEl.textContent = count;
+            pluralEl.textContent = count === 1 ? '' : 's';
+
+            card.classList.remove('bg-amber-50', 'border-amber-200', 'bg-gray-50', 'border-gray-200');
+            iconWrap.classList.remove('bg-amber-100', 'bg-forest-100');
+            icon.classList.remove('text-amber-700', 'text-forest-600');
+
+            if (count > 0) {
+                card.classList.add('bg-amber-50', 'border-amber-200');
+                iconWrap.classList.add('bg-amber-100');
+                icon.classList.add('text-amber-700');
+                iconPath.setAttribute('d', PENDING_APPROVALS_ICON);
+                messageEl.textContent = 'New registrations are waiting to be approved or rejected.';
+                cta.classList.remove('hidden');
+            } else {
+                card.classList.add('bg-gray-50', 'border-gray-200');
+                iconWrap.classList.add('bg-forest-100');
+                icon.classList.add('text-forest-600');
+                iconPath.setAttribute('d', ALL_CAUGHT_UP_ICON);
+                messageEl.textContent = "No accounts waiting for review — you're all caught up.";
+                cta.classList.add('hidden');
+            }
+        }
+
+        // Role-specific SVG icons for recent users. Student = green (forest),
+        // Teacher = purple (plum) — matching each role's own portal identity.
+        // Admin = neutral, not red: it's this row's own role, not a warning state.
         const roleIcons = {
-            student: `<svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>`,
-            teacher: `<svg class="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z"/></svg>`,
-            admin: `<svg class="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>`
+            student: `<svg class="w-5 h-5 text-forest-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>`,
+            teacher: `<svg class="w-5 h-5 text-plum-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z"/></svg>`,
+            admin: `<svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>`
         };
-        const roleIconBg = { student: 'bg-green-100', teacher: 'bg-purple-100', admin: 'bg-red-100' };
-        const roleColors = { student: 'bg-green-100 text-green-700', teacher: 'bg-purple-100 text-purple-700', admin: 'bg-red-100 text-red-700' };
+        const roleIconBg = { student: 'bg-forest-100', teacher: 'bg-plum-100', admin: 'bg-gray-200' };
+        const roleColors = { student: 'bg-forest-100 text-forest-800', teacher: 'bg-plum-100 text-plum-800', admin: 'bg-gray-200 text-gray-700' };
 
         // Load recent users
         async function loadRecentUsers() {
@@ -639,7 +582,7 @@
                     .limit(limitCount);
 
                 if (!users || users.length === 0) {
-                    container.innerHTML = '<div class="p-6 text-center text-gray-500"><p>No users found</p></div>';
+                    container.innerHTML = '<div class="p-6 text-center text-gray-500"><p>No users yet — new registrations will appear here.</p></div>';
                     return;
                 }
 
@@ -680,7 +623,7 @@
                 if (error) throw error;
 
                 if (!submissions || submissions.length === 0) {
-                    container.innerHTML = '<div class="p-6 text-center text-gray-500"><p>No recent activity</p></div>';
+                    container.innerHTML = '<div class="p-6 text-center text-gray-500"><p>No quiz submissions yet — activity will appear here as students submit.</p></div>';
                     return;
                 }
 
@@ -750,15 +693,78 @@
 
         // Setup event listeners
         function setupEventListeners() {
+            // sidebar.js injects the real <aside> inside #sidebar on DOMContentLoaded
+            // (which runs before this handler); resolve it here rather than caching
+            // the empty wrapper div, so the drawer toggle targets the actual element.
+            const sidebarAside = sidebar.querySelector('aside') || sidebar;
+            const isDesktopSidebar = () => window.matchMedia('(min-width: 1024px)').matches;
+
+            // On mobile, while the drawer is closed it must not be reachable by Tab
+            // even though it's still technically in the DOM (only translated off-screen).
+            // On desktop the sidebar is always persistent and must always stay focusable.
+            function setDrawerInert(open) {
+                if (isDesktopSidebar() || open) {
+                    sidebarAside.removeAttribute('inert');
+                } else {
+                    sidebarAside.setAttribute('inert', '');
+                }
+            }
+
+            function openDrawer() {
+                sidebarAside.classList.remove('-translate-x-full');
+                mobileOverlay.classList.remove('hidden');
+                mobileMenuBtn.setAttribute('aria-expanded', 'true');
+                mobileMenuBtn.setAttribute('aria-label', 'Close navigation');
+                setDrawerInert(true);
+                const firstItem = sidebarAside.querySelector('a, button');
+                if (firstItem) firstItem.focus();
+            }
+
+            function closeDrawer(restoreFocus) {
+                sidebarAside.classList.add('-translate-x-full');
+                mobileOverlay.classList.add('hidden');
+                mobileMenuBtn.setAttribute('aria-expanded', 'false');
+                mobileMenuBtn.setAttribute('aria-label', 'Open navigation');
+                setDrawerInert(false);
+                if (restoreFocus !== false) {
+                    mobileMenuBtn.focus();
+                }
+            }
+
             mobileMenuBtn.addEventListener('click', () => {
-                sidebar.classList.toggle('-translate-x-full');
-                mobileOverlay.classList.toggle('hidden');
+                const isOpen = mobileMenuBtn.getAttribute('aria-expanded') === 'true';
+                if (isOpen) {
+                    closeDrawer(false); // focus is already on this button
+                } else {
+                    openDrawer();
+                }
             });
 
             mobileOverlay.addEventListener('click', () => {
-                sidebar.classList.add('-translate-x-full');
-                mobileOverlay.classList.add('hidden');
+                closeDrawer();
             });
+
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape' && mobileMenuBtn.getAttribute('aria-expanded') === 'true') {
+                    closeDrawer();
+                }
+            });
+
+            // Selecting a nav link inside the drawer on mobile navigates away, but
+            // keep drawer/inert state consistent in case navigation is interrupted.
+            sidebarAside.addEventListener('click', (e) => {
+                if (e.target.closest('a') && !isDesktopSidebar()) {
+                    closeDrawer(false);
+                }
+            });
+
+            // Re-evaluate inert state if the viewport crosses the lg breakpoint
+            // (e.g. a tablet rotating) while the drawer is open or closed.
+            window.addEventListener('resize', () => {
+                setDrawerInert(mobileMenuBtn.getAttribute('aria-expanded') === 'true');
+            });
+
+            setDrawerInert(false);
 
             userMenuBtn.addEventListener('click', (e) => {
                 e.stopPropagation();
@@ -791,7 +797,7 @@
                                 </div>
                                 <label class="relative inline-flex items-center cursor-pointer">
                                     <input type="checkbox" checked class="sr-only peer">
-                                    <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-red-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-red-600"></div>
+                                    <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-forest-600 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-red-600"></div>
                                 </label>
                             </div>
                             <div class="flex items-center justify-between p-4 bg-gray-50 rounded-xl">
@@ -801,7 +807,7 @@
                                 </div>
                                 <label class="relative inline-flex items-center cursor-pointer">
                                     <input type="checkbox" checked class="sr-only peer">
-                                    <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-red-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-red-600"></div>
+                                    <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-forest-600 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-red-600"></div>
                                 </label>
                             </div>
                         </div>

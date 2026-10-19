@@ -129,3 +129,10 @@ dist
 CLAUDE.md
 AGENT_INDEX.md
 CLAUDE.md.example
+
+# Local data exports & scratch files (contain real user PII — never commit)
+Files/
+
+# Local AI tool configs
+opencode.json
+skills-lock.json

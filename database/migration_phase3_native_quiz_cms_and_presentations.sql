@@ -5,6 +5,21 @@
 -- ============================================================================
 
 -- ----------------------------------------------------------------------------
+-- 0. Re-run guard
+-- ----------------------------------------------------------------------------
+-- This file redefines the submit/grade RPCs that the remediation migrations
+-- wrap with progression checks. Abort (whole script rolls back) if those
+-- wrappers are already present, so a re-run cannot silently remove gating.
+DO $$
+BEGIN
+    IF to_regprocedure('public.submit_and_grade_assessment_core(uuid, jsonb)') IS NOT NULL
+       OR to_regprocedure('public.submit_and_grade_regular_quiz_core(uuid, jsonb)') IS NOT NULL THEN
+        RAISE EXCEPTION 'Phase 3 is already applied and remediation wrappers are installed; re-running would remove progression gating. Nothing was changed.';
+    END IF;
+END;
+$$;
+
+-- ----------------------------------------------------------------------------
 -- 1. Extend public.modules with Term & Week Curriculum Hierarchy
 -- ----------------------------------------------------------------------------
 ALTER TABLE public.modules

@@ -32,6 +32,8 @@
 * **Open items:** presentation signed-URL check not exercised (no PDF fixture). QA students A and B now hold attempt rows; reset them before re-running Phase 3 sections 8–9.
 * **Staging Target:** `jlmdvcmdvkvdxpfkqivh.supabase.co`
 
+* **⚠️ REGRESSION (2026-10-20 ~16:00):** `migration_phase5_exp_gamification_and_leaderboard.sql` was re-run on staging. Its `CREATE OR REPLACE` statements overwrote the gated wrappers `submit_and_grade_assessment`, `submit_and_grade_regular_quiz` and `submit_regular_quiz_score` with the ungated bodies. Probe: Student B's submit to the locked M2 pre-test reached the answer-count check (no "locked" error), and the legacy score RPC returned "Invalid score bounds". The `get_assessment_questions_for_student` fix survived. **⚠️ Happened again ~16:30** (Phase 5 re-run after the push; probes show both wrappers ungated). Re-run guards were added to the Phase 3 and Phase 5 migrations so this can't recur (see 16:35 entry); staging still needs both remediation files re-run. Earlier: **resolved 16:15**, when the user re-ran both remediation files. Probes show "Assessment locked by module progression" and "This quiz is graded automatically…", and the Phase 4–5 suite is back to 17/17. Any re-run of the Phase 3 or 5 migrations must be followed by both remediation files.
+
 ### 🎯 The Immediate Next Action (Do This First)
 1. ✅ Legacy quiz-score fix applied on staging by the user (2026-10-20 15:45); `verify_phase4_5_authenticated_api.ps1` now **17/17 PASS**. Caveat: the probe was rejected by the "graded automatically" branch; the `p_total = total_items` and locked-quiz branches were not individually exercised (no question-free quiz fixture on staging).
 2. ✅ Done (APPROVE PLAN, 2026-10-20 14:45): migration file saved; font preference restored on all student pages; `public/test-supabase.html` removed.
@@ -268,6 +270,32 @@
 * **Verification / Tests Executed:** `verify_phase4_5_authenticated_api.ps1`: 17 PASS / 0 FAIL. The legacy RPC is now refused ("This quiz is graded automatically…"). The total-items pin and access-lock branches are not individually covered.
 * **Next Immediate Action:** Push; PDF upload for the signed-URL check; browser QA once the Chrome extension is connected.
 
+### [2026-10-20 16:05] — Regression: Phase 5 Re-run Removed Security Wrappers
+* **Author / Agent:** Claude Code
+* **Files Modified:** `docs/PROJECT_STATE.md` only.
+* **Database / Migrations Applied:** None by the agent. The user re-ran the Phase 5 migration on staging.
+* **Verification / Tests Executed:** Read-only probes as Student B (no rows written): locked-assessment submit is no longer refused by the access check; the legacy score RPC is ungated again; the pre-test question RPC is still fixed (HTTP 200).
+* **Blockers / Open Questions:** User must re-run `migration_phase3_remediation_grants_and_rpc_gating.sql`, then `migration_phase5_remediation_legacy_quiz_score_gating.sql` (both re-runnable: the renames are skipped and the wrappers replaced). 4 commits still unpushed.
+* **Next Immediate Action:** After the re-run, the agent repeats the probes and the Phase 4–5 suite.
+
+### [2026-10-20 16:15] — Security Wrappers Restored on Staging
+* **Author / Agent:** Claude Code
+* **Files Modified:** `docs/PROJECT_STATE.md` only.
+* **Database / Migrations Applied:** None by the agent. The user re-ran both remediation files.
+* **Verification / Tests Executed:** Student B probes: locked M2 pre-test submit → "Assessment locked by module progression"; M1 pre-test questions → 200; legacy score → "This quiz is graded automatically…". `verify_phase4_5_authenticated_api.ps1` 17/17. The `submit_and_grade_regular_quiz` wrapper was not probed separately: no locked quiz fixture, and both students have M1 unlocked.
+* **Next Immediate Action:** User pushes the 4 commits; optional safeguard note in the Phase 5 migration (APPROVE PLAN); PDF upload; browser QA.
+
+### [2026-10-20 16:35] — Re-run Guards on Phase 3 & 5 Migrations
+* **Author / Agent:** Claude Code (approved with `APPROVE PLAN`)
+* **Context:** User pushed `1650968` and then re-ran `migration_phase5_exp_gamification_and_leaderboard.sql` ("Success. No rows returned"). Probes confirmed the submit wrappers were overwritten again (locked submit reaches the answer-count check; legacy score returns "Invalid score bounds").
+* **Files Modified:**
+  - `database/migration_phase5_exp_gamification_and_leaderboard.sql`: new section 0, a `DO` block that raises if any `*_core` submit function exists, so the whole script rolls back before any `CREATE OR REPLACE`.
+  - `database/migration_phase3_native_quiz_cms_and_presentations.sql`: same guard (checks the two assessment/quiz `*_core` functions).
+  - Neither file has explicit BEGIN/COMMIT, so the SQL Editor's implicit transaction rolls everything back on the guard error. On a fresh database no `*_core` exists, so the guards pass.
+* **Database / Migrations Applied:** None by the agent.
+* **Verification / Tests Executed:** Read-only probes (above). The guards themselves are not executed yet.
+* **Next Immediate Action:** User re-runs both remediation files on staging; the agent re-probes. Optionally the user runs the Phase 5 file once to see the guard refuse.
+
 ---
 
 ## 5. Agent Instructions for Appending New Entries
@@ -327,3 +355,8 @@ And update the top section (`## 1. Quick Orientation: "Where We Left Off"`) with
 * **Author:** Tycoon James Flores
 * **Commit Message:** docs: record Phase 4-6 QA results
 * **Commit Hash:** `8b95615`
+
+### [2026-10-20 15:46] — Git Commit 1650968
+* **Author:** Tycoon James Flores
+* **Commit Message:** docs: record Phase 4-5 re-verification (17/17)
+* **Commit Hash:** `1650968`

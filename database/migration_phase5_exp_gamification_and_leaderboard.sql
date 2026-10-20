@@ -40,6 +40,25 @@
 -- ============================================================================
 
 -- ----------------------------------------------------------------------------
+-- 0. Re-run guard
+-- ----------------------------------------------------------------------------
+-- The CREATE OR REPLACE statements in section 4 would overwrite the gated
+-- wrappers installed by migration_phase3_remediation_grants_and_rpc_gating.sql
+-- and migration_phase5_remediation_legacy_quiz_score_gating.sql, silently
+-- removing progression gating. Abort (whole script rolls back) if those
+-- wrappers are already present. To re-apply intentionally, run the two
+-- remediation files afterwards instead of this file alone.
+DO $$
+BEGIN
+    IF to_regprocedure('public.submit_and_grade_assessment_core(uuid, jsonb)') IS NOT NULL
+       OR to_regprocedure('public.submit_and_grade_regular_quiz_core(uuid, jsonb)') IS NOT NULL
+       OR to_regprocedure('public.submit_regular_quiz_score_core(uuid, smallint, smallint)') IS NOT NULL THEN
+        RAISE EXCEPTION 'Phase 5 is already applied and remediation wrappers are installed; re-running would remove progression gating. Nothing was changed.';
+    END IF;
+END;
+$$;
+
+-- ----------------------------------------------------------------------------
 -- 1. EXP ledger (protected — no direct write access for authenticated)
 -- ----------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS public.exp_transactions (

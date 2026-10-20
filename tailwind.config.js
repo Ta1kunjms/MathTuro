@@ -1,7 +1,10 @@
 /** @type {import('tailwindcss').Config} */
 module.exports = {
   content: [
-    './**/*.html',
+    // Tracked folders only, so local-only worktrees (e.g. .kilo/) can't add
+    // classes to the local build that the Vercel build from git won't have.
+    './*.html',
+    './{public,student,teacher,admin,shared}/**/*.html',
     './shared/js/**/*.js',
     './teacher/assets/js/**/*.js',
     './student/assets/js/**/*.js',

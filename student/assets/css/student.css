@@ -7,14 +7,39 @@
 /* ============================================
    STUDENT SIDEBAR
    ============================================ */
-.sidebar-link:hover, 
-.sidebar-link.active {
-  background: linear-gradient(135deg, #005801 0%, #16a34a 100%);
-  color: white;
+/* Scoped under #sidebar so it outranks the legacy per-page inline
+   .sidebar-link rules (green gradient) that load before this file. */
+#sidebar .sidebar-link {
+  transition: background-color 0.15s ease, color 0.15s ease;
 }
 
-.sidebar-link.active {
-  box-shadow: 0 4px 15px rgba(0, 88, 1, 0.3);
+#sidebar .sidebar-link:hover {
+  background: #f0f7f3; /* forest-50 */
+  color: #1b4332;      /* forest-800 */
+}
+
+/* Active: solid forest fill plus heavier weight and an offset edge, so the
+   state doesn't rely on color alone */
+#sidebar .sidebar-link.active {
+  background: #1b4332; /* forest-800 */
+  color: #ffffff;
+  font-weight: 600;
+  box-shadow: 3px 3px 0 0 #1c1b1a; /* ink-900 */
+}
+
+#sidebar a:focus-visible,
+#sidebar button:focus-visible,
+#sidebar [tabindex]:focus-visible {
+  outline: 3px solid #1b4332;
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #sidebar,
+  #sidebar * {
+    transition: none !important;
+    animation: none !important;
+  }
 }
 
 /* ============================================
@@ -26,18 +51,18 @@
 
 .module-card:hover {
   transform: translateY(-4px);
-  box-shadow: 0 20px 40px -12px rgba(0, 88, 1, 0.15);
+  box-shadow: 0 20px 40px -12px rgba(27, 67, 50, 0.15);
 }
 
 .stat-card:hover {
-  box-shadow: 0 20px 40px -12px rgba(0, 88, 1, 0.15);
+  box-shadow: 0 20px 40px -12px rgba(27, 67, 50, 0.15);
 }
 
 /* ============================================
    STUDENT PROGRESS
    ============================================ */
 .progress-bar {
-  background: linear-gradient(90deg, #005801 0%, #22c55e 100%);
+  background: #2f7756;
   border-radius: 9999px;
   height: 100%;
   transition: width 0.5s ease;
@@ -49,8 +74,8 @@
 }
 
 .lesson-item:hover {
-  background: rgba(0, 88, 1, 0.05);
-  border-left-color: #005801;
+  background: rgba(27, 67, 50, 0.05);
+  border-left-color: #1b4332;
 }
 
 .lesson-item.completed {
@@ -65,7 +90,7 @@
 }
 
 .activity-item:hover {
-  background: rgba(0, 88, 1, 0.05);
+  background: rgba(27, 67, 50, 0.05);
 }
 
 /* ============================================
@@ -90,7 +115,7 @@
    STUDENT BADGES
    ============================================ */
 .badge-student {
-  background: linear-gradient(135deg, #005801 0%, #22c55e 100%);
+  background: #1b4332;
   color: white;
   padding: 0.25rem 0.75rem;
   border-radius: 9999px;
@@ -102,10 +127,10 @@
    STUDENT CUSTOM SCROLLBAR
    ============================================ */
 ::-webkit-scrollbar-thumb {
-  background: #005801;
+  background: #1b4332;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #004601;
+  background: #122d22;
 }
 
 /* ============================================

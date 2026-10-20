@@ -26,29 +26,22 @@
         body { font-family: 'Inter', system-ui, sans-serif; }
 
         .gradient-text {
-            background: linear-gradient(135deg, #005801 0%, #22c55e 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
+            color: #1b4332;
         }
         
-        .glass-sidebar {
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(20px);
-        }
         
         .lesson-nav-item {
             transition: all 0.2s ease;
         }
         
         .lesson-nav-item:hover {
-            background-color: rgba(0, 88, 1, 0.05);
+            background-color: rgba(27, 67, 50, 0.05);
         }
         
         .lesson-nav-item.active {
-            background: linear-gradient(135deg, #005801 0%, #16a34a 100%);
+            background: #1b4332;
             color: white;
-            box-shadow: 0 4px 15px rgba(0, 88, 1, 0.3);
+            box-shadow: 0 4px 15px rgba(27, 67, 50, 0.3);
         }
         
         .lesson-nav-item.active .lesson-icon {
@@ -60,12 +53,12 @@
         }
         
         .sidebar-link:hover, .sidebar-link.active {
-            background: linear-gradient(135deg, #005801 0%, #16a34a 100%);
+            background: #1b4332;
             color: white;
         }
         
         .sidebar-link.active {
-            box-shadow: 0 4px 15px rgba(0, 88, 1, 0.3);
+            box-shadow: 0 4px 15px rgba(27, 67, 50, 0.3);
         }
         
         .content-card {
@@ -103,8 +96,8 @@
         
         ::-webkit-scrollbar { width: 6px; }
         ::-webkit-scrollbar-track { background: #f1f1f1; }
-        ::-webkit-scrollbar-thumb { background: #005801; border-radius: 3px; }
-        ::-webkit-scrollbar-thumb:hover { background: #004601; }
+        ::-webkit-scrollbar-thumb { background: #1b4332; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: #122d22; }
     </style>
     <link rel="stylesheet" href="../shared/css/base.css">
     <link rel="stylesheet" href="assets/css/student.css">
@@ -117,7 +110,7 @@
     <div id="mobileOverlay" class="fixed inset-0 bg-black bg-opacity-50 z-40 hidden lg:hidden"></div>
     
     <!-- Sidebar -->
-    <aside id="sidebar" class="fixed left-0 top-0 h-full w-72 glass-sidebar border-r border-gray-200 z-50 transform -translate-x-full lg:translate-x-0 transition-transform duration-300">
+    <aside id="sidebar" class="fixed left-0 top-0 h-full w-72 bg-white border-r border-gray-200 z-50 transform -translate-x-full lg:translate-x-0 transition-transform duration-300">
         <!-- Logo -->
         <div class="p-6 border-b border-gray-100">
             <a href="dashboard.html" class="flex items-center space-x-3">
@@ -134,12 +127,12 @@
         <!-- User Info -->
         <div class="p-6 border-b border-gray-100">
             <div class="flex items-center space-x-3">
-                <div class="w-12 h-12 bg-brand/10 rounded-full flex items-center justify-center">
-                    <span id="userInitials" class="text-brand font-bold text-lg">--</span>
+                <div class="w-12 h-12 bg-forest-800/10 rounded-full flex items-center justify-center">
+                    <span id="userInitials" class="text-forest-800 font-bold text-lg">--</span>
                 </div>
                 <div>
                     <p id="sidebarUserName" class="font-semibold text-gray-800">Loading...</p>
-                    <p id="userRole" class="text-sm text-brand font-medium capitalize">Loading...</p>
+                    <p id="userRole" class="text-sm text-forest-800 font-medium capitalize">Loading...</p>
                 </div>
             </div>
         </div>
@@ -160,7 +153,7 @@
         
         <!-- Bottom Actions -->
         <div class="absolute bottom-0 left-0 right-0 p-4 border-t border-gray-100 bg-white">
-            <a id="backToModulesLink" href="modules.html" class="flex items-center space-x-3 px-4 py-3 text-gray-600 hover:text-brand transition-colors">
+            <a id="backToModulesLink" href="modules.html" class="flex items-center space-x-3 px-4 py-3 text-gray-600 hover:text-forest-800 transition-colors">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 17l-5-5m0 0l5-5m-5 5h12"/>
                 </svg>
@@ -181,7 +174,7 @@
         <header class="bg-white border-b border-gray-200 sticky top-0 z-30">
             <div class="flex items-center justify-between px-4 lg:px-8 py-4">
                 <!-- Mobile Menu Button -->
-                <button id="mobileMenuBtn" class="lg:hidden p-2 text-gray-600 hover:text-brand rounded-lg" aria-label="Open menu">
+                <button id="mobileMenuBtn" class="lg:hidden p-2 text-gray-600 hover:text-forest-800 rounded-lg" aria-label="Open menu">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
                     </svg>
@@ -196,9 +189,9 @@
                 <!-- Right Actions -->
                 <div class="flex items-center space-x-4">
                     <!-- Progress Indicator -->
-                    <div id="progressIndicator" class="hidden md:flex items-center space-x-2 px-4 py-2 bg-brand/5 rounded-xl">
-                        <div class="w-8 h-8 bg-brand/10 rounded-full flex items-center justify-center">
-                            <span id="progressPercent" class="text-brand font-bold text-xs">0%</span>
+                    <div id="progressIndicator" class="hidden md:flex items-center space-x-2 px-4 py-2 bg-forest-800/5 rounded-xl">
+                        <div class="w-8 h-8 bg-forest-800/10 rounded-full flex items-center justify-center">
+                            <span id="progressPercent" class="text-forest-800 font-bold text-xs">0%</span>
                         </div>
                         <span class="text-sm text-gray-600">Progress</span>
                     </div>
@@ -206,8 +199,8 @@
                     <!-- User Menu -->
                     <div class="relative">
                         <button id="userMenuBtn" class="flex items-center space-x-2 p-2 rounded-lg hover:bg-gray-100" aria-label="Account menu">
-                            <div class="w-8 h-8 bg-brand/10 rounded-full flex items-center justify-center">
-                                <span id="headerUserInitials" class="text-brand font-semibold text-sm">--</span>
+                            <div class="w-8 h-8 bg-forest-800/10 rounded-full flex items-center justify-center">
+                                <span id="headerUserInitials" class="text-forest-800 font-semibold text-sm">--</span>
                             </div>
                         </button>
                         
@@ -370,7 +363,7 @@
                         name="score"
                         required
                         min="0"
-                        class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-brand/20 focus:border-brand transition-colors"
+                        class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-forest-800/20 focus:border-forest-800 transition-colors"
                         placeholder="Enter your score"
                     >
                 </div>
@@ -384,7 +377,7 @@
                         name="totalItems"
                         required
                         min="1"
-                        class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-brand/20 focus:border-brand transition-colors"
+                        class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-forest-800/20 focus:border-forest-800 transition-colors"
                         placeholder="Enter total items"
                     >
                 </div>
@@ -392,7 +385,7 @@
                     <label for="quizScreenshot" class="block text-sm font-medium text-gray-700 mb-2">
                         Screenshot (Optional)
                     </label>
-                    <div class="border-2 border-dashed border-gray-200 rounded-xl p-4 text-center hover:border-brand transition-colors">
+                    <div class="border-2 border-dashed border-gray-200 rounded-xl p-4 text-center hover:border-forest-800 transition-colors">
                         <input
                             type="file"
                             id="quizScreenshot"
@@ -418,7 +411,7 @@
                     </button>
                     <button
                         type="submit"
-                        class="flex-1 px-4 py-3 bg-brand text-white rounded-xl hover:bg-brand-dark transition-colors"
+                        class="flex-1 px-4 py-3 bg-forest-800 text-white rounded-xl hover:bg-forest-900 transition-colors"
                     >
                         Submit Score
                     </button>
@@ -431,8 +424,8 @@
     <div id="loadingOverlay" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
         <div class="text-center bg-white p-8 rounded-2xl shadow-2xl">
             <div class="relative w-16 h-16 mx-auto mb-4">
-                <div class="absolute inset-0 border-4 border-brand/20 rounded-full"></div>
-                <div class="absolute inset-0 border-4 border-brand border-t-transparent rounded-full animate-spin"></div>
+                <div class="absolute inset-0 border-4 border-forest-800/20 rounded-full"></div>
+                <div class="absolute inset-0 border-4 border-forest-800 border-t-transparent rounded-full animate-spin"></div>
             </div>
             <p class="text-gray-800 font-medium">Loading lesson...</p>
         </div>
@@ -850,7 +843,7 @@
             // Mark as Complete button
             if (!isCompleted) {
                 const completeBtn = document.createElement('button');
-                completeBtn.className = 'flex items-center px-4 py-2 bg-brand text-white rounded-xl hover:bg-brand-dark transition-colors';
+                completeBtn.className = 'flex items-center px-4 py-2 bg-forest-800 text-white rounded-xl hover:bg-forest-900 transition-colors';
                 completeBtn.innerHTML = `
                     <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>

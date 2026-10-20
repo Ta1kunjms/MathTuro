@@ -25,8 +25,8 @@ function initSidebar() {
             <!-- User Info -->
             <div class="p-6 border-b border-gray-100 cursor-pointer hover:bg-gray-50 transition-colors" onclick="if(typeof showProfile==='function'){showProfile();}" title="Click to view profile">
                 <div class="flex items-center space-x-3">
-                    <div class="w-12 h-12 bg-brand/10 rounded-full flex items-center justify-center">
-                        <span id="userInitials" class="text-brand font-bold text-lg">--</span>
+                    <div class="w-12 h-12 bg-forest-800/10 rounded-full flex items-center justify-center">
+                        <span id="userInitials" class="text-forest-800 font-bold text-lg">--</span>
                     </div>
                     <div class="flex-1">
                         <p id="sidebarUserName" class="font-semibold text-gray-800">Loading...</p>
@@ -133,14 +133,13 @@ function initSidebar() {
     const isActive = !!activeNavKey && link.dataset.navKey === activeNavKey;
 
     if (isActive) {
+      // Styling comes from student.css (#sidebar .sidebar-link.active)
       link.classList.add('active');
-      link.style.background = 'linear-gradient(135deg, #005801 0%, #006B01 100%)';
-      link.style.color = 'white';
+      link.setAttribute('aria-current', 'page');
     } else {
       // Remove active class from other links
       link.classList.remove('active');
-      link.style.background = '';
-      link.style.color = '';
+      link.removeAttribute('aria-current');
     }
   });
 
@@ -478,13 +477,13 @@ window.showProfile = async function () {
     <form id="profileForm" class="space-y-4" onsubmit="handleGlobalProfileSave(event)">
       <div>
         <label class="block text-sm font-medium text-gray-700 mb-2">Full Name</label>
-        <input type="text" id="profileName" value="${name || 'Student'}" class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand">
+        <input type="text" id="profileName" value="${name || 'Student'}" class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-forest-800">
       </div>
       <div>
         <label class="block text-sm font-medium text-gray-700 mb-2">Email</label>
         <input type="email" id="profileEmail" value="${email || ''}" disabled class="w-full px-4 py-3 border border-gray-200 rounded-xl bg-gray-50 text-gray-500">
       </div>
-      <button type="submit" class="w-full py-3 bg-brand text-white rounded-xl font-semibold hover:bg-brand-dark transition-all transform active:scale-95">Save Changes</button>
+      <button type="submit" class="w-full py-3 bg-forest-800 text-white rounded-xl font-semibold hover:bg-forest-900 transition-all transform active:scale-95">Save Changes</button>
     </form>
   `);
 };

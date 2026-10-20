@@ -32,34 +32,27 @@
            base.css) even though this page no longer applies that class —
            other pages/portals that still use .quiz-card are unaffected. */
         .gradient-text {
-            background: linear-gradient(135deg, #005801 0%, #22c55e 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
+            color: #1b4332;
         }
 
-        .glass-sidebar {
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(20px);
-        }
 
         .sidebar-link {
             transition: all 0.2s ease;
         }
 
         .sidebar-link:hover, .sidebar-link.active {
-            background: linear-gradient(135deg, #005801 0%, #006B01 100%);
+            background: #1b4332;
             color: white;
         }
 
         .sidebar-link.active {
-            box-shadow: 0 4px 15px rgba(0, 88, 1, 0.3);
+            box-shadow: 0 4px 15px rgba(27, 67, 50, 0.3);
         }
 
         ::-webkit-scrollbar { width: 6px; }
         ::-webkit-scrollbar-track { background: #f1f1f1; }
-        ::-webkit-scrollbar-thumb { background: #005801; border-radius: 3px; }
-        ::-webkit-scrollbar-thumb:hover { background: #004601; }
+        ::-webkit-scrollbar-thumb { background: #1b4332; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: #122d22; }
     </style>
     <link rel="stylesheet" href="../shared/css/base.css">
     <link rel="stylesheet" href="assets/css/student.css">
@@ -73,7 +66,7 @@
     
     <!-- Sidebar -->
         <!-- Sidebar -->
-    <aside id="sidebar" class="fixed left-0 top-0 h-full w-72 glass-sidebar border-r border-gray-200 z-50 transform -translate-x-full lg:translate-x-0 transition-transform duration-300 overflow-y-auto"></aside>
+    <aside id="sidebar" class="fixed left-0 top-0 h-full w-72 bg-white border-r border-gray-200 z-50 transform -translate-x-full lg:translate-x-0 transition-transform duration-300 overflow-y-auto"></aside>
 
     <!-- Main Content -->
     <main class="lg:ml-72 min-h-screen">
@@ -81,7 +74,7 @@
         <header class="bg-white border-b border-gray-200 sticky top-0 z-30">
             <div class="flex items-center justify-between px-4 lg:px-8 py-4">
                 <!-- Mobile Menu Button -->
-                <button id="mobileMenuBtn" class="lg:hidden p-2 text-gray-600 hover:text-brand rounded-lg" aria-label="Open menu">
+                <button id="mobileMenuBtn" class="lg:hidden p-2 text-gray-600 hover:text-forest-800 rounded-lg" aria-label="Open menu">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
                     </svg>
@@ -95,7 +88,7 @@
 
                 <!-- Right Actions -->
                 <div class="flex items-center space-x-3">
-                    <a href="dashboard.html" class="p-2 text-gray-600 hover:text-brand rounded-lg hover:bg-gray-100" aria-label="Back to dashboard">
+                    <a href="dashboard.html" class="p-2 text-gray-600 hover:text-forest-800 rounded-lg hover:bg-gray-100" aria-label="Back to dashboard">
                         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
                         </svg>
@@ -166,15 +159,15 @@
 
             <!-- Quarter Tabs -->
             <div class="flex flex-wrap gap-2 mb-6" id="quarterTabs">
-                <button type="button" class="quarter-tab px-4 py-2 rounded-xl text-sm font-medium bg-brand text-white" data-quarter="all" onclick="setQuarterFilter('all')">All Quarters</button>
-                <button type="button" class="quarter-tab px-4 py-2 rounded-xl text-sm font-medium bg-white text-gray-700 border border-gray-200 hover:border-brand/40" data-quarter="1" onclick="setQuarterFilter('1')">Quarter 1</button>
-                <button type="button" class="quarter-tab px-4 py-2 rounded-xl text-sm font-medium bg-white text-gray-700 border border-gray-200 hover:border-brand/40" data-quarter="2" onclick="setQuarterFilter('2')">Quarter 2</button>
-                <button type="button" class="quarter-tab px-4 py-2 rounded-xl text-sm font-medium bg-white text-gray-700 border border-gray-200 hover:border-brand/40" data-quarter="3" onclick="setQuarterFilter('3')">Quarter 3</button>
-                <button type="button" class="quarter-tab px-4 py-2 rounded-xl text-sm font-medium bg-white text-gray-700 border border-gray-200 hover:border-brand/40" data-quarter="4" onclick="setQuarterFilter('4')">Quarter 4</button>
+                <button type="button" class="quarter-tab px-4 py-2 rounded-xl text-sm font-medium bg-forest-800 text-white" data-quarter="all" onclick="setQuarterFilter('all')">All Quarters</button>
+                <button type="button" class="quarter-tab px-4 py-2 rounded-xl text-sm font-medium bg-white text-gray-700 border border-gray-200 hover:border-forest-800/40" data-quarter="1" onclick="setQuarterFilter('1')">Quarter 1</button>
+                <button type="button" class="quarter-tab px-4 py-2 rounded-xl text-sm font-medium bg-white text-gray-700 border border-gray-200 hover:border-forest-800/40" data-quarter="2" onclick="setQuarterFilter('2')">Quarter 2</button>
+                <button type="button" class="quarter-tab px-4 py-2 rounded-xl text-sm font-medium bg-white text-gray-700 border border-gray-200 hover:border-forest-800/40" data-quarter="3" onclick="setQuarterFilter('3')">Quarter 3</button>
+                <button type="button" class="quarter-tab px-4 py-2 rounded-xl text-sm font-medium bg-white text-gray-700 border border-gray-200 hover:border-forest-800/40" data-quarter="4" onclick="setQuarterFilter('4')">Quarter 4</button>
             </div>
             <!-- Tab Navigation -->
             <div class="flex space-x-4 mb-6 border-b border-gray-200">
-                <button onclick="showTab('all')" id="tabAll" class="tab-btn px-4 py-3 font-medium text-brand border-b-2 border-brand">
+                <button onclick="showTab('all')" id="tabAll" class="tab-btn px-4 py-3 font-medium text-forest-800 border-b-2 border-forest-800">
                     All
                 </button>
                 <button onclick="showTab('pending')" id="tabPending" class="tab-btn px-4 py-3 font-medium text-gray-500 hover:text-gray-700 border-b-2 border-transparent">
@@ -192,14 +185,14 @@
 
             <!-- Loading State -->
             <div id="loadingState" class="text-center py-16">
-                <div class="inline-block animate-spin rounded-full h-12 w-12 border-4 border-brand border-t-transparent"></div>
+                <div class="inline-block animate-spin rounded-full h-12 w-12 border-4 border-forest-800 border-t-transparent"></div>
                 <p class="mt-4 text-gray-600">Loading quizzes...</p>
             </div>
 
             <!-- Empty State -->
             <div id="emptyState" class="hidden text-center py-16">
-                <div class="w-20 h-20 bg-brand/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <svg class="w-10 h-10 text-brand" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div class="w-20 h-20 bg-forest-800/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <svg class="w-10 h-10 text-forest-800" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
                     </svg>
                 </div>
@@ -233,7 +226,7 @@
                     <label class="block text-sm font-medium text-gray-700 mb-1">Your Score *</label>
                     <div class="flex items-center space-x-2">
                         <input type="number" id="studentScore" required min="0" 
-                            class="flex-1 px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-brand focus:border-transparent text-center text-2xl font-bold"
+                            class="flex-1 px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-forest-800 focus:border-transparent text-center text-2xl font-bold"
                             placeholder="0">
                         <span class="text-2xl text-gray-400">/</span>
                         <span id="displayTotalItems" class="text-2xl font-bold text-gray-900">10</span>
@@ -246,7 +239,7 @@
                         Cancel
                     </button>
                     <button type="submit" id="submitBtn" 
-                        class="flex-1 px-6 py-3 bg-brand text-white rounded-xl font-medium hover:bg-brand-dark transition-colors">
+                        class="flex-1 px-6 py-3 bg-forest-800 text-white rounded-xl font-medium hover:bg-forest-900 transition-colors">
                         Submit Score
                     </button>
                 </div>
@@ -291,7 +284,7 @@
         function updateQuarterTabs() {
             document.querySelectorAll('.quarter-tab').forEach(tab => {
                 const isActive = (tab.dataset.quarter || 'all') === activeQuarterFilter;
-                tab.classList.toggle('bg-brand', isActive);
+                tab.classList.toggle('bg-forest-800', isActive);
                 tab.classList.toggle('text-white', isActive);
                 tab.classList.toggle('bg-white', !isActive);
                 tab.classList.toggle('text-gray-700', !isActive);
@@ -444,7 +437,7 @@
                     <div class="quiz-card bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
                         <div class="p-5">
                             <div class="flex items-start justify-between mb-3">
-                                <div class="w-12 h-12 bg-gradient-to-br from-brand to-brand-light rounded-xl flex items-center justify-center">
+                                <div class="w-12 h-12 bg-forest-800 rounded-xl flex items-center justify-center">
                                     <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
                                     </svg>
@@ -527,7 +520,7 @@
                             
                             <div class="flex space-x-2">
                                 <a href="${quiz.quiz_url}" target="_blank" 
-                                    class="flex-1 px-4 py-2 text-center text-sm bg-brand text-white rounded-lg hover:bg-brand-dark transition-colors flex items-center justify-center space-x-1">
+                                    class="flex-1 px-4 py-2 text-center text-sm bg-forest-800 text-white rounded-lg hover:bg-forest-900 transition-colors flex items-center justify-center space-x-1">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
                                     </svg>
@@ -637,11 +630,11 @@
         function showTab(tab) {
             currentTab = tab;
             document.querySelectorAll('.tab-btn').forEach(btn => {
-                btn.classList.remove('text-brand', 'border-brand');
+                btn.classList.remove('text-forest-800', 'border-forest-800');
                 btn.classList.add('text-gray-500', 'border-transparent');
             });
             const activeTab = document.getElementById(`tab${tab.charAt(0).toUpperCase() + tab.slice(1)}`);
-            activeTab.classList.add('text-brand', 'border-brand');
+            activeTab.classList.add('text-forest-800', 'border-forest-800');
             activeTab.classList.remove('text-gray-500', 'border-transparent');
             renderQuizzes();
         }
@@ -723,7 +716,7 @@
             const toast = document.getElementById('toast');
             toast.className = `fixed bottom-4 right-4 px-6 py-3 rounded-xl shadow-lg z-50 flex items-center space-x-2 ${
                 type === 'success' ? 'bg-green-500 text-white' :
-                type === 'error' ? 'bg-red-500 text-white' : 'bg-brand text-white'
+                type === 'error' ? 'bg-red-500 text-white' : 'bg-forest-800 text-white'
             }`;
             toast.innerHTML = `
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

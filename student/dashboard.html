@@ -52,16 +52,9 @@
         }
 
         .gradient-text {
-            background: linear-gradient(135deg, #005801 0%, #22c55e 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
+            color: #1b4332;
         }
 
-        .glass-sidebar {
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(20px);
-        }
 
         .stat-card {
             transition: all 0.3s ease;
@@ -69,7 +62,7 @@
 
         .stat-card:hover {
             transform: translateY(-4px);
-            box-shadow: 0 20px 40px -12px rgba(0, 88, 1, 0.15);
+            box-shadow: 0 20px 40px -12px rgba(27, 67, 50, 0.15);
         }
 
         .module-card {
@@ -78,7 +71,7 @@
 
         .module-card:hover {
             transform: translateY(-4px);
-            box-shadow: 0 20px 40px -12px rgba(0, 88, 1, 0.15);
+            box-shadow: 0 20px 40px -12px rgba(27, 67, 50, 0.15);
         }
 
         .sidebar-link {
@@ -87,12 +80,12 @@
 
         .sidebar-link:hover,
         .sidebar-link.active {
-            background: linear-gradient(135deg, #005801 0%, #006B01 100%);
+            background: #1b4332;
             color: white;
         }
 
         .sidebar-link.active {
-            box-shadow: 0 4px 15px rgba(0, 88, 1, 0.3);
+            box-shadow: 0 4px 15px rgba(27, 67, 50, 0.3);
         }
 
         .progress-ring {
@@ -162,12 +155,12 @@
         }
 
         ::-webkit-scrollbar-thumb {
-            background: #005801;
+            background: #1b4332;
             border-radius: 3px;
         }
 
         ::-webkit-scrollbar-thumb:hover {
-            background: #004601;
+            background: #122d22;
         }
     </style>
     <link rel="stylesheet" href="../shared/css/base.css">
@@ -183,7 +176,7 @@
 
     <!-- Sidebar -->
     <aside id="sidebar"
-        class="fixed left-0 top-0 h-full w-72 glass-sidebar border-r border-gray-200 z-50 transform -translate-x-full lg:translate-x-0 transition-transform duration-300 overflow-y-auto">
+        class="fixed left-0 top-0 h-full w-72 bg-white border-r border-gray-200 z-50 transform -translate-x-full lg:translate-x-0 transition-transform duration-300 overflow-y-auto">
     </aside>
 
     <!-- Main Content -->
@@ -192,7 +185,7 @@
         <header class="bg-white border-b border-gray-200 sticky top-0 z-30">
             <div class="flex items-center justify-between px-4 lg:px-8 py-4">
                 <!-- Mobile Menu Button -->
-                <button id="mobileMenuBtn" class="lg:hidden p-2 text-gray-600 hover:text-brand rounded-lg">
+                <button id="mobileMenuBtn" class="lg:hidden p-2 text-gray-600 hover:text-forest-800 rounded-lg">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                             d="M4 6h16M4 12h16M4 18h16" />
@@ -209,7 +202,7 @@
                 <div class="flex items-center space-x-3">
                     <!-- Notifications -->
                     <button id="notificationBtn"
-                        class="relative p-2 text-gray-600 hover:text-brand rounded-lg hover:bg-gray-100">
+                        class="relative p-2 text-gray-600 hover:text-forest-800 rounded-lg hover:bg-gray-100">
                         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                 d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
@@ -222,8 +215,8 @@
                     <!-- User Menu -->
                     <div class="relative">
                         <button id="userMenuBtn" class="flex items-center space-x-2 p-2 rounded-lg hover:bg-gray-100">
-                            <div class="w-8 h-8 bg-brand/10 rounded-full flex items-center justify-center">
-                                <span id="headerUserInitials" class="text-brand font-semibold text-sm">--</span>
+                            <div class="w-8 h-8 bg-forest-800/10 rounded-full flex items-center justify-center">
+                                <span id="headerUserInitials" class="text-forest-800 font-semibold text-sm">--</span>
                             </div>
                             <svg class="w-4 h-4 text-gray-500 hidden sm:block" fill="none" stroke="currentColor"
                                 viewBox="0 0 24 24">
@@ -743,7 +736,7 @@
             if (!label) return;
             const isEnabled = document.documentElement.getAttribute('data-font') === 'dyslexic';
             label.textContent = isEnabled ? 'On' : 'Off';
-            label.classList.toggle('text-brand', isEnabled);
+            label.classList.toggle('text-forest-800', isEnabled);
             label.classList.toggle('text-gray-400', !isEnabled);
         }
 
@@ -1392,7 +1385,7 @@
                                 </svg>
                             </div>
                             <p class="text-gray-500">No tutorial videos available yet</p>
-                            <a href="tutorial-videos.html" class="inline-flex mt-3 px-4 py-2 rounded-lg bg-brand text-white hover:bg-brand-dark transition-colors">Open Tutorial Videos</a>
+                            <a href="tutorial-videos.html" class="inline-flex mt-3 px-4 py-2 rounded-lg bg-forest-800 text-white hover:bg-forest-900 transition-colors">Open Tutorial Videos</a>
                         </div>
                     `;
                     return;
@@ -1405,11 +1398,11 @@
                                 <div class="aspect-video bg-gray-200 relative">
                                     ${video.thumbnail_url ?
                         `<img src="${video.thumbnail_url}" alt="${escapeHtml(video.title)}" class="w-full h-full object-cover">` :
-                        `<div class="w-full h-full bg-gradient-to-br from-brand/10 to-green-500/10"></div>`
+                        `<div class="w-full h-full bg-forest-800/10"></div>`
                     }
                                     <div class="play-button">
                                         <div class="w-12 h-12 bg-white/90 rounded-full flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
-                                            <svg class="w-6 h-6 text-brand" fill="currentColor" viewBox="0 0 24 24">
+                                            <svg class="w-6 h-6 text-forest-800" fill="currentColor" viewBox="0 0 24 24">
                                                 <path d="M8 5v14l11-7z"/>
                                             </svg>
                                         </div>
@@ -1418,7 +1411,7 @@
                                 </div>
                                 <div class="p-4">
                                     <h4 class="font-semibold text-gray-800 mb-1 line-clamp-1">${escapeHtml(video.title)}</h4>
-                                    ${(video.quarter || '').toString().trim() ? `<p class="text-xs text-brand font-medium mt-1">Quarter ${String(video.quarter).replace(/[^0-9]/g, '')}</p>` : ''}
+                                    ${(video.quarter || '').toString().trim() ? `<p class="text-xs text-forest-800 font-medium mt-1">Quarter ${String(video.quarter).replace(/[^0-9]/g, '')}</p>` : ''}
                                 </div>
                             </a>
                         `).join('')}
@@ -1564,7 +1557,7 @@
                     const isToday = i === adjustedToday;
                     const dayLabel = `${dayNames[i]}: ${count} activit${count === 1 ? 'y' : 'ies'}`;
 
-                    return `<div class="h-8 rounded ${intensity} ${isToday ? 'ring-2 ring-brand ring-offset-1' : ''}" title="${dayLabel}"><span class="sr-only">${dayLabel}</span></div>`;
+                    return `<div class="h-8 rounded ${intensity} ${isToday ? 'ring-2 ring-forest-800 ring-offset-1' : ''}" title="${dayLabel}"><span class="sr-only">${dayLabel}</span></div>`;
                 }).join('');
 
                 if (captionEl) {
@@ -1875,7 +1868,7 @@
                                             <span class="font-medium">${percent}%</span>
                                         </div>
                                         <div class="h-2 bg-gray-100 rounded-full overflow-hidden">
-                                            <div class="h-full bg-brand rounded-full" style="width: ${percent}%"></div>
+                                            <div class="h-full bg-forest-800 rounded-full" style="width: ${percent}%"></div>
                                         </div>
                                     </div>
                                 `;
@@ -1921,7 +1914,7 @@
         async function showLeaderboard() {
             showModal('Leaderboard', `
                 <div class="text-center py-8">
-                    <div class="inline-block animate-spin rounded-full h-8 w-8 border-4 border-brand border-t-transparent mb-4"></div>
+                    <div class="inline-block animate-spin rounded-full h-8 w-8 border-4 border-forest-800 border-t-transparent mb-4"></div>
                     <p class="text-gray-500">Loading leaderboard...</p>
                 </div>
             `);
@@ -1965,7 +1958,7 @@
                                         <span class="w-8 text-center font-bold text-gray-600">${medal || entry.rank}</span>
                                         <span class="font-medium text-gray-800">${escapeHtml(entry.full_name || 'Student')}</span>
                                     </div>
-                                    <span class="font-bold text-brand">${entry.total_exp} EXP</span>
+                                    <span class="font-bold text-forest-800">${entry.total_exp} EXP</span>
                                 </div>
                             `;
                         }).join('')}
@@ -1984,16 +1977,16 @@
         function showStudyTimer() {
             showModal('Study Timer', `
                 <div class="text-center">
-                    <div class="w-48 h-48 mx-auto bg-brand/5 rounded-full flex items-center justify-center mb-6">
-                        <div id="timerDisplay" class="text-5xl font-bold text-brand">25:00</div>
+                    <div class="w-48 h-48 mx-auto bg-forest-800/5 rounded-full flex items-center justify-center mb-6">
+                        <div id="timerDisplay" class="text-5xl font-bold text-forest-800">25:00</div>
                     </div>
                     <div class="flex justify-center space-x-4 mb-6">
-                        <button onclick="startTimer()" class="px-6 py-2 bg-brand text-white rounded-xl hover:bg-brand-dark">Start</button>
+                        <button onclick="startTimer()" class="px-6 py-2 bg-forest-800 text-white rounded-xl hover:bg-forest-900">Start</button>
                         <button onclick="pauseTimer()" class="px-6 py-2 border border-gray-200 rounded-xl hover:bg-gray-50">Pause</button>
                         <button onclick="resetTimer()" class="px-6 py-2 border border-gray-200 rounded-xl hover:bg-gray-50">Reset</button>
                     </div>
                     <div class="flex justify-center space-x-2">
-                        <button onclick="setTimer(25)" class="px-4 py-1 text-sm bg-brand/10 text-brand rounded-lg">25 min</button>
+                        <button onclick="setTimer(25)" class="px-4 py-1 text-sm bg-forest-800/10 text-forest-800 rounded-lg">25 min</button>
                         <button onclick="setTimer(15)" class="px-4 py-1 text-sm bg-gray-100 text-gray-600 rounded-lg">15 min</button>
                         <button onclick="setTimer(5)" class="px-4 py-1 text-sm bg-gray-100 text-gray-600 rounded-lg">5 min</button>
                     </div>
@@ -2048,8 +2041,8 @@
             const savedNotes = localStorage.getItem('studentNotes') || '';
             showModal('My Notes', `
                 <div>
-                    <textarea id="notesTextarea" class="w-full h-64 p-4 border border-gray-200 rounded-xl resize-none focus:outline-none focus:ring-2 focus:ring-brand" placeholder="Write your study notes here...">${escapeHtml(savedNotes)}</textarea>
-                    <button onclick="saveNotes()" class="mt-4 w-full py-3 bg-brand text-white rounded-xl hover:bg-brand-dark">Save Notes</button>
+                    <textarea id="notesTextarea" class="w-full h-64 p-4 border border-gray-200 rounded-xl resize-none focus:outline-none focus:ring-2 focus:ring-forest-800" placeholder="Write your study notes here...">${escapeHtml(savedNotes)}</textarea>
+                    <button onclick="saveNotes()" class="mt-4 w-full py-3 bg-forest-800 text-white rounded-xl hover:bg-forest-900">Save Notes</button>
                 </div>
             `);
         }
@@ -2066,20 +2059,20 @@
                     <input type="text" id="calcDisplay" class="w-full p-4 text-right text-2xl font-mono bg-gray-100 rounded-xl mb-4" readonly value="0">
                     <div class="grid grid-cols-4 gap-2">
                         <button onclick="calcClear()" class="col-span-2 p-4 bg-red-100 text-red-600 rounded-xl hover:bg-red-200 font-semibold">C</button>
-                        <button onclick="calcInput('/')" class="p-4 bg-brand/10 text-brand rounded-xl hover:bg-brand/20 font-semibold">÷</button>
-                        <button onclick="calcInput('*')" class="p-4 bg-brand/10 text-brand rounded-xl hover:bg-brand/20 font-semibold">×</button>
+                        <button onclick="calcInput('/')" class="p-4 bg-forest-800/10 text-forest-800 rounded-xl hover:bg-forest-800/20 font-semibold">÷</button>
+                        <button onclick="calcInput('*')" class="p-4 bg-forest-800/10 text-forest-800 rounded-xl hover:bg-forest-800/20 font-semibold">×</button>
                         <button onclick="calcInput('7')" class="p-4 bg-gray-100 rounded-xl hover:bg-gray-200 font-semibold">7</button>
                         <button onclick="calcInput('8')" class="p-4 bg-gray-100 rounded-xl hover:bg-gray-200 font-semibold">8</button>
                         <button onclick="calcInput('9')" class="p-4 bg-gray-100 rounded-xl hover:bg-gray-200 font-semibold">9</button>
-                        <button onclick="calcInput('-')" class="p-4 bg-brand/10 text-brand rounded-xl hover:bg-brand/20 font-semibold">−</button>
+                        <button onclick="calcInput('-')" class="p-4 bg-forest-800/10 text-forest-800 rounded-xl hover:bg-forest-800/20 font-semibold">−</button>
                         <button onclick="calcInput('4')" class="p-4 bg-gray-100 rounded-xl hover:bg-gray-200 font-semibold">4</button>
                         <button onclick="calcInput('5')" class="p-4 bg-gray-100 rounded-xl hover:bg-gray-200 font-semibold">5</button>
                         <button onclick="calcInput('6')" class="p-4 bg-gray-100 rounded-xl hover:bg-gray-200 font-semibold">6</button>
-                        <button onclick="calcInput('+')" class="p-4 bg-brand/10 text-brand rounded-xl hover:bg-brand/20 font-semibold">+</button>
+                        <button onclick="calcInput('+')" class="p-4 bg-forest-800/10 text-forest-800 rounded-xl hover:bg-forest-800/20 font-semibold">+</button>
                         <button onclick="calcInput('1')" class="p-4 bg-gray-100 rounded-xl hover:bg-gray-200 font-semibold">1</button>
                         <button onclick="calcInput('2')" class="p-4 bg-gray-100 rounded-xl hover:bg-gray-200 font-semibold">2</button>
                         <button onclick="calcInput('3')" class="p-4 bg-gray-100 rounded-xl hover:bg-gray-200 font-semibold">3</button>
-                        <button onclick="calcEquals()" class="row-span-2 p-4 bg-brand text-white rounded-xl hover:bg-brand-dark font-semibold">=</button>
+                        <button onclick="calcEquals()" class="row-span-2 p-4 bg-forest-800 text-white rounded-xl hover:bg-forest-900 font-semibold">=</button>
                         <button onclick="calcInput('0')" class="col-span-2 p-4 bg-gray-100 rounded-xl hover:bg-gray-200 font-semibold">0</button>
                         <button onclick="calcInput('.')" class="p-4 bg-gray-100 rounded-xl hover:bg-gray-200 font-semibold">.</button>
                     </div>
@@ -2109,13 +2102,13 @@
                 <form id="profileForm" class="space-y-4">
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-2">Full Name</label>
-                        <input type="text" id="profileName" value="${currentUser.fullName}" class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand">
+                        <input type="text" id="profileName" value="${currentUser.fullName}" class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-forest-800">
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-2">Email</label>
                         <input type="email" id="profileEmail" value="${currentUser.email}" disabled class="w-full px-4 py-3 border border-gray-200 rounded-xl bg-gray-50 text-gray-500">
                     </div>
-                    <button type="submit" class="w-full py-3 bg-brand text-white rounded-xl font-semibold hover:bg-brand-dark">Save Changes</button>
+                    <button type="submit" class="w-full py-3 bg-forest-800 text-white rounded-xl font-semibold hover:bg-forest-900">Save Changes</button>
                 </form>
             `);
         }
@@ -2141,7 +2134,7 @@
                         </div>
                         <label class="relative inline-flex items-center cursor-pointer">
                             <input type="checkbox" class="sr-only peer" checked>
-                            <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-brand"></div>
+                            <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-forest-800"></div>
                         </label>
                     </div>
                 </div>
@@ -2174,7 +2167,7 @@
         // Show toast notification
         function showToast(message, type = 'info') {
             const toast = document.createElement('div');
-            toast.className = `fixed bottom-4 right-4 px-6 py-3 rounded-xl shadow-lg z-50 ${type === 'success' ? 'bg-green-500' : type === 'error' ? 'bg-red-500' : 'bg-brand'
+            toast.className = `fixed bottom-4 right-4 px-6 py-3 rounded-xl shadow-lg z-50 ${type === 'success' ? 'bg-green-500' : type === 'error' ? 'bg-red-500' : 'bg-forest-800'
                 } text-white font-medium`;
             toast.textContent = message;
             document.body.appendChild(toast);

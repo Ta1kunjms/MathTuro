@@ -26,12 +26,11 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
     <style>
         body { font-family: 'Inter', system-ui, sans-serif; }
-        .glass-sidebar { background: rgba(255,255,255,0.95); backdrop-filter: blur(20px); }
         .sidebar-link { transition: all 0.2s ease; }
         .sidebar-link:hover, .sidebar-link.active {
-            background: linear-gradient(135deg, #005801 0%, #006B01 100%); color: white;
+            background: #1b4332; color: white;
         }
-        .sidebar-link.active { box-shadow: 0 4px 15px rgba(0,88,1,0.3); }
+        .sidebar-link.active { box-shadow: 0 4px 15px rgba(27, 67, 50,0.3); }
 
         #pdfFrame {
             width: 100%;
@@ -41,8 +40,8 @@
         }
         ::-webkit-scrollbar { width: 6px; }
         ::-webkit-scrollbar-track { background: #f1f1f1; }
-        ::-webkit-scrollbar-thumb { background: #005801; border-radius: 3px; }
-        ::-webkit-scrollbar-thumb:hover { background: #004601; }
+        ::-webkit-scrollbar-thumb { background: #1b4332; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: #122d22; }
 
         @keyframes spin { to { transform: rotate(360deg); } }
         .spin { animation: spin 1s linear infinite; }
@@ -68,7 +67,7 @@
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
                         </svg>
                     </button>
-                    <a id="backLink" href="module-view.html" class="text-sm text-gray-500 hover:text-brand flex-shrink-0">
+                    <a id="backLink" href="module-view.html" class="text-sm text-gray-500 hover:text-forest-800 flex-shrink-0">
                         <i class="fas fa-arrow-left mr-1" aria-hidden="true"></i>Back
                     </a>
                     <div class="min-w-0">
@@ -132,7 +131,7 @@
                 <!-- Fallback notice -->
                 <div class="mt-3 text-center">
                     <p class="text-gray-500 text-xs">
-                        PDF not showing? <a id="directLink" href="#" target="_blank" class="text-brand hover:underline font-medium">Open in new tab</a>
+                        PDF not showing? <a id="directLink" href="#" target="_blank" class="text-forest-800 hover:underline font-medium">Open in new tab</a>
                     </p>
                 </div>
             </div>

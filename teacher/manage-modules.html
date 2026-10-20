@@ -14,28 +14,21 @@
         body { font-family: 'Inter', system-ui, sans-serif; }
         
         .gradient-text {
-            background: linear-gradient(135deg, #005801 0%, #22c55e 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
+            color: #720455;
         }
         
-        .glass-sidebar {
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(20px);
-        }
         
         .sidebar-link {
             transition: all 0.2s ease;
         }
         
         .sidebar-link:hover, .sidebar-link.active {
-            background: linear-gradient(135deg, #005801 0%, #006B01 100%);
+            background: #720455;
             color: white;
         }
         
         .sidebar-link.active {
-            box-shadow: 0 4px 15px rgba(0, 88, 1, 0.3);
+            box-shadow: 0 4px 15px rgba(114, 4, 85, 0.3);
         }
         
         .module-card {
@@ -48,20 +41,20 @@
         }
         
         .upload-zone:hover {
-            border-color: #005801;
-            background: rgba(0, 88, 1, 0.05);
+            border-color: #720455;
+            background: rgba(114, 4, 85, 0.05);
         }
         
         .upload-zone.drag-over {
-            border-color: #005801;
-            background: rgba(0, 88, 1, 0.1);
+            border-color: #720455;
+            background: rgba(114, 4, 85, 0.1);
         }
         
         /* Custom scrollbar */
         ::-webkit-scrollbar { width: 6px; }
         ::-webkit-scrollbar-track { background: #f1f1f1; }
-        ::-webkit-scrollbar-thumb { background: #005801; border-radius: 3px; }
-        ::-webkit-scrollbar-thumb:hover { background: #004601; }
+        ::-webkit-scrollbar-thumb { background: #720455; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: #4d0339; }
     </style>
     <link rel="stylesheet" href="../shared/css/base.css">
     <link rel="stylesheet" href="assets/css/teacher.css">
@@ -80,7 +73,7 @@
         <header class="bg-white border-b border-gray-200 sticky top-0 z-30">
             <div class="flex items-center justify-between px-4 lg:px-8 py-4">
                 <!-- Mobile Menu Button -->
-                <button id="mobileMenuBtn" class="lg:hidden p-2 text-gray-600 hover:text-brand rounded-lg">
+                <button id="mobileMenuBtn" class="lg:hidden p-2 text-gray-600 hover:text-plum-800 rounded-lg">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
                     </svg>
@@ -94,7 +87,7 @@
                 
                 <!-- Right Actions -->
                 <div class="flex items-center space-x-4">
-                    <button onclick="openCreateModuleModal()" class="inline-flex items-center space-x-2 bg-brand text-white px-4 py-2 rounded-xl font-medium hover:bg-brand-dark transition-colors">
+                    <button onclick="openCreateModuleModal()" class="inline-flex items-center space-x-2 bg-plum-800 text-white px-4 py-2 rounded-xl font-medium hover:bg-plum-900 transition-colors">
                         <i class="fas fa-plus"></i>
                         <span class="hidden sm:inline">Create Module</span>
                     </button>
@@ -108,8 +101,8 @@
             <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
                 <div class="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm">
                     <div class="flex items-center space-x-3">
-                        <div class="w-12 h-12 bg-brand/10 rounded-xl flex items-center justify-center">
-                            <i class="fas fa-book text-brand text-xl"></i>
+                        <div class="w-12 h-12 bg-plum-800/10 rounded-xl flex items-center justify-center">
+                            <i class="fas fa-book text-plum-800 text-xl"></i>
                         </div>
                         <div>
                             <p class="text-2xl font-bold text-gray-900" id="totalModules">0</p>
@@ -153,30 +146,30 @@
             </div>
 
             <div class="flex flex-wrap gap-2 mb-6" id="quarterTabs">
-                <button type="button" class="quarter-tab px-4 py-2 rounded-xl text-sm font-medium bg-brand text-white" data-quarter="all">All Modules</button>
-                <button type="button" class="quarter-tab px-4 py-2 rounded-xl text-sm font-medium bg-white text-gray-700 border border-gray-200 hover:border-brand/40" data-quarter="1">Quarter 1</button>
-                <button type="button" class="quarter-tab px-4 py-2 rounded-xl text-sm font-medium bg-white text-gray-700 border border-gray-200 hover:border-brand/40" data-quarter="2">Quarter 2</button>
-                <button type="button" class="quarter-tab px-4 py-2 rounded-xl text-sm font-medium bg-white text-gray-700 border border-gray-200 hover:border-brand/40" data-quarter="3">Quarter 3</button>
-                <button type="button" class="quarter-tab px-4 py-2 rounded-xl text-sm font-medium bg-white text-gray-700 border border-gray-200 hover:border-brand/40" data-quarter="4">Quarter 4</button>
+                <button type="button" class="quarter-tab px-4 py-2 rounded-xl text-sm font-medium bg-plum-800 text-white" data-quarter="all">All Modules</button>
+                <button type="button" class="quarter-tab px-4 py-2 rounded-xl text-sm font-medium bg-white text-gray-700 border border-gray-200 hover:border-plum-800/40" data-quarter="1">Quarter 1</button>
+                <button type="button" class="quarter-tab px-4 py-2 rounded-xl text-sm font-medium bg-white text-gray-700 border border-gray-200 hover:border-plum-800/40" data-quarter="2">Quarter 2</button>
+                <button type="button" class="quarter-tab px-4 py-2 rounded-xl text-sm font-medium bg-white text-gray-700 border border-gray-200 hover:border-plum-800/40" data-quarter="3">Quarter 3</button>
+                <button type="button" class="quarter-tab px-4 py-2 rounded-xl text-sm font-medium bg-white text-gray-700 border border-gray-200 hover:border-plum-800/40" data-quarter="4">Quarter 4</button>
             </div>
 
             <!-- Modules Grid -->
             <div id="modulesGrid" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
                 <!-- Loading state -->
                 <div class="col-span-full text-center py-12">
-                    <div class="inline-block animate-spin rounded-full h-12 w-12 border-4 border-brand border-t-transparent"></div>
+                    <div class="inline-block animate-spin rounded-full h-12 w-12 border-4 border-plum-800 border-t-transparent"></div>
                     <p class="mt-4 text-gray-600">Loading modules...</p>
                 </div>
             </div>
 
             <!-- Empty State -->
             <div id="emptyState" class="hidden text-center py-16">
-                <div class="w-24 h-24 bg-brand/10 rounded-full flex items-center justify-center mx-auto mb-6">
-                    <i class="fas fa-book-open text-brand text-4xl"></i>
+                <div class="w-24 h-24 bg-plum-800/10 rounded-full flex items-center justify-center mx-auto mb-6">
+                    <i class="fas fa-book-open text-plum-800 text-4xl"></i>
                 </div>
                 <h3 class="text-xl font-bold text-gray-800 mb-2">No Modules Yet</h3>
                 <p class="text-gray-600 mb-6">Create your first module to get started.</p>
-                <button onclick="openCreateModuleModal()" class="inline-flex items-center space-x-2 bg-brand text-white px-6 py-3 rounded-xl font-medium hover:bg-brand-dark transition-colors">
+                <button onclick="openCreateModuleModal()" class="inline-flex items-center space-x-2 bg-plum-800 text-white px-6 py-3 rounded-xl font-medium hover:bg-plum-900 transition-colors">
                     <i class="fas fa-plus"></i>
                     <span>Create Module</span>
                 </button>
@@ -197,13 +190,13 @@
                 <!-- Module Title -->
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-2">Module Title *</label>
-                    <input type="text" id="moduleTitle" required class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-brand focus:border-transparent" placeholder="e.g., Introduction to Algebra">
+                    <input type="text" id="moduleTitle" required class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-plum-800 focus:border-transparent" placeholder="e.g., Introduction to Algebra">
                 </div>
 
                 <!-- Module Description -->
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-2">Description</label>
-                    <textarea id="moduleDescription" rows="3" class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-brand focus:border-transparent" placeholder="Brief description of the module..."></textarea>
+                    <textarea id="moduleDescription" rows="3" class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-plum-800 focus:border-transparent" placeholder="Brief description of the module..."></textarea>
                 </div>
 
                 <!-- Optional Quiz Setup -->
@@ -216,21 +209,21 @@
                     <div class="space-y-4">
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-2">Quiz URL</label>
-                            <input type="url" id="moduleQuizUrl" class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-brand focus:border-transparent" placeholder="https://forms.google.com/...">
+                            <input type="url" id="moduleQuizUrl" class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-plum-800 focus:border-transparent" placeholder="https://forms.google.com/...">
                             <p class="text-xs text-gray-500 mt-1">Leave blank if you do not want to add a quiz yet.</p>
                         </div>
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-2">Quiz Title</label>
-                                <input type="text" id="moduleQuizTitle" class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-brand focus:border-transparent" placeholder="Auto: Module Title Quiz">
+                                <input type="text" id="moduleQuizTitle" class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-plum-800 focus:border-transparent" placeholder="Auto: Module Title Quiz">
                             </div>
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-2">Total Items</label>
-                                <input type="number" id="moduleQuizTotalItems" min="1" value="10" class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-brand focus:border-transparent" placeholder="10">
+                                <input type="number" id="moduleQuizTotalItems" min="1" value="10" class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-plum-800 focus:border-transparent" placeholder="10">
                             </div>
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-2">Passing Score</label>
-                                <input type="number" id="moduleQuizPassingScore" min="0" value="0" class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-brand focus:border-transparent" placeholder="0">
+                                <input type="number" id="moduleQuizPassingScore" min="0" value="0" class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-plum-800 focus:border-transparent" placeholder="0">
                             </div>
                         </div>
                     </div>
@@ -242,7 +235,7 @@
                     <div class="grid grid-cols-2 gap-4">
                         <label class="relative cursor-pointer">
                             <input type="radio" name="contentType" value="pdf" checked class="peer sr-only">
-                            <div class="p-4 border-2 border-gray-200 rounded-xl peer-checked:border-brand peer-checked:bg-green-50 transition-all">
+                            <div class="p-4 border-2 border-gray-200 rounded-xl peer-checked:border-plum-800 peer-checked:bg-green-50 transition-all">
                                 <div class="flex items-center space-x-3">
                                     <div class="w-10 h-10 bg-red-100 rounded-lg flex items-center justify-center">
                                         <i class="fas fa-file-pdf text-red-600"></i>
@@ -256,7 +249,7 @@
                         </label>
                         <label class="relative cursor-pointer">
                             <input type="radio" name="contentType" value="images" class="peer sr-only">
-                            <div class="p-4 border-2 border-gray-200 rounded-xl peer-checked:border-brand peer-checked:bg-green-50 transition-all">
+                            <div class="p-4 border-2 border-gray-200 rounded-xl peer-checked:border-plum-800 peer-checked:bg-green-50 transition-all">
                                 <div class="flex items-center space-x-3">
                                     <div class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
                                         <i class="fas fa-images text-blue-600"></i>
@@ -274,12 +267,12 @@
                 <!-- PDF Upload Zone -->
                 <div id="pdfUploadZone" class="upload-zone">
                     <label class="block text-sm font-medium text-gray-700 mb-2">Upload PDF *</label>
-                    <div id="pdfDropZone" class="border-2 border-dashed border-gray-300 rounded-xl p-8 text-center cursor-pointer hover:border-brand transition-colors">
+                    <div id="pdfDropZone" class="border-2 border-dashed border-gray-300 rounded-xl p-8 text-center cursor-pointer hover:border-plum-800 transition-colors">
                         <input type="file" id="pdfInput" accept=".pdf" class="hidden">
                         <div class="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
                             <i class="fas fa-cloud-upload-alt text-red-600 text-xl"></i>
                         </div>
-                        <p class="text-gray-600 mb-1">Drop your PDF here or <span class="text-brand font-medium">browse</span></p>
+                        <p class="text-gray-600 mb-1">Drop your PDF here or <span class="text-plum-800 font-medium">browse</span></p>
                         <p class="text-xs text-gray-500">Max file size: 50MB</p>
                     </div>
                     <div id="pdfPreview" class="hidden mt-4 p-4 bg-gray-50 rounded-xl flex items-center justify-between">
@@ -301,12 +294,12 @@
                 <!-- Images Upload Zone -->
                 <div id="imagesUploadZone" class="hidden upload-zone">
                     <label class="block text-sm font-medium text-gray-700 mb-2">Upload Images *</label>
-                    <div id="imagesDropZone" class="border-2 border-dashed border-gray-300 rounded-xl p-8 text-center cursor-pointer hover:border-brand transition-colors">
+                    <div id="imagesDropZone" class="border-2 border-dashed border-gray-300 rounded-xl p-8 text-center cursor-pointer hover:border-plum-800 transition-colors">
                         <input type="file" id="imagesInput" accept="image/*" multiple class="hidden">
                         <div class="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
                             <i class="fas fa-cloud-upload-alt text-blue-600 text-xl"></i>
                         </div>
-                        <p class="text-gray-600 mb-1">Drop images here or <span class="text-brand font-medium">browse</span></p>
+                        <p class="text-gray-600 mb-1">Drop images here or <span class="text-plum-800 font-medium">browse</span></p>
                         <p class="text-xs text-gray-500">JPG, PNG, GIF • Max 10MB each</p>
                     </div>
                     <div id="imagesPreview" class="hidden mt-4 grid grid-cols-3 gap-3"></div>
@@ -316,7 +309,7 @@
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-2">Quarter *</label>
-                        <select id="moduleQuarter" required class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-brand focus:border-transparent">
+                        <select id="moduleQuarter" required class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-plum-800 focus:border-transparent">
                             <option value="">Select quarter</option>
                             <option value="1">Quarter 1</option>
                             <option value="2">Quarter 2</option>
@@ -326,13 +319,13 @@
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-2">Grade Level</label>
-                        <select id="moduleGradeLevel" class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-brand focus:border-transparent">
+                        <select id="moduleGradeLevel" class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-plum-800 focus:border-transparent">
                             <option value="">All Grade Levels</option>
                         </select>
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-2">Section</label>
-                        <select id="moduleSection" class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-brand focus:border-transparent">
+                        <select id="moduleSection" class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-plum-800 focus:border-transparent">
                             <option value="">All Sections</option>
                         </select>
                     </div>
@@ -341,7 +334,7 @@
                 <!-- Status -->
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-2">Status</label>
-                    <select id="moduleStatus" class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-brand focus:border-transparent">
+                    <select id="moduleStatus" class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-plum-800 focus:border-transparent">
                         <option value="draft">Draft - Only you can see</option>
                         <option value="published">Published - Visible to students</option>
                     </select>
@@ -352,7 +345,7 @@
                     <button type="button" onclick="closeCreateModuleModal()" class="flex-1 px-6 py-3 border border-gray-300 rounded-xl font-medium text-gray-700 hover:bg-gray-50 transition-colors">
                         Cancel
                     </button>
-                    <button type="submit" id="createModuleBtn" class="flex-1 px-6 py-3 bg-brand text-white rounded-xl font-medium hover:bg-brand-dark transition-colors flex items-center justify-center space-x-2">
+                    <button type="submit" id="createModuleBtn" class="flex-1 px-6 py-3 bg-plum-800 text-white rounded-xl font-medium hover:bg-plum-900 transition-colors flex items-center justify-center space-x-2">
                         <span>Create Module</span>
                     </button>
                 </div>
@@ -832,7 +825,7 @@
         function updateQuarterTabs() {
             document.querySelectorAll('.quarter-tab').forEach(tab => {
                 const isActive = (tab.dataset.quarter || 'all') === activeQuarterFilter;
-                tab.classList.toggle('bg-brand', isActive);
+                tab.classList.toggle('bg-plum-800', isActive);
                 tab.classList.toggle('text-white', isActive);
                 tab.classList.toggle('bg-white', !isActive);
                 tab.classList.toggle('text-gray-700', !isActive);
@@ -890,7 +883,7 @@
                     const scope = getModuleScopeLabels(module);
                     return `
                 <div class="module-card bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden transition-all cursor-pointer" onclick="openModuleDetail('${module.id}')">
-                    <div class="h-32 bg-gradient-to-br from-brand to-brand-light flex items-center justify-center">
+                    <div class="h-32 bg-plum-800 flex items-center justify-center">
                         ${module.content_type === 'pdf' ? `
                             <i class="fas fa-file-pdf text-white/80 text-5xl"></i>
                         ` : `
@@ -1215,26 +1208,26 @@
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-2">Quarter</label>
-                                <select id="detailModuleQuarter" class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-brand focus:border-transparent">
+                                <select id="detailModuleQuarter" class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-plum-800 focus:border-transparent">
                                     <option value="">Select quarter</option>
                                     ${quarterOptions}
                                 </select>
                             </div>
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-2">Grade Level</label>
-                                <select id="detailModuleGradeLevel" onchange="handleDetailModuleGradeChange()" class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-brand focus:border-transparent">
+                                <select id="detailModuleGradeLevel" onchange="handleDetailModuleGradeChange()" class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-plum-800 focus:border-transparent">
                                     ${gradeOptions}
                                 </select>
                             </div>
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-2">Section</label>
-                                <select id="detailModuleSection" class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-brand focus:border-transparent">
+                                <select id="detailModuleSection" class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-plum-800 focus:border-transparent">
                                     ${sectionOptions}
                                 </select>
                             </div>
                         </div>
                         <div class="mt-4 flex justify-end">
-                            <button onclick="saveModuleAccess('${module.id}')" class="px-4 py-2 bg-brand text-white rounded-lg text-sm hover:bg-brand-dark transition-colors">Save Access Scope</button>
+                            <button onclick="saveModuleAccess('${module.id}')" class="px-4 py-2 bg-plum-800 text-white rounded-lg text-sm hover:bg-plum-900 transition-colors">Save Access Scope</button>
                         </div>
                     </div>
 
@@ -1257,7 +1250,7 @@
                             <div class="space-y-4">
                                 <div>
                                     <label class="block text-xs font-semibold text-gray-600 mb-1 uppercase tracking-wider">Select Existing Video or Input New</label>
-                                    <select id="detailSelectVideo" onchange="handleDetailVideoSelect(this)" class="w-full px-4 py-2.5 border border-gray-300 rounded-xl bg-white focus:ring-2 focus:ring-brand text-sm">
+                                    <select id="detailSelectVideo" onchange="handleDetailVideoSelect(this)" class="w-full px-4 py-2.5 border border-gray-300 rounded-xl bg-white focus:ring-2 focus:ring-plum-800 text-sm">
                                         <option value="">-- Enter New Video Details --</option>
                                         ${teacherVideos.map(v => `<option value="${v.id}" data-url="${v.video_url || ''}" data-title="${v.title || ''}" ${linkedVideo && linkedVideo.id === v.id ? 'selected' : ''}>${v.title} (${v.video_url || 'No URL'})</option>`).join('')}
                                     </select>
@@ -1265,16 +1258,16 @@
                                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     <div>
                                         <label class="block text-xs font-medium text-gray-700 mb-1">Video Title</label>
-                                        <input type="text" id="detailVideoTitle" value="${linkedVideo?.title || ''}" placeholder="e.g., Lesson 1 Tutorial Video" class="w-full px-4 py-2.5 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-brand">
+                                        <input type="text" id="detailVideoTitle" value="${linkedVideo?.title || ''}" placeholder="e.g., Lesson 1 Tutorial Video" class="w-full px-4 py-2.5 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-plum-800">
                                     </div>
                                     <div>
                                         <label class="block text-xs font-medium text-gray-700 mb-1">Video URL (YouTube/Vimeo)</label>
-                                        <input type="url" id="detailVideoUrl" value="${linkedVideo?.video_url || ''}" placeholder="https://youtube.com/watch?v=..." class="w-full px-4 py-2.5 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-brand">
+                                        <input type="url" id="detailVideoUrl" value="${linkedVideo?.video_url || ''}" placeholder="https://youtube.com/watch?v=..." class="w-full px-4 py-2.5 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-plum-800">
                                     </div>
                                 </div>
                                 <div class="flex items-center justify-end space-x-2 pt-2">
                                     ${linkedVideo ? `<button type="button" onclick="unlinkModuleVideo('${linkedVideo.id}', '${module.id}')" class="px-4 py-2 text-sm border border-red-200 text-red-600 hover:bg-red-50 rounded-xl font-medium transition-colors">Unlink Video</button>` : ''}
-                                    <button type="button" onclick="saveModuleVideo('${module.id}', '${linkedVideo?.id || ''}')" class="px-4 py-2 text-sm bg-brand text-white hover:bg-brand-dark rounded-xl font-medium transition-colors">
+                                    <button type="button" onclick="saveModuleVideo('${module.id}', '${linkedVideo?.id || ''}')" class="px-4 py-2 text-sm bg-plum-800 text-white hover:bg-plum-900 rounded-xl font-medium transition-colors">
                                         ${linkedVideo ? 'Update Video' : 'Save / Attach Video'}
                                     </button>
                                 </div>
@@ -1297,26 +1290,26 @@
                                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     <div>
                                         <label class="block text-xs font-medium text-gray-700 mb-1">Quiz Title</label>
-                                        <input type="text" id="detailQuizTitle" value="${linkedQuiz?.title || ''}" placeholder="e.g., ${module.title} Quiz" class="w-full px-4 py-2.5 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-brand">
+                                        <input type="text" id="detailQuizTitle" value="${linkedQuiz?.title || ''}" placeholder="e.g., ${module.title} Quiz" class="w-full px-4 py-2.5 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-plum-800">
                                     </div>
                                     <div>
                                         <label class="block text-xs font-medium text-gray-700 mb-1">Quiz URL (Google Form, Quizizz, Kahoot, etc.)</label>
-                                        <input type="url" id="detailQuizUrl" value="${linkedQuiz?.quiz_url || ''}" placeholder="https://forms.google.com/..." class="w-full px-4 py-2.5 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-brand">
+                                        <input type="url" id="detailQuizUrl" value="${linkedQuiz?.quiz_url || ''}" placeholder="https://forms.google.com/..." class="w-full px-4 py-2.5 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-plum-800">
                                     </div>
                                 </div>
                                 <div class="grid grid-cols-2 gap-4">
                                     <div>
                                         <label class="block text-xs font-medium text-gray-700 mb-1">Total Items</label>
-                                        <input type="number" id="detailQuizTotalItems" min="1" value="${linkedQuiz?.total_items || 10}" class="w-full px-4 py-2.5 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-brand">
+                                        <input type="number" id="detailQuizTotalItems" min="1" value="${linkedQuiz?.total_items || 10}" class="w-full px-4 py-2.5 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-plum-800">
                                     </div>
                                     <div>
                                         <label class="block text-xs font-medium text-gray-700 mb-1">Passing Score</label>
-                                        <input type="number" id="detailQuizPassingScore" min="0" value="${linkedQuiz?.passing_score || 0}" class="w-full px-4 py-2.5 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-brand">
+                                        <input type="number" id="detailQuizPassingScore" min="0" value="${linkedQuiz?.passing_score || 0}" class="w-full px-4 py-2.5 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-plum-800">
                                     </div>
                                 </div>
                                 <div class="flex items-center justify-end space-x-2 pt-2">
                                     ${linkedQuiz ? `<button type="button" onclick="unlinkModuleQuiz('${linkedQuiz.id}', '${module.id}')" class="px-4 py-2 text-sm border border-red-200 text-red-600 hover:bg-red-50 rounded-xl font-medium transition-colors">Unlink Quiz</button>` : ''}
-                                    <button type="button" onclick="saveModuleQuiz('${module.id}', '${linkedQuiz?.id || ''}')" class="px-4 py-2 text-sm bg-brand text-white hover:bg-brand-dark rounded-xl font-medium transition-colors">
+                                    <button type="button" onclick="saveModuleQuiz('${module.id}', '${linkedQuiz?.id || ''}')" class="px-4 py-2 text-sm bg-plum-800 text-white hover:bg-plum-900 rounded-xl font-medium transition-colors">
                                         ${linkedQuiz ? 'Update Quiz' : 'Save / Attach Quiz'}
                                     </button>
                                 </div>

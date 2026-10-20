@@ -23,13 +23,20 @@
   1. `GRANT SELECT ... TO authenticated` on `module_assessments`, `presentations`, `quiz_questions` (plus INSERT/UPDATE/DELETE), `module_assessment_attempts`, `quiz_attempt_answers`.
   2. `get_assessment_questions_for_student`: fixed the ambiguous `id` (`42702`) with a `ma.` alias.
   3. `submit_and_grade_assessment` / `submit_and_grade_regular_quiz` renamed to `*_core` (EXECUTE revoked) and wrapped with `can_student_access_pre_test/_post_test/_quiz` checks.
-* **Open items:** presentation signed-URL check not exercised (no PDF fixture). QA students A and B now hold attempt rows; reset them before re-running sections 8–9.
+* **Phase 4–5 QA (2026-10-20 14:25, `scripts/qa/verify_phase4_5_authenticated_api.ps1`): 16/17 PASS.**
+  - ✅ Teacher and student cannot archive or unarchive users ("Only admins…"). `admin_delete_user` is not executable (42501). A student reads only their own `users` row and cannot change `is_archived` (no UPDATE grant on `users`).
+  - ✅ EXP: own rows only, one award per source (Student A's 3 post-test attempts → 1 row), no direct insert, `award_exp_if_first_completion` and `student_exp_summary` not reachable, leaderboard RPC works for students (0 rows; QA students have no section) and is blocked for anon.
+  - ❌ **SECURITY: `submit_regular_quiz_score` (legacy self-reported score; used by `student/quizzes.html`, `student/module-view.html`, `student/assets/js/student.js`) is executable by students with no access check and accepts any client-chosen `p_total`/`p_score` up to 32767, and the score is awarded as EXP.** A student can mark a locked quiz "passed" and inflate the leaderboard. Fix SQL handed to the user (wrapper: access check + `p_total` must equal `quizzes.total_items` + reject native-question quizzes).
+  - ⚠️ No UPDATE grant on `users` for `authenticated`, so `last_login` never updates (`shared/js/auth.js:130`) and profile name edits fail silently (`student/assets/js/sidebar.js:504`, `teacher/profile.html:486`). Low impact. Product decision.
+* **Phase 6 static QA (browser extension unavailable):** 11 key pages HTTP 200; OpenDyslexic font files present; mobile-nav links resolve. ⚠️ Dyslexia-font preference is only restored on `student/dashboard.html` and the `public/` pages; other student pages don't read `mathturo_font_pref`. ⚠️ `public/test-supabase.html` is a stale test page with 5 broken script refs and still ships. Visual/browser QA still not done.
+* **Open items:** presentation signed-URL check not exercised (no PDF fixture). QA students A and B now hold attempt rows; reset them before re-running Phase 3 sections 8–9.
 * **Staging Target:** `jlmdvcmdvkvdxpfkqivh.supabase.co`
 
 ### 🎯 The Immediate Next Action (Do This First)
-1. ✅ Committed on `develop` as `e4ccf9b` (migration + QA suite + ledger). Run this migration after Phase 5 on any production or fresh database, and re-run it if the Phase 3 or 5 migrations are ever re-applied.
-2. Upload a small PDF to M1 via `teacher/manage-presentations.html` to cover the signed-URL check.
-3. Authenticated QA for Phases 4–6.
+1. **User:** run `database/migration_phase5_remediation_legacy_quiz_score_gating.sql` in the staging SQL Editor, then the agent re-runs `verify_phase4_5_authenticated_api.ps1` (expect 17/17).
+2. ✅ Done (APPROVE PLAN, 2026-10-20 14:45): migration file saved; font preference restored on all student pages; `public/test-supabase.html` removed.
+3. Upload a small PDF to M1 via `teacher/manage-presentations.html` to cover the signed-URL check.
+4. Browser/visual QA of the redesigned pages (connect the Claude Chrome extension, or the user clicks through).
 
 ---
 
@@ -232,6 +239,27 @@
 * **Blockers:** `git push` is denied in this Claude Code session, so the user must push.
 * **Next Immediate Action:** User runs `git push origin develop`; then visual QA of the redesigned pages.
 
+### [2026-10-20 14:30] — Phase 4–6 QA
+* **Author / Agent:** Claude Code
+* **Files Modified:**
+  - `scripts/qa/verify_phase4_5_authenticated_api.ps1` (new): archiving/admin-RPC, users-row, EXP-ledger, leaderboard and legacy-score probes. Read-only except a reversible self-archive probe on Student B (rejected with 42501, so nothing changed).
+  - `docs/PROJECT_STATE.md`: results and next actions.
+* **Database / Migrations Applied:** None.
+* **Verification / Tests Executed:** Phase 4–5 suite 16 PASS / 1 FAIL (legacy score RPC). Phase 6: local `python -m http.server` + curl on 11 pages (all 200), a broken-reference scan over all portal pages, and the font files check.
+* **Blockers / Open Questions:** Fix SQL pending user execution; browser QA blocked (Chrome extension not connected).
+* **Next Immediate Action:** See Section 1.
+
+### [2026-10-20 14:45] — Legacy Quiz-Score Fix Saved, Font Preference, Stale Page Removed
+* **Author / Agent:** Claude Code (approved with `APPROVE PLAN`)
+* **Files Modified:**
+  - `database/migration_phase5_remediation_legacy_quiz_score_gating.sql` (new): `submit_regular_quiz_score` renamed to `_core` (EXECUTE revoked). The new wrapper requires `can_student_access_quiz`, rejects quizzes that have native `quiz_questions`, and requires `p_total = quizzes.total_items`. The rename is guarded, so the file is re-runnable.
+  - `student/{lesson-view,module-view,modules,presentations,quizzes,take-quiz,tutorial-videos,view-presentation}.html`: added the same pre-paint `mathturo_font_pref` snippet `student/dashboard.html` uses.
+  - `public/test-supabase.html`: removed (stale test page, 5 broken script refs, not linked anywhere).
+  - `scripts/qa/verify_phase4_5_authenticated_api.ps1`: committed.
+* **Database / Migrations Applied:** None by the agent. The fix SQL is not yet on staging.
+* **Verification / Tests Executed:** Every student page now contains `mathturo_font_pref`; diff reviewed. Legacy callers already send `quiz.total_items` (`student/quizzes.html:641`, `student/module-view.html:977`), so the wrapper won't break them.
+* **Next Immediate Action:** User runs the migration on staging; agent re-runs the Phase 4–5 suite.
+
 ---
 
 ## 5. Agent Instructions for Appending New Entries
@@ -271,3 +299,18 @@ And update the top section (`## 1. Quick Orientation: "Where We Left Off"`) with
 * **Author:** Tycoon James Flores
 * **Commit Message:** feat(supabase): add provision-user edge function
 * **Commit Hash:** `b4e3704`
+
+### [2026-10-20 04:57] — Git Commit c30b100
+* **Author:** Tycoon James Flores
+* **Commit Message:** feat(ui): visual polish across public, student, and admin portals
+* **Commit Hash:** `c30b100`
+
+### [2026-10-20 14:35] — Git Commit b8fe074
+* **Author:** Tycoon James Flores
+* **Commit Message:** fix(phase5): gate legacy self-reported quiz score RPC
+* **Commit Hash:** `b8fe074`
+
+### [2026-10-20 14:35] — Git Commit 72854ed
+* **Author:** Tycoon James Flores
+* **Commit Message:** fix(a11y): restore dyslexia font preference on all student pages
+* **Commit Hash:** `72854ed`

@@ -33,7 +33,7 @@
 * **Staging Target:** `jlmdvcmdvkvdxpfkqivh.supabase.co`
 
 ### 🎯 The Immediate Next Action (Do This First)
-1. **User:** run `database/migration_phase5_remediation_legacy_quiz_score_gating.sql` in the staging SQL Editor, then the agent re-runs `verify_phase4_5_authenticated_api.ps1` (expect 17/17).
+1. ✅ Legacy quiz-score fix applied on staging by the user (2026-10-20 15:45); `verify_phase4_5_authenticated_api.ps1` now **17/17 PASS**. Caveat: the probe was rejected by the "graded automatically" branch; the `p_total = total_items` and locked-quiz branches were not individually exercised (no question-free quiz fixture on staging).
 2. ✅ Done (APPROVE PLAN, 2026-10-20 14:45): migration file saved; font preference restored on all student pages; `public/test-supabase.html` removed.
 3. Upload a small PDF to M1 via `teacher/manage-presentations.html` to cover the signed-URL check.
 4. Browser/visual QA of the redesigned pages (connect the Claude Chrome extension, or the user clicks through).
@@ -260,6 +260,14 @@
 * **Verification / Tests Executed:** Every student page now contains `mathturo_font_pref`; diff reviewed. Legacy callers already send `quiz.total_items` (`student/quizzes.html:641`, `student/module-view.html:977`), so the wrapper won't break them.
 * **Next Immediate Action:** User runs the migration on staging; agent re-runs the Phase 4–5 suite.
 
+### [2026-10-20 15:46] — Phase 4–5 Re-verified: 17/17 PASS
+* **Author / Agent:** Claude Code
+* **Context:** User applied `migration_phase5_remediation_legacy_quiz_score_gating.sql` on staging; the check query showed `submit_regular_quiz_score, submit_regular_quiz_score_core`.
+* **Files Modified:** `docs/PROJECT_STATE.md` only.
+* **Database / Migrations Applied:** None by the agent.
+* **Verification / Tests Executed:** `verify_phase4_5_authenticated_api.ps1`: 17 PASS / 0 FAIL. The legacy RPC is now refused ("This quiz is graded automatically…"). The total-items pin and access-lock branches are not individually covered.
+* **Next Immediate Action:** Push; PDF upload for the signed-URL check; browser QA once the Chrome extension is connected.
+
 ---
 
 ## 5. Agent Instructions for Appending New Entries
@@ -314,3 +322,8 @@ And update the top section (`## 1. Quick Orientation: "Where We Left Off"`) with
 * **Author:** Tycoon James Flores
 * **Commit Message:** fix(a11y): restore dyslexia font preference on all student pages
 * **Commit Hash:** `72854ed`
+
+### [2026-10-20 14:35] — Git Commit 8b95615
+* **Author:** Tycoon James Flores
+* **Commit Message:** docs: record Phase 4-6 QA results
+* **Commit Hash:** `8b95615`

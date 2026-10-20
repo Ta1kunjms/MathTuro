@@ -648,7 +648,7 @@ async function loadTeacherSections(teacherId) {
     // Show loading state
     sectionsContainer.innerHTML = `
       <div class="p-6 text-center text-gray-500">
-        <div class="inline-block animate-spin rounded-full h-8 w-8 border-4 border-teacher-600 border-t-transparent mb-2"></div>
+        <div class="inline-block animate-spin rounded-full h-8 w-8 border-4 border-plum-800 border-t-transparent mb-2"></div>
         <p>Loading sections...</p>
       </div>
     `;
@@ -679,10 +679,10 @@ async function loadTeacherSections(teacherId) {
               <p class="text-sm text-gray-600">${section.grade_levels?.name || 'N/A'}</p>
             </div>
             <div class="text-right">
-              <p class="text-sm font-medium text-teacher-600">${students.length} Students</p>
+              <p class="text-sm font-medium text-plum-800">${students.length} Students</p>
               <button 
                 onclick="viewSectionStudents('${section.id}', '${section.name}')"
-                class="text-xs text-teacher-600 hover:text-teacher-700 mt-1"
+                class="text-xs text-plum-800 hover:text-plum-900 mt-1"
               >
                 View Students
               </button>

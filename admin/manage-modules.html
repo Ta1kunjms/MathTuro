@@ -78,11 +78,11 @@
                 <div class="p-6">
                     <h2 class="text-lg font-semibold mb-4">All Modules</h2>
                     <div class="flex flex-wrap gap-2 mb-6" id="quarterTabs">
-                        <button type="button" class="quarter-tab px-4 py-2 rounded-lg text-sm font-medium bg-gray-900 text-white" data-quarter="all">All Modules</button>
-                        <button type="button" class="quarter-tab px-4 py-2 rounded-lg text-sm font-medium bg-white text-gray-700 border border-gray-200 hover:border-gray-400" data-quarter="1">Quarter 1</button>
-                        <button type="button" class="quarter-tab px-4 py-2 rounded-lg text-sm font-medium bg-white text-gray-700 border border-gray-200 hover:border-gray-400" data-quarter="2">Quarter 2</button>
-                        <button type="button" class="quarter-tab px-4 py-2 rounded-lg text-sm font-medium bg-white text-gray-700 border border-gray-200 hover:border-gray-400" data-quarter="3">Quarter 3</button>
-                        <button type="button" class="quarter-tab px-4 py-2 rounded-lg text-sm font-medium bg-white text-gray-700 border border-gray-200 hover:border-gray-400" data-quarter="4">Quarter 4</button>
+                        <button type="button" class="quarter-tab px-4 py-2 rounded-lg text-sm font-medium bg-gray-900 text-white" aria-pressed="true" data-quarter="all">All Modules</button>
+                        <button type="button" class="quarter-tab px-4 py-2 rounded-lg text-sm font-medium bg-white text-gray-700 border border-gray-200 hover:border-gray-400" aria-pressed="false" data-quarter="1">Quarter 1</button>
+                        <button type="button" class="quarter-tab px-4 py-2 rounded-lg text-sm font-medium bg-white text-gray-700 border border-gray-200 hover:border-gray-400" aria-pressed="false" data-quarter="2">Quarter 2</button>
+                        <button type="button" class="quarter-tab px-4 py-2 rounded-lg text-sm font-medium bg-white text-gray-700 border border-gray-200 hover:border-gray-400" aria-pressed="false" data-quarter="3">Quarter 3</button>
+                        <button type="button" class="quarter-tab px-4 py-2 rounded-lg text-sm font-medium bg-white text-gray-700 border border-gray-200 hover:border-gray-400" aria-pressed="false" data-quarter="4">Quarter 4</button>
                     </div>
                     <div id="modulesList" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                         <!-- Modules will be dynamically loaded here -->
@@ -389,7 +389,8 @@
         function updateQuarterTabs() {
             document.querySelectorAll('.quarter-tab').forEach(tab => {
                 const isActive = (tab.dataset.quarter || 'all') === activeQuarterFilter;
-                tab.classList.toggle('bg-maroon', isActive);
+                tab.classList.toggle('bg-gray-900', isActive);
+                tab.setAttribute('aria-pressed', String(isActive));
                 tab.classList.toggle('text-white', isActive);
                 tab.classList.toggle('bg-white', !isActive);
                 tab.classList.toggle('text-gray-700', !isActive);

@@ -47,7 +47,7 @@ function createAdminSidebar() {
                 </div>
             </div>
 
-            <nav class="p-4 space-y-2 flex-1 overflow-y-auto">
+            <nav class="p-4 space-y-2 flex-1 overflow-y-auto" aria-label="Admin navigation">
                 <a href="dashboard.html" class="nav-link flex items-center space-x-3 px-3 py-2 rounded-lg text-gray-300 hover:bg-gray-800 hover:text-white transition-colors" data-section="dashboard">
                     <i class="fas fa-tachometer-alt"></i>
                     <span>Dashboard</span>
@@ -64,12 +64,12 @@ function createAdminSidebar() {
                 </a>
 
                 <div class="pt-4 border-t border-gray-800">
-                    <button class="w-full nav-link flex items-center justify-between space-x-3 px-3 py-2 rounded-lg text-gray-300 hover:bg-gray-800 hover:text-white transition-colors" onclick="toggleFilesDropdown()">
+                    <button type="button" class="w-full nav-link flex items-center justify-between space-x-3 px-3 py-2 rounded-lg text-gray-300 hover:bg-gray-800 hover:text-white transition-colors" onclick="toggleFilesDropdown()" aria-expanded="false" aria-controls="filesDropdown">
                         <div class="flex items-center space-x-3">
                             <i class="fas fa-folder"></i>
                             <span>Files</span>
                         </div>
-                        <i class="fas fa-chevron-down text-xs transition-transform duration-200" id="filesDropdownIcon"></i>
+                        <i class="fas fa-chevron-down text-xs transition-transform duration-200 motion-reduce:transition-none" id="filesDropdownIcon"></i>
                     </button>
                     
                     <div id="filesDropdown" class="pl-4 mt-1 space-y-1 hidden">
@@ -141,16 +141,19 @@ function createAdminSidebar() {
         } else {
             sidebarContainer.innerHTML = sidebarHTML;
         }
+        // Icons are decorative; every control has a visible text label
+        sidebarContainer.querySelectorAll('i.fas').forEach(icon => icon.setAttribute('aria-hidden', 'true'));
     }
 
      const currentPath = window.location.pathname.toLowerCase();
+     const currentPage = currentPath.split('/').pop().replace(/.html$/, '');
      
      const navLinks = document.querySelectorAll('.nav-link');
      
      navLinks.forEach(link => {
          const section = (link.getAttribute('data-section') || '').toLowerCase();
-         const isSectionMatch = section && currentPath.includes(section);
-         const isGradeSectionPair = section === 'grade-levels' && currentPath.includes('sections.html');
+         const isSectionMatch = section && currentPage === section;
+         const isGradeSectionPair = section === 'grade-levels' && currentPage === 'sections';
 
          if (isSectionMatch || isGradeSectionPair) {
              // Neutral-dark active state with a restrained green indicator —
@@ -162,6 +165,7 @@ function createAdminSidebar() {
              // forest-600 remains the one consistent "primary action" shade everywhere else.
              link.classList.remove('text-gray-300', 'hover:bg-gray-800', 'hover:text-white');
              link.classList.add('bg-gray-800', 'text-white', 'border-l-4', 'border-forest-100', 'pl-2');
+             link.setAttribute('aria-current', 'page');
          }
      });
 
@@ -211,6 +215,12 @@ function toggleFilesDropdown() {
     
     dropdown.classList.toggle('hidden');
     icon.classList.toggle('rotate-180');
+    setFilesDropdownExpanded(!dropdown.classList.contains('hidden'));
+}
+
+function setFilesDropdownExpanded(expanded) {
+    const dropdownButton = document.querySelector('button[onclick="toggleFilesDropdown()"]');
+    if (dropdownButton) dropdownButton.setAttribute('aria-expanded', String(expanded));
 }
 
 // Close dropdown when clicking outside
@@ -225,6 +235,7 @@ document.addEventListener('click', function(event) {
         if (filesDropdownIcon) {
             filesDropdownIcon.classList.remove('rotate-180');
         }
+        setFilesDropdownExpanded(false);
     }
 });
 
@@ -242,6 +253,7 @@ document.addEventListener('DOMContentLoaded', function() {
             if (dropdown) {
                 dropdown.classList.remove('hidden');
                 icon.classList.add('rotate-180');
+                setFilesDropdownExpanded(true);
             }
         }
     });

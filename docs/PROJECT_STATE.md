@@ -296,6 +296,18 @@
 * **Verification / Tests Executed:** Read-only probes (above). The guards themselves are not executed yet.
 * **Next Immediate Action:** User re-runs both remediation files on staging; the agent re-probes. Optionally the user runs the Phase 5 file once to see the guard refuse.
 
+### [2026-10-20 16:45] — Phase 3 Re-run Guard Confirmed; Staging Still Ungated
+* **Author / Agent:** Claude Code
+* **Verification:** The user ran the updated Phase 3 migration on staging and got `P0001: Phase 3 is already applied and remediation wrappers are installed… Nothing was changed.` The guard works live. Probes afterwards: the locked submit still reaches the answer-count check, and the legacy score still returns "Invalid score bounds", so the wrappers are still overwritten from the 16:30 Phase 5 run. The remediation files haven't been re-run yet.
+* **Files Modified:** `docs/PROJECT_STATE.md` only.
+* **Next Immediate Action:** User runs `migration_phase3_remediation_grants_and_rpc_gating.sql`, then `migration_phase5_remediation_legacy_quiz_score_gating.sql`, on staging.
+
+### [2026-10-20 16:55] — Staging Protections Restored (Guarded)
+* **Author / Agent:** Claude Code
+* **Verification:** After the user re-ran both remediation files: locked M2 pre-test submit → "Assessment locked by module progression"; legacy score → "This quiz is graded automatically…"; M1 pre-test questions → 200; `verify_phase4_5_authenticated_api.ps1` 17/17. `05f2448` (re-run guards) is on `origin/develop`. Re-running Phase 3 or Phase 5 now aborts with no changes (Phase 3 guard confirmed live at 16:45).
+* **Files Modified:** `docs/PROJECT_STATE.md` only.
+* **Next Immediate Action:** PDF upload for the signed-URL check; browser QA (Chrome extension); production rollout: Phase 1–5, then both remediation files.
+
 ---
 
 ## 5. Agent Instructions for Appending New Entries
@@ -360,3 +372,8 @@ And update the top section (`## 1. Quick Orientation: "Where We Left Off"`) with
 * **Author:** Tycoon James Flores
 * **Commit Message:** docs: record Phase 4-5 re-verification (17/17)
 * **Commit Hash:** `1650968`
+
+### [2026-10-20 20:32] — Git Commit 05f2448
+* **Author:** Tycoon James Flores
+* **Commit Message:** fix(db): guard Phase 3 and 5 migrations against re-runs that drop progression gating
+* **Commit Hash:** `05f2448`

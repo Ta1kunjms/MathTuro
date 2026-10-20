@@ -26,14 +26,38 @@
   min-height: 0;
 }
 
-.sidebar-link:hover, 
-.sidebar-link.active {
-  background: linear-gradient(135deg, #005801 0%, #006B01 100%);
-  color: white;
+/* Scoped under #teacherSidebar so it outranks the legacy per-page inline
+   .sidebar-link rules (green gradient) that load before this file. */
+#teacherSidebar .sidebar-link {
+  transition: background-color 0.15s ease, color 0.15s ease;
 }
 
-.sidebar-link.active {
-  box-shadow: 0 4px 15px rgba(0, 88, 1, 0.3);
+#teacherSidebar .sidebar-link:hover {
+  background: #fbf1f8; /* plum-50 */
+  color: #720455;      /* plum-800 */
+}
+
+/* Active: solid plum fill plus heavier weight and an offset edge, so the
+   state doesn't rely on color alone */
+#teacherSidebar .sidebar-link.active {
+  background: #720455; /* plum-800 */
+  color: #ffffff;
+  font-weight: 600;
+  box-shadow: 3px 3px 0 0 #1c1b1a; /* ink-900 */
+}
+
+#teacherSidebar a:focus-visible,
+#teacherSidebar button:focus-visible {
+  outline: 3px solid #720455;
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #teacherSidebar,
+  #teacherSidebar * {
+    transition: none !important;
+    animation: none !important;
+  }
 }
 
 /* ============================================

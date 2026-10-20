@@ -14,20 +14,18 @@
     <style>
         body { font-family: 'Inter', system-ui, sans-serif; }
         .gradient-text {
-            background: linear-gradient(135deg, #005801 0%, #22c55e 100%);
-            -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+            color: #720455;
         }
-        .glass-sidebar { background: rgba(255,255,255,0.95); backdrop-filter: blur(20px); }
         .sidebar-link { transition: all 0.2s ease; }
         .sidebar-link:hover, .sidebar-link.active {
-            background: linear-gradient(135deg, #005801 0%, #006B01 100%); color: white;
+            background: #720455; color: white;
         }
-        .sidebar-link.active { box-shadow: 0 4px 15px rgba(0,88,1,0.3); }
+        .sidebar-link.active { box-shadow: 0 4px 15px rgba(114, 4, 85,0.3); }
 
         .pres-card { transition: all 0.25s cubic-bezier(0.4,0,0.2,1); }
         .pres-card:hover {
             transform: translateY(-4px);
-            box-shadow: 0 12px 32px -8px rgba(0,88,1,0.18);
+            box-shadow: 0 12px 32px -8px rgba(114, 4, 85,0.18);
         }
         .drop-zone {
             border: 2px dashed #86efac;
@@ -36,7 +34,7 @@
             transition: all 0.2s;
         }
         .drop-zone.drag-over {
-            border-color: #005801;
+            border-color: #720455;
             background: #dcfce7;
         }
         .upload-progress {
@@ -47,14 +45,14 @@
         }
         .upload-progress-bar {
             height: 100%;
-            background: linear-gradient(90deg, #005801, #22c55e);
+            background: #720455;
             border-radius: 999px;
             transition: width 0.3s ease;
         }
         ::-webkit-scrollbar { width: 6px; }
         ::-webkit-scrollbar-track { background: #f1f1f1; }
-        ::-webkit-scrollbar-thumb { background: #005801; border-radius: 3px; }
-        ::-webkit-scrollbar-thumb:hover { background: #004601; }
+        ::-webkit-scrollbar-thumb { background: #720455; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: #4d0339; }
         @keyframes shimmer { 0%{transform:translateX(-100%)} 100%{transform:translateX(100%)} }
         .shimmer-card {
             background: #f9fafb; border-radius: 16px; height: 100px;
@@ -78,7 +76,7 @@
         <!-- Header -->
         <header class="bg-white border-b border-gray-200 sticky top-0 z-30">
             <div class="flex items-center justify-between px-4 lg:px-8 py-4">
-                <button id="mobileMenuBtn" class="lg:hidden p-2 text-gray-600 hover:text-brand rounded-lg">
+                <button id="mobileMenuBtn" class="lg:hidden p-2 text-gray-600 hover:text-plum-800 rounded-lg">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
                     </svg>
@@ -89,7 +87,7 @@
                 </div>
                 <div class="flex items-center space-x-3">
                     <button id="btnUploadPres"
-                        class="inline-flex items-center space-x-2 bg-brand text-white px-4 py-2 rounded-xl font-medium hover:bg-brand-dark transition-colors">
+                        class="inline-flex items-center space-x-2 bg-plum-800 text-white px-4 py-2 rounded-xl font-medium hover:bg-plum-900 transition-colors">
                         <i class="fas fa-upload"></i>
                         <span class="hidden sm:inline">Upload PDF</span>
                     </button>
@@ -102,8 +100,8 @@
             <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
                 <div class="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm">
                     <div class="flex items-center space-x-3">
-                        <div class="w-12 h-12 bg-brand/10 rounded-xl flex items-center justify-center">
-                            <i class="fas fa-file-pdf text-brand text-xl"></i>
+                        <div class="w-12 h-12 bg-plum-800/10 rounded-xl flex items-center justify-center">
+                            <i class="fas fa-file-pdf text-plum-800 text-xl"></i>
                         </div>
                         <div>
                             <p class="text-2xl font-bold text-gray-900" id="statTotal">0</p>
@@ -152,15 +150,15 @@
                     <div class="relative">
                         <i class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"></i>
                         <input type="text" id="searchInput" placeholder="Search presentations…"
-                            class="w-full pl-11 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-brand focus:border-transparent">
+                            class="w-full pl-11 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-plum-800 focus:border-transparent">
                     </div>
                 </div>
                 <select id="moduleFilter"
-                    class="px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-brand bg-white min-w-[180px]">
+                    class="px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-plum-800 bg-white min-w-[180px]">
                     <option value="">All Modules</option>
                 </select>
                 <select id="statusFilter"
-                    class="px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-brand bg-white">
+                    class="px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-plum-800 bg-white">
                     <option value="">All Status</option>
                     <option value="published">Published</option>
                     <option value="draft">Draft</option>
@@ -175,13 +173,13 @@
 
             <!-- Empty State -->
             <div id="emptyState" class="hidden text-center py-20">
-                <div class="w-20 h-20 bg-brand/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <i class="fas fa-file-pdf text-brand text-3xl"></i>
+                <div class="w-20 h-20 bg-plum-800/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <i class="fas fa-file-pdf text-plum-800 text-3xl"></i>
                 </div>
                 <h3 class="text-xl font-semibold text-gray-900 mb-2">No presentations yet</h3>
                 <p class="text-gray-500 mb-6">Upload your first PDF slide deck for a module.</p>
                 <button id="btnUploadFirst"
-                    class="inline-flex items-center space-x-2 bg-brand text-white px-6 py-3 rounded-xl font-medium hover:bg-brand-dark transition-colors">
+                    class="inline-flex items-center space-x-2 bg-plum-800 text-white px-6 py-3 rounded-xl font-medium hover:bg-plum-900 transition-colors">
                     <i class="fas fa-upload mr-2"></i>Upload PDF
                 </button>
             </div>
@@ -212,7 +210,7 @@
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1">Presentation Title *</label>
                     <input type="text" id="presTitle" required
-                        class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-brand focus:border-transparent"
+                        class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-plum-800 focus:border-transparent"
                         placeholder="e.g., Term 1 Week 3 — Fractions">
                 </div>
 
@@ -220,7 +218,7 @@
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1">Description</label>
                     <textarea id="presDescription" rows="2"
-                        class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-brand focus:border-transparent resize-none"
+                        class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-plum-800 focus:border-transparent resize-none"
                         placeholder="Brief description of the content…"></textarea>
                 </div>
 
@@ -228,7 +226,7 @@
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1">Module *</label>
                     <select id="presModule" required
-                        class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-brand">
+                        class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-plum-800">
                         <option value="">Select module…</option>
                     </select>
                 </div>
@@ -237,7 +235,7 @@
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1">Lesson (optional)</label>
                     <select id="presLesson"
-                        class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-brand">
+                        class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-plum-800">
                         <option value="">No specific lesson</option>
                     </select>
                 </div>
@@ -247,11 +245,11 @@
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">Display Order</label>
                         <input type="number" id="presOrder" value="1" min="1"
-                            class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-brand focus:border-transparent">
+                            class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-plum-800 focus:border-transparent">
                     </div>
                     <div class="flex items-end pb-1">
                         <label class="flex items-center gap-2 cursor-pointer">
-                            <input type="checkbox" id="presPublished" class="w-5 h-5 rounded border-gray-300 text-brand focus:ring-brand">
+                            <input type="checkbox" id="presPublished" class="w-5 h-5 rounded border-gray-300 text-plum-800 focus:ring-plum-800">
                             <span class="text-sm font-medium text-gray-700">Publish immediately</span>
                         </label>
                     </div>
@@ -261,8 +259,8 @@
                 <div id="fileZoneWrapper">
                     <label class="block text-sm font-medium text-gray-700 mb-2">PDF File *</label>
                     <div id="dropZone" class="drop-zone p-8 text-center cursor-pointer" onclick="document.getElementById('pdfFileInput').click()">
-                        <i class="fas fa-cloud-upload-alt text-4xl text-brand/50 mb-3"></i>
-                        <p class="text-gray-600 font-medium">Drop PDF here or <span class="text-brand font-semibold">browse</span></p>
+                        <i class="fas fa-cloud-upload-alt text-4xl text-plum-800/50 mb-3"></i>
+                        <p class="text-gray-600 font-medium">Drop PDF here or <span class="text-plum-800 font-semibold">browse</span></p>
                         <p class="text-xs text-gray-400 mt-1">PDF only  •  Max 25 MB</p>
                         <input type="file" id="pdfFileInput" accept=".pdf,application/pdf" class="hidden">
                     </div>
@@ -280,7 +278,7 @@
                 <div id="uploadProgressWrapper" class="hidden">
                     <div class="flex justify-between text-sm mb-1">
                         <span class="text-gray-600">Uploading…</span>
-                        <span id="uploadPct" class="font-medium text-brand">0%</span>
+                        <span id="uploadPct" class="font-medium text-plum-800">0%</span>
                     </div>
                     <div class="upload-progress">
                         <div id="uploadBar" class="upload-progress-bar" style="width:0%"></div>
@@ -289,7 +287,7 @@
 
                 <div class="flex gap-3 pt-2">
                     <button type="submit" id="uploadSubmitBtn"
-                        class="flex-1 bg-brand text-white py-3 rounded-xl font-semibold hover:bg-brand-dark transition-colors">
+                        class="flex-1 bg-plum-800 text-white py-3 rounded-xl font-semibold hover:bg-plum-900 transition-colors">
                         Upload & Save
                     </button>
                     <button type="button" id="btnCancelUpload"
@@ -445,11 +443,11 @@
                 '<span><i class="fas fa-calendar mr-1"></i>' + new Date(p.created_at).toLocaleDateString() + '</span>' +
                 '</div></div>' +
                 '<div class="flex flex-col gap-1 flex-shrink-0">' +
-                '<button onclick="previewPresentation(\'' + p.id + '\')" class="p-2 text-gray-400 hover:text-blue-500 hover:bg-blue-50 rounded-lg transition-colors" title="Preview"><i class="fas fa-eye"></i></button>' +
-                '<button onclick="openEditPres(\'' + p.id + '\')" class="p-2 text-gray-400 hover:text-brand hover:bg-brand/5 rounded-lg transition-colors" title="Edit"><i class="fas fa-edit"></i></button>' +
-                '<button onclick="togglePublish(\'' + p.id + '\',' + p.is_published + ')" class="p-2 text-gray-400 hover:text-green-500 hover:bg-green-50 rounded-lg transition-colors" title="' + (p.is_published ? 'Unpublish' : 'Publish') + '">' +
+                '<button onclick="previewPresentation(\'' + p.id + '\')" class="p-2 text-ink-500 hover:text-blue-500 hover:bg-blue-50 rounded-lg transition-colors" title="Preview" aria-label="Preview"><i class="fas fa-eye" aria-hidden="true"></i></button>' +
+                '<button onclick="openEditPres(\'' + p.id + '\')" class="p-2 text-ink-500 hover:text-plum-800 hover:bg-plum-800/5 rounded-lg transition-colors" title="Edit" aria-label="Edit"><i class="fas fa-edit" aria-hidden="true"></i></button>' +
+                '<button onclick="togglePublish(\'' + p.id + '\',' + p.is_published + ')" class="p-2 text-ink-500 hover:text-green-500 hover:bg-green-50 rounded-lg transition-colors" title="' + (p.is_published ? 'Unpublish' : 'Publish') + '" aria-label="' + (p.is_published ? 'Unpublish' : 'Publish') + '">' +
                 '<i class="fas fa-' + (p.is_published ? 'eye-slash' : 'check-circle') + '"></i></button>' +
-                '<button onclick="openDeleteConfirm(\'' + p.id + '\')" class="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors" title="Delete"><i class="fas fa-trash"></i></button>' +
+                '<button onclick="openDeleteConfirm(\'' + p.id + '\')" class="p-2 text-ink-500 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors" title="Delete" aria-label="Delete"><i class="fas fa-trash" aria-hidden="true"></i></button>' +
                 '</div></div></div>';
         }).join('');
     }

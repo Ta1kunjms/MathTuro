@@ -765,5 +765,12 @@ And update the top section (`## 1. Quick Orientation: "Where We Left Off"`) with
   - `develop` branch and staging environment are strictly deprecated.
   - Documented as an inviolable rule in `AGENTS.md` and `docs/PROJECT_STATE.md`.
 
+### [2026-10-22 01:38] — Auth Pages 100% Unified (login, register, reset-password)
+* **Author:** Antigravity (Implementation Lead)
+* **Status:** Complete directly on `main`.
+* **Details:**
+  - `public/reset-password.html` upgraded to Fredoka + Nunito, `bg-paper-50`, `border-2 border-ink-900` inputs, tactile button shadow.
+  - All public authentication entrypoints (`login.html`, `register.html`, `reset-password.html`) are now completely unified with the landing page design language.
+
 
 

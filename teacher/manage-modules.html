@@ -882,7 +882,7 @@
                 ${(() => {
                     const scope = getModuleScopeLabels(module);
                     return `
-                <div class="module-card bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden transition-all cursor-pointer" onclick="openModuleDetail('${module.id}')">
+                <div class="module-card bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden transition-all cursor-pointer" role="button" tabindex="0" onclick="openModuleDetail('${module.id}')" onkeydown="if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); this.click(); }">
                     <div class="h-32 bg-plum-800 flex items-center justify-center">
                         ${module.content_type === 'pdf' ? `
                             <i class="fas fa-file-pdf text-white/80 text-5xl"></i>

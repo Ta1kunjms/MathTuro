@@ -458,7 +458,7 @@
                             
                             ${quiz.video && quiz.video.video_url ? `
                                 <div class="mb-3">
-                                    <div class="relative aspect-video rounded-lg overflow-hidden bg-gray-900 cursor-pointer" onclick="playQuizVideo(${attrValue(JSON.stringify(String(quiz.video.video_url)))})">
+                                    <div class="relative aspect-video rounded-lg overflow-hidden bg-gray-900 cursor-pointer" role="button" tabindex="0" aria-label="Play video" onkeydown="if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); this.click(); }" onclick="playQuizVideo(${attrValue(JSON.stringify(String(quiz.video.video_url)))})">
                                         <img src="${attrValue(quiz.video.thumbnail_url || getYouTubeThumbnail(quiz.video.video_url) || 'https://via.placeholder.com/320x180?text=Video')}" 
                                              alt="${escapeHtml(quiz.video.title)}" 
                                              class="w-full h-full object-cover">

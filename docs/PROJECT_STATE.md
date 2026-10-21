@@ -49,7 +49,30 @@
    - **Batch 3 (Priority C: Teacher CMS & Authoring):** All 11 teacher pages unified to Fredoka + Nunito.
    - **Batch 4 (Priority D: Admin Operations & Housekeeping):** Deleted stray stub `admin/grade-levels-fixed.html`. Unified all 11 admin subpages and `admin/login.html` to Fredoka + Nunito.
    - **Batch 5 (Priority E: Functional Polish & Production Alignment):** Created `database/migration_profile_update_and_last_login.sql` for safe profile and atomic login state updates; updated `scripts/qa/verify_phase3_authenticated_api.ps1` and `scripts/qa/verify_phase4_5_authenticated_api.ps1` to default to Production (`ynkzcybctsstpqxdoweq.supabase.co`) with configurable environment variables.
-9. **Next Step for User:** Review git diff on `main`, run `git add .`, `git commit -m "feat: complete neo-brutalist unification, Philippine statutory compliance, and production alignment"`, and run `git push origin main` in terminal to trigger automatic Vercel production deployment.
+9. **Production Register RLS Fix (2026-10-22 02:46):**
+   - **Issue:** `https://mathturo.vercel.app/public/register.html` failed to populate Grade Levels and Sections due to PostgREST 401 (`error=42501: permission denied for function is_current_user_admin`). The `admin_manage_grade_levels` and `teachers_view_own_sections` RLS policies called helper functions that `anon` lacked EXECUTE grants on.
+   - **Resolution:** Executed `GRANT EXECUTE ON FUNCTION public.is_current_user_admin() TO anon;` and `GRANT EXECUTE ON FUNCTION public.is_current_user_teacher_or_admin() TO anon;` in production Supabase SQL editor.
+   - **Verification:** Verified in browser that `https://mathturo.vercel.app/public/register.html` successfully loads Grade 7–10 and dynamically populates sections (Earth, Jupiter, Saturn, Section A/B/C) with 0 console or network errors.
+10. **Admin & Teacher Accounts Provisioned & Verified (2026-10-22 03:04):**
+   - **Resolution:** Updated `handle_new_user()` trigger to only enforce student demographic fields (12-digit LRN, SY, gender) on student registrations; updated `prevent_protected_user_changes()` to permit the `postgres` superuser in SQL Editor.
+   - **Accounts Created:** `admin@mathturo.com` (Role: `admin`, Approved, Active) and `teacher@mathturo.com` (Role: `teacher`, Approved, Active).
+   - **Verification:** Browser subagents logged in and verified seamless redirects on production Vercel:
+     - `admin@mathturo.com` $\rightarrow$ `https://mathturo.vercel.app/admin/dashboard.html` (Full student approval queue accessible).
+     - `teacher@mathturo.com` $\rightarrow$ `https://mathturo.vercel.app/teacher/dashboard.html` (Full teacher instructional portal accessible).
+11. **Teacher & Admin Student Approval Workflow & RLS (2026-10-22 03:37):**
+   - **Resolution:** Empowered teachers alongside administrators to review, approve, and reject student registrations.
+   - **Database Migration:** Created [database/migration_teacher_student_approval_and_rls.sql](file:///d:/Personal_Projects/MathTuro/database/migration_teacher_student_approval_and_rls.sql) which:
+     - Updates `teachers_view_all_students` RLS policy to permit teachers to SELECT pending students.
+     - Updates `approve_student_account`, `reject_student_account`, and `bulk_approve_student_accounts` to allow active teachers (`is_current_user_teacher_or_admin()`).
+     - Updates `prevent_protected_user_changes()` trigger so teachers can update student approval status and active state without trigger errors, while maintaining strict protection over demographic fields.
+   - **Frontend UI Integration:**
+     - Admin: [admin/users.html](file:///d:/Personal_Projects/MathTuro/admin/users.html) (Pending Approval tab with bulk and individual approve/reject).
+     - Teacher: [teacher/student-progress.html](file:///d:/Personal_Projects/MathTuro/teacher/student-progress.html) (Top "Pending Registrations Queue" banner + inline status badges and Approve/Reject buttons in student table).
+     - Teacher Dashboard: [teacher/dashboard.html](file:///d:/Personal_Projects/MathTuro/teacher/dashboard.html) (Hero alert banner directing teachers to pending student registrations).
+12. **Immediate Next Options:**
+   - **Step 1:** Run [database/migration_teacher_student_approval_and_rls.sql](file:///d:/Personal_Projects/MathTuro/database/migration_teacher_student_approval_and_rls.sql) in production Supabase SQL Editor (`ynkzcybctsstpqxdoweq`).
+   - **Step 2:** User reviews git diff on `main`, runs `git add .`, `git commit -m "feat: enable teacher and admin student registration approval workflows"`, and `git push origin main`.
+   - **Step 3 (End-to-End Registration & Approval Walkthrough):** Register a test student at `/public/register.html`, then log in as teacher or admin to approve them, and verify student sign-in.
 
 ---
 
@@ -807,6 +830,37 @@ And update the top section (`## 1. Quick Orientation: "Where We Left Off"`) with
   - All work resides directly on `main` branch.
 
 
+
+
+
+
+### [2026-10-22 02:46] — Production Register RLS Function Grants & Verification
+* **Author:** Antigravity & Tycoon James Flores
+* **Context:** Following deployment of `a670f14`, `https://mathturo.vercel.app/public/register.html` failed to populate Grade Levels and Sections with PostgREST 401 (`error=42501`).
+* **Root Cause:** PostgreSQL evaluated all RLS policies on `grade_levels` (`admin_manage_grade_levels`) and `sections` (`teachers_view_own_sections`), which call helper functions `is_current_user_admin()` and `is_current_user_teacher_or_admin()`. Because `anon` lacked `EXECUTE` privileges on those functions, the function calls failed, aborting the queries.
+* **Fix Applied:** Granted `EXECUTE` on both functions to `anon` in production Supabase SQL Editor.
+* **Verification:** Browser subagent navigated to `https://mathturo.vercel.app/public/register.html`, verified Grade 7–10 options rendered, selected Grade 7, and verified Sections (Earth, Jupiter, Saturn, Section A/B/C) populated dynamically with 0 errors.
+
+### [2026-10-22 03:04] — Production Admin & Teacher Accounts Verification
+* **Author:** Antigravity & Tycoon James Flores
+* **Context:** Creation of administrative and instructional staff accounts for system operation and student approval workflows.
+* **Database Adjustments:**
+  - Upgraded `handle_new_user()` trigger to only validate Philippine student demographic invariants (12-digit LRN, S.Y., gender) for `role = 'student'`, allowing non-student roles created via dashboard/admin to initialize gracefully.
+  - Updated `prevent_protected_user_changes()` trigger to allow database administrative roles (`postgres`, `supabase_admin`) in SQL Editor to update user roles and approval statuses.
+### [2026-10-22 03:37] — Teacher & Admin Student Registration Approval Workflow
+* **Author:** Antigravity & Tycoon James Flores
+* **Context:** Enabled teachers as well as administrators to approve and reject student registrations.
+* **Database Migration:** [database/migration_teacher_student_approval_and_rls.sql](file:///d:/Personal_Projects/MathTuro/database/migration_teacher_student_approval_and_rls.sql)
+  - Dropped and recreated `teachers_view_all_students` policy on `public.users` so teachers can SELECT pending students.
+  - Updated `approve_student_account`, `reject_student_account`, and `bulk_approve_student_accounts` to accept active teachers (`is_current_user_teacher_or_admin()`).
+  - Updated `prevent_protected_user_changes()` trigger so that teachers are authorized to update student approval status and active state without trigger errors, and permitted `postgres` superuser.
+* **Frontend Implementation:**
+  - [teacher/student-progress.html](file:///d:/Personal_Projects/MathTuro/teacher/student-progress.html): Added dedicated top "Pending Registrations Queue" banner + inline status badges and Approve/Reject buttons in student table with automatic list reloads.
+  - [teacher/dashboard.html](file:///d:/Personal_Projects/MathTuro/teacher/dashboard.html): Added alert banner notifying teachers when student registrations are awaiting approval with direct link to Student Progress.
+  - [public/login.html](file:///d:/Personal_Projects/MathTuro/public/login.html): Unified single sign-in flow (removed student/teacher tabs; automatically routes to respective portal).
+  - [student/dashboard.html](file:///d:/Personal_Projects/MathTuro/student/dashboard.html): Removed "This Week's Activity" section per client directive.
+  - [student/modules.html](file:///d:/Personal_Projects/MathTuro/student/modules.html): Added status chips (Completed, Incompleted, Graded, Non-Graded) and Term tabs (Term 1, Term 2, Term 3).
+  - [public/modules.html](file:///d:/Personal_Projects/MathTuro/public/modules.html) & [public/guest-modules.html](file:///d:/Personal_Projects/MathTuro/public/guest-modules.html): Updated to Term tabs (Term 1, Term 2, Term 3).
 
 
 

@@ -138,12 +138,22 @@
                 </div>
             </div>
 
-            <div class="flex flex-wrap gap-2 mb-8" id="quarterTabs">
-                <button type="button" class="learn-quarter-tab active" data-quarter="all">All Modules</button>
-                <button type="button" class="learn-quarter-tab" data-quarter="1">Quarter 1</button>
-                <button type="button" class="learn-quarter-tab" data-quarter="2">Quarter 2</button>
-                <button type="button" class="learn-quarter-tab" data-quarter="3">Quarter 3</button>
-                <button type="button" class="learn-quarter-tab" data-quarter="4">Quarter 4</button>
+            <!-- Term Tabs (3 terms per DepEd mandate) -->
+            <div class="flex flex-wrap gap-2 mb-3" id="quarterTabs">
+                <button type="button" class="learn-quarter-tab active" data-quarter="all">All Terms</button>
+                <button type="button" class="learn-quarter-tab" data-quarter="1">Term 1</button>
+                <button type="button" class="learn-quarter-tab" data-quarter="2">Term 2</button>
+                <button type="button" class="learn-quarter-tab" data-quarter="3">Term 3</button>
+            </div>
+
+            <!-- Status Filter Chips (Completed, Incompleted, Graded, Non-Graded) -->
+            <div class="flex flex-wrap items-center gap-2 mb-8" id="statusFilterChips">
+                <span class="text-xs font-bold text-ink-500 uppercase tracking-wider mr-1">Status:</span>
+                <button type="button" class="learn-status-chip active px-3 py-1.5 rounded-full text-xs font-bold border-2 border-ink-900 bg-forest-600 text-white shadow-[2px_2px_0_0_#1c1b1a] transition-all" data-status="all">All</button>
+                <button type="button" class="learn-status-chip px-3 py-1.5 rounded-full text-xs font-bold border-2 border-ink-900 bg-white text-ink-900 hover:bg-paper-100 shadow-[2px_2px_0_0_#1c1b1a] transition-all" data-status="completed">Completed</button>
+                <button type="button" class="learn-status-chip px-3 py-1.5 rounded-full text-xs font-bold border-2 border-ink-900 bg-white text-ink-900 hover:bg-paper-100 shadow-[2px_2px_0_0_#1c1b1a] transition-all" data-status="incompleted">Incompleted</button>
+                <button type="button" class="learn-status-chip px-3 py-1.5 rounded-full text-xs font-bold border-2 border-ink-900 bg-white text-ink-900 hover:bg-paper-100 shadow-[2px_2px_0_0_#1c1b1a] transition-all" data-status="graded">Graded</button>
+                <button type="button" class="learn-status-chip px-3 py-1.5 rounded-full text-xs font-bold border-2 border-ink-900 bg-white text-ink-900 hover:bg-paper-100 shadow-[2px_2px_0_0_#1c1b1a] transition-all" data-status="non-graded">Non-Graded</button>
             </div>
 
             <!-- Loading State -->
@@ -188,6 +198,7 @@
         let modules = [];
         let studentAssignment = null;
         let activeQuarterFilter = 'all';
+        let activeStatusFilter = 'all';
 
         document.addEventListener('DOMContentLoaded', async function() {
             try {
@@ -225,7 +236,7 @@
         function normalizeQuarterValue(value) {
             if (value === null || value === undefined || value === '') return '';
             const quarter = String(value).trim().replace(/[^0-9]/g, '');
-            return ['1', '2', '3', '4'].includes(quarter) ? quarter : '';
+            return ['1', '2', '3'].includes(quarter) ? quarter : (quarter === '4' ? '3' : '');
         }
 
         function getModuleQuarter(module) {
@@ -234,7 +245,7 @@
 
         function getQuarterLabel(module) {
             const quarter = getModuleQuarter(module);
-            return quarter ? `Quarter ${quarter}` : '';
+            return quarter ? `Term ${quarter}` : '';
         }
 
         function resolveLearningMaterialUrl(rawPath) {
@@ -308,6 +319,11 @@
                 tab.addEventListener('click', () => setQuarterFilter(tab.dataset.quarter || 'all'));
             });
             updateQuarterTabs();
+
+            document.querySelectorAll('.learn-status-chip').forEach(chip => {
+                chip.addEventListener('click', () => setStatusFilter(chip.dataset.status || 'all'));
+            });
+            updateStatusChips();
         }
 
         function setQuarterFilter(quarter) {
@@ -320,6 +336,24 @@
             document.querySelectorAll('.learn-quarter-tab').forEach(tab => {
                 const isActive = (tab.dataset.quarter || 'all') === activeQuarterFilter;
                 tab.classList.toggle('active', isActive);
+            });
+        }
+
+        function setStatusFilter(status) {
+            activeStatusFilter = status || 'all';
+            updateStatusChips();
+            renderModules(modules);
+        }
+
+        function updateStatusChips() {
+            document.querySelectorAll('.learn-status-chip').forEach(chip => {
+                const isActive = (chip.dataset.status || 'all') === activeStatusFilter;
+                chip.classList.toggle('active', isActive);
+                if (isActive) {
+                    chip.className = 'learn-status-chip active px-3 py-1.5 rounded-full text-xs font-bold border-2 border-ink-900 bg-forest-600 text-white shadow-[2px_2px_0_0_#1c1b1a] transition-all';
+                } else {
+                    chip.className = 'learn-status-chip px-3 py-1.5 rounded-full text-xs font-bold border-2 border-ink-900 bg-white text-ink-900 hover:bg-paper-100 shadow-[2px_2px_0_0_#1c1b1a] transition-all';
+                }
             });
         }
 
@@ -374,7 +408,33 @@
                     return gradeMatch && sectionMatch;
                 });
 
-                // Phase 2: Check sequential access for each module
+                // Check sequential access, assessment association, and completion for each module
+                let passedAssessmentIds = new Set();
+                let moduleAssessmentsMap = new Map();
+
+                try {
+                    const [attemptsRes, assessmentsRes] = await Promise.all([
+                        getSupabase()
+                            .from('module_assessment_attempts')
+                            .select('module_assessment_id, passed')
+                            .eq('student_id', currentUser.id),
+                        getSupabase()
+                            .from('module_assessments')
+                            .select('id, module_id, assessment_type')
+                    ]);
+
+                    (attemptsRes.data || []).forEach(a => {
+                        if (a.passed) passedAssessmentIds.add(a.module_assessment_id);
+                    });
+
+                    (assessmentsRes.data || []).forEach(asmt => {
+                        if (!moduleAssessmentsMap.has(asmt.module_id)) moduleAssessmentsMap.set(asmt.module_id, []);
+                        moduleAssessmentsMap.get(asmt.module_id).push(asmt);
+                    });
+                } catch (metaErr) {
+                    console.warn('Metadata load error:', metaErr);
+                }
+
                 for (const m of modules) {
                     try {
                         const { data: canAccess } = await getSupabase().rpc('can_student_access_module', {
@@ -386,6 +446,11 @@
                         console.warn('Access check error for module', m.id, err);
                         m.is_locked = false;
                     }
+
+                    const asmts = moduleAssessmentsMap.get(m.id) || [];
+                    m.has_quiz = asmts.length > 0;
+                    const postTest = asmts.find(a => a.assessment_type === 'post_test');
+                    m.is_completed = postTest ? passedAssessmentIds.has(postTest.id) : false;
                 }
                 
                 // Hide loading state
@@ -408,15 +473,29 @@
             const grid = document.getElementById('modulesGrid');
             const empty = document.getElementById('emptyState');
             const query = document.getElementById('searchInput').value.toLowerCase().trim();
+            
+            // Filter by Term
             const quarterFiltered = activeQuarterFilter === 'all'
                 ? data
                 : data.filter(module => getModuleQuarter(module) === activeQuarterFilter);
+
+            // Filter by Status (Completed, Incompleted, Graded, Non-Graded)
+            const statusFiltered = quarterFiltered.filter(module => {
+                if (activeStatusFilter === 'all') return true;
+                if (activeStatusFilter === 'completed') return Boolean(module.is_completed);
+                if (activeStatusFilter === 'incompleted') return !module.is_completed;
+                if (activeStatusFilter === 'graded') return Boolean(module.has_quiz);
+                if (activeStatusFilter === 'non-graded') return !module.has_quiz;
+                return true;
+            });
+
+            // Filter by Search Query
             const filtered = query
-                ? quarterFiltered.filter(m =>
+                ? statusFiltered.filter(m =>
                     (m.title || '').toLowerCase().includes(query) ||
                     ((m.description || '').toLowerCase().includes(query))
                 )
-                : quarterFiltered;
+                : statusFiltered;
 
             document.getElementById('moduleCount').textContent = filtered.length;
 

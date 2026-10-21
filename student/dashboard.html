@@ -498,24 +498,6 @@
                             <!-- Achievement badges loaded dynamically -->
                         </div>
                     </div>
-
-                    <!-- Weekly Activity -->
-                    <div class="dash-support-panel p-6">
-                        <h3 class="dash-support-panel-title mb-4">This Week's Activity</h3>
-                        <div id="weeklyActivity" class="grid grid-cols-7 gap-1">
-                            <!-- Days will be populated -->
-                        </div>
-                        <div class="flex justify-between text-xs text-gray-400 mt-2">
-                            <span>Mon</span>
-                            <span>Tue</span>
-                            <span>Wed</span>
-                            <span>Thu</span>
-                            <span>Fri</span>
-                            <span>Sat</span>
-                            <span>Sun</span>
-                        </div>
-                        <p id="weeklyActivityCaption" class="dash-weekly-caption"></p>
-                    </div>
                 </div>
             </div>
         </div>
@@ -659,7 +641,6 @@
                 loadContinueLearning();
                 loadRecentSubmissions();
                 loadRecentActivity();
-                loadWeeklyActivity();
                 loadStreak();
                 await loadAchievements();
 
@@ -1530,60 +1511,6 @@
                         <button type="button" onclick="location.reload()" class="dash-inline-error-action">Refresh page</button>
                     </div>
                 `;
-            }
-        }
-
-        // Load weekly activity heatmap
-        function loadWeeklyActivity() {
-            const container = document.getElementById('weeklyActivity');
-            const captionEl = document.getElementById('weeklyActivityCaption');
-            const dayNames = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
-
-            try {
-                const startOfWeek = new Date();
-                startOfWeek.setDate(startOfWeek.getDate() - startOfWeek.getDay() + 1);
-                startOfWeek.setHours(0, 0, 0, 0);
-
-                const dayCounts = [0, 0, 0, 0, 0, 0, 0];
-                dashboardData.activityTimeline.forEach(activity => {
-                    const timestamp = new Date(activity.timestamp);
-                    if (Number.isNaN(timestamp.getTime()) || timestamp < startOfWeek) return;
-                    const day = timestamp.getDay();
-                    const adjustedDay = day === 0 ? 6 : day - 1; // Monday = 0
-                    dayCounts[adjustedDay]++;
-                });
-
-                const today = new Date().getDay();
-                const adjustedToday = today === 0 ? 6 : today - 1;
-
-                container.innerHTML = dayCounts.map((count, i) => {
-                    let intensity = 'bg-gray-100';
-                    if (count >= 5) intensity = 'bg-green-500';
-                    else if (count >= 3) intensity = 'bg-green-400';
-                    else if (count >= 1) intensity = 'bg-green-300';
-
-                    const isToday = i === adjustedToday;
-                    const dayLabel = `${dayNames[i]}: ${count} activit${count === 1 ? 'y' : 'ies'}`;
-
-                    return `<div class="h-8 rounded ${intensity} ${isToday ? 'ring-2 ring-forest-800 ring-offset-1' : ''}" title="${dayLabel}"><span class="sr-only">${dayLabel}</span></div>`;
-                }).join('');
-
-                if (captionEl) {
-                    const weekTotal = dayCounts.reduce((sum, count) => sum + count, 0);
-                    captionEl.textContent = weekTotal === 0
-                        ? 'No activity logged this week yet — complete a lesson or quiz to begin your streak.'
-                        : `${weekTotal} activit${weekTotal === 1 ? 'y' : 'ies'} logged this week`;
-                }
-
-            } catch (error) {
-                console.error('Error loading weekly activity:', error);
-                container.innerHTML = `
-                    <div class="dash-inline-error dash-inline-error-span-7">
-                        <p>Couldn't load your weekly activity right now.</p>
-                        <button type="button" onclick="location.reload()" class="dash-inline-error-action">Refresh page</button>
-                    </div>
-                `;
-                if (captionEl) captionEl.textContent = '';
             }
         }
 

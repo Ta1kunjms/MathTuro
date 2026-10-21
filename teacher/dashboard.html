@@ -163,6 +163,23 @@
                 </div>
             </div>
 
+            <!-- Pending Student Registrations Alert -->
+            <div id="pendingStudentsBanner" class="hidden mb-6 bg-yellow-50 border-2 border-ink-900 rounded-2xl p-4 sm:p-5 shadow-[4px_4px_0_0_#1c1b1a] flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div class="flex items-center gap-3">
+                    <span class="inline-flex items-center justify-center w-10 h-10 rounded-xl bg-yellow-200 border-2 border-ink-900 text-yellow-900 font-bold text-lg">🎓</span>
+                    <div>
+                        <h3 class="font-bold text-ink-900 text-base"><span id="pendingStudentsCount">0</span> Student Registration(s) Awaiting Approval</h3>
+                        <p class="text-xs text-ink-600 font-medium">New student accounts are waiting to be reviewed and approved for classroom access.</p>
+                    </div>
+                </div>
+                <a href="student-progress.html" class="inline-flex items-center justify-center gap-2 px-4 py-2 bg-forest-600 hover:bg-forest-700 text-white font-bold text-xs sm:text-sm rounded-xl border-2 border-ink-900 shadow-[2px_2px_0_0_#1c1b1a] active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all shrink-0">
+                    <span>Review in Student Progress</span>
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/>
+                    </svg>
+                </a>
+            </div>
+
             <!-- Stats Grid -->
             <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6 mb-8">
                 <!-- Pending Submissions -->
@@ -533,13 +550,25 @@
                 const approved = allSubmissions ? allSubmissions.filter(s => s.status === 'approved').length : 0;
                 const rejected = allSubmissions ? allSubmissions.filter(s => s.status === 'rejected').length : 0;
 
-                // Get student count
+                // Get student count & pending student registrations
                 const { data: students } = await getSupabase()
                     .from('users')
-                    .select('id')
+                    .select('id, approval_status')
                     .eq('role', 'student');
 
-                const studentCount = students ? students.length : 0;
+                const studentCount = students ? students.filter(s => s.approval_status === 'approved').length : 0;
+                const pendingStudentCount = students ? students.filter(s => s.approval_status === 'pending').length : 0;
+
+                const pendingBanner = document.getElementById('pendingStudentsBanner');
+                const pendingStudentsCountEl = document.getElementById('pendingStudentsCount');
+                if (pendingBanner && pendingStudentsCountEl) {
+                    if (pendingStudentCount > 0) {
+                        pendingStudentsCountEl.textContent = pendingStudentCount;
+                        pendingBanner.classList.remove('hidden');
+                    } else {
+                        pendingBanner.classList.add('hidden');
+                    }
+                }
 
                 // Update UI
                 document.getElementById('pendingStat').textContent = pending;

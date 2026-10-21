@@ -146,6 +146,20 @@
                 <div class="nav-step" data-step="quizzes">Quizzes</div>
             </div>
 
+            <!-- Pending Registrations Queue for Teachers -->
+            <div id="pendingRegistrationsBanner" class="hidden mb-6 bg-yellow-50 border-2 border-ink-900 rounded-2xl p-5 shadow-[4px_4px_0_0_#1c1b1a]">
+                <div class="flex items-center justify-between mb-3">
+                    <div class="flex items-center gap-2">
+                        <span class="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-yellow-200 border-2 border-ink-900 text-yellow-900 font-bold">⚠️</span>
+                        <h3 class="font-bold text-ink-900 text-base sm:text-lg">Student Registrations Awaiting Approval (<span id="pendingCount">0</span>)</h3>
+                    </div>
+                    <span class="text-xs font-bold text-ink-600 uppercase tracking-wider">Teacher Approval Queue</span>
+                </div>
+                <div id="pendingRegistrationsList" class="space-y-2">
+                    <!-- Loaded dynamically -->
+                </div>
+            </div>
+
             <!-- Grade Levels View -->
             <div id="gradeLevelView" class="space-y-4">
                 <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
@@ -187,12 +201,13 @@
                                     <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Grade Level</th>
                                     <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Section</th>
                                     <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Email</th>
+                                    <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Status</th>
                                     <th class="px-4 py-3 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">Actions</th>
                                 </tr>
                             </thead>
                             <tbody id="studentTableBody" class="divide-y divide-gray-100">
                                 <tr>
-                                    <td colspan="5" class="text-center py-8 text-gray-400">Loading students...</td>
+                                    <td colspan="6" class="text-center py-8 text-gray-400">Loading students...</td>
                                 </tr>
                             </tbody>
                         </table>
@@ -366,6 +381,7 @@
             // Load user info and initial data
             loadUserInfo();
             loadGradeLevels();
+            loadPendingRegistrations();
         });
 
         async function loadUserInfo() {
@@ -542,8 +558,6 @@
                     .from('users')
                     .select('*')
                     .eq('role', 'student')
-                    .eq('approval_status', 'approved')
-                    .eq('is_active', true)
                     .order('full_name');
                 
                 if (error) {
@@ -576,7 +590,7 @@
                 if (filteredStudents.length === 0) {
                     studentTableBody.innerHTML = `
                         <tr>
-                            <td colspan="5" class="text-center py-8 text-gray-400">
+                            <td colspan="6" class="text-center py-8 text-gray-400">
                                 No students found in ${escText(sectionName)}
                             </td>
                         </tr>
@@ -587,28 +601,47 @@
                         const initials = displayName.trim().charAt(0).toUpperCase() || 'S';
                         const gradeLabel = student.grade_level_text || student.grade_level || gradeLevelName || '-';
                         const sectionLabel = student.section_text || student.section || sectionName || '-';
+                        const isPending = (student.approval_status || '').toLowerCase() === 'pending';
+
+                        const statusBadge = isPending
+                            ? `<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-yellow-100 text-yellow-800 border-2 border-ink-900 shadow-[1px_1px_0_0_#1c1b1a]">Pending</span>`
+                            : `<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-forest-100 text-forest-800 border-2 border-ink-900 shadow-[1px_1px_0_0_#1c1b1a]">Approved</span>`;
+
+                        const actionsHtml = isPending
+                            ? `<div class="flex items-center justify-end gap-1.5">
+                                <button
+                                    onclick="approveStudentRegistration('${student.id}')"
+                                    class="px-2.5 py-1 bg-forest-600 text-white font-bold text-xs rounded-lg border-2 border-ink-900 shadow-[1px_1px_0_0_#1c1b1a] hover:bg-forest-800 active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all">
+                                    Approve
+                                </button>
+                                <button
+                                    onclick="rejectStudentRegistration('${student.id}')"
+                                    class="px-2.5 py-1 bg-red-600 text-white font-bold text-xs rounded-lg border-2 border-ink-900 shadow-[1px_1px_0_0_#1c1b1a] hover:bg-red-700 active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all">
+                                    Reject
+                                </button>
+                              </div>`
+                            : `<button
+                                class="inline-flex items-center justify-center w-9 h-9 rounded-lg text-plum-800 hover:bg-plum-100/50 border border-transparent hover:border-ink-900"
+                                title="View Student Quizzes"
+                                onclick="selectStudent('${student.id}', ${jsArg(displayName)})">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                                </svg>
+                              </button>`;
 
                         return `
                             <tr class="hover:bg-gray-50">
                                 <td class="px-4 py-4">
                                     <div class="flex items-center gap-3">
-                                        <div class="w-10 h-10 rounded-full bg-green-100 text-green-700 font-semibold flex items-center justify-center">${escText(initials)}</div>
-                                        <span class="font-medium text-gray-900">${escText(displayName)}</span>
+                                        <div class="w-10 h-10 rounded-full bg-forest-100 text-forest-800 font-bold border-2 border-ink-900 flex items-center justify-center">${escText(initials)}</div>
+                                        <span class="font-bold text-gray-900">${escText(displayName)}</span>
                                     </div>
                                 </td>
-                                <td class="px-4 py-4 text-gray-600">${escText(gradeLabel)}</td>
-                                <td class="px-4 py-4 text-gray-600">${escText(sectionLabel)}</td>
-                                <td class="px-4 py-4 text-gray-700">${escText(student.email || '-')}</td>
-                                <td class="px-4 py-4 text-right">
-                                    <button
-                                        class="inline-flex items-center justify-center w-9 h-9 rounded-lg text-forest-600 hover:bg-forest-50"
-                                        title="View Student Quizzes"
-                                        onclick="selectStudent('${student.id}', ${jsArg(displayName)})">
-                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-                                        </svg>
-                                    </button>
-                                </td>
+                                <td class="px-4 py-4 text-gray-600 font-semibold">${escText(gradeLabel)}</td>
+                                <td class="px-4 py-4 text-gray-600 font-semibold">${escText(sectionLabel)}</td>
+                                <td class="px-4 py-4 text-gray-700 font-medium">${escText(student.email || '-')}</td>
+                                <td class="px-4 py-4">${statusBadge}</td>
+                                <td class="px-4 py-4 text-right">${actionsHtml}</td>
                             </tr>
                         `;
                     }).join('');
@@ -617,9 +650,115 @@
                 console.error('Error loading students:', err);
                 document.getElementById('studentTableBody').innerHTML = `
                     <tr>
-                        <td colspan="5" class="text-center py-8 text-red-400">Failed to load students: ${escText(err.message)}</td>
+                        <td colspan="6" class="text-center py-8 text-red-400">Failed to load students: ${escText(err.message)}</td>
                     </tr>
                 `;
+            }
+        }
+
+        async function loadPendingRegistrations() {
+            try {
+                const supabase = getSupabase();
+                if (!supabase) return;
+
+                const { data, error } = await supabase
+                    .from('users')
+                    .select('*')
+                    .eq('role', 'student')
+                    .eq('approval_status', 'pending')
+                    .order('created_at', { ascending: false });
+
+                if (error) {
+                    console.error('Error fetching pending student registrations:', error);
+                    return;
+                }
+
+                const banner = document.getElementById('pendingRegistrationsBanner');
+                const countEl = document.getElementById('pendingCount');
+                const listEl = document.getElementById('pendingRegistrationsList');
+                if (!banner || !listEl) return;
+
+                const pendingStudents = data || [];
+                if (countEl) countEl.textContent = pendingStudents.length;
+
+                if (pendingStudents.length === 0) {
+                    banner.classList.add('hidden');
+                    return;
+                }
+
+                banner.classList.remove('hidden');
+                listEl.innerHTML = pendingStudents.map(student => {
+                    const displayName = student.full_name || `${student.first_name || ''} ${student.last_name || ''}`.trim() || student.email || 'Student';
+                    const gradeText = student.grade_level_text || student.grade_level || 'Grade N/A';
+                    const sectionText = student.section_text || student.section || 'Section N/A';
+                    const lrnText = student.lrn ? `LRN: ${student.lrn}` : '';
+                    const syText = student.school_year ? `SY: ${student.school_year}` : '';
+                    const metaInfo = [gradeText, sectionText, lrnText, syText].filter(Boolean).join(' • ');
+
+                    return `
+                        <div class="flex flex-col sm:flex-row sm:items-center justify-between p-3.5 bg-white border-2 border-ink-900 rounded-xl shadow-[2px_2px_0_0_#1c1b1a] gap-3">
+                            <div>
+                                <div class="flex items-center gap-2">
+                                    <span class="font-bold text-ink-900 text-sm sm:text-base">${escText(displayName)}</span>
+                                    <span class="text-xs text-ink-500 font-medium">(${escText(student.email || '')})</span>
+                                </div>
+                                <div class="text-xs font-semibold text-ink-600 mt-0.5">${escText(metaInfo)}</div>
+                            </div>
+                            <div class="flex items-center gap-2 shrink-0">
+                                <button
+                                    type="button"
+                                    onclick="approveStudentRegistration('${student.id}')"
+                                    class="px-3 py-1.5 bg-forest-600 hover:bg-forest-700 text-white font-bold text-xs rounded-lg border-2 border-ink-900 shadow-[1px_1px_0_0_#1c1b1a] active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all">
+                                    Approve
+                                </button>
+                                <button
+                                    type="button"
+                                    onclick="rejectStudentRegistration('${student.id}')"
+                                    class="px-3 py-1.5 bg-red-600 hover:bg-red-700 text-white font-bold text-xs rounded-lg border-2 border-ink-900 shadow-[1px_1px_0_0_#1c1b1a] active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all">
+                                    Reject
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            } catch (err) {
+                console.error('Error in loadPendingRegistrations:', err);
+            }
+        }
+
+        async function approveStudentRegistration(studentId) {
+            try {
+                const { error } = await getSupabase().rpc('approve_student_account', { target_user_id: studentId });
+                if (error) throw error;
+                announceResult('Student account approved successfully!');
+                await loadPendingRegistrations();
+                if (currentState.gradeLevel?.id && currentState.section?.id) {
+                    await loadStudents(currentState.gradeLevel.id, currentState.section.id, currentState.section.name, currentState.gradeLevel.name);
+                }
+            } catch (err) {
+                console.error('Error approving student:', err);
+                announceResult('Failed to approve student: ' + err.message, true);
+            }
+        }
+
+        async function rejectStudentRegistration(studentId) {
+            const reason = prompt('Please enter a reason for rejecting this student registration:');
+            if (!reason || !reason.trim()) return;
+
+            try {
+                const { error } = await getSupabase().rpc('reject_student_account', {
+                    target_user_id: studentId,
+                    reason: reason.trim()
+                });
+                if (error) throw error;
+                announceResult('Student registration rejected.');
+                await loadPendingRegistrations();
+                if (currentState.gradeLevel?.id && currentState.section?.id) {
+                    await loadStudents(currentState.gradeLevel.id, currentState.section.id, currentState.section.name, currentState.gradeLevel.name);
+                }
+            } catch (err) {
+                console.error('Error rejecting student:', err);
+                announceResult('Failed to reject student: ' + err.message, true);
             }
         }
 

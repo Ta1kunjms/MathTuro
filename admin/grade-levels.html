@@ -11,43 +11,18 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
         body { font-family: 'Inter', system-ui, sans-serif; }
-        
-        .gradient-text {
-            background: linear-gradient(135deg, #005801 0%, #22c55e 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
-        
-        .glass-sidebar {
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(20px);
-        }
-        
-        .sidebar-link {
-            transition: all 0.2s ease;
-        }
-        
-        .sidebar-link:hover, .sidebar-link.active {
-            background: linear-gradient(135deg, #dc2626 0%, #ef4444 100%);
-            color: white;
-        }
-        
-        .sidebar-link.active {
-            box-shadow: 0 4px 15px rgba(220, 38, 38, 0.3);
-        }
-        
+
         .grade-row {
             transition: all 0.2s ease;
         }
-        
+
         .grade-row:hover {
             background-color: #f9fafb;
         }
-        
+
         ::-webkit-scrollbar { width: 6px; }
         ::-webkit-scrollbar-track { background: #f1f1f1; }
-        ::-webkit-scrollbar-thumb { background: #dc2626; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb { background: #9ca3af; border-radius: 3px; }
     </style>
     <link rel="stylesheet" href="../shared/css/base.css">
     <link rel="stylesheet" href="assets/css/admin.css">
@@ -58,97 +33,15 @@
     <!-- Mobile Menu Overlay -->
     <div id="mobileOverlay" class="fixed inset-0 bg-black bg-opacity-50 z-40 hidden lg:hidden"></div>
     
-    <!-- Sidebar -->
-    <aside id="sidebar" class="fixed left-0 top-0 h-full w-72 glass-sidebar border-r border-gray-200 z-50 transform -translate-x-full lg:translate-x-0 transition-transform duration-300">
-        <!-- Logo -->
-        <div class="p-6 border-b border-gray-100">
-            <a href="../public/index.html" class="flex items-center space-x-3">
-                <div class="w-12 h-12 bg-white rounded-xl flex items-center justify-center shadow-lg">
-                    <img src="../Logo/MATHURO-LOGO-v2.png" alt="MathTuro" class="w-10 h-10 object-contain">
-                </div>
-                <div>
-                    <span class="text-xl font-bold gradient-text">MathTuro</span>
-                    <p class="text-xs text-gray-500">Admin Portal</p>
-                </div>
-            </a>
-        </div>
-        
-        <!-- User Info -->
-        <div class="p-6 border-b border-gray-100">
-            <div class="flex items-center space-x-3">
-                <div class="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center">
-                    <span id="userInitials" class="text-red-600 font-bold text-lg">--</span>
-                </div>
-                <div>
-                    <p id="sidebarUserName" class="font-semibold text-gray-800">Loading...</p>
-                    <p class="text-sm text-red-600 font-medium">Administrator</p>
-                </div>
-            </div>
-        </div>
-        
-        <!-- Navigation -->
-        <nav class="p-4 space-y-2">
-            <a href="dashboard.html" class="sidebar-link flex items-center space-x-3 px-4 py-3 rounded-xl text-gray-700">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
-                </svg>
-                <span>Dashboard</span>
-            </a>
-            <a href="users.html" class="sidebar-link flex items-center space-x-3 px-4 py-3 rounded-xl text-gray-700">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
-                </svg>
-                <span>User Management</span>
-            </a>
-            <a href="grade-levels.html" class="sidebar-link active flex items-center space-x-3 px-4 py-3 rounded-xl text-gray-700">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/>
-                </svg>
-                <span>Grade Levels</span>
-            </a>
-            <a href="sections.html" class="sidebar-link flex items-center space-x-3 px-4 py-3 rounded-xl text-gray-700">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/>
-                </svg>
-                <span>Sections</span>
-            </a>
-            <a href="/teacher/manage-modules.html" class="sidebar-link flex items-center space-x-3 px-4 py-3 rounded-xl text-gray-700">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
-                </svg>
-                <span>Modules</span>
-            </a>
-            <a href="/teacher/submissions.html" class="sidebar-link flex items-center space-x-3 px-4 py-3 rounded-xl text-gray-700">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/>
-                </svg>
-                <span>Submissions</span>
-            </a>
-        </nav>
-        
-        <!-- Bottom Actions -->
-        <div class="absolute bottom-0 left-0 right-0 p-4 border-t border-gray-100 bg-white">
-            <a href="../public/index.html" class="flex items-center space-x-3 px-4 py-3 text-gray-600 hover:text-brand transition-colors">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
-                </svg>
-                <span>Back to Home</span>
-            </a>
-            <button id="logoutButton" class="w-full flex items-center space-x-3 px-4 py-3 text-red-600 hover:bg-red-50 rounded-xl transition-colors">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
-                </svg>
-                <span>Logout</span>
-            </button>
-        </div>
-    </aside>
+    <!-- Sidebar (populated by assets/js/sidebar.js) -->
+    <div id="sidebar"></div>
 
     <!-- Main Content -->
     <main class="lg:ml-72 min-h-screen">
         <!-- Top Header -->
         <header class="bg-white border-b border-gray-200 sticky top-0 z-30">
             <div class="flex items-center justify-between px-4 lg:px-8 py-4">
-                <button id="mobileMenuBtn" class="lg:hidden p-2 text-gray-600 hover:text-red-600 rounded-lg">
+                <button id="mobileMenuBtn" class="lg:hidden p-2 text-gray-600 hover:text-gray-900 rounded-lg">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
                     </svg>
@@ -160,13 +53,13 @@
                 </div>
                 
                 <div class="flex items-center space-x-3">
-                    <button onclick="openCreateSectionModal(selectedGradeId)" class="inline-flex items-center space-x-2 bg-white text-red-600 border border-red-200 px-4 py-2 rounded-xl font-medium hover:bg-red-50 transition-colors">
+                    <button onclick="openCreateSectionModal(selectedGradeId)" class="inline-flex items-center space-x-2 bg-white text-forest-600 border border-forest-600 px-4 py-2 rounded-xl font-medium hover:bg-forest-50 transition-colors">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
                         </svg>
                         <span class="hidden sm:inline">Add Section</span>
                     </button>
-                    <button onclick="openCreateModal()" class="inline-flex items-center space-x-2 bg-red-600 text-white px-4 py-2 rounded-xl font-medium hover:bg-red-700 transition-colors">
+                    <button onclick="openCreateModal()" class="inline-flex items-center space-x-2 bg-forest-600 text-white px-4 py-2 rounded-xl font-medium hover:bg-forest-800 transition-colors">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"/>
                         </svg>
@@ -181,42 +74,42 @@
             <!-- Stats Cards -->
             <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6 mb-8">
                 <div class="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm">
-                    <div class="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center mb-3">
-                        <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <div class="w-12 h-12 bg-gray-100 rounded-xl flex items-center justify-center mb-3">
+                        <svg class="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 8v8m-4-5v5m-4-2v2m-2 4h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
                         </svg>
                     </div>
-                    <div class="text-3xl font-bold text-blue-600" id="totalGradeLevelsStat">0</div>
+                    <div class="text-3xl font-bold text-gray-900" id="totalGradeLevelsStat">0</div>
                     <div class="text-sm text-gray-500">Total Grade Levels</div>
                 </div>
                 
                 <div class="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm">
-                    <div class="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center mb-3">
-                        <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <div class="w-12 h-12 bg-forest-100 rounded-xl flex items-center justify-center mb-3">
+                        <svg class="w-6 h-6 text-forest-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
                         </svg>
                     </div>
-                    <div class="text-3xl font-bold text-green-600" id="activeGradeLevelsStat">0</div>
+                    <div class="text-3xl font-bold text-forest-600" id="activeGradeLevelsStat">0</div>
                     <div class="text-sm text-gray-500">Active Grade Levels</div>
                 </div>
                 
                 <div class="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm">
-                    <div class="w-12 h-12 bg-yellow-100 rounded-xl flex items-center justify-center mb-3">
-                        <svg class="w-6 h-6 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <div class="w-12 h-12 bg-gray-100 rounded-xl flex items-center justify-center mb-3">
+                        <svg class="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
                         </svg>
                     </div>
-                    <div class="text-3xl font-bold text-yellow-600" id="inactiveGradeLevelsStat">0</div>
+                    <div class="text-3xl font-bold text-gray-900" id="inactiveGradeLevelsStat">0</div>
                     <div class="text-sm text-gray-500">Inactive Grade Levels</div>
                 </div>
                 
                 <div class="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm">
-                    <div class="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center mb-3">
-                        <svg class="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <div class="w-12 h-12 bg-plum-100 rounded-xl flex items-center justify-center mb-3">
+                        <svg class="w-6 h-6 text-plum-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z"/>
                         </svg>
                     </div>
-                    <div class="text-3xl font-bold text-purple-600" id="totalSectionsStat">0</div>
+                    <div class="text-3xl font-bold text-plum-600" id="totalSectionsStat">0</div>
                     <div class="text-sm text-gray-500">Total Sections</div>
                 </div>
             </div>
@@ -231,18 +124,18 @@
                     <table class="w-full">
                         <thead class="bg-gray-50">
                             <tr>
-                                <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Grade Level</th>
-                                <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Description</th>
-                                <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Status</th>
-                                <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Sections</th>
-                                <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Created</th>
-                                <th class="px-6 py-4 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">Actions</th>
+                                <th scope="col" class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Grade Level</th>
+                                <th scope="col" class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Description</th>
+                                <th scope="col" class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Status</th>
+                                <th scope="col" class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Sections</th>
+                                <th scope="col" class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Created</th>
+                                <th scope="col" class="px-6 py-4 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">Actions</th>
                             </tr>
                         </thead>
                         <tbody id="gradeLevelsTableBody" class="divide-y divide-gray-100">
                             <tr>
                                 <td colspan="6" class="px-6 py-12 text-center text-gray-500">
-                                    <div class="inline-block animate-spin rounded-full h-8 w-8 border-4 border-red-600 border-t-transparent mb-4"></div>
+                                    <div class="inline-block animate-spin rounded-full h-8 w-8 border-4 border-gray-400 border-t-transparent mb-4"></div>
                                     <p>Loading grade levels...</p>
                                 </td>
                             </tr>
@@ -260,12 +153,12 @@
                     <table class="w-full">
                         <thead class="bg-gray-50">
                             <tr>
-                                <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Section</th>
-                                <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Teacher</th>
-                                <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Students</th>
-                                <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Status</th>
-                                <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Created</th>
-                                <th class="px-6 py-4 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">Actions</th>
+                                <th scope="col" class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Section</th>
+                                <th scope="col" class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Teacher</th>
+                                <th scope="col" class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Students</th>
+                                <th scope="col" class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Status</th>
+                                <th scope="col" class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Created</th>
+                                <th scope="col" class="px-6 py-4 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">Actions</th>
                             </tr>
                         </thead>
                         <tbody id="sectionsTableBody" class="divide-y divide-gray-100"></tbody>
@@ -296,9 +189,9 @@
                     <table class="w-full">
                         <thead class="bg-gray-50">
                             <tr>
-                                <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Student Name</th>
-                                <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Email</th>
-                                <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Joined</th>
+                                <th scope="col" class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Student Name</th>
+                                <th scope="col" class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Email</th>
+                                <th scope="col" class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Joined</th>
                             </tr>
                         </thead>
                         <tbody id="sectionStudentsTableBody" class="divide-y divide-gray-100"></tbody>
@@ -324,17 +217,17 @@
                 
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-2">Grade Level Name</label>
-                    <input type="text" id="gradeName" required class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-red-500/20 focus:border-red-500" placeholder="e.g., Grade 7, Grade 8">
+                    <input type="text" id="gradeName" required class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-forest-600 focus:border-forest-600" placeholder="e.g., Grade 7, Grade 8">
                 </div>
                 
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-2">Description</label>
-                    <textarea id="gradeDescription" rows="3" class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-red-500/20 focus:border-red-500" placeholder="Enter grade level description"></textarea>
+                    <textarea id="gradeDescription" rows="3" class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-forest-600 focus:border-forest-600" placeholder="Enter grade level description"></textarea>
                 </div>
                 
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-2">Status</label>
-                    <select id="gradeStatus" class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-red-500/20 focus:border-red-500">
+                    <select id="gradeStatus" class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-forest-600 focus:border-forest-600">
                         <option value="true">Active</option>
                         <option value="false">Inactive</option>
                     </select>
@@ -344,7 +237,7 @@
                     <button type="button" onclick="closeGradeModal()" class="flex-1 py-3 border border-gray-200 text-gray-700 rounded-xl font-semibold hover:bg-gray-50 transition-colors">
                         Cancel
                     </button>
-                    <button type="submit" class="flex-1 py-3 bg-red-600 text-white rounded-xl font-semibold hover:bg-red-700 transition-colors">
+                    <button type="submit" class="flex-1 py-3 bg-forest-600 text-white rounded-xl font-semibold hover:bg-forest-800 transition-colors">
                         Save
                     </button>
                 </div>
@@ -367,27 +260,27 @@
 
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-2">Section Name</label>
-                    <input type="text" id="sectionName" required class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-red-500/20 focus:border-red-500" placeholder="e.g., Section A">
+                    <input type="text" id="sectionName" required class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-forest-600 focus:border-forest-600" placeholder="e.g., Section A">
                 </div>
 
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-2">Grade Level</label>
-                    <select id="sectionGradeLevel" required class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-red-500/20 focus:border-red-500"></select>
+                    <select id="sectionGradeLevel" required class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-forest-600 focus:border-forest-600"></select>
                 </div>
 
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-2">Teacher</label>
-                    <select id="sectionTeacher" class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-red-500/20 focus:border-red-500"></select>
+                    <select id="sectionTeacher" class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-forest-600 focus:border-forest-600"></select>
                 </div>
 
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-2">Description</label>
-                    <textarea id="sectionDescription" rows="3" class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-red-500/20 focus:border-red-500" placeholder="Enter section description"></textarea>
+                    <textarea id="sectionDescription" rows="3" class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-forest-600 focus:border-forest-600" placeholder="Enter section description"></textarea>
                 </div>
 
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-2">Status</label>
-                    <select id="sectionStatus" class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-red-500/20 focus:border-red-500">
+                    <select id="sectionStatus" class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-forest-600 focus:border-forest-600">
                         <option value="true">Active</option>
                         <option value="false">Inactive</option>
                     </select>
@@ -395,7 +288,7 @@
 
                 <div class="flex space-x-3 pt-4">
                     <button type="button" onclick="closeSectionModal()" class="flex-1 py-3 border border-gray-200 text-gray-700 rounded-xl font-semibold hover:bg-gray-50 transition-colors">Cancel</button>
-                    <button type="submit" class="flex-1 py-3 bg-red-600 text-white rounded-xl font-semibold hover:bg-red-700 transition-colors">Save</button>
+                    <button type="submit" class="flex-1 py-3 bg-forest-600 text-white rounded-xl font-semibold hover:bg-forest-800 transition-colors">Save</button>
                 </div>
             </form>
         </div>
@@ -423,7 +316,7 @@
     <!-- Loading Overlay -->
     <div id="loadingOverlay" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
         <div class="bg-white rounded-2xl p-8 text-center">
-            <div class="inline-block animate-spin rounded-full h-12 w-12 border-4 border-red-600 border-t-transparent mb-4"></div>
+            <div class="inline-block animate-spin rounded-full h-12 w-12 border-4 border-gray-400 border-t-transparent mb-4"></div>
             <p class="text-gray-600 font-medium">Loading...</p>
         </div>
     </div>
@@ -432,6 +325,7 @@
     <script src="../shared/js/includes.js"></script>
 
     <script src="assets/js/sidebar.js"></script>
+    <script src="../shared/js/runtime-config.js"></script>
     <script src="../shared/js/config.js"></script>
     <script src="../shared/js/utils.js"></script>
     <script src="../shared/js/supabase.js"></script>
@@ -545,13 +439,13 @@
                 const isExpanded = selectedGradeId === grade.id && explorerVisible;
 
                 return `
-                    <tr class="grade-row ${isExpanded ? 'bg-red-50' : ''}" onclick="toggleGradeSections('${grade.id}')">
+                    <tr class="grade-row ${isExpanded ? 'bg-gray-50' : ''}" onclick="toggleGradeSections('${grade.id}')">
                         <td class="px-6 py-4">
-                            <div class="font-medium text-red-600">${escapeHtml(grade.name)}</div>
+                            <div class="font-medium text-gray-900">${escapeHtml(grade.name)}</div>
                         </td>
                         <td class="px-6 py-4 text-gray-600 text-sm">${escapeHtml(grade.description || 'No description')}</td>
                         <td class="px-6 py-4">
-                            <span class="px-3 py-1 rounded-full text-xs font-medium ${grade.is_active ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}">
+                            <span class="px-3 py-1 rounded-full text-xs font-medium ${grade.is_active ? 'bg-forest-100 text-forest-800' : 'bg-gray-200 text-gray-700'}">
                                 ${grade.is_active ? 'Active' : 'Inactive'}
                             </span>
                         </td>
@@ -559,17 +453,17 @@
                         <td class="px-6 py-4 text-gray-500 text-sm">${formatDate(grade.created_at)}</td>
                         <td class="px-6 py-4 text-right">
                             <div class="flex items-center justify-end space-x-2">
-                                <button onclick="event.stopPropagation(); toggleGradeSections('${grade.id}')" class="p-2 text-gray-600 hover:bg-gray-100 rounded-lg" title="${isExpanded ? 'Collapse' : 'Expand'}">
+                                <button onclick="event.stopPropagation(); toggleGradeSections('${grade.id}')" class="p-2 text-gray-600 hover:bg-gray-100 rounded-lg" title="${isExpanded ? 'Collapse' : 'Expand'}" aria-label="${isExpanded ? 'Collapse' : 'Expand'}">
                                     <svg class="w-5 h-5 transition-transform ${isExpanded ? 'rotate-180' : ''}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
                                     </svg>
                                 </button>
-                                <button onclick="event.stopPropagation(); openEditModal('${grade.id}')" class="p-2 text-blue-600 hover:bg-blue-50 rounded-lg" title="Edit">
+                                <button onclick="event.stopPropagation(); openEditModal('${grade.id}')" class="p-2 text-blue-600 hover:bg-blue-50 rounded-lg" title="Edit" aria-label="Edit">
                                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
                                     </svg>
                                 </button>
-                                <button onclick="event.stopPropagation(); confirmDelete('${grade.id}')" class="p-2 text-red-600 hover:bg-red-50 rounded-lg" title="Delete">
+                                <button onclick="event.stopPropagation(); confirmDelete('${grade.id}')" class="p-2 text-red-600 hover:bg-red-50 rounded-lg" title="Delete" aria-label="Delete">
                                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
                                     </svg>
@@ -706,7 +600,7 @@
                     <tr>
                         <td colspan="6" class="px-6 py-10 text-center text-gray-500">
                             <p class="mb-4">No sections yet for ${escapeHtml(gradeName)}.</p>
-                            <button onclick="openCreateSectionModal('${selectedGradeId}')" class="inline-flex items-center space-x-2 bg-red-600 text-white px-4 py-2 rounded-xl font-medium hover:bg-red-700 transition-colors">
+                            <button onclick="openCreateSectionModal('${selectedGradeId}')" class="inline-flex items-center space-x-2 bg-forest-600 text-white px-4 py-2 rounded-xl font-medium hover:bg-forest-800 transition-colors">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
                                 </svg>
@@ -724,31 +618,31 @@
                 const isExpanded = selectedSectionId === section.id && detailsVisible;
 
                 return `
-                    <tr class="grade-row ${isExpanded ? 'bg-red-50' : ''}" onclick="toggleSectionDetails('${section.id}')">
+                    <tr class="grade-row ${isExpanded ? 'bg-gray-50' : ''}" onclick="toggleSectionDetails('${section.id}')">
                         <td class="px-6 py-4">
-                            <div class="font-medium text-red-600">${escapeHtml(section.name)}</div>
+                            <div class="font-medium text-gray-900">${escapeHtml(section.name)}</div>
                         </td>
                         <td class="px-6 py-4 text-gray-600 text-sm">${teacher ? escapeHtml(teacher.full_name) : '<span class="text-gray-400">Unassigned</span>'}</td>
                         <td class="px-6 py-4 text-gray-600 text-sm">${studentCount} student${studentCount === 1 ? '' : 's'}</td>
                         <td class="px-6 py-4">
-                            <span class="px-3 py-1 rounded-full text-xs font-medium ${section.is_active ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}">
+                            <span class="px-3 py-1 rounded-full text-xs font-medium ${section.is_active ? 'bg-forest-100 text-forest-800' : 'bg-gray-200 text-gray-700'}">
                                 ${section.is_active ? 'Active' : 'Inactive'}
                             </span>
                         </td>
                         <td class="px-6 py-4 text-gray-500 text-sm">${formatDate(section.created_at)}</td>
                         <td class="px-6 py-4 text-right">
                             <div class="flex items-center justify-end space-x-2">
-                                <button onclick="event.stopPropagation(); toggleSectionDetails('${section.id}')" class="p-2 text-gray-600 hover:bg-gray-100 rounded-lg" title="${isExpanded ? 'Collapse' : 'Expand'}">
+                                <button onclick="event.stopPropagation(); toggleSectionDetails('${section.id}')" class="p-2 text-gray-600 hover:bg-gray-100 rounded-lg" title="${isExpanded ? 'Collapse' : 'Expand'}" aria-label="${isExpanded ? 'Collapse' : 'Expand'}">
                                     <svg class="w-5 h-5 transition-transform ${isExpanded ? 'rotate-180' : ''}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
                                     </svg>
                                 </button>
-                                <button onclick="event.stopPropagation(); openEditSectionModal('${section.id}')" class="p-2 text-blue-600 hover:bg-blue-50 rounded-lg" title="Edit Section">
+                                <button onclick="event.stopPropagation(); openEditSectionModal('${section.id}')" class="p-2 text-blue-600 hover:bg-blue-50 rounded-lg" title="Edit Section" aria-label="Edit Section">
                                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
                                     </svg>
                                 </button>
-                                <button onclick="event.stopPropagation(); removeSection('${section.id}')" class="p-2 text-red-600 hover:bg-red-50 rounded-lg" title="Delete Section">
+                                <button onclick="event.stopPropagation(); removeSection('${section.id}')" class="p-2 text-red-600 hover:bg-red-50 rounded-lg" title="Delete Section" aria-label="Delete Section">
                                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
                                     </svg>
@@ -1071,13 +965,18 @@
         }
 
         function setupEventListeners() {
+            // sidebar.js injects the real <aside> inside #sidebar on DOMContentLoaded
+            // (which runs before this handler); resolve it here rather than the
+            // empty wrapper div, so the drawer toggle targets the actual element.
+            const sidebarAside = sidebar.querySelector('aside') || sidebar;
+
             mobileMenuBtn.addEventListener('click', () => {
-                sidebar.classList.toggle('-translate-x-full');
+                sidebarAside.classList.toggle('-translate-x-full');
                 mobileOverlay.classList.toggle('hidden');
             });
 
             mobileOverlay.addEventListener('click', () => {
-                sidebar.classList.add('-translate-x-full');
+                sidebarAside.classList.add('-translate-x-full');
                 mobileOverlay.classList.add('hidden');
             });
 

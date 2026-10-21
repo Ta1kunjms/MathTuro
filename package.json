@@ -3,16 +3,22 @@
   "version": "1.0.0",
   "description": "MathTuro LMS",
   "scripts": {
+    "predev": "node scripts/generate-runtime-config.mjs",
+    "prebuild": "node scripts/generate-runtime-config.mjs",
     "build:css": "npx tailwindcss -i ./shared/css/input.css -o ./dist/styles.css --minify",
     "build": "npm run build:css",
     "dev:css": "npx tailwindcss -i ./shared/css/input.css -o ./dist/styles.css --watch",
     "dev": "python -m http.server 3000"
   },
   "devDependencies": {
+    "dotenv": "^18.0.3",
+    "supabase": "^2.117.0",
     "tailwindcss": "^3.4.0"
   },
-  "keywords": ["lms", "education"],
+  "keywords": [
+    "lms",
+    "education"
+  ],
   "author": "",
   "license": "MIT"
 }
-

@@ -123,47 +123,10 @@ async function createUser(email, password, fullName, role = 'student') {
       return null;
     }
 
-    // Create user in Supabase Auth
-    const { data: authData, error: authError } = await getSupabase().auth.signUp({
-      email: email,
-      password: password,
-      options: {
-        data: {
-          full_name: fullName,
-          role: role
-        }
-      }
-    });
-
-    if (authError) {
-      console.error('Auth error:', authError);
-      if (typeof showToast === 'function') showToast('Failed to create user: ' + authError.message, 'error');
-      return null;
+    if (typeof showToast === 'function') {
+      showToast('Direct account creation requires the trusted server-side provisioning service.', 'error');
     }
-
-    // Create user record in users table
-    const { data: userData, error: userError } = await getSupabase()
-      .from('users')
-      .insert({
-        id: authData.user.id,
-        email: email,
-        full_name: fullName,
-        role: role,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-      })
-      .select('*')
-      .single();
-
-    if (userError) {
-      console.error('Database error:', userError);
-      // Cannot safely call auth.admin APIs from client-side code.
-      // Keep the failure transparent and let server-side cleanup handle orphaned auth users.
-      if (typeof showToast === 'function') showToast('Failed to create user record: ' + userError.message, 'error');
-      return null;
-    }
-
-    return userData;
+    return null;
 
   } catch (error) {
     console.error('Error creating user:', error);

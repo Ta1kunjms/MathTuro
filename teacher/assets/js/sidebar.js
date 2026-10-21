@@ -3,36 +3,36 @@
 
 document.addEventListener('DOMContentLoaded', function () {
   const sidebarHTML = `
-    <aside id="teacherSidebar" class="fixed left-0 top-0 h-screen w-72 glass-sidebar border-r border-gray-200 z-50 transform -translate-x-full lg:translate-x-0 transition-transform duration-300 flex flex-col">
+    <aside id="teacherSidebar" class="fixed left-0 top-0 h-screen w-72 bg-white border-r border-line z-50 transform -translate-x-full lg:translate-x-0 transition-transform duration-300 flex flex-col">
         <div class="sidebar-scrollable flex-1 overflow-y-auto">
             <!-- Logo -->
-            <div class="p-6 border-b border-gray-100">
+            <div class="p-6 border-b border-line">
                 <a href="dashboard.html" class="flex items-center space-x-3">
-                    <div class="w-12 h-12 bg-white rounded-xl flex items-center justify-center shadow-lg">
+                    <div class="w-12 h-12 bg-white rounded-xl flex items-center justify-center border-2 border-ink-900">
                         <img src="../Logo/MATHURO-LOGO-v2.png" alt="MathTuro" class="w-10 h-10 object-contain">
                     </div>
                     <div>
-                        <span class="text-xl font-bold gradient-text">MathTuro</span>
-                        <p class="text-xs text-gray-500">Teacher Portal</p>
+                        <span class="text-xl font-bold text-plum-800">MathTuro</span>
+                        <p class="text-xs text-ink-500">Teacher Portal</p>
                     </div>
                 </a>
             </div>
-            
+
             <!-- User Info -->
-            <div class="p-6 border-b border-gray-100">
-                <a href="profile.html" class="flex items-center space-x-3 group hover:opacity-80 transition-opacity cursor-pointer">
-                    <div class="w-12 h-12 bg-teacher-100 rounded-full flex items-center justify-center ring-2 ring-transparent group-hover:ring-teacher-300 transition-all">
-                        <span id="userInitials" class="text-teacher-600 font-bold text-lg">--</span>
+            <div class="p-6 border-b border-line">
+                <a href="profile.html" class="flex items-center space-x-3 group cursor-pointer">
+                    <div class="w-12 h-12 bg-plum-50 rounded-full flex items-center justify-center ring-2 ring-transparent group-hover:ring-plum-600 transition-all">
+                        <span id="userInitials" class="text-plum-800 font-bold text-lg">--</span>
                     </div>
                     <div>
-                        <p id="sidebarUserName" class="font-semibold text-gray-800">Loading...</p>
-                        <p class="text-sm text-teacher-600 font-medium">Teacher</p>
+                        <p id="sidebarUserName" class="font-semibold text-ink-900">Loading...</p>
+                        <p class="text-sm text-plum-800 font-medium">Teacher</p>
                     </div>
                 </a>
             </div>
-            
+
             <!-- Navigation -->
-            <nav class="p-4 space-y-2">
+            <nav class="p-4 space-y-2" aria-label="Teacher navigation">
                 <a href="dashboard.html" class="sidebar-link flex items-center space-x-3 px-4 py-3 rounded-xl text-gray-700">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
@@ -44,7 +44,7 @@ document.addEventListener('DOMContentLoaded', function () {
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/>
                     </svg>
                     <span>Submissions</span>
-                    <span id="pendingBadge" class="pulse-badge ml-auto bg-yellow-500 text-white text-xs px-2 py-0.5 rounded-full hidden">0</span>
+                    <span id="pendingBadge" class="pulse-badge ml-auto bg-amber-100 text-amber-900 font-semibold text-xs px-2 py-0.5 rounded-full hidden">0</span>
                 </a>
                 <a href="manage-modules.html" class="sidebar-link flex items-center space-x-3 px-4 py-3 rounded-xl text-gray-700">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -63,6 +63,12 @@ document.addEventListener('DOMContentLoaded', function () {
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/>
                     </svg>
                     <span>Manage Quizzes</span>
+                </a>
+                <a href="manage-presentations.html" class="sidebar-link flex items-center space-x-3 px-4 py-3 rounded-xl text-gray-700">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"/>
+                    </svg>
+                    <span>Presentations</span>
                 </a>
                 <a href="lessonplan.html" class="sidebar-link flex items-center space-x-3 px-4 py-3 rounded-xl text-gray-700">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -101,6 +107,8 @@ document.addEventListener('DOMContentLoaded', function () {
   const sidebarContainer = document.getElementById('sidebar');
   if (sidebarContainer) {
     sidebarContainer.innerHTML = sidebarHTML;
+    // Nav icons are decorative; each link already has a visible text label
+    sidebarContainer.querySelectorAll('svg').forEach(svg => svg.setAttribute('aria-hidden', 'true'));
   }
 
   // Set active link based on current page
@@ -114,11 +122,13 @@ document.addEventListener('DOMContentLoaded', function () {
       (currentPage === 'edit-module.html' && linkPage === 'manage-modules.html');
 
     if (isActive) {
+      // Styling comes from teacher.css (#teacherSidebar .sidebar-link.active)
       link.classList.add('active');
-      link.style.background = 'linear-gradient(135deg, #005801 0%, #006B01 100%)';
-      link.style.color = 'white';
+      link.setAttribute('aria-current', 'page');
     }
   });
+
+  enhanceMobileDrawer(document.getElementById('teacherSidebar'));
 
   // Load sidebar user info
   loadSidebarUserInfo();
@@ -182,6 +192,7 @@ async function loadPendingSubmissionsCount() {
 
     if (typeof count === 'number' && count > 0) {
       pendingBadge.textContent = String(count);
+      pendingBadge.setAttribute('aria-label', `${count} pending`);
       pendingBadge.classList.remove('hidden');
     } else {
       pendingBadge.classList.add('hidden');
@@ -212,4 +223,43 @@ async function handleLogout() {
     console.error('Logout error:', error);
     window.location.href = '../public/login.html';
   }
+}
+
+// Phone drawer accessibility: pages toggle the drawer <aside> themselves, so this mirrors that state onto the menu button
+// and adds Escape-to-close plus focus moving into and back out of the drawer.
+// Skipped when a page already manages aria-expanded on its menu button.
+function enhanceMobileDrawer(drawer) {
+  const button = document.getElementById('mobileMenuBtn');
+  const overlay = document.getElementById('mobileOverlay');
+  if (!button || !drawer || button.hasAttribute('aria-expanded')) return;
+
+  if (!drawer.id) drawer.id = 'portalSidebarDrawer';
+  if (!button.getAttribute('aria-label')) button.setAttribute('aria-label', 'Open navigation menu');
+  button.setAttribute('aria-controls', drawer.id);
+
+  const isPhoneLayout = () => window.matchMedia('(max-width: 1023px)').matches;
+  const isOpen = () => isPhoneLayout() && !drawer.classList.contains('-translate-x-full');
+
+  let wasOpen = isOpen();
+  button.setAttribute('aria-expanded', String(wasOpen));
+
+  const onChange = () => {
+    const nowOpen = isOpen();
+    button.setAttribute('aria-expanded', String(nowOpen));
+    if (nowOpen && !wasOpen) {
+      const first = drawer.querySelector('a[href], button:not([disabled])');
+      if (first) first.focus();
+    } else if (!nowOpen && wasOpen && drawer.contains(document.activeElement)) {
+      button.focus();
+    }
+    wasOpen = nowOpen;
+  };
+  new MutationObserver(onChange).observe(drawer, { attributes: true, attributeFilter: ['class'] });
+
+  document.addEventListener('keydown', e => {
+    if (e.key !== 'Escape' || !isOpen()) return;
+    drawer.classList.add('-translate-x-full');
+    if (overlay) overlay.classList.add('hidden');
+    button.focus();
+  });
 }

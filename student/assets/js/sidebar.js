@@ -25,8 +25,8 @@ function initSidebar() {
             <!-- User Info -->
             <div class="p-6 border-b border-gray-100 cursor-pointer hover:bg-gray-50 transition-colors" onclick="if(typeof showProfile==='function'){showProfile();}" title="Click to view profile">
                 <div class="flex items-center space-x-3">
-                    <div class="w-12 h-12 bg-brand/10 rounded-full flex items-center justify-center">
-                        <span id="userInitials" class="text-brand font-bold text-lg">--</span>
+                    <div class="w-12 h-12 bg-forest-800/10 rounded-full flex items-center justify-center">
+                        <span id="userInitials" class="text-forest-800 font-bold text-lg">--</span>
                     </div>
                     <div class="flex-1">
                         <p id="sidebarUserName" class="font-semibold text-gray-800">Loading...</p>
@@ -42,32 +42,49 @@ function initSidebar() {
             </div>
             
             <!-- Navigation -->
+            <!-- Six distinct destinations: Dashboard, Modules, Quizzes,
+                 Videos, Presentations, Progress. Each link carries its own
+                 data-nav-key used by the active-link matching below —
+                 do not rely on href/filename parsing alone, since Progress
+                 shares dashboard.html's URL but is distinguished by hash. -->
             <nav class="p-4 space-y-2 overflow-y-auto" style="max-height: calc(100vh - 320px);">
                 <p class="text-xs text-gray-400 uppercase tracking-wider px-4 mb-2">Main Menu</p>
-                <a href="${studentPrefix}dashboard.html" class="sidebar-link active flex items-center space-x-3 px-4 py-3 rounded-xl text-gray-700">
+                <a href="${studentPrefix}dashboard.html" data-nav-key="dashboard" class="sidebar-link flex items-center space-x-3 px-4 py-3 rounded-xl text-gray-700">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
                     </svg>
                     <span>Dashboard</span>
                 </a>
-                <a href="${studentPrefix}modules.html" class="sidebar-link flex items-center space-x-3 px-4 py-3 rounded-xl text-gray-700">
+                <a href="${studentPrefix}modules.html" data-nav-key="modules" class="sidebar-link flex items-center space-x-3 px-4 py-3 rounded-xl text-gray-700">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/>
                     </svg>
-                    <span>Browse Modules</span>
+                    <span>Modules</span>
                 </a>
-                <a href="${studentPrefix}tutorial-videos.html" class="sidebar-link flex items-center space-x-3 px-4 py-3 rounded-xl text-gray-700">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/>
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                    </svg>
-                    <span>Tutorial Videos</span>
-                </a>
-                <a href="${studentPrefix}quizzes.html" class="sidebar-link flex items-center space-x-3 px-4 py-3 rounded-xl text-gray-700">
+                <a href="${studentPrefix}quizzes.html" data-nav-key="quizzes" class="sidebar-link flex items-center space-x-3 px-4 py-3 rounded-xl text-gray-700">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/>
                     </svg>
                     <span>Quizzes</span>
+                </a>
+                <a href="${studentPrefix}tutorial-videos.html" data-nav-key="videos" class="sidebar-link flex items-center space-x-3 px-4 py-3 rounded-xl text-gray-700">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                    <span>Videos</span>
+                </a>
+                <a href="${studentPrefix}presentations.html" data-nav-key="presentations" class="sidebar-link flex items-center space-x-3 px-4 py-3 rounded-xl text-gray-700">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+                    </svg>
+                    <span>Presentations</span>
+                </a>
+                <a href="${studentPrefix}dashboard.html#progress" data-nav-key="progress" class="sidebar-link flex items-center space-x-3 px-4 py-3 rounded-xl text-gray-700">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 012-2h2a2 2 0 012 2v6m-9 0h10a2 2 0 002-2V9.5a1 1 0 00-.4-.8l-5-3.75a1 1 0 00-1.2 0l-5 3.75a1 1 0 00-.4.8V17a2 2 0 002 2z"/>
+                    </svg>
+                    <span>Progress</span>
                 </a>
             </nav>
         </div>
@@ -89,26 +106,40 @@ function initSidebar() {
     sidebarContainer.innerHTML = sidebarHTML;
   }
 
-  // Set active link based on current page
+  // Set active link based on current page, matched by the data-nav-key each
+  // link declares rather than by parsing hrefs. Each real destination file
+  // maps to exactly one nav key; drill-down pages (module-view/lesson-view,
+  // take-quiz, view-presentation) map to their parent section's key so that
+  // section stays highlighted while browsing within it. Progress shares
+  // dashboard.html's URL but is distinguished by the #progress hash, so it's
+  // checked separately and wins over the plain dashboard match when present.
   const currentPage = window.location.pathname.split('/').pop().toLowerCase();
+  const currentHash = window.location.hash.toLowerCase();
+  const pageNavKeyMap = {
+    'dashboard.html': 'dashboard',
+    '': 'dashboard',
+    'modules.html': 'modules',
+    'module-view.html': 'modules',
+    'lesson-view.html': 'modules',
+    'quizzes.html': 'quizzes',
+    'take-quiz.html': 'quizzes',
+    'tutorial-videos.html': 'videos',
+    'presentations.html': 'presentations',
+    'view-presentation.html': 'presentations'
+  };
+  const activeNavKey = currentHash === '#progress' ? 'progress' : (pageNavKeyMap[currentPage] || null);
   const sidebarLinks = document.querySelectorAll('.sidebar-link');
   sidebarLinks.forEach(link => {
-    const href = (link.getAttribute('href') || '').toLowerCase();
-    const linkPage = href.split('#')[0].split('?')[0].split('/').pop();
-    const isActive =
-      currentPage === linkPage ||
-      (currentPage === '' && linkPage === 'dashboard.html') ||
-      ((currentPage === 'module-view.html' || currentPage === 'lesson-view.html') && linkPage === 'modules.html');
+    const isActive = !!activeNavKey && link.dataset.navKey === activeNavKey;
 
     if (isActive) {
+      // Styling comes from student.css (#sidebar .sidebar-link.active)
       link.classList.add('active');
-      link.style.background = 'linear-gradient(135deg, #005801 0%, #006B01 100%)';
-      link.style.color = 'white';
+      link.setAttribute('aria-current', 'page');
     } else {
       // Remove active class from other links
       link.classList.remove('active');
-      link.style.background = '';
-      link.style.color = '';
+      link.removeAttribute('aria-current');
     }
   });
 
@@ -446,13 +477,13 @@ window.showProfile = async function () {
     <form id="profileForm" class="space-y-4" onsubmit="handleGlobalProfileSave(event)">
       <div>
         <label class="block text-sm font-medium text-gray-700 mb-2">Full Name</label>
-        <input type="text" id="profileName" value="${name || 'Student'}" class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand">
+        <input type="text" id="profileName" value="${name || 'Student'}" class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-forest-800">
       </div>
       <div>
         <label class="block text-sm font-medium text-gray-700 mb-2">Email</label>
         <input type="email" id="profileEmail" value="${email || ''}" disabled class="w-full px-4 py-3 border border-gray-200 rounded-xl bg-gray-50 text-gray-500">
       </div>
-      <button type="submit" class="w-full py-3 bg-brand text-white rounded-xl font-semibold hover:bg-brand-dark transition-all transform active:scale-95">Save Changes</button>
+      <button type="submit" class="w-full py-3 bg-forest-800 text-white rounded-xl font-semibold hover:bg-forest-900 transition-all transform active:scale-95">Save Changes</button>
     </form>
   `);
 };

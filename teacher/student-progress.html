@@ -13,34 +13,27 @@
         body { font-family: 'Inter', system-ui, sans-serif; }
         
         .gradient-text {
-            background: linear-gradient(135deg, #005801 0%, #22c55e 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
+            color: #720455;
         }
         
-        .glass-sidebar {
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(20px);
-        }
         
         .sidebar-link {
             transition: all 0.2s ease;
         }
         
         .sidebar-link:hover, .sidebar-link.active {
-            background: linear-gradient(135deg, #005801 0%, #006B01 100%);
+            background: #720455;
             color: white;
         }
         
         .sidebar-link.active {
-            box-shadow: 0 4px 15px rgba(0, 88, 1, 0.3);
+            box-shadow: 0 4px 15px rgba(114, 4, 85, 0.3);
         }
         
         ::-webkit-scrollbar { width: 6px; }
         ::-webkit-scrollbar-track { background: #f1f1f1; }
-        ::-webkit-scrollbar-thumb { background: #005801; border-radius: 3px; }
-        ::-webkit-scrollbar-thumb:hover { background: #004601; }
+        ::-webkit-scrollbar-thumb { background: #720455; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: #4d0339; }
         
         .card-hover {
             transition: all 0.3s ease;
@@ -48,7 +41,7 @@
         
         .card-hover:hover {
             transform: translateY(-2px);
-            box-shadow: 0 10px 25px rgba(0, 88, 1, 0.1);
+            box-shadow: 0 10px 25px rgba(114, 4, 85, 0.1);
         }
         
         .nav-step {
@@ -69,7 +62,7 @@
         }
         
         .nav-step.active {
-            background: linear-gradient(135deg, #005801 0%, #006B01 100%);
+            background: #720455;
             color: white;
         }
         
@@ -95,7 +88,7 @@
         <header class="bg-white border-b border-gray-200 sticky top-0 z-30">
             <div class="flex items-center justify-between px-4 lg:px-8 py-4">
                 <!-- Mobile Menu Button -->
-                <button id="mobileMenuBtn" class="lg:hidden p-2 text-gray-600 hover:text-brand rounded-lg">
+                <button id="mobileMenuBtn" class="lg:hidden p-2 text-gray-600 hover:text-plum-800 rounded-lg">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
                     </svg>
@@ -112,8 +105,8 @@
                     <!-- User Menu -->
                     <div class="relative">
                         <button id="userMenuBtn" class="flex items-center space-x-2 p-2 rounded-lg hover:bg-gray-100">
-                            <div class="w-8 h-8 bg-teacher-100 rounded-full flex items-center justify-center">
-                                <span id="headerUserInitials" class="text-teacher-600 font-semibold text-sm">--</span>
+                            <div class="w-8 h-8 bg-plum-100 rounded-full flex items-center justify-center">
+                                <span id="headerUserInitials" class="text-plum-800 font-semibold text-sm">--</span>
                             </div>
                         </button>
                         
@@ -173,7 +166,7 @@
                         <h2 class="text-lg font-semibold text-gray-800">Students</h2>
                         <span id="studentCount" class="text-sm text-gray-500">0 students</span>
                     </div>
-                    <div class="overflow-x-auto">
+                    <div class="overflow-x-auto" tabindex="0" role="region" aria-label="Students table">
                         <table class="w-full">
                             <thead class="bg-gray-50">
                                 <tr>
@@ -195,13 +188,42 @@
             </div>
 
             <!-- Quizzes View -->
-            <div id="quizzesView" class="space-y-4 hidden">
+            <div id="quizzesView" class="space-y-6 hidden">
+                <!-- Formal Assessments (Pre-Tests & Post-Tests) -->
+                <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
+                    <div class="flex items-center justify-between mb-6">
+                        <div>
+                            <h2 class="text-lg font-semibold text-gray-800">Formal Pre/Post Assessments</h2>
+                            <p class="text-xs text-gray-500 mt-1">Pre-tests gate module content; post-tests gate module progression</p>
+                        </div>
+                        <span id="formalAsmtCount" class="text-sm text-gray-500">0 assessments</span>
+                    </div>
+                    <div class="overflow-x-auto" tabindex="0" role="region" aria-label="Formal pre/post assessments table">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Assessment</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Type</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Module</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Attempts</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Score</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Effective Status</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="formalAssessmentsTableBody" class="bg-white divide-y divide-gray-200">
+                                <tr><td colspan="7" class="text-center py-8 text-gray-400">Loading assessments...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
                 <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
                     <div class="flex items-center justify-between mb-6">
                         <h2 id="quizzesTitle" class="text-lg font-semibold text-gray-800">Student Quizzes</h2>
                         <span id="quizCount" class="text-sm text-gray-500">0 quizzes</span>
                     </div>
-                    <div id="quizzesTableContainer" class="overflow-x-auto">
+                    <div id="quizzesTableContainer" class="overflow-x-auto" tabindex="0" role="region" aria-label="Student quizzes table">
                         <table class="min-w-full divide-y divide-gray-200">
                             <thead class="bg-gray-50">
                                 <tr>
@@ -225,9 +247,9 @@
                 <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
                     <h3 class="text-lg font-semibold text-gray-800 mb-4">Progress Summary</h3>
                     <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-                        <div class="bg-primary-50 rounded-xl p-4">
-                            <div class="text-2xl font-bold text-primary-600" id="summaryTotalQuizzes">0</div>
-                            <div class="text-sm text-primary-700">Total Quizzes</div>
+                        <div class="bg-forest-50 rounded-xl p-4">
+                            <div class="text-2xl font-bold text-forest-600" id="summaryTotalQuizzes">0</div>
+                            <div class="text-sm text-forest-800">Total Quizzes</div>
                         </div>
                         <div class="bg-green-50 rounded-xl p-4">
                             <div class="text-2xl font-bold text-green-600" id="summaryApproved">0</div>
@@ -248,7 +270,7 @@
                             <span class="text-sm font-semibold text-gray-900" id="summaryCompletion">0%</span>
                         </div>
                         <div class="w-full bg-gray-200 rounded-full h-2">
-                            <div id="completionBar" class="bg-gradient-to-r from-primary-500 to-primary-600 h-2 rounded-full" style="width: 0%"></div>
+                            <div id="completionBar" class="bg-forest-600 h-2 rounded-full" style="width: 0%"></div>
                         </div>
                     </div>
                 </div>
@@ -259,11 +281,23 @@
     <!-- Scripts -->
     <script src="../shared/js/includes.js"></script>
 
+    <script src="../shared/js/runtime-config.js"></script>
     <script src="../shared/js/config.js"></script>
     <script src="../shared/js/supabase.js"></script>
     <script src="../shared/js/auth.js"></script>
-        <script src="assets/js/sidebar.js"></script>
+    <script src="assets/js/sidebar.js"></script>
+    <script src="assets/js/teacher.js"></script>
     <script>
+        // Escape text for innerHTML templates
+        function escText(value) {
+            return String(value ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+        }
+
+        // Encode a value as a JS string literal that is safe inside an inline on* attribute
+        function jsArg(value) {
+            return escText(JSON.stringify(String(value ?? '')));
+        }
+
         // State management
         let currentState = {
             gradeLevel: null,
@@ -395,14 +429,14 @@
                 } else {
                     gradeGrid.innerHTML = data.map(grade => `
                         <div class="bg-white rounded-xl border border-gray-200 p-6 card-hover cursor-pointer" 
-                             onclick="selectGradeLevel('${grade.id}', '${grade.name}')">
+                             onclick="selectGradeLevel('${grade.id}', ${jsArg(grade.name)})">
                             <div class="flex items-center justify-between">
                                 <div>
-                                    <h3 class="font-semibold text-gray-900 text-lg">${grade.name}</h3>
-                                    <p class="text-sm text-gray-500 mt-1">${grade.description || `View sections in ${grade.name}`}</p>
+                                    <h3 class="font-semibold text-gray-900 text-lg">${escText(grade.name)}</h3>
+                                    <p class="text-sm text-gray-500 mt-1">${escText(grade.description || `View sections in ${grade.name}`)}</p>
                                 </div>
-                                <div class="w-10 h-10 bg-primary-100 rounded-full flex items-center justify-center">
-                                    <svg class="w-5 h-5 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <div class="w-10 h-10 bg-forest-100 rounded-full flex items-center justify-center">
+                                    <svg class="w-5 h-5 text-forest-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
                                     </svg>
                                 </div>
@@ -414,7 +448,7 @@
                 console.error('Error loading grade levels:', err);
                 document.getElementById('gradeLevelGrid').innerHTML = `
                     <div class="col-span-full text-center py-8 text-red-400">
-                        <p>Failed to load grade levels: ${err.message}</p>
+                        <p>Failed to load grade levels: ${escText(err.message)}</p>
                     </div>
                 `;
             }
@@ -449,20 +483,20 @@
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
                             </svg>
                             <p>No sections available</p>
-                            <p class="text-sm text-gray-500 mt-1">No sections found for ${gradeLevelName}</p>
+                            <p class="text-sm text-gray-500 mt-1">No sections found for ${escText(gradeLevelName)}</p>
                         </div>
                     `;
                 } else {
                     sectionGrid.innerHTML = data.map(section => `
                         <div class="bg-white rounded-xl border border-gray-200 p-6 card-hover cursor-pointer" 
-                             onclick="selectSection('${section.id}', '${section.name}')">
+                             onclick="selectSection('${section.id}', ${jsArg(section.name)})">
                             <div class="flex items-center justify-between">
                                 <div>
-                                    <h3 class="font-semibold text-gray-900 text-lg">${section.name}</h3>
-                                    <p class="text-sm text-gray-500 mt-1">${section.description || `View students in ${section.name}`}</p>
+                                    <h3 class="font-semibold text-gray-900 text-lg">${escText(section.name)}</h3>
+                                    <p class="text-sm text-gray-500 mt-1">${escText(section.description || `View students in ${section.name}`)}</p>
                                 </div>
-                                <div class="w-10 h-10 bg-primary-100 rounded-full flex items-center justify-center">
-                                    <svg class="w-5 h-5 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <div class="w-10 h-10 bg-forest-100 rounded-full flex items-center justify-center">
+                                    <svg class="w-5 h-5 text-forest-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
                                     </svg>
                                 </div>
@@ -474,7 +508,7 @@
                 console.error('Error loading sections:', err);
                 document.getElementById('sectionGrid').innerHTML = `
                     <div class="col-span-full text-center py-8 text-red-400">
-                        <p>Failed to load sections: ${err.message}</p>
+                        <p>Failed to load sections: ${escText(err.message)}</p>
                     </div>
                 `;
             }
@@ -495,6 +529,8 @@
                     .from('users')
                     .select('*')
                     .eq('role', 'student')
+                    .eq('approval_status', 'approved')
+                    .eq('is_active', true)
                     .order('full_name');
                 
                 if (error) {
@@ -528,7 +564,7 @@
                     studentTableBody.innerHTML = `
                         <tr>
                             <td colspan="5" class="text-center py-8 text-gray-400">
-                                No students found in ${sectionName}
+                                No students found in ${escText(sectionName)}
                             </td>
                         </tr>
                     `;
@@ -538,24 +574,23 @@
                         const initials = displayName.trim().charAt(0).toUpperCase() || 'S';
                         const gradeLabel = student.grade_level_text || student.grade_level || gradeLevelName || '-';
                         const sectionLabel = student.section_text || student.section || sectionName || '-';
-                        const safeName = displayName.replace(/'/g, "\\'");
 
                         return `
                             <tr class="hover:bg-gray-50">
                                 <td class="px-4 py-4">
                                     <div class="flex items-center gap-3">
-                                        <div class="w-10 h-10 rounded-full bg-green-100 text-green-700 font-semibold flex items-center justify-center">${initials}</div>
-                                        <span class="font-medium text-gray-900">${displayName}</span>
+                                        <div class="w-10 h-10 rounded-full bg-green-100 text-green-700 font-semibold flex items-center justify-center">${escText(initials)}</div>
+                                        <span class="font-medium text-gray-900">${escText(displayName)}</span>
                                     </div>
                                 </td>
-                                <td class="px-4 py-4 text-gray-600">${gradeLabel}</td>
-                                <td class="px-4 py-4 text-gray-600">${sectionLabel}</td>
-                                <td class="px-4 py-4 text-gray-700">${student.email || '-'}</td>
+                                <td class="px-4 py-4 text-gray-600">${escText(gradeLabel)}</td>
+                                <td class="px-4 py-4 text-gray-600">${escText(sectionLabel)}</td>
+                                <td class="px-4 py-4 text-gray-700">${escText(student.email || '-')}</td>
                                 <td class="px-4 py-4 text-right">
                                     <button
-                                        class="inline-flex items-center justify-center w-9 h-9 rounded-lg text-primary-600 hover:bg-primary-50"
+                                        class="inline-flex items-center justify-center w-9 h-9 rounded-lg text-forest-600 hover:bg-forest-50"
                                         title="View Student Quizzes"
-                                        onclick="selectStudent('${student.id}', '${safeName}')">
+                                        onclick="selectStudent('${student.id}', ${jsArg(displayName)})">
                                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
                                         </svg>
@@ -569,7 +604,7 @@
                 console.error('Error loading students:', err);
                 document.getElementById('studentTableBody').innerHTML = `
                     <tr>
-                        <td colspan="5" class="text-center py-8 text-red-400">Failed to load students: ${err.message}</td>
+                        <td colspan="5" class="text-center py-8 text-red-400">Failed to load students: ${escText(err.message)}</td>
                     </tr>
                 `;
             }
@@ -619,7 +654,7 @@
             } catch (err) {
                 console.error('Error loading quizzes:', err);
                 document.getElementById('quizzesTableBody').innerHTML = `
-                    <tr><td colspan="5" class="text-center py-8 text-red-400">Failed to load quizzes: ${err.message}</td></tr>
+                    <tr><td colspan="5" class="text-center py-8 text-red-400">Failed to load quizzes: ${escText(err.message)}</td></tr>
                 `;
             }
         }
@@ -665,6 +700,220 @@
             document.getElementById('quizzesTitle').textContent = `${studentName}'s Quizzes`;
             navigateToStep('quizzes');
             loadStudentQuizzes(studentId);
+            loadStudentFormalAssessments(studentId);
+        }
+
+        async function loadStudentFormalAssessments(studentId) {
+            try {
+                const supabase = getSupabase();
+                const { data, error } = await supabase
+                    .from('v_module_assessment_student_summary')
+                    .select('*, module_assessments(title, assessment_type, total_items, passing_threshold, modules(title))')
+                    .eq('student_id', studentId);
+
+                if (error) throw error;
+
+                const countEl = document.getElementById('formalAsmtCount');
+                if (countEl) countEl.textContent = `${data?.length || 0} assessment${data?.length !== 1 ? 's' : ''}`;
+
+                const tableBody = document.getElementById('formalAssessmentsTableBody');
+                if (!tableBody) return;
+
+                if (!data || data.length === 0) {
+                    tableBody.innerHTML = `<tr><td colspan="7" class="text-center py-8 text-gray-400">No formal assessments attempted yet</td></tr>`;
+                    return;
+                }
+
+                tableBody.innerHTML = data.map(row => {
+                    const asmt = row.module_assessments;
+                    const isPreTest = asmt?.assessment_type === 'pre_test';
+                    const canOverride = row.total_attempts >= 3 && row.raw_result === 'failed' && !row.is_teacher_override && row.verification_status === 'verified';
+                    const canVerify = row.verification_status === 'pending';
+
+                    let badgeClass = 'bg-gray-100 text-gray-700';
+                    if (row.is_teacher_override) badgeClass = 'bg-purple-100 text-purple-700';
+                    else if (row.raw_result === 'passed') badgeClass = 'bg-green-100 text-green-700';
+                    else if (row.verification_status === 'pending') badgeClass = 'bg-yellow-100 text-yellow-700';
+                    else if (row.raw_result === 'failed') badgeClass = 'bg-red-100 text-red-700';
+
+                    return `
+                        <tr class="hover:bg-gray-50">
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${asmt?.title || '-'}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-xs font-semibold uppercase ${isPreTest ? 'text-amber-600' : 'text-indigo-600'}">${isPreTest ? 'Pre-Test' : 'Post-Test'}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${asmt?.modules?.title || '-'}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700 font-semibold">${row.total_attempts}/3</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 font-bold">${row.final_numerical_score} / ${row.final_total_items} (${row.final_score_pct}%)</td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <span class="px-2.5 py-1 rounded-full text-xs font-semibold ${badgeClass}">
+                                    ${row.effective_status}
+                                </span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm space-x-2">
+                                ${canVerify ? `
+                                    <button onclick="handleTeacherVerify('${row.latest_attempt_id}', ${row.final_numerical_score}, ${row.final_total_items})" class="px-3 py-1 bg-green-600 text-white rounded-lg text-xs font-medium hover:bg-green-700">
+                                        Verify Score
+                                    </button>
+                                ` : ''}
+                                ${canOverride ? `
+                                    <button onclick="handleTeacherOverride('${row.latest_attempt_id}')" class="px-3 py-1 bg-purple-600 text-white rounded-lg text-xs font-medium hover:bg-purple-700">
+                                        Apply Override
+                                    </button>
+                                ` : ''}
+                                ${!canVerify && !canOverride ? '<span class="text-xs text-gray-400">None</span>' : ''}
+                            </td>
+                        </tr>
+                    `;
+                }).join('');
+            } catch (err) {
+                console.error('Error loading formal assessments:', err);
+                const tableBody = document.getElementById('formalAssessmentsTableBody');
+                if (tableBody) {
+                    tableBody.innerHTML = `<tr><td colspan="7" class="text-center py-6 text-red-500">Error: ${escText(err.message)}</td></tr>`;
+                }
+            }
+        }
+
+        // Accessible form dialog (replaces prompt()). fields: [{ name, label, type:
+        // 'number'|'textarea', value, min, max, required }]. Resolves with
+        // { name: value } or null when cancelled (Escape, backdrop or Cancel).
+        function openFormDialog({ title, description, fields, confirmLabel }) {
+            return new Promise(resolve => {
+                const opener = document.activeElement;
+                const overlay = document.createElement('div');
+                overlay.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4';
+                overlay.innerHTML = `
+                    <form role="dialog" aria-modal="true" aria-labelledby="formDialogTitle" class="bg-white rounded-2xl w-full max-w-md p-6" novalidate>
+                        <h2 id="formDialogTitle" class="text-lg font-bold text-gray-900">${escText(title)}</h2>
+                        ${description ? `<p class="text-sm text-gray-600 mt-1">${escText(description)}</p>` : ''}
+                        <div class="space-y-4 mt-4">
+                            ${fields.map(field => `
+                                <div>
+                                    <label for="fd_${field.name}" class="block text-sm font-medium text-gray-700 mb-1">${escText(field.label)}</label>
+                                    ${field.type === 'textarea'
+                                        ? `<textarea id="fd_${field.name}" name="${field.name}" rows="3" class="w-full px-3 py-2 border border-gray-300 rounded-xl" aria-describedby="fd_${field.name}_error">${escText(field.value ?? '')}</textarea>`
+                                        : `<input id="fd_${field.name}" name="${field.name}" type="number" inputmode="numeric" step="1" min="${field.min ?? ''}" max="${field.max ?? ''}" value="${escText(field.value ?? '')}" class="w-full px-3 py-2 border border-gray-300 rounded-xl" aria-describedby="fd_${field.name}_error">`}
+                                    <p id="fd_${field.name}_error" class="hidden text-sm text-red-700 mt-1"></p>
+                                </div>`).join('')}
+                        </div>
+                        <div class="flex gap-3 mt-6">
+                            <button type="button" data-action="cancel" class="flex-1 py-3 border border-gray-300 text-gray-700 rounded-xl font-semibold hover:bg-gray-50">Cancel</button>
+                            <button type="submit" class="flex-1 py-3 bg-plum-800 text-white rounded-xl font-semibold hover:bg-plum-900">${escText(confirmLabel)}</button>
+                        </div>
+                    </form>`;
+                document.body.appendChild(overlay);
+                const form = overlay.querySelector('form');
+                const focusable = () => Array.from(form.querySelectorAll('input, textarea, button'));
+
+                function close(result) {
+                    document.removeEventListener('keydown', onKeydown, true);
+                    overlay.remove();
+                    if (opener && typeof opener.focus === 'function') opener.focus();
+                    resolve(result);
+                }
+                function showError(field, message) {
+                    const input = form.querySelector('#fd_' + field.name);
+                    const errorEl = form.querySelector('#fd_' + field.name + '_error');
+                    errorEl.textContent = message;
+                    errorEl.classList.remove('hidden');
+                    input.setAttribute('aria-invalid', 'true');
+                    input.focus();
+                }
+                function onKeydown(e) {
+                    if (e.key === 'Escape') { e.preventDefault(); close(null); return; }
+                    if (e.key === 'Tab') {
+                        const items = focusable();
+                        const first = items[0], last = items[items.length - 1];
+                        if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+                        else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+                    }
+                }
+
+                form.addEventListener('submit', e => {
+                    e.preventDefault();
+                    const values = {};
+                    for (const field of fields) {
+                        const raw = form.querySelector('#fd_' + field.name).value;
+                        if (field.type === 'number') {
+                            const n = Number(raw);
+                            if (raw.trim() === '' || !Number.isInteger(n) || n < field.min || n > field.max) {
+                                showError(field, `Enter a whole number from ${field.min} to ${field.max}.`);
+                                return;
+                            }
+                            values[field.name] = n;
+                        } else {
+                            const text = raw.trim();
+                            if (field.required && !text) {
+                                showError(field, 'This field is required.');
+                                return;
+                            }
+                            values[field.name] = text;
+                        }
+                    }
+                    close(values);
+                });
+                overlay.querySelector('[data-action="cancel"]').addEventListener('click', () => close(null));
+                overlay.addEventListener('click', e => { if (e.target === overlay) close(null); });
+                document.addEventListener('keydown', onKeydown, true);
+                focusable()[0].focus();
+            });
+        }
+
+        // Result message in a polite live region (replaces alert())
+        function announceResult(message, isError) {
+            let region = document.getElementById('resultAnnouncer');
+            if (!region) {
+                region = document.createElement('div');
+                region.id = 'resultAnnouncer';
+                region.setAttribute('role', 'status');
+                region.setAttribute('aria-live', 'polite');
+                region.className = 'fixed bottom-4 right-4 left-4 sm:left-auto max-w-sm px-5 py-3 rounded-xl text-white font-medium z-50 hidden';
+                document.body.appendChild(region);
+            }
+            region.textContent = message;
+            region.classList.toggle('bg-red-700', !!isError);
+            region.classList.toggle('bg-forest-800', !isError);
+            region.classList.remove('hidden');
+            clearTimeout(region._hideTimer);
+            region._hideTimer = setTimeout(() => region.classList.add('hidden'), 5000);
+        }
+
+        async function handleTeacherVerify(attemptId, currentScore, totalItems) {
+            const values = await openFormDialog({
+                title: 'Verify paper score',
+                description: `Total items: ${totalItems}`,
+                confirmLabel: 'Verify score',
+                fields: [
+                    { name: 'score', label: 'Score', type: 'number', value: currentScore, min: 0, max: totalItems },
+                    { name: 'notes', label: 'Verification notes (optional)', type: 'textarea', value: 'Paper test verified by teacher' }
+                ]
+            });
+            if (!values) return;
+            const res = await verifyAssessmentAttempt(attemptId, values.score, totalItems, values.notes || null);
+            if (res.success) {
+                announceResult('Assessment verified successfully.');
+                await loadStudentFormalAssessments(currentState.student.id);
+            } else {
+                announceResult('Verification failed: ' + res.error, true);
+            }
+        }
+
+        async function handleTeacherOverride(attemptId) {
+            const values = await openFormDialog({
+                title: 'Authorize completion override',
+                description: 'Attempt 3. The attempt count stays at 3 and the next module unlocks.',
+                confirmLabel: 'Apply override',
+                fields: [
+                    { name: 'reason', label: 'Justification', type: 'textarea', value: 'Student completed remedial oral examination', required: true }
+                ]
+            });
+            if (!values) return;
+            const res = await applyAssessmentOverride(attemptId, values.reason);
+            if (res.success) {
+                announceResult('Override applied. Attempt count preserved at 3. Next module unlocked.');
+                await loadStudentFormalAssessments(currentState.student.id);
+            } else {
+                announceResult('Override failed: ' + res.error, true);
+            }
         }
 
         function navigateToStep(stepName) {

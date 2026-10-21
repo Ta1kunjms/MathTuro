@@ -3,6 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script>
+        // Apply the saved font preference before first paint to avoid a flash
+        // of the default font for returning users who enabled the dyslexia-
+        // friendly toggle. Per-viewer UI preference only — localStorage, not
+        // account data.
+        (function () {
+            try {
+                if (localStorage.getItem('mathturo_font_pref') === 'dyslexic') {
+                    document.documentElement.setAttribute('data-font', 'dyslexic');
+                }
+            } catch (e) { /* localStorage unavailable — fall back to default font */ }
+        })();
+    </script>
     <link rel="stylesheet" href="../dist/styles.css">
     <script src="../shared/js/device.js"></script>
     <link rel="icon" type="image/png" href="../Logo/MATHURO-LOGO-v2.png">
@@ -11,50 +24,24 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
         body { font-family: 'Inter', system-ui, sans-serif; }
-                @media (max-width: 768px) {
-                    .lesson-card,
-                    .module-card,
-                    .quiz-card {
-                        max-width: 100% !important;
-                        min-width: 0 !important;
-                        width: 100% !important;
-                        margin: 0 0 1.5rem 0 !important;
-                        padding: 1.25rem !important;
-                        box-sizing: border-box;
-                    }
-                    .cards-row,
-                    .lessons-grid,
-                    .modules-grid {
-                        display: flex !important;
-                        flex-direction: column !important;
-                        gap: 1.5rem !important;
-                    }
-                }
-        
+
         .gradient-text {
-            background: linear-gradient(135deg, #005801 0%, #22c55e 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
+            color: #1b4332;
         }
         
-        .glass-sidebar {
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(20px);
-        }
         
         .lesson-nav-item {
             transition: all 0.2s ease;
         }
         
         .lesson-nav-item:hover {
-            background-color: rgba(0, 88, 1, 0.05);
+            background-color: rgba(27, 67, 50, 0.05);
         }
         
         .lesson-nav-item.active {
-            background: linear-gradient(135deg, #005801 0%, #16a34a 100%);
+            background: #1b4332;
             color: white;
-            box-shadow: 0 4px 15px rgba(0, 88, 1, 0.3);
+            box-shadow: 0 4px 15px rgba(27, 67, 50, 0.3);
         }
         
         .lesson-nav-item.active .lesson-icon {
@@ -66,12 +53,12 @@
         }
         
         .sidebar-link:hover, .sidebar-link.active {
-            background: linear-gradient(135deg, #005801 0%, #16a34a 100%);
+            background: #1b4332;
             color: white;
         }
         
         .sidebar-link.active {
-            box-shadow: 0 4px 15px rgba(0, 88, 1, 0.3);
+            box-shadow: 0 4px 15px rgba(27, 67, 50, 0.3);
         }
         
         .content-card {
@@ -109,8 +96,8 @@
         
         ::-webkit-scrollbar { width: 6px; }
         ::-webkit-scrollbar-track { background: #f1f1f1; }
-        ::-webkit-scrollbar-thumb { background: #005801; border-radius: 3px; }
-        ::-webkit-scrollbar-thumb:hover { background: #004601; }
+        ::-webkit-scrollbar-thumb { background: #1b4332; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: #122d22; }
     </style>
     <link rel="stylesheet" href="../shared/css/base.css">
     <link rel="stylesheet" href="assets/css/student.css">
@@ -123,7 +110,7 @@
     <div id="mobileOverlay" class="fixed inset-0 bg-black bg-opacity-50 z-40 hidden lg:hidden"></div>
     
     <!-- Sidebar -->
-    <aside id="sidebar" class="fixed left-0 top-0 h-full w-72 glass-sidebar border-r border-gray-200 z-50 transform -translate-x-full lg:translate-x-0 transition-transform duration-300">
+    <aside id="sidebar" class="fixed left-0 top-0 h-full w-72 bg-white border-r border-gray-200 z-50 transform -translate-x-full lg:translate-x-0 transition-transform duration-300">
         <!-- Logo -->
         <div class="p-6 border-b border-gray-100">
             <a href="dashboard.html" class="flex items-center space-x-3">
@@ -140,12 +127,12 @@
         <!-- User Info -->
         <div class="p-6 border-b border-gray-100">
             <div class="flex items-center space-x-3">
-                <div class="w-12 h-12 bg-brand/10 rounded-full flex items-center justify-center">
-                    <span id="userInitials" class="text-brand font-bold text-lg">--</span>
+                <div class="w-12 h-12 bg-forest-800/10 rounded-full flex items-center justify-center">
+                    <span id="userInitials" class="text-forest-800 font-bold text-lg">--</span>
                 </div>
                 <div>
                     <p id="sidebarUserName" class="font-semibold text-gray-800">Loading...</p>
-                    <p id="userRole" class="text-sm text-brand font-medium capitalize">Loading...</p>
+                    <p id="userRole" class="text-sm text-forest-800 font-medium capitalize">Loading...</p>
                 </div>
             </div>
         </div>
@@ -166,7 +153,7 @@
         
         <!-- Bottom Actions -->
         <div class="absolute bottom-0 left-0 right-0 p-4 border-t border-gray-100 bg-white">
-            <a id="backToModulesLink" href="modules.html" class="flex items-center space-x-3 px-4 py-3 text-gray-600 hover:text-brand transition-colors">
+            <a id="backToModulesLink" href="modules.html" class="flex items-center space-x-3 px-4 py-3 text-gray-600 hover:text-forest-800 transition-colors">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 17l-5-5m0 0l5-5m-5 5h12"/>
                 </svg>
@@ -187,8 +174,8 @@
         <header class="bg-white border-b border-gray-200 sticky top-0 z-30">
             <div class="flex items-center justify-between px-4 lg:px-8 py-4">
                 <!-- Mobile Menu Button -->
-                <button id="mobileMenuBtn" class="lg:hidden p-2 text-gray-600 hover:text-brand rounded-lg">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <button id="mobileMenuBtn" class="lg:hidden p-2 text-gray-600 hover:text-forest-800 rounded-lg" aria-label="Open menu">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
                     </svg>
                 </button>
@@ -202,18 +189,18 @@
                 <!-- Right Actions -->
                 <div class="flex items-center space-x-4">
                     <!-- Progress Indicator -->
-                    <div id="progressIndicator" class="hidden md:flex items-center space-x-2 px-4 py-2 bg-brand/5 rounded-xl">
-                        <div class="w-8 h-8 bg-brand/10 rounded-full flex items-center justify-center">
-                            <span id="progressPercent" class="text-brand font-bold text-xs">0%</span>
+                    <div id="progressIndicator" class="hidden md:flex items-center space-x-2 px-4 py-2 bg-forest-800/5 rounded-xl">
+                        <div class="w-8 h-8 bg-forest-800/10 rounded-full flex items-center justify-center">
+                            <span id="progressPercent" class="text-forest-800 font-bold text-xs">0%</span>
                         </div>
                         <span class="text-sm text-gray-600">Progress</span>
                     </div>
                     
                     <!-- User Menu -->
                     <div class="relative">
-                        <button id="userMenuBtn" class="flex items-center space-x-2 p-2 rounded-lg hover:bg-gray-100">
-                            <div class="w-8 h-8 bg-brand/10 rounded-full flex items-center justify-center">
-                                <span id="headerUserInitials" class="text-brand font-semibold text-sm">--</span>
+                        <button id="userMenuBtn" class="flex items-center space-x-2 p-2 rounded-lg hover:bg-gray-100" aria-label="Account menu">
+                            <div class="w-8 h-8 bg-forest-800/10 rounded-full flex items-center justify-center">
+                                <span id="headerUserInitials" class="text-forest-800 font-semibold text-sm">--</span>
                             </div>
                         </button>
                         
@@ -233,15 +220,15 @@
         <!-- Lesson Content -->
         <div class="p-4 lg:p-8">
             <!-- Module Header Card -->
-            <div id="moduleHeader" class="bg-gradient-to-r from-brand to-brand-light rounded-2xl p-6 lg:p-8 text-white mb-8">
+            <div id="moduleHeader" class="learn-module-banner mb-6">
                 <div class="flex items-start justify-between">
                     <div>
-                        <p class="text-white/80 text-sm mb-1">Module</p>
-                        <h2 id="moduleTitle" class="text-2xl lg:text-3xl font-bold mb-2">Loading...</h2>
-                        <p id="moduleDescription" class="text-white/80 max-w-2xl">Loading...</p>
+                        <p class="text-gray-500 text-sm mb-1">Module</p>
+                        <h2 id="moduleTitle" class="text-2xl lg:text-3xl font-bold mb-2 text-gray-800">Loading...</h2>
+                        <p id="moduleDescription" class="text-gray-600 max-w-2xl">Loading...</p>
                     </div>
-                    <div class="hidden lg:flex items-center space-x-2 bg-white/20 px-4 py-2 rounded-xl">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <div class="hidden lg:flex items-center space-x-2 learn-count-chip">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
                         </svg>
                         <span id="lessonCount">0 Lessons</span>
@@ -249,14 +236,14 @@
                 </div>
             </div>
 
-            <!-- Lesson Content Section -->
-            <div id="lessonContentSection" class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden mb-8">
+            <!-- Lesson Content Section: the primary element on this page -->
+            <div id="lessonContentSection" class="learn-content-card mb-8">
                 <!-- Lesson Header -->
                 <div class="px-6 lg:px-8 py-6 border-b border-gray-100">
                     <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between">
                         <div>
                             <div class="flex items-center space-x-2 mb-2">
-                                <span id="lessonBadge" class="px-3 py-1 bg-brand/10 text-brand text-sm font-medium rounded-full">Lesson 1</span>
+                                <span id="lessonBadge" class="learn-count-chip text-sm">Lesson 1</span>
                                 <span id="lessonStatus" class="px-3 py-1 bg-gray-100 text-gray-600 text-sm rounded-full hidden">Pending</span>
                             </div>
                             <h3 id="lessonTitle" class="text-xl lg:text-2xl font-bold text-gray-800">Loading...</h3>
@@ -277,24 +264,24 @@
                     <!-- Video Section -->
                     <div id="videoSection" class="mb-8 hidden">
                         <div class="flex items-center space-x-2 mb-4">
-                            <div class="w-10 h-10 bg-red-100 rounded-xl flex items-center justify-center">
-                                <svg class="w-5 h-5 text-red-600" fill="currentColor" viewBox="0 0 24 24">
+                            <div class="w-10 h-10 bg-forest-50 rounded-xl flex items-center justify-center">
+                                <svg class="w-5 h-5 text-forest-800" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                                     <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
                                 </svg>
                             </div>
                             <h4 class="text-lg font-semibold text-gray-800">Video Lesson</h4>
                         </div>
-                        <div class="video-container bg-gray-900 rounded-xl overflow-hidden">
-                            <div id="videoThumbnail" class="absolute inset-0 flex items-center justify-center cursor-pointer bg-gray-900">
-                                <img id="thumbnailImage" src="" alt="Video Thumbnail" class="w-full h-full object-cover">
-                                <div class="absolute inset-0 flex items-center justify-center bg-black/30 hover:bg-black/50 transition-colors">
-                                    <div class="w-20 h-20 bg-red-600 rounded-full flex items-center justify-center shadow-2xl hover:scale-110 transition-transform">
-                                        <svg class="w-8 h-8 text-white ml-1" fill="currentColor" viewBox="0 0 24 24">
+                        <div class="video-container bg-gray-900 rounded-xl overflow-hidden border-2 border-ink-900">
+                            <button type="button" id="videoThumbnail" class="absolute inset-0 w-full h-full flex items-center justify-center bg-gray-900 p-0 border-0" aria-label="Play video lesson">
+                                <img id="thumbnailImage" src="" alt="" class="w-full h-full object-cover">
+                                <div class="absolute inset-0 flex items-center justify-center bg-black/30 hover:bg-black/50 transition-colors" aria-hidden="true">
+                                    <div class="w-20 h-20 bg-white border-2 border-ink-900 rounded-full flex items-center justify-center">
+                                        <svg class="w-8 h-8 text-forest-600 ml-1" fill="currentColor" viewBox="0 0 24 24">
                                             <path d="M8 5v14l11-7z"/>
                                         </svg>
                                     </div>
                                 </div>
-                            </div>
+                            </button>
                             <iframe
                                 id="lessonVideo"
                                 src=""
@@ -302,6 +289,7 @@
                                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                                 allowfullscreen
                                 class="hidden"
+                                title="Lesson video"
                             ></iframe>
                         </div>
                     </div>
@@ -309,14 +297,14 @@
                     <!-- Quiz Section -->
                     <div id="quizSection" class="mb-8 hidden">
                         <div class="flex items-center space-x-2 mb-4">
-                            <div class="w-10 h-10 bg-purple-100 rounded-xl flex items-center justify-center">
-                                <svg class="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <div class="w-10 h-10 bg-plum-50 rounded-xl flex items-center justify-center">
+                                <svg class="w-5 h-5 text-plum-800" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/>
                                 </svg>
                             </div>
                             <h4 class="text-lg font-semibold text-gray-800">Quiz</h4>
                         </div>
-                        <div id="quizContent" class="bg-gradient-to-r from-purple-50 to-indigo-50 rounded-xl p-6 border border-purple-100">
+                        <div id="quizContent" class="learn-quiz-callout">
                             <!-- Quiz content will be loaded here -->
                         </div>
                     </div>
@@ -331,16 +319,16 @@
             </div>
 
             <!-- No Lessons Message -->
-            <div id="noLessonsMessage" class="hidden bg-white rounded-2xl p-12 text-center border border-gray-100">
-                <div class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <svg class="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div id="noLessonsMessage" class="hidden learn-state-block bg-white border-2 border-ink-900 rounded-2xl">
+                <div class="learn-state-icon" style="background: #f0f0f0; color: #6b6862;" aria-hidden="true">
+                    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
                     </svg>
                 </div>
-                <h3 class="text-lg font-semibold text-gray-800 mb-2">No Lessons Available</h3>
-                <p class="text-gray-500 mb-6">This module doesn't have any lessons yet.</p>
-                <a id="noLessonsBackLink" href="modules.html" class="inline-flex items-center px-6 py-3 bg-brand text-white rounded-xl hover:bg-brand-dark transition-colors">
-                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <h3 class="learn-state-title">No Lessons Available</h3>
+                <p class="learn-state-text">This module doesn't have any lessons yet.</p>
+                <a id="noLessonsBackLink" href="modules.html" class="learn-state-action">
+                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 17l-5-5m0 0l5-5m-5 5h12"/>
                     </svg>
                     Back to Modules
@@ -375,7 +363,7 @@
                         name="score"
                         required
                         min="0"
-                        class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-brand/20 focus:border-brand transition-colors"
+                        class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-forest-800/20 focus:border-forest-800 transition-colors"
                         placeholder="Enter your score"
                     >
                 </div>
@@ -389,7 +377,7 @@
                         name="totalItems"
                         required
                         min="1"
-                        class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-brand/20 focus:border-brand transition-colors"
+                        class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-forest-800/20 focus:border-forest-800 transition-colors"
                         placeholder="Enter total items"
                     >
                 </div>
@@ -397,7 +385,7 @@
                     <label for="quizScreenshot" class="block text-sm font-medium text-gray-700 mb-2">
                         Screenshot (Optional)
                     </label>
-                    <div class="border-2 border-dashed border-gray-200 rounded-xl p-4 text-center hover:border-brand transition-colors">
+                    <div class="border-2 border-dashed border-gray-200 rounded-xl p-4 text-center hover:border-forest-800 transition-colors">
                         <input
                             type="file"
                             id="quizScreenshot"
@@ -423,7 +411,7 @@
                     </button>
                     <button
                         type="submit"
-                        class="flex-1 px-4 py-3 bg-brand text-white rounded-xl hover:bg-brand-dark transition-colors"
+                        class="flex-1 px-4 py-3 bg-forest-800 text-white rounded-xl hover:bg-forest-900 transition-colors"
                     >
                         Submit Score
                     </button>
@@ -436,8 +424,8 @@
     <div id="loadingOverlay" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
         <div class="text-center bg-white p-8 rounded-2xl shadow-2xl">
             <div class="relative w-16 h-16 mx-auto mb-4">
-                <div class="absolute inset-0 border-4 border-brand/20 rounded-full"></div>
-                <div class="absolute inset-0 border-4 border-brand border-t-transparent rounded-full animate-spin"></div>
+                <div class="absolute inset-0 border-4 border-forest-800/20 rounded-full"></div>
+                <div class="absolute inset-0 border-4 border-forest-800 border-t-transparent rounded-full animate-spin"></div>
             </div>
             <p class="text-gray-800 font-medium">Loading lesson...</p>
         </div>
@@ -446,6 +434,7 @@
     <!-- Scripts -->
     <script src="../shared/js/includes.js"></script>
 
+    <script src="../shared/js/runtime-config.js"></script>
     <script src="../shared/js/config.js"></script>
     <script src="../shared/js/utils.js"></script>
     <script src="../shared/js/supabase.js"></script>
@@ -854,7 +843,7 @@
             // Mark as Complete button
             if (!isCompleted) {
                 const completeBtn = document.createElement('button');
-                completeBtn.className = 'flex items-center px-4 py-2 bg-brand text-white rounded-xl hover:bg-brand-dark transition-colors';
+                completeBtn.className = 'flex items-center px-4 py-2 bg-forest-800 text-white rounded-xl hover:bg-forest-900 transition-colors';
                 completeBtn.innerHTML = `
                     <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>

@@ -33,14 +33,29 @@
   - Shows alert if user's role is not found in database
   - Shows alert for any other Supabase error
 */
+let lastLoginError = null;
+
+/*
+  Function Name: getLastLoginError
+  Purpose:
+  - Returns the machine-readable error details from the most recent login attempt
+  - Allows caller pages to display specific, appropriate error messages
+*/
+function getLastLoginError() {
+  return lastLoginError;
+}
+
 async function login(email, password) {
+  lastLoginError = null;
+
   try {
     // Check if Supabase is initialized
     const supabase = getSupabase();
     if (!supabase) {
-      if (typeof showToast === 'function') {
-        showToast('Login failed: Database connection not available. Please refresh the page.', 'error');
-      }
+      lastLoginError = {
+        code: 'DATABASE_UNAVAILABLE',
+        message: 'Database connection not available. Please refresh the page.'
+      };
       console.error('Supabase client not initialized');
       return null;
     }
@@ -51,54 +66,62 @@ async function login(email, password) {
       password: password
     });
 
-    // Check if login failed (invalid credentials)
+    // Check if login failed (invalid credentials or unconfirmed email)
     if (authError) {
-      if (typeof showToast === 'function') {
-        showToast('Login failed: ' + authError.message, 'error');
-      }
+      const isUnconfirmed = (authError.message || '').toLowerCase().includes('email not confirmed');
+      lastLoginError = {
+        code: isUnconfirmed ? 'EMAIL_NOT_CONFIRMED' : 'INVALID_CREDENTIALS',
+        message: isUnconfirmed
+          ? 'Please confirm your email address before logging in. Check your inbox for the verification link.'
+          : 'Invalid email or password. Please try again.'
+      };
       return null;
     }
 
     // Step 2: Get user role from the database
     let { data: userData, error: userError } = await supabase
       .from('users')
-      .select('id, email, role, full_name')
+      .select('id, email, role, full_name, first_name, last_name, approval_status, is_active, is_archived')
       .eq('id', authData.user.id)
       .single();
 
-    // If user doesn't exist in users table, create them
     if (userError || !userData) {
-      console.log('User not found in users table, creating record...');
-      
-      // Get user metadata from auth
-      const userMeta = authData.user.user_metadata || {};
-      const role = userMeta.role || 'student';
-      const fullName = userMeta.full_name || authData.user.email.split('@')[0];
+      await supabase.auth.signOut();
+      lastLoginError = {
+        code: 'PROFILE_NOT_FOUND',
+        message: 'Your account profile is not available. Please contact an administrator.'
+      };
+      return null;
+    }
 
-      // Insert the user record
-      const { data: newUser, error: insertError } = await supabase
-        .from('users')
-        .insert({
-          id: authData.user.id,
-          email: authData.user.email,
-          full_name: fullName,
-          role: role,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
-        })
-        .select()
-        .single();
+    if (userData.is_archived) {
+      await supabase.auth.signOut();
+      lastLoginError = {
+        code: 'ACCOUNT_ARCHIVED',
+        message: 'Your account has been archived. Please contact an administrator.'
+      };
+      return null;
+    }
 
-      if (insertError) {
-        console.error('Failed to create user record:', insertError);
-        if (typeof showToast === 'function') {
-          showToast('Error: Could not create user profile. Please contact support.', 'error');
-        }
-        await supabase.auth.signOut();
-        return null;
+    if (!userData.is_active || userData.approval_status !== 'approved') {
+      await supabase.auth.signOut();
+      if (userData.approval_status === 'rejected') {
+        lastLoginError = {
+          code: 'ACCOUNT_REJECTED',
+          message: 'Your account registration was rejected. Please contact an administrator.'
+        };
+      } else if (!userData.is_active) {
+        lastLoginError = {
+          code: 'ACCOUNT_INACTIVE',
+          message: 'Your account is inactive. Please contact an administrator.'
+        };
+      } else {
+        lastLoginError = {
+          code: 'PENDING_APPROVAL',
+          message: 'Your account is awaiting administrator approval.'
+        };
       }
-
-      userData = newUser;
+      return null;
     }
 
     // Step 3: Update last_login in database and record login event in activity_log
@@ -125,16 +148,22 @@ async function login(email, password) {
       id: authData.user.id,
       email: authData.user.email,
       role: userData.role,
-      fullName: userData.full_name
+      fullName: userData.full_name,
+      firstName: userData.first_name,
+      lastName: userData.last_name,
+      approvalStatus: userData.approval_status,
+      isActive: userData.is_active
     };
     localStorage.setItem('user', JSON.stringify(user));
 
+    lastLoginError = null;
     return user;
 
   } catch (error) {
-    if (typeof showToast === 'function') {
-      showToast('Login failed: ' + error.message, 'error');
-    }
+    lastLoginError = {
+      code: 'UNKNOWN_ERROR',
+      message: 'Login failed: ' + error.message
+    };
     return null;
   }
 }
@@ -225,57 +254,43 @@ async function checkAuthSession() {
       return null;
     }
 
-    // Get user data from localStorage
-    const user = JSON.parse(localStorage.getItem('user'));
-    
-    // If no user data in localStorage, try to fetch from database
-    if (!user) {
-      const { data: userRows, error: userError } = await supabase
-        .from('users')
-        .select('id, email, role, full_name')
-        .eq('id', session.user.id)
-        .limit(1);
+    const { data: userData, error: userError } = await supabase
+      .from('users')
+      .select('id, email, role, full_name, first_name, last_name, approval_status, is_active, is_archived')
+      .eq('id', session.user.id)
+      .single();
 
-      let userData = Array.isArray(userRows) ? userRows[0] : null;
-
-      if (!userData) {
-        const metadata = session.user.user_metadata || {};
-        const fallbackRole = metadata.role || 'student';
-        const fallbackFullName = metadata.full_name || metadata.name || (session.user.email || '').split('@')[0] || 'User';
-
-        const { data: createdRows, error: createError } = await supabase
-          .from('users')
-          .upsert({
-            id: session.user.id,
-            email: session.user.email,
-            role: fallbackRole,
-            full_name: fallbackFullName,
-            updated_at: new Date().toISOString()
-          }, { onConflict: 'id' })
-          .select('id, email, role, full_name')
-          .limit(1);
-
-        if (!createError) {
-          userData = Array.isArray(createdRows) ? createdRows[0] : null;
-        }
-      }
-
-      if (userError || !userData) {
-        return null;
-      }
-
-      const newUser = {
-        id: session.user.id,
-        email: session.user.email,
-        role: userData.role,
-        fullName: userData.full_name
-      };
-
-      localStorage.setItem('user', JSON.stringify(newUser));
-      return newUser;
+    if (userError || !userData) {
+      localStorage.removeItem('user');
+      await supabase.auth.signOut();
+      return null;
     }
 
-    return user;
+    if (userData.is_archived) {
+      localStorage.removeItem('user');
+      await supabase.auth.signOut();
+      return null;
+    }
+
+    if (!userData.is_active || userData.approval_status !== 'approved') {
+      localStorage.removeItem('user');
+      await supabase.auth.signOut();
+      return null;
+    }
+
+    const currentUser = {
+      id: userData.id,
+      email: userData.email || session.user.email,
+      role: userData.role,
+      fullName: userData.full_name,
+      firstName: userData.first_name,
+      lastName: userData.last_name,
+      approvalStatus: userData.approval_status,
+      isActive: userData.is_active
+    };
+
+    localStorage.setItem('user', JSON.stringify(currentUser));
+    return currentUser;
 
   } catch (error) {
     console.error('Session check error:', error);

@@ -5,6 +5,8 @@ node_modules/
 dist/
 build/
 *.log
+shared/js/runtime-config.js
+public/shared/js/runtime-config.js
 
 # IDE files
 .vscode/
@@ -118,3 +120,19 @@ dist
 .yarn/install-state.gz
 .pnp.*
 .vercel
+
+# AI assistant configurations (local/private — not for distribution)
+.claude/
+.github/agents/
+.github/skills/
+.opencode/
+CLAUDE.md
+AGENT_INDEX.md
+CLAUDE.md.example
+
+# Local data exports & scratch files (contain real user PII — never commit)
+Files/
+
+# Local AI tool configs
+opencode.json
+skills-lock.json

@@ -8,13 +8,13 @@
    TEACHER THEME COLORS
    ============================================ */
 :root {
-  --teacher-50: #fdf2f8;
-  --teacher-100: #fce7f3;
-  --teacher-200: #fbcfe8;
-  --teacher-500: #910568;
-  --teacher-600: #720455;
-  --teacher-700: #5a0344;
-  --teacher-800: #4a0338;
+  --teacher-50: var(--ds-purple-50);   /* plum-50 */
+  --teacher-100: var(--ds-purple-100); /* plum-100 */
+  --teacher-200: var(--ds-purple-100);
+  --teacher-500: var(--ds-purple-600); /* plum-600 */
+  --teacher-600: var(--ds-purple-800); /* plum-800 */
+  --teacher-700: var(--ds-purple-900); /* plum-900 */
+  --teacher-800: var(--ds-purple-900);
 }
 
 /* ============================================
@@ -26,14 +26,38 @@
   min-height: 0;
 }
 
-.sidebar-link:hover, 
-.sidebar-link.active {
-  background: linear-gradient(135deg, #005801 0%, #006B01 100%);
-  color: white;
+/* Scoped under #teacherSidebar so it outranks the legacy per-page inline
+   .sidebar-link rules (green gradient) that load before this file. */
+#teacherSidebar .sidebar-link {
+  transition: background-color 0.15s ease, color 0.15s ease;
 }
 
-.sidebar-link.active {
-  box-shadow: 0 4px 15px rgba(0, 88, 1, 0.3);
+#teacherSidebar .sidebar-link:hover {
+  background: #fbf1f8; /* plum-50 */
+  color: #720455;      /* plum-800 */
+}
+
+/* Active: solid plum fill plus heavier weight and an offset edge, so the
+   state doesn't rely on color alone */
+#teacherSidebar .sidebar-link.active {
+  background: #720455; /* plum-800 */
+  color: #ffffff;
+  font-weight: 600;
+  box-shadow: 3px 3px 0 0 #1c1b1a; /* ink-900 */
+}
+
+#teacherSidebar a:focus-visible,
+#teacherSidebar button:focus-visible {
+  outline: 3px solid #720455;
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #teacherSidebar,
+  #teacherSidebar * {
+    transition: none !important;
+    animation: none !important;
+  }
 }
 
 /* ============================================
@@ -62,7 +86,7 @@
    TEACHER BUTTONS
    ============================================ */
 .btn-approve {
-  background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+  background: #15803d;
   color: white;
   padding: 0.5rem 1rem;
   border-radius: 0.375rem;
@@ -70,12 +94,12 @@
 }
 
 .btn-approve:hover {
-  background: linear-gradient(135deg, #16a34a 0%, #15803d 100%);
+  background: #166534;
   box-shadow: 0 4px 12px rgba(22, 163, 74, 0.3);
 }
 
 .btn-reject {
-  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  background: #b91c1c;
   color: white;
   padding: 0.5rem 1rem;
   border-radius: 0.375rem;
@@ -83,12 +107,12 @@
 }
 
 .btn-reject:hover {
-  background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+  background: #991b1b;
   box-shadow: 0 4px 12px rgba(220, 38, 38, 0.3);
 }
 
 .btn-teacher {
-  background: linear-gradient(135deg, var(--teacher-500) 0%, var(--teacher-600) 100%);
+  background: var(--teacher-600);
   color: white;
   padding: 0.5rem 1rem;
   border-radius: 0.375rem;
@@ -96,7 +120,7 @@
 }
 
 .btn-teacher:hover {
-  background: linear-gradient(135deg, var(--teacher-600) 0%, var(--teacher-700) 100%);
+  background: var(--teacher-700);
   box-shadow: 0 4px 12px rgba(145, 5, 104, 0.3);
 }
 
@@ -134,7 +158,7 @@
    TEACHER BADGES
    ============================================ */
 .badge-teacher {
-  background: linear-gradient(135deg, var(--teacher-500) 0%, var(--teacher-600) 100%);
+  background: var(--teacher-600);
   color: white;
   padding: 0.25rem 0.75rem;
   border-radius: 9999px;
@@ -189,4 +213,41 @@
 .drop-zone.active {
   border: 2px dashed var(--teacher-500);
   background: rgba(145, 5, 104, 0.05);
+}
+
+/* ============================================
+   PAGE-WIDE ACCESSIBILITY (teacher portal only)
+   ============================================ */
+/* Plum focus ring for every focusable control (≥3:1 on white and paper) */
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+[tabindex]:focus-visible {
+  outline: 3px solid #720455;
+  outline-offset: 2px;
+}
+
+/* Inside solid plum surfaces (e.g. the dashboard hero) a white ring stays visible */
+.bg-plum-800 a:focus-visible,
+.bg-plum-800 button:focus-visible {
+  outline-color: #ffffff;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  .stat-card:hover,
+  .submission-card:hover,
+  .action-card:hover {
+    transform: none !important;
+  }
 }

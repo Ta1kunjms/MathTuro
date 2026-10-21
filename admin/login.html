@@ -259,6 +259,7 @@
     </div>
 
     <!-- Scripts -->
+    <script src="../shared/js/runtime-config.js"></script>
     <script src="../shared/js/config.js"></script>
     <script src="../shared/js/utils.js"></script>
     <script src="../shared/js/supabase.js"></script>
@@ -358,7 +359,8 @@
                         }
                         window.location.href = 'dashboard.html';
                     } else {
-                        showError('Invalid email or password');
+                        const lastError = typeof getLastLoginError === 'function' ? getLastLoginError() : null;
+                        showError(lastError?.message || 'Invalid email or password');
                     }
                 } catch (error) {
                     showError('Login failed: ' + error.message);

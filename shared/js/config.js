@@ -10,11 +10,17 @@
   to expose as it's designed for public access with RLS policies.
 */
 
+if (!window.__RUNTIME_CONFIG__?.SUPABASE_URL || !window.__RUNTIME_CONFIG__?.SUPABASE_ANON_KEY) {
+  const message = 'Runtime Supabase configuration is missing. Run the environment configuration generator before serving the app.';
+  console.error(message);
+  throw new Error(message);
+}
+
 const CONFIG = {
   // Supabase Configuration
   // Replace these with your actual Supabase project credentials
-  SUPABASE_URL: 'https://ynkzcybctsstpqxdoweq.supabase.co',
-  SUPABASE_ANON_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inlua3pjeWJjdHNzdHBxeGRvd2VxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njk4NzI1NjAsImV4cCI6MjA4NTQ0ODU2MH0.ZXdFcLmSmgaikZrA9MpP6d9enp4rjz_9nuiTpwm9n2k',
+    SUPABASE_URL: window.__RUNTIME_CONFIG__.SUPABASE_URL,
+    SUPABASE_ANON_KEY: window.__RUNTIME_CONFIG__.SUPABASE_ANON_KEY,
 
   // Application Settings
   APP_NAME: 'Learning Management System',

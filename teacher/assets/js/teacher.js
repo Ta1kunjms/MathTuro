@@ -13,6 +13,16 @@
   - uploads.js - for file upload functionality
 */
 
+// Escape text for innerHTML templates
+function escText(value) {
+  return String(value ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
+
+// Encode a value as a JS string literal that is safe inside an inline on* attribute
+function jsArg(value) {
+  return escText(JSON.stringify(String(value ?? '')));
+}
+
 /*
   Function Name: approveQuizSubmission
   Purpose:
@@ -648,7 +658,7 @@ async function loadTeacherSections(teacherId) {
     // Show loading state
     sectionsContainer.innerHTML = `
       <div class="p-6 text-center text-gray-500">
-        <div class="inline-block animate-spin rounded-full h-8 w-8 border-4 border-teacher-600 border-t-transparent mb-2"></div>
+        <div class="inline-block animate-spin rounded-full h-8 w-8 border-4 border-plum-800 border-t-transparent mb-2"></div>
         <p>Loading sections...</p>
       </div>
     `;
@@ -675,14 +685,14 @@ async function loadTeacherSections(teacherId) {
         <div class="p-4 hover:bg-gray-50 transition-colors">
           <div class="flex items-center justify-between">
             <div>
-              <h4 class="font-semibold text-gray-800">${section.name}</h4>
-              <p class="text-sm text-gray-600">${section.grade_levels?.name || 'N/A'}</p>
+              <h4 class="font-semibold text-gray-800">${escText(section.name)}</h4>
+              <p class="text-sm text-gray-600">${escText(section.grade_levels?.name || 'N/A')}</p>
             </div>
             <div class="text-right">
-              <p class="text-sm font-medium text-teacher-600">${students.length} Students</p>
+              <p class="text-sm font-medium text-plum-800">${students.length} Students</p>
               <button 
-                onclick="viewSectionStudents('${section.id}', '${section.name}')"
-                class="text-xs text-teacher-600 hover:text-teacher-700 mt-1"
+                onclick="viewSectionStudents('${section.id}', ${jsArg(section.name)})"
+                class="text-xs text-plum-800 hover:text-plum-900 mt-1"
               >
                 View Students
               </button>
@@ -744,5 +754,73 @@ async function viewSectionStudents(sectionId, sectionName) {
   } catch (error) {
     console.error('Error viewing section students:', error);
     alert('Error loading students');
+  }
+}
+
+/**
+ * Phase 2 Formal Assessment: Teacher Verification
+ * Calls public.verify_assessment_attempt RPC
+ */
+async function verifyAssessmentAttempt(attemptId, verifiedScore = null, verifiedTotal = null, notes = null) {
+  try {
+    const { data, error } = await getSupabase().rpc('verify_assessment_attempt', {
+      p_attempt_id: attemptId,
+      p_verified_score: verifiedScore !== null ? parseInt(verifiedScore, 10) : null,
+      p_verified_total: verifiedTotal !== null ? parseInt(verifiedTotal, 10) : null,
+      p_verification_notes: notes || null
+    });
+
+    if (error) throw error;
+    return { success: true, data };
+  } catch (error) {
+    console.error('Error verifying assessment attempt:', error);
+    return { success: false, error: error.message };
+  }
+}
+
+/**
+ * Phase 2 Formal Assessment: Teacher Override on Terminal (3rd) Failed Attempt
+ * In-place row update, never creates attempt 4, preserves numeric scores.
+ * Calls public.apply_assessment_override RPC
+ */
+async function applyAssessmentOverride(attemptId, reason) {
+  try {
+    if (!reason || !reason.trim()) {
+      return { success: false, error: 'An override reason is required' };
+    }
+
+    const { data, error } = await getSupabase().rpc('apply_assessment_override', {
+      p_attempt_id: attemptId,
+      p_reason: reason.trim()
+    });
+
+    if (error) throw error;
+    return { success: true, data };
+  } catch (error) {
+    console.error('Error applying assessment override:', error);
+    return { success: false, error: error.message };
+  }
+}
+
+/**
+ * Phase 2 Regular Quiz: Teacher Override on Terminal (3rd) Failed Submission
+ * Calls public.apply_quiz_override RPC
+ */
+async function applyQuizOverride(submissionId, reason) {
+  try {
+    if (!reason || !reason.trim()) {
+      return { success: false, error: 'An override reason is required' };
+    }
+
+    const { data, error } = await getSupabase().rpc('apply_quiz_override', {
+      p_submission_id: submissionId,
+      p_reason: reason.trim()
+    });
+
+    if (error) throw error;
+    return { success: true, data };
+  } catch (error) {
+    console.error('Error applying quiz override:', error);
+    return { success: false, error: error.message };
   }
 }

@@ -26,7 +26,7 @@ function createAdminSidebar() {
         <aside class="w-64 bg-gray-900 text-white h-screen fixed left-0 top-0 z-50 transform -translate-x-full lg:transform-none transition-transform duration-300 ease-in-out flex flex-col">
             <div class="p-6 border-b border-gray-800">
                 <div class="flex items-center space-x-3">
-                    <div class="w-10 h-10 bg-maroon rounded-lg flex items-center justify-center">
+                    <div class="w-10 h-10 bg-gray-800 border border-gray-700 rounded-lg flex items-center justify-center">
                         <i class="fas fa-book"></i>
                     </div>
                     <div>
@@ -47,7 +47,7 @@ function createAdminSidebar() {
                 </div>
             </div>
 
-            <nav class="p-4 space-y-2 flex-1 overflow-y-auto">
+            <nav class="p-4 space-y-2 flex-1 overflow-y-auto" aria-label="Admin navigation">
                 <a href="dashboard.html" class="nav-link flex items-center space-x-3 px-3 py-2 rounded-lg text-gray-300 hover:bg-gray-800 hover:text-white transition-colors" data-section="dashboard">
                     <i class="fas fa-tachometer-alt"></i>
                     <span>Dashboard</span>
@@ -64,12 +64,12 @@ function createAdminSidebar() {
                 </a>
 
                 <div class="pt-4 border-t border-gray-800">
-                    <button class="w-full nav-link flex items-center justify-between space-x-3 px-3 py-2 rounded-lg text-gray-300 hover:bg-gray-800 hover:text-white transition-colors" onclick="toggleFilesDropdown()">
+                    <button type="button" class="w-full nav-link flex items-center justify-between space-x-3 px-3 py-2 rounded-lg text-gray-300 hover:bg-gray-800 hover:text-white transition-colors" onclick="toggleFilesDropdown()" aria-expanded="false" aria-controls="filesDropdown">
                         <div class="flex items-center space-x-3">
                             <i class="fas fa-folder"></i>
                             <span>Files</span>
                         </div>
-                        <i class="fas fa-chevron-down text-xs transition-transform duration-200" id="filesDropdownIcon"></i>
+                        <i class="fas fa-chevron-down text-xs transition-transform duration-200 motion-reduce:transition-none" id="filesDropdownIcon"></i>
                     </button>
                     
                     <div id="filesDropdown" class="pl-4 mt-1 space-y-1 hidden">
@@ -141,20 +141,31 @@ function createAdminSidebar() {
         } else {
             sidebarContainer.innerHTML = sidebarHTML;
         }
+        // Icons are decorative; every control has a visible text label
+        sidebarContainer.querySelectorAll('i.fas').forEach(icon => icon.setAttribute('aria-hidden', 'true'));
     }
 
      const currentPath = window.location.pathname.toLowerCase();
+     const currentPage = currentPath.split('/').pop().replace(/.html$/, '');
      
      const navLinks = document.querySelectorAll('.nav-link');
      
      navLinks.forEach(link => {
          const section = (link.getAttribute('data-section') || '').toLowerCase();
-         const isSectionMatch = section && currentPath.includes(section);
-         const isGradeSectionPair = section === 'grade-levels' && currentPath.includes('sections.html');
+         const isSectionMatch = section && currentPage === section;
+         const isGradeSectionPair = section === 'grade-levels' && currentPage === 'sections';
 
          if (isSectionMatch || isGradeSectionPair) {
+             // Neutral-dark active state with a restrained green indicator —
+             // green is the primary admin action color; it marks "you are here"
+             // without competing with purple (reserved for secondary emphasis).
+             // forest-100 (not forest-600) is used for the border specifically because
+             // it's the shade in this family that clears the 3:1 non-text contrast
+             // minimum against the gray-800 active-row background (11.98:1 computed);
+             // forest-600 remains the one consistent "primary action" shade everywhere else.
              link.classList.remove('text-gray-300', 'hover:bg-gray-800', 'hover:text-white');
-             link.classList.add('bg-maroon', 'text-white');
+             link.classList.add('bg-gray-800', 'text-white', 'border-l-4', 'border-forest-100', 'pl-2');
+             link.setAttribute('aria-current', 'page');
          }
      });
 
@@ -196,6 +207,8 @@ function createAdminSidebar() {
             mobileOverlay.classList.add('hidden');
         });
     }
+
+    enhanceMobileDrawer(sidebar);
 }
 
 function toggleFilesDropdown() {
@@ -204,6 +217,12 @@ function toggleFilesDropdown() {
     
     dropdown.classList.toggle('hidden');
     icon.classList.toggle('rotate-180');
+    setFilesDropdownExpanded(!dropdown.classList.contains('hidden'));
+}
+
+function setFilesDropdownExpanded(expanded) {
+    const dropdownButton = document.querySelector('button[onclick="toggleFilesDropdown()"]');
+    if (dropdownButton) dropdownButton.setAttribute('aria-expanded', String(expanded));
 }
 
 // Close dropdown when clicking outside
@@ -218,6 +237,7 @@ document.addEventListener('click', function(event) {
         if (filesDropdownIcon) {
             filesDropdownIcon.classList.remove('rotate-180');
         }
+        setFilesDropdownExpanded(false);
     }
 });
 
@@ -235,7 +255,47 @@ document.addEventListener('DOMContentLoaded', function() {
             if (dropdown) {
                 dropdown.classList.remove('hidden');
                 icon.classList.add('rotate-180');
+                setFilesDropdownExpanded(true);
             }
         }
     });
 });
+
+// Phone drawer accessibility: pages toggle the drawer <aside> themselves, so this mirrors that state onto the menu button
+// and adds Escape-to-close plus focus moving into and back out of the drawer.
+// Skipped when a page already manages aria-expanded on its menu button.
+function enhanceMobileDrawer(drawer) {
+  const button = document.getElementById('mobileMenuBtn');
+  const overlay = document.getElementById('mobileOverlay');
+  if (!button || !drawer || button.hasAttribute('aria-expanded')) return;
+
+  if (!drawer.id) drawer.id = 'portalSidebarDrawer';
+  if (!button.getAttribute('aria-label')) button.setAttribute('aria-label', 'Open navigation menu');
+  button.setAttribute('aria-controls', drawer.id);
+
+  const isPhoneLayout = () => window.matchMedia('(max-width: 1023px)').matches;
+  const isOpen = () => isPhoneLayout() && !drawer.classList.contains('-translate-x-full');
+
+  let wasOpen = isOpen();
+  button.setAttribute('aria-expanded', String(wasOpen));
+
+  const onChange = () => {
+    const nowOpen = isOpen();
+    button.setAttribute('aria-expanded', String(nowOpen));
+    if (nowOpen && !wasOpen) {
+      const first = drawer.querySelector('a[href], button:not([disabled])');
+      if (first) first.focus();
+    } else if (!nowOpen && wasOpen && drawer.contains(document.activeElement)) {
+      button.focus();
+    }
+    wasOpen = nowOpen;
+  };
+  new MutationObserver(onChange).observe(drawer, { attributes: true, attributeFilter: ['class'] });
+
+  document.addEventListener('keydown', e => {
+    if (e.key !== 'Escape' || !isOpen()) return;
+    drawer.classList.add('-translate-x-full');
+    if (overlay) overlay.classList.add('hidden');
+    button.focus();
+  });
+}

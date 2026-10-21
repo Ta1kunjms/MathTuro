@@ -3,6 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script>
+        // Apply the saved font preference before first paint to avoid a flash
+        // of the default font for returning users who enabled the dyslexia-
+        // friendly toggle. Per-viewer UI preference only — localStorage, not
+        // account data.
+        (function () {
+            try {
+                if (localStorage.getItem('mathturo_font_pref') === 'dyslexic') {
+                    document.documentElement.setAttribute('data-font', 'dyslexic');
+                }
+            } catch (e) { /* localStorage unavailable — fall back to default font */ }
+        })();
+    </script>
     <link rel="stylesheet" href="../dist/styles.css">
     <script src="../shared/js/device.js"></script>
     <link rel="icon" type="image/png" href="../Logo/MATHURO-LOGO-v2.png">
@@ -11,47 +24,25 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
         body { font-family: 'Inter', system-ui, sans-serif; }
-                @media (max-width: 768px) {
-                    .video-card,
-                    .quiz-card,
-                    .lesson-card,
-                    .module-card {
-                        max-width: 100% !important;
-                        min-width: 0 !important;
-                        width: 100% !important;
-                        margin: 0 0 1.5rem 0 !important;
-                        padding: 1.25rem !important;
-                        box-sizing: border-box;
-                    }
-                    .cards-row,
-                    .videos-grid,
-                    .lessons-grid,
-                    .quizzes-grid {
-                        display: flex !important;
-                        flex-direction: column !important;
-                        gap: 1.5rem !important;
-                    }
-                }
         .gradient-text {
-            background: linear-gradient(135deg, #005801 0%, #22c55e 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
+            color: #1b4332;
         }
-        .video-card:hover { transform: translateY(-2px); box-shadow: 0 10px 40px -12px rgba(0, 0, 0, 0.15); }
-        .quiz-card:hover { transform: translateY(-2px); box-shadow: 0 10px 40px -12px rgba(0, 0, 0, 0.15); }
-        .upload-zone:hover { border-color: #005801; background: rgba(0, 88, 1, 0.05); }
-        .upload-zone.drag-over { border-color: #005801; background: rgba(0, 88, 1, 0.1); }
-        
+        .upload-zone:hover { border-color: #1b4332; background: rgba(27, 67, 50, 0.05); }
+        .upload-zone.drag-over { border-color: #1b4332; background: rgba(27, 67, 50, 0.1); }
+
         /* PDF Viewer */
         .pdf-container { height: 70vh; }
-        
+
         /* Image Gallery */
         .image-gallery img { cursor: pointer; transition: transform 0.3s; }
         .image-gallery img:hover { transform: scale(1.02); }
-        
+
         /* Lightbox */
         .lightbox { background: rgba(0, 0, 0, 0.95); }
+
+        @media (prefers-reduced-motion: reduce) {
+            .image-gallery img { transition: none; }
+        }
     </style>
     <link rel="stylesheet" href="../shared/css/base.css">
     <link rel="stylesheet" href="assets/css/student.css">
@@ -64,7 +55,7 @@
     <div id="mobileOverlay" class="fixed inset-0 bg-black bg-opacity-50 z-40 hidden lg:hidden"></div>
     
     <!-- Sidebar -->
-    <aside id="sidebar" class="fixed left-0 top-0 h-full w-72 glass-sidebar border-r border-gray-200 z-50 transform -translate-x-full lg:translate-x-0 transition-transform duration-300 overflow-y-auto"></aside>
+    <aside id="sidebar" class="fixed left-0 top-0 h-full w-72 bg-white border-r border-gray-200 z-50 transform -translate-x-full lg:translate-x-0 transition-transform duration-300 overflow-y-auto"></aside>
 
     <!-- Main Content -->
     <main class="lg:ml-72 min-h-screen">
@@ -72,22 +63,22 @@
         <header class="bg-white border-b border-gray-200 sticky top-0 z-30">
             <div class="flex items-center justify-between px-4 lg:px-8 py-4">
                 <!-- Mobile Menu Button -->
-                <button id="mobileMenuBtn" class="lg:hidden p-2 text-gray-600 hover:text-brand rounded-lg">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <button id="mobileMenuBtn" class="lg:hidden p-2 text-gray-600 hover:text-forest-800 rounded-lg" aria-label="Open menu">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
                     </svg>
                 </button>
-                
+
                 <!-- Page Title -->
                 <div class="flex-1 lg:flex-none">
                     <h1 id="moduleTitle" class="text-xl lg:text-2xl font-bold text-gray-800">Module View</h1>
                     <p class="text-sm text-gray-500 hidden sm:block">View module content and complete activities</p>
                 </div>
-                
+
                 <!-- Right Actions -->
                 <div class="flex items-center space-x-3">
-                    <a href="dashboard.html" class="p-2 text-gray-600 hover:text-brand rounded-lg hover:bg-gray-100">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <a href="dashboard.html" class="p-2 text-gray-600 hover:text-forest-800 rounded-lg hover:bg-gray-100" aria-label="Back to dashboard">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
                         </svg>
                     </a>
@@ -98,7 +89,7 @@
         <!-- Loading State -->
         <div id="loadingState" class="flex items-center justify-center min-h-[60vh]">
             <div class="text-center">
-                <div class="inline-block animate-spin rounded-full h-12 w-12 border-4 border-brand border-t-transparent"></div>
+                <div class="inline-block animate-spin rounded-full h-12 w-12 border-4 border-forest-100 border-t-forest-600" aria-hidden="true"></div>
                 <p class="mt-4 text-gray-600">Loading module...</p>
             </div>
         </div>
@@ -109,18 +100,18 @@
             <!-- Left Column - Module Content -->
             <div class="lg:col-span-2 space-y-6">
                 <!-- Module Info Card -->
-                <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
-                    <div class="flex items-start justify-between mb-4">
+                <div class="learn-module-banner">
+                    <div class="flex items-start justify-between mb-0">
                         <div>
                             <h2 id="moduleName" class="text-2xl font-bold text-gray-800 mb-2"></h2>
                             <p id="moduleDescription" class="text-gray-600"></p>
                         </div>
-                        <span id="moduleType" class="px-3 py-1 bg-gray-100 text-gray-600 rounded-full text-sm"></span>
+                        <span id="moduleType" class="learn-count-chip"></span>
                     </div>
                 </div>
 
-                <!-- Content Section -->
-                <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+                <!-- Content Section: the primary element on this page -->
+                <div class="learn-content-card">
                     <div class="p-6 border-b border-gray-100">
                         <h3 class="text-lg font-bold text-gray-800">Module Content</h3>
                     </div>
@@ -130,7 +121,7 @@
                 </div>
 
                 <!-- Videos Section -->
-                <div id="videosSection" class="hidden bg-white rounded-2xl border border-gray-100 shadow-sm">
+                <div id="videosSection" class="hidden bg-white rounded-2xl border-2 border-ink-900">
                     <div class="p-6 border-b border-gray-100">
                         <h3 class="text-lg font-bold text-gray-800">Video Lessons</h3>
                     </div>
@@ -143,32 +134,48 @@
             <!-- Right Column - Quizzes & Progress -->
             <div class="space-y-6">
                 <!-- Progress Card -->
-                <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
+                <div class="bg-white rounded-2xl border-2 border-ink-900 p-6">
                     <h3 class="text-lg font-bold text-gray-800 mb-4">Your Progress</h3>
                     <div class="space-y-4">
                         <div>
                             <div class="flex justify-between text-sm mb-1">
                                 <span class="text-gray-600">Content Viewed</span>
-                                <span id="contentProgress" class="font-semibold text-brand">0%</span>
+                                <span id="contentProgress" class="font-semibold text-forest-800">0%</span>
                             </div>
-                            <div class="h-2 bg-gray-200 rounded-full overflow-hidden">
-                                <div id="contentProgressBar" class="h-full bg-brand rounded-full transition-all" style="width: 0%"></div>
+                            <div class="learn-progress-track">
+                                <div id="contentProgressBar" class="learn-progress-fill" style="width: 0%"></div>
                             </div>
                         </div>
                         <div>
                             <div class="flex justify-between text-sm mb-1">
                                 <span class="text-gray-600">Quizzes Completed</span>
-                                <span id="quizProgress" class="font-semibold text-green-600">0/0</span>
+                                <span id="quizProgress" class="font-semibold text-forest-800">0/0</span>
                             </div>
-                            <div class="h-2 bg-gray-200 rounded-full overflow-hidden">
-                                <div id="quizProgressBar" class="h-full bg-green-500 rounded-full transition-all" style="width: 0%"></div>
+                            <div class="learn-progress-track">
+                                <div id="quizProgressBar" class="learn-progress-fill" style="width: 0%"></div>
                             </div>
                         </div>
                     </div>
                 </div>
 
+                <!-- Formal Assessments Card (Phase 2 Pre-Test & Post-Test) -->
+                <div class="bg-white rounded-2xl border-2 border-ink-900">
+                    <div class="p-6 border-b border-gray-100">
+                        <div class="flex items-center justify-between">
+                            <h3 class="text-lg font-bold text-gray-800">Formal Assessments</h3>
+                            <span class="px-2.5 py-0.5 bg-plum-50 text-plum-800 text-xs font-semibold rounded-full">Gated</span>
+                        </div>
+                        <p class="text-xs text-gray-500 mt-1">Pre-test unlocks content; verified post-test unlocks next module</p>
+                    </div>
+                    <div id="formalAssessmentsList" class="divide-y divide-gray-100">
+                        <div class="p-6 text-center text-gray-500 text-sm">
+                            <p>Loading assessments...</p>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Quizzes Card -->
-                <div class="bg-white rounded-2xl border border-gray-100 shadow-sm">
+                <div class="bg-white rounded-2xl border-2 border-ink-900">
                     <div class="p-6 border-b border-gray-100">
                         <h3 class="text-lg font-bold text-gray-800">Quizzes</h3>
                         <p class="text-sm text-gray-500 mt-1">Complete the external quiz and submit your score</p>
@@ -182,7 +189,7 @@
                 </div>
 
                 <!-- My Submissions -->
-                <div class="bg-white rounded-2xl border border-gray-100 shadow-sm">
+                <div class="bg-white rounded-2xl border-2 border-ink-900">
                     <div class="p-6 border-b border-gray-100">
                         <h3 class="text-lg font-bold text-gray-800">My Submissions</h3>
                     </div>
@@ -195,6 +202,42 @@
             </div>
         </div>
     </main>
+
+    <!-- Submit Formal Assessment Modal -->
+    <div id="submitAssessmentModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl">
+            <div class="flex items-center justify-between pb-4 border-b border-gray-100">
+                <div>
+                    <h3 class="text-xl font-bold text-gray-800" id="asmtModalTitle">Submit Assessment</h3>
+                    <p class="text-sm text-gray-500" id="asmtModalSubtitle"></p>
+                </div>
+                <button type="button" onclick="closeSubmitAssessmentModal()" class="p-2 text-gray-500 hover:text-gray-700 rounded-lg hover:bg-gray-100">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                </button>
+            </div>
+            <form id="submitAssessmentForm" class="pt-4 space-y-4">
+                <input type="hidden" id="asmtModalId">
+                <input type="hidden" id="asmtModalTotalItems">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Paper Assessment Score *</label>
+                    <div class="flex items-center space-x-2">
+                        <input type="number" id="asmtStudentScore" required min="0" 
+                            class="flex-1 px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-forest-800 text-center text-2xl font-bold" 
+                            placeholder="0">
+                        <span class="text-2xl text-gray-400">/</span>
+                        <span id="asmtDisplayTotal" class="text-2xl font-bold text-gray-900">10</span>
+                    </div>
+                    <p class="text-xs text-gray-500 mt-2">Enter your verified paper test score. Maximum 3 attempts.</p>
+                </div>
+                <div class="flex space-x-3 pt-2">
+                    <button type="button" onclick="closeSubmitAssessmentModal()" class="flex-1 px-4 py-2.5 border border-gray-300 rounded-xl text-gray-700 font-medium hover:bg-gray-50 transition-colors">Cancel</button>
+                    <button type="submit" id="asmtSubmitBtn" class="flex-1 px-4 py-2.5 bg-forest-800 text-white rounded-xl font-medium hover:bg-forest-900 transition-colors">Submit Score</button>
+                </div>
+            </form>
+        </div>
+    </div>
 
     <!-- Submit Quiz Modal -->
     <div id="submitQuizModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
@@ -224,8 +267,8 @@
                             <p class="font-medium mb-1">How to submit:</p>
                             <ol class="list-decimal list-inside space-y-1 text-blue-700">
                                 <li>Take the quiz using the external link</li>
-                                <li>Screenshot your final score</li>
-                                <li>Enter your score below and upload the screenshot</li>
+                                <li>Enter your verified score below</li>
+                                <li>Submit to record your attempt (max 3 attempts)</li>
                             </ol>
                         </div>
                     </div>
@@ -235,7 +278,7 @@
                 <div class="grid grid-cols-2 gap-4">
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-2">Your Score *</label>
-                        <input type="number" id="studentScore" required min="0" class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-brand focus:border-transparent text-center text-2xl font-bold" placeholder="0">
+                        <input type="number" id="studentScore" required min="0" class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-forest-800 focus:border-transparent text-center text-2xl font-bold" placeholder="0">
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-2">Out of</label>
@@ -243,35 +286,10 @@
                     </div>
                 </div>
 
-                <!-- Screenshot Upload -->
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Screenshot of Score *</label>
-                    <div id="screenshotDropZone" class="upload-zone border-2 border-dashed border-gray-300 rounded-xl p-6 text-center cursor-pointer transition-colors">
-                        <input type="file" id="screenshotInput" accept="image/*" class="hidden" required>
-                        <div class="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-3">
-                            <svg class="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
-                            </svg>
-                        </div>
-                        <p class="text-gray-600 text-sm">Drop screenshot here or <span class="text-brand font-medium">browse</span></p>
-                        <p class="text-xs text-gray-500 mt-1">PNG, JPG up to 5MB</p>
-                    </div>
-                    <div id="screenshotPreview" class="hidden mt-4">
-                        <div class="relative rounded-xl overflow-hidden">
-                            <img id="screenshotImage" class="w-full h-48 object-cover" alt="Screenshot">
-                            <button type="button" onclick="removeScreenshot()" class="absolute top-2 right-2 p-2 bg-red-500 text-white rounded-full hover:bg-red-600">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-                                </svg>
-                            </button>
-                        </div>
-                    </div>
-                </div>
-
                 <!-- Submit Button -->
                 <div class="flex space-x-4 pt-2">
                     <button type="button" onclick="closeSubmitQuizModal()" class="flex-1 px-6 py-3 border border-gray-300 rounded-xl font-medium text-gray-700 hover:bg-gray-50">Cancel</button>
-                    <button type="submit" id="submitScoreBtn" class="flex-1 px-6 py-3 bg-brand text-white rounded-xl font-medium hover:bg-brand-dark transition-colors flex items-center justify-center space-x-2">
+                    <button type="submit" id="submitScoreBtn" class="flex-1 px-6 py-3 bg-forest-800 text-white rounded-xl font-medium hover:bg-forest-900 transition-colors flex items-center justify-center space-x-2">
                         <span>Submit Score</span>
                     </button>
                 </div>
@@ -281,18 +299,18 @@
 
     <!-- Image Lightbox -->
     <div id="lightbox" class="hidden fixed inset-0 lightbox z-50 flex items-center justify-center p-4">
-        <button onclick="closeLightbox()" class="absolute top-4 right-4 p-2 text-white hover:bg-white/10 rounded-full">
-            <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <button type="button" onclick="closeLightbox()" class="absolute top-4 right-4 p-2 text-white hover:bg-white/10 rounded-full" aria-label="Close image viewer">
+            <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
             </svg>
         </button>
-        <button id="prevImage" onclick="navigateLightbox(-1)" class="absolute left-4 p-2 text-white hover:bg-white/10 rounded-full">
-            <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <button type="button" id="prevImage" onclick="navigateLightbox(-1)" class="absolute left-4 p-2 text-white hover:bg-white/10 rounded-full" aria-label="Previous image">
+            <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
             </svg>
         </button>
-        <button id="nextImage" onclick="navigateLightbox(1)" class="absolute right-4 p-2 text-white hover:bg-white/10 rounded-full">
-            <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <button type="button" id="nextImage" onclick="navigateLightbox(1)" class="absolute right-4 p-2 text-white hover:bg-white/10 rounded-full" aria-label="Next image">
+            <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
             </svg>
         </button>
@@ -308,11 +326,13 @@
     <!-- Scripts -->
     <script src="../shared/js/includes.js"></script>
 
+    <script src="../shared/js/runtime-config.js"></script>
     <script src="../shared/js/config.js"></script>
     <script src="../shared/js/utils.js"></script>
     <script src="../shared/js/supabase.js"></script>
     <script src="../shared/js/auth.js"></script>
     <script src="assets/js/sidebar.js"></script>
+    <script src="assets/js/student.js"></script>
     
     <script>
         // Global variables
@@ -320,10 +340,12 @@
         let module = null;
         let moduleImages = [];
         let currentImageIndex = 0;
-        let selectedScreenshot = null;
         let studentAssignment = null;
         let moduleProgressRecord = null;
         let latestSubmissionByQuiz = {};
+        let isContentUnlocked = true;
+        let moduleAssessments = [];
+        let moduleAssessmentAttempts = [];
 
         // Get module ID from URL
         const urlParams = new URLSearchParams(window.location.search);
@@ -551,18 +573,11 @@
 
         // Setup event listeners
         function setupEventListeners() {
-            // Screenshot upload
-            const dropZone = document.getElementById('screenshotDropZone');
-            const input = document.getElementById('screenshotInput');
-            
-            dropZone.addEventListener('click', () => input.click());
-            dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.classList.add('drag-over'); });
-            dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
-            dropZone.addEventListener('drop', (e) => { e.preventDefault(); dropZone.classList.remove('drag-over'); handleScreenshotSelect(e.dataTransfer.files[0]); });
-            input.addEventListener('change', (e) => handleScreenshotSelect(e.target.files[0]));
-
-            // Submit form
+            // Submit quiz form
             document.getElementById('submitQuizForm').addEventListener('submit', handleSubmitQuiz);
+            
+            // Submit formal assessment form
+            document.getElementById('submitAssessmentForm').addEventListener('submit', handleSubmitAssessment);
 
             // Lightbox keyboard navigation
             document.addEventListener('keydown', (e) => {
@@ -612,6 +627,26 @@
                     return;
                 }
 
+                // Phase 2 Gating: Check sequential module access
+                const { data: canAccess } = await getSupabase().rpc('can_student_access_module', {
+                    p_student_id: currentUser.id,
+                    p_module_id: moduleId
+                });
+
+                if (canAccess === false) {
+                    document.getElementById('loadingState').classList.add('hidden');
+                    showToast('This module is locked. Please pass the previous module post-test first.', 'error');
+                    setTimeout(() => window.location.href = 'modules.html', 2000);
+                    return;
+                }
+
+                // Phase 2 Gating: Check Option B pre-test unlock
+                const { data: isUnlocked } = await getSupabase().rpc('is_module_content_unlocked', {
+                    p_student_id: currentUser.id,
+                    p_module_id: moduleId
+                });
+                isContentUnlocked = (isUnlocked !== false);
+
                 // Fetch videos separately
                 const { data: videosData } = await getSupabase()
                     .from('videos')
@@ -639,6 +674,7 @@
                 document.getElementById('moduleType').textContent = module.content_type === 'pdf' ? 'PDF Document' : 'Image Gallery';
 
                 // Render content
+                await loadFormalAssessments();
                 renderContent();
                 renderVideos();
                 renderQuizzes();
@@ -662,31 +698,49 @@
         function renderContent() {
             const section = document.getElementById('contentSection');
 
+            if (!isContentUnlocked) {
+                section.innerHTML = `
+                    <div class="learn-lock-banner">
+                        <div class="learn-lock-banner-icon">
+                            <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+                            </svg>
+                        </div>
+                        <h3 class="text-xl font-bold text-gray-900 mb-2">Pre-Test Required</h3>
+                        <p class="text-gray-600 mb-6 max-w-md mx-auto">Please submit your pre-test score to unlock this module's learning materials and videos. Any attempt unlocks the content.</p>
+                        <button type="button" onclick="openPreTestModal()" class="learn-module-card-cta" style="width: auto; display: inline-block; padding: 0.75rem 1.5rem;">
+                            Take Pre-Test / Enter Score
+                        </button>
+                    </div>
+                `;
+                return;
+            }
+
             if (module.content_type === 'pdf' && module.pdf_url) {
                 const isMobile = window.innerWidth <= 768;
                 if (isMobile) {
                     section.innerHTML = `
-                        <div class="text-center py-4 bg-gray-50 border border-gray-100 rounded-xl p-4">
-                            <div class="w-12 h-12 bg-red-100 text-red-600 rounded-full flex items-center justify-center mx-auto mb-3">
-                                <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+                        <div class="text-center py-4 learn-content-card p-4" style="box-shadow: none;">
+                            <div class="w-12 h-12 bg-forest-50 text-forest-800 rounded-full flex items-center justify-center mx-auto mb-3">
+                                <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                                     <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8l-6-6z"/>
                                 </svg>
                             </div>
                             <h4 class="font-bold text-gray-800 mb-1 text-sm">PDF Learning Material</h4>
                             <p class="text-xs text-gray-500 mb-4">View or download the learning document.</p>
-                            <a href="${module.pdf_url}" target="_blank" class="w-full inline-flex items-center justify-center space-x-2 px-4 py-3 bg-red-600 text-white rounded-xl hover:bg-red-700 transition-colors font-medium text-sm shadow-sm">
+                            <a href="${module.pdf_url}" target="_blank" class="learn-module-card-cta" style="width: 100%; display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem;">
                                 <span>Open PDF Document</span>
                             </a>
                         </div>
                     `;
                 } else {
                     section.innerHTML = `
-                        <div class="pdf-container rounded-xl overflow-hidden bg-gray-100">
-                            <iframe src="${module.pdf_url}" class="w-full h-full" frameborder="0"></iframe>
+                        <div class="learn-doc-frame">
+                            <iframe src="${module.pdf_url}" class="w-full h-full pdf-container" frameborder="0" title="Module PDF document"></iframe>
                         </div>
                         <div class="mt-4 flex justify-center">
-                            <a href="${module.pdf_url}" target="_blank" class="inline-flex items-center space-x-2 px-6 py-3 bg-red-50 text-red-600 rounded-xl hover:bg-red-100 transition-colors">
-                                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                            <a href="${module.pdf_url}" target="_blank" class="inline-flex items-center space-x-2 px-6 py-3 bg-forest-50 text-forest-800 rounded-xl hover:bg-forest-100 transition-colors font-medium">
+                                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                                     <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8l-6-6z"/>
                                 </svg>
                                 <span>Open PDF in New Tab</span>
@@ -699,12 +753,12 @@
                 section.innerHTML = `
                     <div class="image-gallery grid grid-cols-2 md:grid-cols-3 gap-4">
                         ${module.image_urls.map((url, index) => `
-                            <div class="relative aspect-video rounded-xl overflow-hidden bg-gray-100 cursor-pointer" onclick="openLightbox(${index})">
+                            <button type="button" class="learn-gallery-item aspect-video bg-gray-100" onclick="openLightbox(${index})" aria-label="View page ${index + 1} full size">
                                 <img src="${url}" alt="Page ${index + 1}" class="w-full h-full object-cover">
-                                <div class="absolute inset-0 bg-black/0 hover:bg-black/20 transition-colors flex items-center justify-center">
+                                <div class="absolute inset-0 bg-black/0 hover:bg-black/20 transition-colors flex items-center justify-center" aria-hidden="true">
                                     <span class="opacity-0 hover:opacity-100 bg-white/90 px-3 py-1 rounded-full text-sm font-medium">View</span>
                                 </div>
-                            </div>
+                            </button>
                         `).join('')}
                     </div>
                     <p class="text-center text-sm text-gray-500 mt-4">Click any image to view full size</p>
@@ -726,27 +780,27 @@
             const section = document.getElementById('videosSection');
             const list = document.getElementById('videosList');
 
-            if (!module.videos || module.videos.length === 0) {
+            if (!isContentUnlocked || !module.videos || module.videos.length === 0) {
                 section.classList.add('hidden');
                 return;
             }
 
             section.classList.remove('hidden');
             list.innerHTML = module.videos.map(video => `
-                <div class="video-card bg-gray-50 rounded-xl overflow-hidden transition-all">
-                    <a href="${video.video_url}" target="_blank" class="block relative">
-                        <img src="${video.thumbnail_url || getYouTubeThumbnail(video.video_url) || 'https://via.placeholder.com/320x180?text=Video'}" alt="${video.title}" class="w-full h-36 object-cover">
-                        <div class="absolute inset-0 flex items-center justify-center bg-black/30 hover:bg-black/50 transition-colors">
-                            <div class="w-14 h-14 bg-white rounded-full flex items-center justify-center shadow-lg">
-                                <svg class="w-7 h-7 text-brand ml-1" fill="currentColor" viewBox="0 0 24 24">
+                <div class="learn-video-tile">
+                    <a href="${video.video_url}" target="_blank" class="block relative" aria-label="Open video: ${escapeHtml(video.title)} (opens in new tab)">
+                        <img src="${video.thumbnail_url || getYouTubeThumbnail(video.video_url) || 'https://via.placeholder.com/320x180?text=Video'}" alt="" class="w-full h-36 object-cover">
+                        <div class="absolute inset-0 flex items-center justify-center bg-black/30 hover:bg-black/50 transition-colors" aria-hidden="true">
+                            <div class="w-14 h-14 bg-white border-2 border-ink-900 rounded-full flex items-center justify-center">
+                                <svg class="w-7 h-7 text-forest-600 ml-1" fill="currentColor" viewBox="0 0 24 24">
                                     <path d="M8 5v14l11-7z"/>
                                 </svg>
                             </div>
                         </div>
                     </a>
                     <div class="p-4">
-                        <h4 class="font-semibold text-gray-800 mb-1 line-clamp-1">${video.title}</h4>
-                        <p class="text-sm text-gray-500 line-clamp-2">${video.description || 'No description'}</p>
+                        <h4 class="font-semibold text-gray-800 mb-1 line-clamp-1">${escapeHtml(video.title)}</h4>
+                        <p class="text-sm text-gray-500 line-clamp-2">${escapeHtml(video.description || 'No description')}</p>
                     </div>
                 </div>
             `).join('');
@@ -833,12 +887,12 @@
                             <a href="${quiz.quiz_url}" target="_blank" class="flex-1 text-center px-4 py-2 bg-yellow-50 text-yellow-700 rounded-lg text-sm font-medium hover:bg-yellow-100 transition-colors flex items-center justify-center space-x-1">
                                 <span>Take Quiz ↗</span>
                             </a>
-                            <button onclick="openSubmitQuizModal('${quiz.id}', '${safeTitle.replace(/'/g, "\\'")}', ${quiz.total_items})" 
+                            <button onclick="openSubmitQuizModal('${quiz.id}', ${attrValue(JSON.stringify(quiz.title || ''))}, ${quiz.total_items})" 
                                 ${submission && submission.status === 'approved' ? 'disabled' : ''}
                                 class="flex-1 px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
                                     submission 
                                         ? (submission.status === 'approved' ? 'bg-gray-100 text-gray-400 cursor-not-allowed' : 'bg-blue-100 text-blue-700 hover:bg-blue-200')
-                                        : 'bg-brand text-white hover:bg-brand-dark'
+                                        : 'bg-forest-800 text-white hover:bg-forest-900'
                                 } flex items-center justify-center space-x-1">
                                 <span>${submission ? 'Update' : 'Submit'}</span>
                             </button>
@@ -935,20 +989,12 @@
             document.getElementById('studentScore').max = totalItems;
             document.getElementById('submitQuizForm').reset();
             document.getElementById('totalItemsDisplay').value = totalItems;
-            removeScreenshot();
 
             const existingSubmission = latestSubmissionByQuiz[quizId];
             if (existingSubmission) {
                 document.getElementById('studentScore').value = existingSubmission.student_score;
-                if (existingSubmission.screenshot_url) {
-                    document.getElementById('screenshotImage').src = existingSubmission.screenshot_url;
-                    document.getElementById('screenshotPreview').classList.remove('hidden');
-                    document.getElementById('screenshotDropZone').classList.add('hidden');
-                    document.getElementById('screenshotInput').required = false;
-                }
             } else {
                 document.getElementById('studentScore').value = '';
-                document.getElementById('screenshotInput').required = true;
             }
 
             document.getElementById('submitQuizModal').classList.remove('hidden');
@@ -958,35 +1004,7 @@
             document.getElementById('submitQuizModal').classList.add('hidden');
         }
 
-        // Screenshot handling
-        function handleScreenshotSelect(file) {
-            if (!file || !file.type.startsWith('image/')) {
-                showToast('Please select an image file', 'error');
-                return;
-            }
-            if (file.size > 5 * 1024 * 1024) {
-                showToast('File must be under 5MB', 'error');
-                return;
-            }
-            selectedScreenshot = file;
-            document.getElementById('screenshotImage').src = URL.createObjectURL(file);
-            document.getElementById('screenshotPreview').classList.remove('hidden');
-            document.getElementById('screenshotDropZone').classList.add('hidden');
-        }
-
-        function removeScreenshot() {
-            selectedScreenshot = null;
-            document.getElementById('screenshotInput').value = '';
-            document.getElementById('screenshotPreview').classList.add('hidden');
-            document.getElementById('screenshotDropZone').classList.remove('hidden');
-            const quizId = document.getElementById('submitQuizId').value;
-            const existingSubmission = latestSubmissionByQuiz[quizId];
-            if (!existingSubmission || !existingSubmission.screenshot_url) {
-                document.getElementById('screenshotInput').required = true;
-            }
-        }
-
-        // Submit quiz score
+        // Submit regular quiz score via RPC
         async function handleSubmitQuiz(e) {
             e.preventDefault();
             
@@ -996,73 +1014,26 @@
 
             try {
                 const quizId = document.getElementById('submitQuizId').value;
-                const studentScore = parseInt(document.getElementById('studentScore').value);
-                const totalItems = parseInt(document.getElementById('submitQuizTotalItems').value);
-                const existingSubmission = latestSubmissionByQuiz[quizId];
+                const studentScore = parseInt(document.getElementById('studentScore').value, 10);
+                const totalItems = parseInt(document.getElementById('submitQuizTotalItems').value, 10);
 
-                if (!selectedScreenshot && !existingSubmission?.screenshot_url) {
-                    throw new Error('Please upload a screenshot of your score');
+                if (isNaN(studentScore) || studentScore < 0) {
+                    throw new Error('Please enter a valid non-negative score');
                 }
 
                 if (studentScore > totalItems) {
                     throw new Error('Score cannot exceed total items');
                 }
 
-                let screenshotUrl = existingSubmission?.screenshot_url || null;
+                const { data, error } = await getSupabase().rpc('submit_regular_quiz_score', {
+                    p_quiz_id: quizId,
+                    p_score: studentScore,
+                    p_total: totalItems
+                });
 
-                // Upload screenshot if a new one was selected
-                if (selectedScreenshot) {
-                    const fileName = `${currentUser.id}/${quizId}_${Date.now()}.${selectedScreenshot.name.split('.').pop()}`;
-                    const { error: uploadError } = await getSupabase().storage
-                        .from('quiz-screenshots')
-                        .upload(fileName, selectedScreenshot);
+                if (error) throw error;
 
-                    if (uploadError) throw uploadError;
-
-                    const { data: urlData } = getSupabase().storage
-                        .from('quiz-screenshots')
-                        .getPublicUrl(fileName);
-
-                    screenshotUrl = urlData.publicUrl;
-                }
-
-                let updateResult;
-
-                if (existingSubmission) {
-                    console.log('Updating existing submission:', existingSubmission);
-                    updateResult = await getSupabase()
-                        .from('quiz_submissions')
-                        .update({
-                            student_score: studentScore,
-                            total_items: totalItems,
-                            screenshot_url: screenshotUrl,
-                            status: 'pending', // Reset to pending when updating
-                            teacher_comment: null, // Clear teacher comment when student updates
-                            teacher_feedback: null, // Clear teacher feedback when student updates
-                            reviewed_at: null, // Clear reviewed timestamp
-                            reviewed_by: null, // Clear reviewed by user
-                            updated_at: new Date().toISOString()
-                        })
-                        .eq('id', existingSubmission.id);
-                } else {
-                    // Create submission
-                    updateResult = await getSupabase()
-                        .from('quiz_submissions')
-                        .insert({
-                            user_id: currentUser.id,
-                            quiz_id: quizId,
-                            module_id: moduleId,
-                            student_score: studentScore,
-                            total_items: totalItems,
-                            screenshot_url: screenshotUrl,
-                            status: 'pending',
-                            submitted_at: new Date().toISOString()
-                        });
-                }
-
-                if (updateResult.error) throw updateResult.error;
-
-                showToast('Score submitted successfully! Waiting for teacher approval.', 'success');
+                showToast('Score submitted successfully! Attempt ' + (data?.attempt_number || 1) + '/3', 'success');
                 closeSubmitQuizModal();
                 await loadSubmissions();
 
@@ -1072,6 +1043,184 @@
             } finally {
                 btn.disabled = false;
                 btn.innerHTML = '<span>Submit Score</span>';
+            }
+        }
+
+        // Formal Assessments (Phase 2 Pre-Test & Post-Test)
+        async function loadFormalAssessments() {
+            try {
+                const { data: asmts, error: asmtError } = await getSupabase()
+                    .from('module_assessments')
+                    .select('*')
+                    .eq('module_id', moduleId)
+                    .eq('is_published', true)
+                    .order('assessment_type', { ascending: false }); // pre_test then post_test
+
+                if (asmtError) throw asmtError;
+                moduleAssessments = asmts || [];
+
+                const asmtIds = moduleAssessments.map(a => a.id);
+                if (asmtIds.length > 0) {
+                    const { data: atts, error: attError } = await getSupabase()
+                        .from('module_assessment_attempts')
+                        .select('*')
+                        .in('assessment_id', asmtIds)
+                        .eq('student_id', currentUser.id)
+                        .order('attempt_number', { ascending: true });
+
+                    if (attError) throw attError;
+                    moduleAssessmentAttempts = atts || [];
+                } else {
+                    moduleAssessmentAttempts = [];
+                }
+
+                renderFormalAssessments();
+            } catch (err) {
+                console.error('Error loading formal assessments:', err);
+            }
+        }
+
+        function renderFormalAssessments() {
+            const container = document.getElementById('formalAssessmentsList');
+            if (!container) return;
+
+            if (moduleAssessments.length === 0) {
+                container.innerHTML = `
+                    <div class="p-6 text-center text-gray-500 text-sm">
+                        <p>No formal pre/post assessments assigned to this module.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = moduleAssessments.map(asmt => {
+                const attempts = moduleAssessmentAttempts.filter(a => a.assessment_id === asmt.id);
+                const latestAttempt = attempts.length > 0 ? attempts[attempts.length - 1] : null;
+                const hasPassed = attempts.some(a => a.assessment_result === 'passed' || a.is_teacher_override);
+                const isOverridden = attempts.some(a => a.is_teacher_override);
+                const isExhausted = attempts.length >= (asmt.max_attempts || 3) && !hasPassed;
+
+                let statusBadge = '';
+                if (isOverridden) {
+                    statusBadge = `<span class="px-2.5 py-1 text-xs font-semibold rounded-full bg-purple-100 text-purple-700">Passed via Override</span>`;
+                } else if (hasPassed) {
+                    statusBadge = `<span class="px-2.5 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-700">Passed</span>`;
+                } else if (latestAttempt && latestAttempt.verification_status === 'pending') {
+                    statusBadge = `<span class="px-2.5 py-1 text-xs font-semibold rounded-full bg-yellow-100 text-yellow-700">Pending Verification</span>`;
+                } else if (isExhausted) {
+                    statusBadge = `<span class="px-2.5 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-700">Failed (3/3)</span>`;
+                } else if (attempts.length > 0) {
+                    statusBadge = `<span class="px-2.5 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-700">Attempted (${attempts.length}/3)</span>`;
+                } else {
+                    statusBadge = `<span class="px-2.5 py-1 text-xs font-semibold rounded-full bg-gray-100 text-gray-600">Not Started</span>`;
+                }
+
+                const canSubmit = !hasPassed && !isExhausted && (!latestAttempt || latestAttempt.verification_status !== 'pending');
+                const isPreTest = asmt.assessment_type === 'pre_test';
+
+                const safeTitle = typeof escapeHtml === 'function' ? escapeHtml(asmt.title || '') : (asmt.title || '');
+
+                return `
+                    <div class="p-4 space-y-3">
+                        <div class="flex items-start justify-between">
+                            <div>
+                                <span class="text-xs uppercase tracking-wide font-bold ${isPreTest ? 'text-amber-600' : 'text-indigo-600'}">
+                                    ${isPreTest ? 'Diagnostic Pre-Test' : 'Summative Post-Test'}
+                                </span>
+                                <h4 class="font-bold text-gray-800 text-sm mt-0.5">${safeTitle}</h4>
+                                <p class="text-xs text-gray-500">${asmt.total_items} items • Pass: ${asmt.passing_threshold}%</p>
+                            </div>
+                            ${statusBadge}
+                        </div>
+
+                        ${latestAttempt ? `
+                            <div class="text-xs text-gray-600 bg-gray-50 p-2.5 rounded-lg flex justify-between items-center">
+                                <span>Latest: <strong class="text-gray-800">${latestAttempt.student_score}/${latestAttempt.total_items}</strong> (${latestAttempt.score_pct}%)</span>
+                                <span>Attempt ${latestAttempt.attempt_number}/3</span>
+                            </div>
+                        ` : ''}
+
+                        <div class="flex space-x-2">
+                            ${asmt.quiz_url ? `
+                                <a href="${asmt.quiz_url}" target="_blank" class="flex-1 text-center py-2 px-3 border border-gray-200 rounded-lg text-xs font-medium text-gray-700 hover:bg-gray-50 transition-colors">
+                                    View Test Form ↗
+                                </a>
+                            ` : ''}
+                            <button onclick="openAssessmentModal('${asmt.id}', ${attrValue(JSON.stringify(asmt.title || ''))}, ${asmt.total_items})"
+                                ${canSubmit ? '' : 'disabled'}
+                                class="flex-1 py-2 px-3 text-xs font-medium rounded-lg transition-colors ${
+                                    canSubmit ? 'bg-forest-800 text-white hover:bg-forest-900' : 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                                }">
+                                ${latestAttempt && latestAttempt.verification_status === 'pending' ? 'Pending Teacher Check' : (hasPassed ? 'Completed' : (isExhausted ? 'Attempts Exhausted' : 'Submit Paper Score'))}
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function openAssessmentModal(asmtId, title, totalItems) {
+            document.getElementById('asmtModalId').value = asmtId;
+            document.getElementById('asmtModalTitle').textContent = title;
+            document.getElementById('asmtModalSubtitle').textContent = `Total items: ${totalItems}`;
+            document.getElementById('asmtModalTotalItems').value = totalItems;
+            document.getElementById('asmtDisplayTotal').textContent = totalItems;
+            document.getElementById('asmtStudentScore').max = totalItems;
+            document.getElementById('asmtStudentScore').value = '';
+            document.getElementById('submitAssessmentModal').classList.remove('hidden');
+        }
+
+        function openPreTestModal() {
+            const preTest = moduleAssessments.find(a => a.assessment_type === 'pre_test');
+            if (preTest) {
+                openAssessmentModal(preTest.id, preTest.title, preTest.total_items);
+            } else {
+                showToast('Pre-test definition not found', 'error');
+            }
+        }
+
+        function closeSubmitAssessmentModal() {
+            document.getElementById('submitAssessmentModal').classList.add('hidden');
+        }
+
+        async function handleSubmitAssessment(e) {
+            e.preventDefault();
+            const btn = document.getElementById('asmtSubmitBtn');
+            btn.disabled = true;
+            btn.textContent = 'Submitting...';
+
+            try {
+                const asmtId = document.getElementById('asmtModalId').value;
+                const score = parseInt(document.getElementById('asmtStudentScore').value, 10);
+                const total = parseInt(document.getElementById('asmtModalTotalItems').value, 10);
+
+                if (isNaN(score) || score < 0 || score > total) {
+                    throw new Error('Please enter a valid non-negative score');
+                }
+
+                const res = await submitAssessmentScore(asmtId, score, total);
+                if (!res.success) throw new Error(res.error);
+
+                showToast('Assessment score submitted! Waiting for teacher check.', 'success');
+                closeSubmitAssessmentModal();
+
+                // Refresh Option B content gating & assessments
+                const { data: isUnlocked } = await getSupabase().rpc('is_module_content_unlocked', {
+                    p_student_id: currentUser.id,
+                    p_module_id: moduleId
+                });
+                isContentUnlocked = (isUnlocked !== false);
+
+                renderContent();
+                renderVideos();
+                await loadFormalAssessments();
+
+            } catch (err) {
+                console.error('Error submitting assessment:', err);
+                showToast(err.message || 'Failed to submit assessment', 'error');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Submit Score';
             }
         }
 
@@ -1104,6 +1253,18 @@
         function getYouTubeThumbnail(url) {
             const match = url?.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([a-zA-Z0-9_-]+)/);
             return match ? `https://img.youtube.com/vi/${match[1]}/maxresdefault.jpg` : null;
+        }
+
+        function escapeHtml(text) {
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // Escape a value for an HTML attribute (also safe for JSON passed to inline on* handlers)
+        function attrValue(value) {
+            return String(value ?? '').replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
         }
 
         function showToast(message, type = 'info') {

@@ -650,7 +650,7 @@
                     <div class="submission-card p-4 flex items-center justify-between hover:bg-gray-50">
                         <div class="flex items-center space-x-4">
                             <div class="w-12 h-12 bg-yellow-100 rounded-full flex items-center justify-center flex-shrink-0">
-                                <span class="text-yellow-600 font-bold text-sm">${getInitials(studentName)}</span>
+                                <span class="text-yellow-600 font-bold text-sm">${escapeHtml(getInitials(studentName))}</span>
                             </div>
                             <div>
                                 <p class="font-medium text-gray-800">${escapeHtml(studentName)}</p>
@@ -879,7 +879,7 @@
                 <div class="space-y-6">
                     <div class="flex items-center space-x-4 p-4 bg-gray-50 rounded-xl">
                         <div class="w-14 h-14 bg-plum-100 rounded-full flex items-center justify-center">
-                            <span class="text-plum-800 font-bold text-lg">${getInitials(submission.users?.full_name || 'S')}</span>
+                            <span class="text-plum-800 font-bold text-lg">${escapeHtml(getInitials(submission.users?.full_name || 'S'))}</span>
                         </div>
                         <div>
                             <p class="font-semibold text-gray-800 text-lg">${escapeHtml(submission.users?.full_name || 'Student')}</p>
@@ -902,7 +902,7 @@
                         <div>
                             <p class="font-medium text-gray-700 mb-2">Screenshot Proof</p>
                             <div class="border border-gray-200 rounded-xl overflow-hidden">
-                                <img src="${submission.screenshot_url}" alt="Quiz Screenshot" class="w-full h-auto max-h-96 object-contain bg-gray-100" onclick="window.open('${submission.screenshot_url}', '_blank')">
+                                <img src="${safeImageUrl(submission.screenshot_url)}" alt="Quiz Screenshot" class="w-full h-auto max-h-96 object-contain bg-gray-100" onclick="window.open(this.src, '_blank', 'noopener')">
                             </div>
                         </div>
                     ` : '<p class="text-gray-500 italic">No screenshot provided</p>'}
@@ -979,6 +979,13 @@
             const div = document.createElement('div');
             div.textContent = text;
             return div.innerHTML;
+        }
+
+        // Only http(s) URLs, escaped for an attribute; anything else gets no source
+        function safeImageUrl(url) {
+            const value = String(url || '').trim();
+            if (!/^https?:\/\//i.test(value)) return '';
+            return value.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
         }
 
         // Setup event listeners

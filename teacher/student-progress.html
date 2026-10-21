@@ -773,36 +773,146 @@
             }
         }
 
-        async function handleTeacherVerify(attemptId, currentScore, totalItems) {
-            const scoreStr = prompt(`Confirm paper score for student (Total items: ${totalItems}):`, currentScore);
-            if (scoreStr === null) return;
-            const score = parseInt(scoreStr, 10);
-            if (isNaN(score) || score < 0 || score > totalItems) {
-                alert('Invalid score entered');
-                return;
+        // Accessible form dialog (replaces prompt()). fields: [{ name, label, type:
+        // 'number'|'textarea', value, min, max, required }]. Resolves with
+        // { name: value } or null when cancelled (Escape, backdrop or Cancel).
+        function openFormDialog({ title, description, fields, confirmLabel }) {
+            return new Promise(resolve => {
+                const opener = document.activeElement;
+                const overlay = document.createElement('div');
+                overlay.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4';
+                overlay.innerHTML = `
+                    <form role="dialog" aria-modal="true" aria-labelledby="formDialogTitle" class="bg-white rounded-2xl w-full max-w-md p-6" novalidate>
+                        <h2 id="formDialogTitle" class="text-lg font-bold text-gray-900">${escText(title)}</h2>
+                        ${description ? `<p class="text-sm text-gray-600 mt-1">${escText(description)}</p>` : ''}
+                        <div class="space-y-4 mt-4">
+                            ${fields.map(field => `
+                                <div>
+                                    <label for="fd_${field.name}" class="block text-sm font-medium text-gray-700 mb-1">${escText(field.label)}</label>
+                                    ${field.type === 'textarea'
+                                        ? `<textarea id="fd_${field.name}" name="${field.name}" rows="3" class="w-full px-3 py-2 border border-gray-300 rounded-xl" aria-describedby="fd_${field.name}_error">${escText(field.value ?? '')}</textarea>`
+                                        : `<input id="fd_${field.name}" name="${field.name}" type="number" inputmode="numeric" step="1" min="${field.min ?? ''}" max="${field.max ?? ''}" value="${escText(field.value ?? '')}" class="w-full px-3 py-2 border border-gray-300 rounded-xl" aria-describedby="fd_${field.name}_error">`}
+                                    <p id="fd_${field.name}_error" class="hidden text-sm text-red-700 mt-1"></p>
+                                </div>`).join('')}
+                        </div>
+                        <div class="flex gap-3 mt-6">
+                            <button type="button" data-action="cancel" class="flex-1 py-3 border border-gray-300 text-gray-700 rounded-xl font-semibold hover:bg-gray-50">Cancel</button>
+                            <button type="submit" class="flex-1 py-3 bg-plum-800 text-white rounded-xl font-semibold hover:bg-plum-900">${escText(confirmLabel)}</button>
+                        </div>
+                    </form>`;
+                document.body.appendChild(overlay);
+                const form = overlay.querySelector('form');
+                const focusable = () => Array.from(form.querySelectorAll('input, textarea, button'));
+
+                function close(result) {
+                    document.removeEventListener('keydown', onKeydown, true);
+                    overlay.remove();
+                    if (opener && typeof opener.focus === 'function') opener.focus();
+                    resolve(result);
+                }
+                function showError(field, message) {
+                    const input = form.querySelector('#fd_' + field.name);
+                    const errorEl = form.querySelector('#fd_' + field.name + '_error');
+                    errorEl.textContent = message;
+                    errorEl.classList.remove('hidden');
+                    input.setAttribute('aria-invalid', 'true');
+                    input.focus();
+                }
+                function onKeydown(e) {
+                    if (e.key === 'Escape') { e.preventDefault(); close(null); return; }
+                    if (e.key === 'Tab') {
+                        const items = focusable();
+                        const first = items[0], last = items[items.length - 1];
+                        if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+                        else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+                    }
+                }
+
+                form.addEventListener('submit', e => {
+                    e.preventDefault();
+                    const values = {};
+                    for (const field of fields) {
+                        const raw = form.querySelector('#fd_' + field.name).value;
+                        if (field.type === 'number') {
+                            const n = Number(raw);
+                            if (raw.trim() === '' || !Number.isInteger(n) || n < field.min || n > field.max) {
+                                showError(field, `Enter a whole number from ${field.min} to ${field.max}.`);
+                                return;
+                            }
+                            values[field.name] = n;
+                        } else {
+                            const text = raw.trim();
+                            if (field.required && !text) {
+                                showError(field, 'This field is required.');
+                                return;
+                            }
+                            values[field.name] = text;
+                        }
+                    }
+                    close(values);
+                });
+                overlay.querySelector('[data-action="cancel"]').addEventListener('click', () => close(null));
+                overlay.addEventListener('click', e => { if (e.target === overlay) close(null); });
+                document.addEventListener('keydown', onKeydown, true);
+                focusable()[0].focus();
+            });
+        }
+
+        // Result message in a polite live region (replaces alert())
+        function announceResult(message, isError) {
+            let region = document.getElementById('resultAnnouncer');
+            if (!region) {
+                region = document.createElement('div');
+                region.id = 'resultAnnouncer';
+                region.setAttribute('role', 'status');
+                region.setAttribute('aria-live', 'polite');
+                region.className = 'fixed bottom-4 right-4 left-4 sm:left-auto max-w-sm px-5 py-3 rounded-xl text-white font-medium z-50 hidden';
+                document.body.appendChild(region);
             }
-            const notes = prompt('Verification notes (optional):', 'Paper test verified by teacher');
-            const res = await verifyAssessmentAttempt(attemptId, score, totalItems, notes);
+            region.textContent = message;
+            region.classList.toggle('bg-red-700', !!isError);
+            region.classList.toggle('bg-forest-800', !isError);
+            region.classList.remove('hidden');
+            clearTimeout(region._hideTimer);
+            region._hideTimer = setTimeout(() => region.classList.add('hidden'), 5000);
+        }
+
+        async function handleTeacherVerify(attemptId, currentScore, totalItems) {
+            const values = await openFormDialog({
+                title: 'Verify paper score',
+                description: `Total items: ${totalItems}`,
+                confirmLabel: 'Verify score',
+                fields: [
+                    { name: 'score', label: 'Score', type: 'number', value: currentScore, min: 0, max: totalItems },
+                    { name: 'notes', label: 'Verification notes (optional)', type: 'textarea', value: 'Paper test verified by teacher' }
+                ]
+            });
+            if (!values) return;
+            const res = await verifyAssessmentAttempt(attemptId, values.score, totalItems, values.notes || null);
             if (res.success) {
-                alert('Assessment verified successfully!');
+                announceResult('Assessment verified successfully.');
                 await loadStudentFormalAssessments(currentState.student.id);
             } else {
-                alert('Verification failed: ' + res.error);
+                announceResult('Verification failed: ' + res.error, true);
             }
         }
 
         async function handleTeacherOverride(attemptId) {
-            const reason = prompt('Enter justification for authorizing completion override (Attempt 3):', 'Student completed remedial oral examination');
-            if (!reason || !reason.trim()) {
-                alert('Override reason is required');
-                return;
-            }
-            const res = await applyAssessmentOverride(attemptId, reason.trim());
+            const values = await openFormDialog({
+                title: 'Authorize completion override',
+                description: 'Attempt 3. The attempt count stays at 3 and the next module unlocks.',
+                confirmLabel: 'Apply override',
+                fields: [
+                    { name: 'reason', label: 'Justification', type: 'textarea', value: 'Student completed remedial oral examination', required: true }
+                ]
+            });
+            if (!values) return;
+            const res = await applyAssessmentOverride(attemptId, values.reason);
             if (res.success) {
-                alert('Override successfully applied! Attempt count preserved at 3. Next module unlocked.');
+                announceResult('Override applied. Attempt count preserved at 3. Next module unlocked.');
                 await loadStudentFormalAssessments(currentState.student.id);
             } else {
-                alert('Override failed: ' + res.error);
+                announceResult('Override failed: ' + res.error, true);
             }
         }
 

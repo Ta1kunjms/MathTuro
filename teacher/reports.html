@@ -155,10 +155,8 @@
                             <tr>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Student Name</th>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Student Email</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Total Average</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Pass/Fail</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Total Quizzes</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Completed Quizzes</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Overall Status</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Attempted</th>
                             </tr>
                         </thead>
                         <tbody id="reportTableBody" class="bg-white divide-y divide-gray-200">
@@ -184,6 +182,8 @@
             students: [],
             quizzes: [],
             submissions: [],
+            assessments: [],
+            assessmentAttempts: [],
             studentScores: [],
             gradeLevels: [],
             sections: []
@@ -194,6 +194,7 @@
             selectedSectionId: '',
             filteredStudents: [],
             filteredQuizzes: [],
+            columns: [],
             filteredStudentScores: []
         };
 
@@ -270,7 +271,7 @@
             if (!gradeFilter) return;
 
             gradeFilter.innerHTML = '<option value="">All Grade Levels</option>' +
-                reportData.gradeLevels.map(grade => `<option value="${grade.id}">${grade.name}</option>`).join('');
+                reportData.gradeLevels.map(grade => `<option value="${grade.id}">${escText(grade.name)}</option>`).join('');
 
             if (selectedValue) {
                 gradeFilter.value = selectedValue;
@@ -286,7 +287,7 @@
                 : reportData.sections;
 
             sectionFilter.innerHTML = '<option value="">All Sections (General Quizzes Only)</option>' +
-                availableSections.map(section => `<option value="${section.id}">${section.name}</option>`).join('');
+                availableSections.map(section => `<option value="${section.id}">${escText(section.name)}</option>`).join('');
 
             if (selectedSectionId && availableSections.some(section => String(section.id) === String(selectedSectionId))) {
                 sectionFilter.value = selectedSectionId;
@@ -385,59 +386,157 @@
             return true;
         }
 
-        function renderTableHeader(quizzes) {
+        // Client grading rules: 75% applies to each assessment on its own (no
+        // combined average). Status per assessment: Missing (0 attempts),
+        // Passed (any attempt >= 75% or teacher override), Failed (attempted,
+        // below 75%, no override). A student is Incomplete when some but not
+        // all assessments in scope have been attempted.
+        const PASSING_PCT = 75;
+
+        const STATUS_STYLES = {
+            Missing: 'bg-gray-100 text-gray-700 border-gray-300',
+            Incomplete: 'bg-amber-100 text-amber-900 border-amber-300',
+            Failed: 'bg-red-100 text-red-800 border-red-300',
+            Passed: 'bg-green-100 text-green-800 border-green-300'
+        };
+
+        function escText(value) {
+            return String(value ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+        }
+
+        function statusBadge(status) {
+            return `<span class="px-2 py-0.5 inline-flex text-xs font-semibold rounded-full border ${STATUS_STYLES[status]}">${status}</span>`;
+        }
+
+        function studentSortKey(student) {
+            const last = (student.last_name || '').trim();
+            const first = (student.first_name || '').trim();
+            return (last ? `${last} ${first}` : (student.full_name || student.email || '')).toLowerCase();
+        }
+
+        function studentDisplayName(student) {
+            const last = (student.last_name || '').trim();
+            const first = (student.first_name || '').trim();
+            if (last && first) return `${last}, ${first}`;
+            return student.full_name || student.email || 'Student';
+        }
+
+        function pct(score, total) {
+            return total > 0 ? Math.round((score / total) * 1000) / 10 : 0;
+        }
+
+        // Columns in reading order: [Pre-Test] -> [Quizzes] -> [Post-Test], each
+        // group ordered by module term/week/order so a module's tests sit together.
+        function buildColumns(quizzes, assessments) {
+            const moduleOrder = module => [
+                Number(module?.term_number) || 99,
+                Number(module?.week_number) || 99,
+                Number(module?.order_index) || 0,
+                (module?.title || '').toLowerCase()
+            ];
+            const byModule = (a, b) => {
+                const ka = moduleOrder(a.module), kb = moduleOrder(b.module);
+                for (let i = 0; i < ka.length; i++) {
+                    if (ka[i] < kb[i]) return -1;
+                    if (ka[i] > kb[i]) return 1;
+                }
+                return 0;
+            };
+            const formal = type => assessments
+                .filter(a => a.assessment_type === type)
+                .map(a => ({ kind: type, id: a.id, title: a.title, totalItems: a.total_items, module: a.modules }))
+                .sort(byModule);
+
+            return [
+                ...formal('pre_test'),
+                ...quizzes.map(q => ({ kind: 'quiz', id: q.id, title: q.title, totalItems: q.total_items, module: null })),
+                ...formal('post_test')
+            ];
+        }
+
+        function columnGroupLabel(kind) {
+            return kind === 'pre_test' ? 'Pre-Test' : kind === 'post_test' ? 'Post-Test' : 'Quizzes';
+        }
+
+        function renderTableHeader(columns) {
             const tableHeader = document.getElementById('reportTableHeader');
             if (!tableHeader) return;
 
-            const dynamicHeaders = quizzes.map((quiz, index) => `
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Quiz ${index + 1} (${quiz.total_items || 0} items)</th>
-            `).join('');
+            const groups = [];
+            columns.forEach(col => {
+                const label = columnGroupLabel(col.kind);
+                const last = groups[groups.length - 1];
+                if (last && last.label === label) last.span++;
+                else groups.push({ label, span: 1 });
+            });
 
+            const th = 'px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase';
             tableHeader.innerHTML = `
                 <tr>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Student Name</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Student Email</th>
-                    ${dynamicHeaders}
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Total Average</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Pass/Fail</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Total Quizzes</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Completed Quizzes</th>
+                    <th scope="col" rowspan="2" class="${th}">Student Name</th>
+                    <th scope="col" rowspan="2" class="${th}">Student Email</th>
+                    ${groups.map(g => `<th scope="colgroup" colspan="${g.span}" class="${th} text-center border-l border-gray-200">[${g.label}]</th>`).join('')}
+                    <th scope="col" rowspan="2" class="${th} border-l border-gray-200">Overall Status</th>
+                    <th scope="col" rowspan="2" class="${th}">Attempted</th>
+                </tr>
+                <tr>
+                    ${columns.map(col => `<th scope="col" class="${th} normal-case font-medium border-l border-gray-200">${escText(col.title || 'Untitled')}<span class="block text-[11px] text-gray-500">${col.totalItems || 0} items</span></th>`).join('')}
                 </tr>
             `;
         }
 
-        function buildStudentScores(students, quizzes, submissions) {
-            return students.map(student => {
-                const scores = {};
+        function quizAttemptsFor(studentId, quizId) {
+            return reportData.submissions
+                .filter(sub => sub.user_id === studentId && sub.quiz_id === quizId && sub.status !== 'rejected')
+                .sort((a, b) => new Date(a.submitted_at || a.created_at) - new Date(b.submitted_at || b.created_at))
+                .map(sub => ({ pct: pct(sub.student_score, sub.total_items), override: false, unverified: false }));
+        }
 
-                quizzes.forEach(quiz => {
-                    const studentSubmissions = submissions.filter(
-                        sub => sub.user_id === student.id && sub.quiz_id === quiz.id
-                    );
+        function formalAttemptsFor(studentId, assessmentId) {
+            return reportData.assessmentAttempts
+                .filter(att => att.student_id === studentId && att.assessment_id === assessmentId)
+                .sort((a, b) => a.attempt_number - b.attempt_number)
+                .map(att => ({
+                    pct: Number(att.score_pct ?? pct(att.student_score, att.total_items)),
+                    override: !!att.is_teacher_override,
+                    unverified: att.verification_status === 'pending'
+                }));
+        }
 
-                    if (studentSubmissions.length > 0) {
-                        const latestSubmission = studentSubmissions.reduce((latest, current) => {
-                            return new Date(current.submitted_at || current.created_at) > new Date(latest.submitted_at || latest.created_at)
-                                ? current
-                                : latest;
-                        });
+        function evaluateCell(attempts) {
+            if (attempts.length === 0) return { status: 'Missing', attempts };
+            const passed = attempts.some(a => a.override || a.pct >= PASSING_PCT);
+            return { status: passed ? 'Passed' : 'Failed', attempts };
+        }
 
-                        scores[quiz.id] = {
-                            score: latestSubmission.student_score,
-                            totalItems: latestSubmission.total_items
-                        };
-                    } else {
-                        scores[quiz.id] = null;
-                    }
+        function overallStatus(cells) {
+            if (cells.length === 0) return 'Missing';
+            const attempted = cells.filter(c => c.status !== 'Missing').length;
+            if (attempted === 0) return 'Missing';
+            if (attempted < cells.length) return 'Incomplete';
+            return cells.some(c => c.status === 'Failed') ? 'Failed' : 'Passed';
+        }
+
+        function attemptsText(attempts) {
+            return attempts.map((a, i) => `Att ${i + 1}: ${a.pct}%${a.override ? ' (override)' : ''}${a.unverified ? ' (unverified)' : ''}`).join(', ');
+        }
+
+        function buildStudentScores(students, columns) {
+            return [...students]
+                .sort((a, b) => studentSortKey(a).localeCompare(studentSortKey(b)))
+                .map(student => {
+                    const cells = columns.map(col => evaluateCell(
+                        col.kind === 'quiz' ? quizAttemptsFor(student.id, col.id) : formalAttemptsFor(student.id, col.id)
+                    ));
+                    return {
+                        id: student.id,
+                        name: studentDisplayName(student),
+                        email: student.email,
+                        cells,
+                        overall: overallStatus(cells),
+                        attemptedCount: cells.filter(c => c.status !== 'Missing').length
+                    };
                 });
-
-                return {
-                    id: student.id,
-                    name: student.full_name,
-                    email: student.email,
-                    scores
-                };
-            });
         }
 
         function applyReportFilters() {
@@ -447,78 +546,61 @@
             const filteredStudents = reportData.students.filter(student =>
                 studentMatchesScope(student, selectedGradeLevelId, selectedSectionId)
             );
-
             const filteredQuizzes = reportData.quizzes.filter(quiz =>
                 quizMatchesScope(quiz, selectedGradeLevelId, selectedSectionId)
             );
+            const filteredAssessments = reportData.assessments.filter(asmt =>
+                quizMatchesScope(asmt.modules || {}, selectedGradeLevelId, selectedSectionId)
+            );
 
-            const filteredStudentScores = buildStudentScores(filteredStudents, filteredQuizzes, reportData.submissions);
+            const columns = buildColumns(filteredQuizzes, filteredAssessments);
+            const filteredStudentScores = buildStudentScores(filteredStudents, columns);
 
             reportState.filteredStudents = filteredStudents;
             reportState.filteredQuizzes = filteredQuizzes;
+            reportState.columns = columns;
             reportState.filteredStudentScores = filteredStudentScores;
 
-            renderReportTable(filteredStudentScores, filteredQuizzes);
-            renderScopeNote(filteredStudents.length, filteredQuizzes.length);
+            renderReportTable(filteredStudentScores, columns);
+            renderScopeNote(filteredStudents.length, columns.length);
         }
 
-        function renderScopeNote(studentCount, quizCount) {
+        function renderScopeNote(studentCount, assessmentCount) {
             const note = document.getElementById('reportScopeNote');
             if (!note) return;
 
             const gradeName = getGradeLevelNameById(reportState.selectedGradeLevelId) || 'All Grade Levels';
             const sectionName = getSectionById(reportState.selectedSectionId)?.name || 'All Sections (General Quizzes Only)';
-            note.textContent = `Scope: ${gradeName} • ${sectionName} • ${studentCount} students • ${quizCount} quizzes`;
+            note.textContent = `Scope: ${gradeName} • ${sectionName} • ${studentCount} students • ${assessmentCount} assessments • Passing: ${PASSING_PCT}% per assessment`;
         }
 
-        function renderReportTable(studentScores, quizzes) {
+        function renderReportTable(studentScores, columns) {
             const tableBody = document.getElementById('reportTableBody');
-            renderTableHeader(quizzes);
+            renderTableHeader(columns);
 
             if (!tableBody) return;
 
+            const colspan = columns.length + 4;
             if (studentScores.length === 0) {
-                tableBody.innerHTML = '<tr><td colspan="10" class="text-center py-8 text-gray-400">No students found for the selected scope.</td></tr>';
+                tableBody.innerHTML = `<tr><td colspan="${colspan}" class="text-center py-8 text-gray-500">No students found for the selected scope.</td></tr>`;
                 return;
             }
 
-            let rows = '';
-            studentScores.forEach(student => {
-                const quizScores = quizzes.map(quiz => student.scores[quiz.id]);
-                const validScores = quizScores.filter(score => score !== null);
-                const averageScore = validScores.length > 0
-                    ? (validScores.reduce((sum, score) => sum + (score.score / score.totalItems * 100), 0) / validScores.length)
-                    : 0;
-
-                const passRate = averageScore >= 70;
-
-                rows += `<tr class="hover:bg-gray-50">
-                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${student.name || 'Student'}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${student.email || '-'}</td>`;
-
-                quizzes.forEach(quiz => {
-                    const score = student.scores[quiz.id];
-                    if (score) {
-                        const percentage = (score.score / score.totalItems * 100).toFixed(1);
-                        const isPass = percentage >= 70;
-                        rows += `<td class="px-6 py-4 whitespace-nowrap text-sm ${isPass ? 'text-green-600' : 'text-red-600'}">${score.score}/${score.totalItems} (${percentage}%)</td>`;
-                    } else {
-                        rows += `<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-400">-</td>`;
-                    }
-                });
-
-                rows += `<td class="px-6 py-4 whitespace-nowrap text-sm ${averageScore >= 70 ? 'text-green-600' : 'text-red-600'} font-medium">${averageScore.toFixed(1)}%</td>`;
-                rows += `<td class="px-6 py-4 whitespace-nowrap">
-                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${passRate ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}">
-                        ${passRate ? 'Pass' : 'Fail'}
-                    </span>
-                </td>`;
-                rows += `<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${quizzes.length}</td>`;
-                rows += `<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${validScores.length}</td>`;
-                rows += `</tr>`;
-            });
-
-            tableBody.innerHTML = rows;
+            tableBody.innerHTML = studentScores.map(student => `
+                <tr class="hover:bg-gray-50 align-top">
+                    <th scope="row" class="px-4 py-3 whitespace-nowrap text-sm font-semibold text-gray-900 text-left">${escText(student.name)}</th>
+                    <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-600">${escText(student.email || '-')}</td>
+                    ${student.cells.map(cell => `
+                        <td class="px-4 py-3 text-sm border-l border-gray-100 min-w-[9rem]">
+                            ${statusBadge(cell.status)}
+                            ${cell.attempts.length
+                                ? `<span class="block text-xs text-gray-700 mt-1">${cell.attempts.length} attempt${cell.attempts.length === 1 ? '' : 's'}</span>
+                                   <span class="block text-xs text-gray-600">${escText(attemptsText(cell.attempts))}</span>`
+                                : ''}
+                        </td>`).join('')}
+                    <td class="px-4 py-3 border-l border-gray-100">${statusBadge(student.overall)}</td>
+                    <td class="px-4 py-3 text-sm text-gray-700 whitespace-nowrap">${student.attemptedCount} / ${columns.length}</td>
+                </tr>`).join('');
         }
 
         async function loadUserInfo() {
@@ -562,7 +644,7 @@
 
         async function loadReportData() {
             const tableBody = document.getElementById('reportTableBody');
-            
+
             try {
                 const supabase = getSupabase();
                 if (!supabase) {
@@ -572,9 +654,8 @@
                 const { data: students, error: studentsError } = await supabase
                     .from('users')
                     .select('*')
-                    .eq('role', 'student')
-                    .order('full_name', { ascending: true });
-                
+                    .eq('role', 'student');
+
                 if (studentsError) {
                     console.error('Error loading students:', studentsError);
                     throw studentsError;
@@ -590,7 +671,7 @@
                 }
 
                 const { data: quizzes, error: quizzesError } = await quizzesQuery;
-                
+
                 if (quizzesError) {
                     console.error('Error loading quizzes:', quizzesError);
                     throw quizzesError;
@@ -621,15 +702,41 @@
                 const { data: submissions, error: submissionsError } = await supabase
                     .from('quiz_submissions')
                     .select('*');
-                
+
                 if (submissionsError) {
                     console.error('Error loading submissions:', submissionsError);
                     throw submissionsError;
                 }
 
-                reportData.students = students;
-                reportData.quizzes = quizzes;
-                reportData.submissions = submissions;
+                // Formal pre/post-tests (published), limited to the teacher's own modules
+                const { data: assessments, error: assessmentsError } = await supabase
+                    .from('module_assessments')
+                    .select('*, modules(*)')
+                    .eq('is_published', true);
+
+                if (assessmentsError) {
+                    console.error('Error loading module assessments:', assessmentsError);
+                    throw assessmentsError;
+                }
+
+                const scopedAssessments = (assessments || []).filter(asmt =>
+                    currentUser?.role !== 'teacher' || asmt.modules?.teacher_id === currentUser.id
+                );
+
+                const { data: assessmentAttempts, error: attemptsError } = await supabase
+                    .from('module_assessment_attempts')
+                    .select('id, assessment_id, student_id, attempt_number, student_score, total_items, score_pct, verification_status, is_teacher_override');
+
+                if (attemptsError) {
+                    console.error('Error loading assessment attempts:', attemptsError);
+                    throw attemptsError;
+                }
+
+                reportData.students = students || [];
+                reportData.quizzes = quizzes || [];
+                reportData.submissions = submissions || [];
+                reportData.assessments = scopedAssessments;
+                reportData.assessmentAttempts = assessmentAttempts || [];
                 reportData.gradeLevels = gradeLevels || [];
                 reportData.sections = sections || [];
 
@@ -639,118 +746,60 @@
 
             } catch (err) {
                 console.error('Error loading report data:', err);
-                tableBody.innerHTML = `<tr><td colspan="10" class="text-center py-8 text-red-400">Failed to load data: ${err.message}</td></tr>`;
+                tableBody.innerHTML = `<tr><td colspan="10" class="text-center py-8 text-red-700">Failed to load data: ${escText(err.message)}</td></tr>`;
             }
         }
 
-        function exportToExcel() {
-            const students = reportState.filteredStudents;
-            const quizzes = reportState.filteredQuizzes;
-            const studentScores = reportState.filteredStudentScores;
+        // Shared by both exports: one row per student, A–Z, with each
+        // assessment's status and attempt history (no combined average).
+        function exportRows() {
+            const columns = reportState.columns || [];
+            const headers = ['Student Name', 'Student Email',
+                ...columns.map(col => `[${columnGroupLabel(col.kind)}] ${col.title || 'Untitled'}`),
+                'Overall Status', 'Attempted'];
+            const rows = reportState.filteredStudentScores.map(student => [
+                student.name,
+                student.email || '-',
+                ...student.cells.map(cell => cell.attempts.length ? `${cell.status} — ${attemptsText(cell.attempts)}` : cell.status),
+                student.overall,
+                `${student.attemptedCount} / ${columns.length}`
+            ]);
+            return { headers, rows };
+        }
 
-            if (!students.length) return;
-            
-            const worksheetData = [];
-            
-            const headers = ['Student Name', 'Student Email'];
-            quizzes.forEach((quiz, index) => {
-                headers.push(`Quiz ${index + 1} (${quiz.total_items} items)`);
-            });
-            headers.push('Total Average', 'Pass/Fail', 'Total Quizzes', 'Completed Quizzes');
-            worksheetData.push(headers);
-            
-            studentScores.forEach(student => {
-                const row = [student.name, student.email];
-                
-                quizzes.forEach(quiz => {
-                    const score = student.scores[quiz.id];
-                    if (score) {
-                        row.push(`${score.score}/${score.totalItems} (${(score.score / score.totalItems * 100).toFixed(1)}%)`);
-                    } else {
-                        row.push('-');
-                    }
-                });
-                
-                const quizScores = quizzes.map(quiz => student.scores[quiz.id]);
-                const validScores = quizScores.filter(score => score !== null);
-                const averageScore = validScores.length > 0 
-                    ? (validScores.reduce((sum, score) => sum + (score.score / score.totalItems * 100), 0) / validScores.length) 
-                    : 0;
-                    
-                row.push(`${averageScore.toFixed(1)}%`);
-                row.push(averageScore >= 70 ? 'Pass' : 'Fail');
-                row.push(quizzes.length);
-                row.push(validScores.length);
-                
-                worksheetData.push(row);
-            });
-            
-            const worksheet = XLSX.utils.aoa_to_sheet(worksheetData);
+        function exportToExcel() {
+            if (!reportState.filteredStudentScores.length) return;
+            const { headers, rows } = exportRows();
+
+            const worksheet = XLSX.utils.aoa_to_sheet([headers, ...rows]);
             const workbook = XLSX.utils.book_new();
             XLSX.utils.book_append_sheet(workbook, worksheet, 'Student Reports');
-            
+
             XLSX.writeFile(workbook, `student_reports_${new Date().toISOString().split('T')[0]}.xlsx`);
         }
 
         function exportToPDF() {
-            const students = reportState.filteredStudents;
-            const quizzes = reportState.filteredQuizzes;
-            const studentScores = reportState.filteredStudentScores;
-
-            if (!students.length) return;
+            if (!reportState.filteredStudentScores.length) return;
+            const { headers, rows } = exportRows();
 
             const { jsPDF } = window.jspdf;
-            const doc = new jsPDF();
-            
+            const doc = new jsPDF({ orientation: headers.length > 6 ? 'landscape' : 'portrait' });
+
             doc.setFontSize(18);
             doc.text('Student Performance Report', 14, 20);
-            
-            doc.setFontSize(12);
+
+            doc.setFontSize(11);
             doc.text(`Generated on: ${new Date().toLocaleDateString()}`, 14, 30);
-            doc.text(`Total Students: ${students.length}`, 14, 38);
-            doc.text(`Total Quizzes: ${quizzes.length}`, 14, 46);
-            
-            const tableData = [];
-            const headers = ['Student Name', 'Student Email'];
-            quizzes.forEach((quiz, index) => {
-                headers.push(`Quiz ${index + 1}`);
-            });
-            headers.push('Avg', 'Pass/Fail', 'Total', 'Completed');
-            
-            studentScores.forEach(student => {
-                const row = [student.name, student.email];
-                
-                quizzes.forEach(quiz => {
-                    const score = student.scores[quiz.id];
-                    if (score) {
-                        row.push(`${score.score}/${score.totalItems}`);
-                    } else {
-                        row.push('-');
-                    }
-                });
-                
-                const quizScores = quizzes.map(quiz => student.scores[quiz.id]);
-                const validScores = quizScores.filter(score => score !== null);
-                const averageScore = validScores.length > 0 
-                    ? (validScores.reduce((sum, score) => sum + (score.score / score.totalItems * 100), 0) / validScores.length) 
-                    : 0;
-                    
-                row.push(`${averageScore.toFixed(0)}%`);
-                row.push(averageScore >= 70 ? 'Pass' : 'Fail');
-                row.push(quizzes.length);
-                row.push(validScores.length);
-                
-                tableData.push(row);
-            });
-            
+            doc.text(`Students: ${rows.length}  •  Assessments: ${(reportState.columns || []).length}  •  Passing: ${PASSING_PCT}% per assessment`, 14, 37);
+
             doc.autoTable({
                 head: [headers],
-                body: tableData,
-                startY: 55,
+                body: rows,
+                startY: 44,
                 theme: 'grid',
                 styles: {
-                    fontSize: 8,
-                    cellPadding: 3
+                    fontSize: 7,
+                    cellPadding: 2
                 },
                 headStyles: {
                     fillColor: '#720455',
@@ -761,7 +810,7 @@
                     fillColor: '#f8f9fa'
                 }
             });
-            
+
             doc.save(`student_reports_${new Date().toISOString().split('T')[0]}.pdf`);
         }
 

@@ -202,8 +202,24 @@
                     <p class="text-sm text-gray-500 hidden sm:block">Welcome back! Continue your learning journey.</p>
                 </div>
 
+                <!-- Search Bar Trigger -->
+                <button onclick="showSearch()" class="hidden md:flex items-center space-x-2 px-3.5 py-2 bg-paper-100 hover:bg-paper-200 text-ink-700 border-2 border-ink-900 rounded-xl shadow-[2px_2px_0_0_#1c1b1a] text-sm font-bold transition-all mx-4" title="Search modules & lessons (Ctrl+K)">
+                    <svg class="w-4 h-4 text-ink-900" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                    </svg>
+                    <span>Search modules, lessons...</span>
+                    <kbd class="px-1.5 py-0.5 text-xs bg-white border border-ink-900 rounded font-mono shadow-[1px_1px_0_0_#1c1b1a]">Ctrl K</kbd>
+                </button>
+
                 <!-- Right Actions -->
                 <div class="flex items-center space-x-3">
+                    <!-- Mobile Search Trigger -->
+                    <button onclick="showSearch()" class="md:hidden p-2 text-ink-900 border-2 border-ink-900 bg-paper-100 rounded-xl shadow-[2px_2px_0_0_#1c1b1a]" title="Search">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                        </svg>
+                    </button>
+
                     <!-- Notifications -->
                     <button id="notificationBtn"
                         class="relative p-2 text-gray-600 hover:text-forest-800 rounded-lg hover:bg-gray-100">
@@ -231,10 +247,10 @@
 
                         <!-- Dropdown -->
                         <div id="userDropdown"
-                            class="hidden absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-lg border border-gray-100 py-2 z-50">
-                            <div class="px-4 py-3 border-b border-gray-100">
-                                <p id="dropdownUserName" class="font-semibold text-gray-800">User</p>
-                                <p id="dropdownUserEmail" class="text-sm text-gray-500">email@example.com</p>
+                            class="hidden absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-[4px_4px_0_0_#1c1b1a] border-2 border-ink-900 py-2 z-50">
+                            <div class="px-4 py-3 border-b-2 border-ink-900">
+                                <p id="dropdownUserName" class="font-bold text-ink-900">User</p>
+                                <p id="dropdownUserEmail" class="text-xs text-ink-500 font-semibold truncate">email@example.com</p>
                             </div>
                             <a href="#" onclick="showProfile(); return false;"
                                 class="flex items-center space-x-3 px-4 py-2 text-gray-700 hover:bg-gray-50">
@@ -521,17 +537,19 @@
     </div>
 
     <!-- Search Modal -->
-    <div id="searchModal" class="hidden fixed inset-0 bg-black/50 flex items-start justify-center pt-20 z-50">
-        <div class="bg-white rounded-2xl w-full max-w-xl mx-4 shadow-2xl overflow-hidden">
-            <div class="p-4 border-b border-gray-100">
+    <div id="searchModal" class="hidden fixed inset-0 bg-ink-900/60 backdrop-blur-sm flex items-start justify-center pt-20 z-50">
+        <div class="bg-white rounded-2xl w-full max-w-xl mx-4 border-2 border-ink-900 shadow-[8px_8px_0_0_#1c1b1a] overflow-hidden">
+            <div class="p-4 border-b-2 border-ink-900 bg-paper-50">
                 <div class="flex items-center space-x-3">
-                    <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                    </svg>
+                    <div class="w-9 h-9 rounded-xl bg-forest-100 border-2 border-ink-900 flex items-center justify-center flex-shrink-0 shadow-[2px_2px_0_0_#1c1b1a]">
+                        <svg class="w-5 h-5 text-forest-800" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                        </svg>
+                    </div>
                     <input type="text" id="searchInput" placeholder="Search modules, lessons, videos..."
-                        class="flex-1 outline-none text-gray-800" autofocus>
-                    <button onclick="closeSearch()" class="p-1 text-gray-400 hover:text-gray-600">
+                        class="flex-1 outline-none text-ink-900 font-bold placeholder-ink-400 bg-transparent text-base border-none shadow-none focus:ring-0 focus:shadow-none" autofocus>
+                    <button onclick="closeSearch()" class="p-2 text-ink-900 hover:bg-paper-200 border-2 border-ink-900 rounded-xl shadow-[2px_2px_0_0_#1c1b1a] active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                 d="M6 18L18 6M6 6l12 12" />
@@ -539,9 +557,9 @@
                     </button>
                 </div>
             </div>
-            <div id="searchResults" class="max-h-96 overflow-y-auto">
-                <div class="p-4 text-center text-gray-500">
-                    <p>Start typing to search...</p>
+            <div id="searchResults" class="max-h-96 overflow-y-auto divide-y divide-ink-900/10">
+                <div class="p-8 text-center text-ink-500 font-semibold">
+                    <p>Start typing to search modules, lessons, or tutorials...</p>
                 </div>
             </div>
         </div>
@@ -552,8 +570,8 @@
 
     <!-- Modal Container -->
     <div id="modalContainer"
-        class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-        <div id="modalContent" class="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl">
+        class="hidden fixed inset-0 bg-ink-900/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+        <div id="modalContent" class="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto border-2 border-ink-900 shadow-[8px_8px_0_0_#1c1b1a]">
             <!-- Modal content loaded dynamically -->
         </div>
     </div>

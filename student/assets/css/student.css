@@ -1283,3 +1283,31 @@
     transition: none;
   }
 }
+
+/* ============================================
+   STUDENT NEO-BRUTALISM CARDS & DASHBOARD
+   ============================================ */
+.stat-card,
+.dash-stat-card,
+.dash-hero-strip,
+.dash-support-panel,
+.dash-streak-chip,
+.module-card,
+.quick-action-card,
+main .bg-white.rounded-2xl,
+main .bg-white.rounded-xl {
+  border: 2px solid #1c1b1a !important;
+  box-shadow: 4px 4px 0 0 #1c1b1a !important;
+  border-radius: 1rem !important;
+}
+
+/* Sidebar right border */
+#sidebar {
+  border-right: 2px solid #1c1b1a !important;
+}
+
+/* Top header border */
+header.border-b {
+  border-bottom: 2px solid #1c1b1a !important;
+}
+

@@ -251,3 +251,26 @@ textarea:focus-visible,
     transform: none !important;
   }
 }
+
+/* ============================================
+   TEACHER NEO-BRUTALISM CARDS & SURFACES
+   ============================================ */
+.stat-card,
+.card-hover,
+.dashboard-card,
+.module-card,
+.quiz-card,
+.video-card,
+.submission-card,
+main .bg-white.rounded-2xl,
+main .bg-white.rounded-xl {
+  border: 2px solid #1c1b1a !important;
+  box-shadow: 4px 4px 0 0 #1c1b1a !important;
+  border-radius: 1rem !important;
+}
+
+/* Header border */
+header.border-b {
+  border-bottom: 2px solid #1c1b1a !important;
+}
+

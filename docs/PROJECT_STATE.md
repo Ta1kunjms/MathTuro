@@ -69,10 +69,21 @@
      - Admin: [admin/users.html](file:///d:/Personal_Projects/MathTuro/admin/users.html) (Pending Approval tab with bulk and individual approve/reject).
      - Teacher: [teacher/student-progress.html](file:///d:/Personal_Projects/MathTuro/teacher/student-progress.html) (Top "Pending Registrations Queue" banner + inline status badges and Approve/Reject buttons in student table).
      - Teacher Dashboard: [teacher/dashboard.html](file:///d:/Personal_Projects/MathTuro/teacher/dashboard.html) (Hero alert banner directing teachers to pending student registrations).
-12. **Immediate Next Options:**
-   - **Step 1:** Run [database/migration_teacher_student_approval_and_rls.sql](file:///d:/Personal_Projects/MathTuro/database/migration_teacher_student_approval_and_rls.sql) in production Supabase SQL Editor (`ynkzcybctsstpqxdoweq`).
-   - **Step 2:** User reviews git diff on `main`, runs `git add .`, `git commit -m "feat: enable teacher and admin student registration approval workflows"`, and `git push origin main`.
-   - **Step 3 (End-to-End Registration & Approval Walkthrough):** Register a test student at `/public/register.html`, then log in as teacher or admin to approve them, and verify student sign-in.
+   - **Production Migration Status:** ✅ User confirmed [database/migration_teacher_student_approval_and_rls.sql](file:///d:/Personal_Projects/MathTuro/database/migration_teacher_student_approval_and_rls.sql) applied successfully in production Supabase SQL editor (`ynkzcybctsstpqxdoweq`). Code committed (`656cebf`) and pushed to `main`.
+73: 12. **Systemic Rounded Neo-Brutalism UI/UX Unification (2026-10-22 04:05):**
+74:    - **Admin Auth & Portal:** Rewrote [admin/login.html](file:///d:/Personal_Projects/MathTuro/admin/login.html) to perfectly mirror `public/login.html` and the landing page (warm paper canvas `bg-paper-50`, official institutional seals, wordmark logo badge, 2px ink border, 4px offset shadow, tactile pill switchers, and neo-brutalist inputs).
+75:    - **Systemic Modals, Forms & Searches:** Updated [shared/css/base.css](file:///d:/Personal_Projects/MathTuro/shared/css/base.css), [admin/assets/css/admin.css](file:///d:/Personal_Projects/MathTuro/admin/assets/css/admin.css), and [teacher/assets/css/teacher.css](file:///d:/Personal_Projects/MathTuro/teacher/assets/css/teacher.css) with systemic neo-brutalist overrides:
+76:      - All modal dialogs across admin, teacher, and student portals receive dark ink backdrops with blur (`bg-ink-900/60 backdrop-blur-sm`), 2px ink borders, and 6px/8px offset shadows (`shadow-[8px_8px_0_0_#1c1b1a]`).
+77:      - All text, password, search, number inputs, textareas, and select dropdowns across all portals receive 2px ink borders with 2px offset shadows (`shadow-[2px_2px_0_0_#1c1b1a]`).
+78:      - Tactile action and secondary/cancel buttons with hover/active transitions (`active:translate-x-0.5 active:translate-y-0.5 active:shadow-none`).
+79:    - **Users & Administration:** Updated [admin/users.html](file:///d:/Personal_Projects/MathTuro/admin/users.html) with neo-brutalist search bar, stat cards, role tabs, tactile action buttons, User Modal, and Archive Modal.
+80: 13. **Immediate Next Action:**
+81:    - **Commit & Deploy:** User commits local UI unification changes on `main` and pushes to origin.
+82:    - **Live Production End-to-End Walkthrough:**
+83:      1. Register a test student at `https://mathturo.vercel.app/public/register.html`.
+84:      2. Verify registration completes and account is marked pending.
+85:      3. Log in as Teacher (`teacher@mathturo.com`) or Admin (`admin@mathturo.com`) and approve the student.
+86:      4. Log in as the approved student and verify full dashboard access.
 
 ---
 
@@ -862,5 +873,22 @@ And update the top section (`## 1. Quick Orientation: "Where We Left Off"`) with
   - [student/modules.html](file:///d:/Personal_Projects/MathTuro/student/modules.html): Added status chips (Completed, Incompleted, Graded, Non-Graded) and Term tabs (Term 1, Term 2, Term 3).
   - [public/modules.html](file:///d:/Personal_Projects/MathTuro/public/modules.html) & [public/guest-modules.html](file:///d:/Personal_Projects/MathTuro/public/guest-modules.html): Updated to Term tabs (Term 1, Term 2, Term 3).
 
+
+
+
+### [2026-10-22 03:40] — Git Commit 656cebf
+* **Author:** Tycoon James Flores
+* **Commit Message:** feat: enable teacher and admin student registration approval workflows
+* **Commit Hash:** `656cebf`
+
+### [2026-10-22 04:12] — Dashboard Modals, Search Triggers & Dialogs Unification
+* **Author:** Antigravity & Tycoon James Flores
+* **Context:** Comprehensive styling of all modals, search dialogs, dropdowns, and form inputs across Admin, Teacher, and Student Dashboards.
+* **Key Enhancements:**
+  - [student/dashboard.html](file:///d:/Personal_Projects/MathTuro/student/dashboard.html): Added prominent tactile header search button (`Search modules, lessons... (Ctrl K)`), converted `#searchModal` to 2px ink borders with 8px hard offset shadow and dark ink backdrop blur, and upgraded `#modalContainer` and `#userDropdown`.
+  - [teacher/dashboard.html](file:///d:/Personal_Projects/MathTuro/teacher/dashboard.html): Upgraded `#reviewModal` with ink borders, backdrop blur, tactile Approve/Reject action buttons, and rounded neo-brutalist score cards.
+  - [admin/dashboard.html](file:///d:/Personal_Projects/MathTuro/admin/dashboard.html): Upgraded `#modalContainer` and dynamic `#modalContent` to rounded neo-brutalism.
+  - [shared/css/base.css](file:///d:/Personal_Projects/MathTuro/shared/css/base.css): Extended systemic rules to explicitly style `#modalContainer`, `#modalContent`, `#searchModal`, `#reviewModal`, `#notificationPanel`, and all dropdown menus across all portals.
+  - [student/assets/css/student.css](file:///d:/Personal_Projects/MathTuro/student/assets/css/student.css): Added tactile card, streak chip, hero strip, and sidebar borders.
 
 

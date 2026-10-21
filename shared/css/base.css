@@ -589,3 +589,269 @@ html[data-portal="student"] .mobile-tab:focus-visible {
     transform: none !important;
   }
 }
+
+/* ============================================
+   ROUNDED NEO-BRUTALISM SYSTEMIC UNIFICATION
+   Cohesive Duolingo-style UI across all portals
+   ============================================ */
+
+/* 1. Modal Overlays, Backdrops & Drawers */
+#modalContainer,
+#searchModal,
+#reviewModal,
+#deleteModal,
+#userModal,
+#sectionModal,
+#gradeModal,
+#videoModal,
+#quizModal,
+#submissionsModal,
+div[id*="Modal"],
+div[id*="modal"],
+div[id*="Container"][class*="fixed"],
+div[id$="Overlay"]:not(#mobileOverlay),
+div[role="dialog"][class*="fixed"],
+.modal-overlay {
+  background-color: rgba(28, 27, 26, 0.6) !important;
+  backdrop-filter: blur(4px) !important;
+  -webkit-backdrop-filter: blur(4px) !important;
+}
+
+/* 2. Modal Content Containers & Drawers */
+#modalContent,
+#reviewModalContent,
+#modalContainer > div,
+#searchModal > div,
+#reviewModal > div,
+div[id*="Modal"] > div.bg-white,
+div[id*="modal"] > div.bg-white,
+div[id*="Modal"] > div > div.bg-white,
+div[id*="modal"] > div > div.bg-white,
+div[role="dialog"] .bg-white,
+div[role="dialog"] form.bg-white,
+.modal-container {
+  border: 2px solid #1c1b1a !important;
+  box-shadow: 6px 6px 0 0 #1c1b1a !important;
+  border-radius: 1.5rem !important;
+}
+
+/* Right-side sliding notification drawer */
+#notificationPanel {
+  border-left: 2px solid #1c1b1a !important;
+  box-shadow: -6px 0 0 0 #1c1b1a !important;
+}
+
+/* Modal header separation line & typography */
+#modalContent .border-b,
+#modalContainer .border-b,
+#searchModal .border-b,
+#reviewModal .border-b,
+#notificationPanel .border-b,
+div[id*="Modal"] .border-b,
+div[id*="modal"] .border-b {
+  border-bottom: 2px solid #1c1b1a !important;
+}
+
+#modalContent h3,
+#modalContainer h3,
+#searchModal h3,
+#reviewModal h3,
+#notificationPanel h3,
+div[id*="Modal"] h3,
+div[id*="modal"] h3 {
+  font-family: 'Fredoka', 'Lexend', system-ui, sans-serif !important;
+  font-weight: 700 !important;
+  color: #1c1b1a !important;
+}
+
+/* Modal close button */
+#modalContent button[onclick*="close"],
+#modalContainer button[onclick*="close"],
+#searchModal button[onclick*="close"],
+#reviewModal button[onclick*="close"],
+#notificationPanel button[onclick*="close"],
+div[id*="Modal"] button[onclick*="close"],
+div[id*="modal"] button[onclick*="close"] {
+  border: 2px solid #1c1b1a !important;
+  border-radius: 0.5rem !important;
+  box-shadow: 1px 1px 0 0 #1c1b1a !important;
+  background-color: #ffffff !important;
+  color: #1c1b1a !important;
+  transition: all 0.15s ease !important;
+}
+
+#modalContent button[onclick*="close"]:hover,
+#modalContainer button[onclick*="close"]:hover,
+#reviewModal button[onclick*="close"]:hover,
+#searchModal button[onclick*="close"]:hover,
+#notificationPanel button[onclick*="close"]:hover {
+  background-color: #f2f0ec !important;
+  transform: translate(-1px, -1px);
+  box-shadow: 2px 2px 0 0 #1c1b1a !important;
+}
+
+/* User Profile Menu Dropdowns across all dashboards */
+#userDropdown {
+  border: 2px solid #1c1b1a !important;
+  box-shadow: 4px 4px 0 0 #1c1b1a !important;
+  border-radius: 0.75rem !important;
+}
+
+#userDropdown .border-b,
+#userDropdown .border-t {
+  border-color: #1c1b1a !important;
+}
+
+/* Universal Top Header border */
+main > header.border-b,
+header.border-b {
+  border-bottom: 2px solid #1c1b1a !important;
+}
+
+/* 3. Inputs, Selects, Textareas & Search Bars */
+input[type="text"],
+input[type="email"],
+input[type="password"],
+input[type="number"],
+input[type="search"],
+input[type="tel"],
+input[type="url"],
+input[type="date"],
+select,
+textarea {
+  border: 2px solid #1c1b1a !important;
+  border-radius: 0.75rem !important;
+  box-shadow: 2px 2px 0 0 #1c1b1a !important;
+  background-color: #ffffff;
+  color: #1c1b1a !important;
+  font-family: inherit;
+  transition: transform 0.1s ease, box-shadow 0.1s ease, border-color 0.15s ease !important;
+}
+
+input[type="text"]:focus,
+input[type="email"]:focus,
+input[type="password"]:focus,
+input[type="number"]:focus,
+input[type="search"]:focus,
+input[type="tel"]:focus,
+input[type="url"]:focus,
+input[type="date"]:focus,
+select:focus,
+textarea:focus {
+  outline: none !important;
+  box-shadow: 3px 3px 0 0 #1c1b1a !important;
+  border-color: #1c1b1a !important;
+  transform: translate(-1px, -1px);
+}
+
+input:disabled,
+select:disabled,
+textarea:disabled {
+  background-color: #f2f0ec !important;
+  opacity: 0.7 !important;
+  cursor: not-allowed !important;
+  box-shadow: 1px 1px 0 0 #1c1b1a !important;
+}
+
+/* 4. Action Buttons (Tactile Pill & Rounded) */
+button.bg-forest-600,
+a.bg-forest-600 {
+  border: 2px solid #1c1b1a !important;
+  box-shadow: 2px 2px 0 0 #1c1b1a !important;
+  font-weight: 700 !important;
+  transition: transform 0.1s ease, box-shadow 0.1s ease, background-color 0.15s ease !important;
+}
+
+button.bg-forest-600:hover,
+a.bg-forest-600:hover {
+  box-shadow: 3px 3px 0 0 #1c1b1a !important;
+  transform: translate(-1px, -1px);
+}
+
+button.bg-forest-600:active,
+a.bg-forest-600:active {
+  box-shadow: none !important;
+  transform: translate(2px, 2px);
+}
+
+button.bg-plum-800,
+a.bg-plum-800 {
+  border: 2px solid #1c1b1a !important;
+  box-shadow: 2px 2px 0 0 #1c1b1a !important;
+  font-weight: 700 !important;
+  transition: transform 0.1s ease, box-shadow 0.1s ease, background-color 0.15s ease !important;
+}
+
+button.bg-plum-800:hover,
+a.bg-plum-800:hover {
+  box-shadow: 3px 3px 0 0 #1c1b1a !important;
+  transform: translate(-1px, -1px);
+}
+
+button.bg-plum-800:active,
+a.bg-plum-800:active {
+  box-shadow: none !important;
+  transform: translate(2px, 2px);
+}
+
+/* Secondary & Cancel Buttons */
+button.border-gray-200,
+a.border-gray-200,
+button[onclick*="close"],
+button[onclick*="Close"] {
+  border: 2px solid #1c1b1a !important;
+  box-shadow: 2px 2px 0 0 #1c1b1a !important;
+  border-radius: 0.75rem !important;
+  color: #1c1b1a !important;
+  font-weight: 700 !important;
+  background-color: #ffffff;
+  transition: transform 0.1s ease, box-shadow 0.1s ease, background-color 0.15s ease !important;
+}
+
+button.border-gray-200:hover,
+a.border-gray-200:hover,
+button[onclick*="close"]:hover,
+button[onclick*="Close"]:hover {
+  background-color: #f2f0ec !important;
+  box-shadow: 3px 3px 0 0 #1c1b1a !important;
+  transform: translate(-1px, -1px);
+}
+
+button.border-gray-200:active,
+a.border-gray-200:active,
+button[onclick*="close"]:active,
+button[onclick*="Close"]:active {
+  box-shadow: none !important;
+  transform: translate(2px, 2px);
+}
+
+/* Destructive / Danger Buttons */
+button.bg-red-600,
+a.bg-red-600 {
+  border: 2px solid #1c1b1a !important;
+  box-shadow: 2px 2px 0 0 #1c1b1a !important;
+  font-weight: 700 !important;
+}
+
+/* 5. Filter Tabs & Quarter Selectors */
+.quarter-tab,
+button.quarter-tab {
+  border: 2px solid #1c1b1a !important;
+  box-shadow: 2px 2px 0 0 #1c1b1a !important;
+  border-radius: 0.75rem !important;
+  font-weight: 700 !important;
+  transition: transform 0.1s ease, box-shadow 0.1s ease, background-color 0.15s ease !important;
+}
+
+.quarter-tab:hover,
+button.quarter-tab:hover {
+  box-shadow: 3px 3px 0 0 #1c1b1a !important;
+  transform: translate(-1px, -1px);
+}
+
+.quarter-tab:active,
+button.quarter-tab:active {
+  box-shadow: none !important;
+  transform: translate(1px, 1px);
+}
+

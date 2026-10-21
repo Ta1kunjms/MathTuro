@@ -446,11 +446,11 @@
     </div>
 
     <!-- Review Modal -->
-    <div id="reviewModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-        <div class="bg-white rounded-2xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
-            <div class="p-6 border-b border-gray-100 flex items-center justify-between">
-                <h3 class="text-xl font-bold text-gray-800">Review Submission</h3>
-                <button onclick="closeReviewModal()" class="p-2 text-gray-500 hover:text-gray-700 rounded-lg hover:bg-gray-100">
+    <div id="reviewModal" class="hidden fixed inset-0 bg-ink-900/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-2xl border-2 border-ink-900 shadow-[8px_8px_0_0_#1c1b1a] max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+            <div class="p-6 border-b-2 border-ink-900 flex items-center justify-between">
+                <h3 class="text-xl font-bold text-ink-900 font-display">Review Submission</h3>
+                <button onclick="closeReviewModal()" class="p-2 text-ink-900 hover:bg-paper-100 border-2 border-ink-900 rounded-xl shadow-[2px_2px_0_0_#1c1b1a] active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
                     </svg>
@@ -907,49 +907,49 @@
         function renderReviewModal(submission, content) {
             content.innerHTML = `
                 <div class="space-y-6">
-                    <div class="flex items-center space-x-4 p-4 bg-gray-50 rounded-xl">
-                        <div class="w-14 h-14 bg-plum-100 rounded-full flex items-center justify-center">
+                    <div class="flex items-center space-x-4 p-4 bg-paper-100 border-2 border-ink-900 rounded-xl shadow-[2px_2px_0_0_#1c1b1a]">
+                        <div class="w-14 h-14 bg-plum-100 border-2 border-ink-900 rounded-full flex items-center justify-center shadow-[1px_1px_0_0_#1c1b1a]">
                             <span class="text-plum-800 font-bold text-lg">${escapeHtml(getInitials(submission.users?.full_name || 'S'))}</span>
                         </div>
                         <div>
-                            <p class="font-semibold text-gray-800 text-lg">${escapeHtml(submission.users?.full_name || 'Student')}</p>
-                            <p class="text-gray-500">${escapeHtml(submission.lessons?.title || 'Quiz')}</p>
+                            <p class="font-bold text-ink-900 text-lg">${escapeHtml(submission.users?.full_name || 'Student')}</p>
+                            <p class="text-ink-600 font-medium text-sm">${escapeHtml(submission.lessons?.title || 'Quiz')}</p>
                         </div>
                     </div>
                     
                     <div class="grid grid-cols-2 gap-4">
-                        <div class="bg-blue-50 rounded-xl p-4 text-center">
-                            <p class="text-3xl font-bold text-blue-600">${submission.student_score ?? 0}/${submission.total_items}</p>
-                            <p class="text-sm text-blue-700">Score</p>
+                        <div class="bg-blue-50 border-2 border-ink-900 rounded-xl p-4 text-center shadow-[2px_2px_0_0_#1c1b1a]">
+                            <p class="text-3xl font-bold text-blue-700 font-display">${submission.student_score ?? 0}/${submission.total_items}</p>
+                            <p class="text-xs font-bold text-blue-900 uppercase tracking-wider mt-1">Score</p>
                         </div>
-                        <div class="bg-green-50 rounded-xl p-4 text-center">
-                            <p class="text-3xl font-bold text-green-600">${submission.total_items > 0 ? Math.round(((submission.student_score ?? 0) / submission.total_items) * 100) : 0}%</p>
-                            <p class="text-sm text-green-700">Percentage</p>
+                        <div class="bg-green-50 border-2 border-ink-900 rounded-xl p-4 text-center shadow-[2px_2px_0_0_#1c1b1a]">
+                            <p class="text-3xl font-bold text-green-700 font-display">${submission.total_items > 0 ? Math.round(((submission.student_score ?? 0) / submission.total_items) * 100) : 0}%</p>
+                            <p class="text-xs font-bold text-green-900 uppercase tracking-wider mt-1">Percentage</p>
                         </div>
                     </div>
                     
                     ${submission.screenshot_url ? `
                         <div>
-                            <p class="font-medium text-gray-700 mb-2">Screenshot Proof</p>
-                            <div class="border border-gray-200 rounded-xl overflow-hidden">
-                                <img src="${safeImageUrl(submission.screenshot_url)}" alt="Quiz Screenshot" class="w-full h-auto max-h-96 object-contain bg-gray-100" onclick="window.open(this.src, '_blank', 'noopener')">
+                            <p class="font-bold text-ink-900 text-sm mb-2">Screenshot Proof</p>
+                            <div class="border-2 border-ink-900 rounded-xl overflow-hidden shadow-[2px_2px_0_0_#1c1b1a]">
+                                <img src="${safeImageUrl(submission.screenshot_url)}" alt="Quiz Screenshot" class="w-full h-auto max-h-96 object-contain bg-paper-100 cursor-pointer" onclick="window.open(this.src, '_blank', 'noopener')">
                             </div>
                         </div>
-                    ` : '<p class="text-gray-500 italic">No screenshot provided</p>'}
+                    ` : '<p class="text-ink-500 italic text-sm">No screenshot provided</p>'}
                     
                     <div>
-                        <label class="block font-medium text-gray-700 mb-2">Feedback Comment (Optional)</label>
-                        <textarea id="reviewComment" class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-plum-600" rows="3" placeholder="Provide feedback for the student..."></textarea>
+                        <label class="block font-bold text-ink-900 text-sm mb-2">Feedback Comment (Optional)</label>
+                        <textarea id="reviewComment" class="w-full px-4 py-3 bg-white border-2 border-ink-900 rounded-xl shadow-[2px_2px_0_0_#1c1b1a] text-ink-900 font-medium focus:outline-none focus:ring-2 focus:ring-plum-800" rows="3" placeholder="Provide feedback for the student..."></textarea>
                     </div>
                     
                     <div class="flex space-x-4">
-                        <button onclick="handleApprove('${submission.id}')" class="flex-1 btn-approve text-white py-3 rounded-xl font-semibold flex items-center justify-center space-x-2">
+                        <button onclick="handleApprove('${submission.id}')" class="flex-1 bg-forest-600 text-white py-3.5 rounded-xl font-bold border-2 border-ink-900 shadow-[3px_3px_0_0_#1c1b1a] hover:bg-forest-700 active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all flex items-center justify-center space-x-2">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
                             </svg>
                             <span>Approve</span>
                         </button>
-                        <button onclick="handleReject('${submission.id}')" class="flex-1 btn-reject text-white py-3 rounded-xl font-semibold flex items-center justify-center space-x-2">
+                        <button onclick="handleReject('${submission.id}')" class="flex-1 bg-red-600 text-white py-3.5 rounded-xl font-bold border-2 border-ink-900 shadow-[3px_3px_0_0_#1c1b1a] hover:bg-red-700 active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all flex items-center justify-center space-x-2">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
                             </svg>

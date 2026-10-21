@@ -160,10 +160,9 @@
 
             <div class="flex flex-wrap gap-2 mb-6" id="quarterTabs">
                 <button type="button" class="quarter-tab px-4 py-2 rounded-xl text-sm font-medium bg-plum-800 text-white" data-quarter="all">All Modules</button>
-                <button type="button" class="quarter-tab px-4 py-2 rounded-xl text-sm font-medium bg-white text-gray-700 border border-gray-200 hover:border-plum-800/40" data-quarter="1">Quarter 1</button>
-                <button type="button" class="quarter-tab px-4 py-2 rounded-xl text-sm font-medium bg-white text-gray-700 border border-gray-200 hover:border-plum-800/40" data-quarter="2">Quarter 2</button>
-                <button type="button" class="quarter-tab px-4 py-2 rounded-xl text-sm font-medium bg-white text-gray-700 border border-gray-200 hover:border-plum-800/40" data-quarter="3">Quarter 3</button>
-                <button type="button" class="quarter-tab px-4 py-2 rounded-xl text-sm font-medium bg-white text-gray-700 border border-gray-200 hover:border-plum-800/40" data-quarter="4">Quarter 4</button>
+                <button type="button" class="quarter-tab px-4 py-2 rounded-xl text-sm font-medium bg-white text-gray-700 border border-gray-200 hover:border-plum-800/40" data-quarter="1">Term 1</button>
+                <button type="button" class="quarter-tab px-4 py-2 rounded-xl text-sm font-medium bg-white text-gray-700 border border-gray-200 hover:border-plum-800/40" data-quarter="2">Term 2</button>
+                <button type="button" class="quarter-tab px-4 py-2 rounded-xl text-sm font-medium bg-white text-gray-700 border border-gray-200 hover:border-plum-800/40" data-quarter="3">Term 3</button>
             </div>
 
             <!-- Modules Grid -->
@@ -321,13 +320,12 @@
                 <!-- Status -->
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Quarter *</label>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Term *</label>
                         <select id="moduleQuarter" required class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-plum-800 focus:border-transparent">
-                            <option value="">Select quarter</option>
-                            <option value="1">Quarter 1</option>
-                            <option value="2">Quarter 2</option>
-                            <option value="3">Quarter 3</option>
-                            <option value="4">Quarter 4</option>
+                            <option value="">Select term</option>
+                            <option value="1">Term 1</option>
+                            <option value="2">Term 2</option>
+                            <option value="3">Term 3</option>
                         </select>
                     </div>
                     <div>
@@ -475,7 +473,7 @@
         function normalizeQuarterValue(value) {
             if (value === null || value === undefined || value === '') return '';
             const quarter = String(value).trim().replace(/[^0-9]/g, '');
-            return ['1', '2', '3', '4'].includes(quarter) ? quarter : '';
+            return ['1', '2', '3'].includes(quarter) ? quarter : (quarter === '4' ? '3' : ''); // legacy Quarter 4 content counts as Term 3
         }
 
         function getModuleQuarter(module) {
@@ -484,7 +482,7 @@
 
         function getQuarterLabel(module) {
             const quarter = getModuleQuarter(module);
-            return quarter ? `Quarter ${quarter}` : 'No Quarter';
+            return quarter ? `Term ${quarter}` : 'No Term';
         }
 
         function resolveGradeLevelId(record) {
@@ -575,6 +573,9 @@
 
         function rememberUnsupportedModuleColumn(columnName) {
             if (!columnName) return;
+            // Columns added by newer migrations: skip only for this save, never remember,
+            // so they start working as soon as the production migration runs.
+            if (['lesson_objectives', 'term_number', 'week_number'].includes(columnName)) return;
             unsupportedModuleColumns.add(columnName);
             localStorage.setItem('unsupported_modules_columns', JSON.stringify(Array.from(unsupportedModuleColumns)));
         }
@@ -1015,7 +1016,7 @@
                 let pdfUrl = null;
                 let imageUrls = [];
 
-                if (!selectedQuarter) throw new Error('Please select a quarter');
+                if (!selectedQuarter) throw new Error('Please select a term');
                 if (!moduleTitle) throw new Error('Please enter a module title');
                 if (quizUrl && !isValidHttpUrl(quizUrl)) throw new Error('Please enter a valid quiz URL (http/https)');
 
@@ -1046,6 +1047,7 @@
                     pdf_url: pdfUrl,
                     image_urls: imageUrls.length > 0 ? imageUrls : null,
                     quarter: Number(selectedQuarter),
+                    term_number: Number(selectedQuarter),
                     grade_level: getGradeLevelNameById(resolvedScope.gradeLevelId),
                     grade_level_id: resolvedScope.gradeLevelId,
                     section_id: resolvedScope.sectionId,
@@ -1127,8 +1129,8 @@
             const sectionOptions = '<option value="">All Sections</option>' +
                 filteredSections.map(s => `<option value="${s.id}" ${String(s.id) === String(module.section_id || '') ? 'selected' : ''}>${s.name}</option>`).join('');
             const selectedQuarter = getModuleQuarter(module);
-            const quarterOptions = ['1', '2', '3', '4']
-                .map(q => `<option value="${q}" ${q === selectedQuarter ? 'selected' : ''}>Quarter ${q}</option>`)
+            const quarterOptions = ['1', '2', '3']
+                .map(q => `<option value="${q}" ${q === selectedQuarter ? 'selected' : ''}>Term ${q}</option>`)
                 .join('');
 
             // Fetch attached quiz and video for this module
@@ -1218,9 +1220,9 @@
                         <h4 class="font-semibold text-gray-800 mb-4">Access Scope</h4>
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                             <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-2">Quarter</label>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Term</label>
                                 <select id="detailModuleQuarter" class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-plum-800 focus:border-transparent">
-                                    <option value="">Select quarter</option>
+                                    <option value="">Select term</option>
                                     ${quarterOptions}
                                 </select>
                             </div>
@@ -1341,11 +1343,12 @@
             try {
                 const resolvedScope = validateAndResolveScope(gradeLevelId, sectionId);
                 if (!quarter) {
-                    showToast('Please select a quarter', 'error');
+                    showToast('Please select a term', 'error');
                     return;
                 }
                 const { error } = await updateModuleWithFallback(moduleId, {
                     quarter: Number(quarter),
+                    term_number: Number(quarter),
                     grade_level: getGradeLevelNameById(resolvedScope.gradeLevelId),
                     grade_level_id: resolvedScope.gradeLevelId,
                     section_id: resolvedScope.sectionId

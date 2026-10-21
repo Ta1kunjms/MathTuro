@@ -92,10 +92,9 @@
                     <h2 class="text-lg font-semibold mb-4">All Modules</h2>
                     <div class="flex flex-wrap gap-2 mb-6" id="quarterTabs">
                         <button type="button" class="quarter-tab px-4 py-2 rounded-lg text-sm font-medium bg-gray-900 text-white" aria-pressed="true" data-quarter="all">All Modules</button>
-                        <button type="button" class="quarter-tab px-4 py-2 rounded-lg text-sm font-medium bg-white text-gray-700 border border-gray-200 hover:border-gray-400" aria-pressed="false" data-quarter="1">Quarter 1</button>
-                        <button type="button" class="quarter-tab px-4 py-2 rounded-lg text-sm font-medium bg-white text-gray-700 border border-gray-200 hover:border-gray-400" aria-pressed="false" data-quarter="2">Quarter 2</button>
-                        <button type="button" class="quarter-tab px-4 py-2 rounded-lg text-sm font-medium bg-white text-gray-700 border border-gray-200 hover:border-gray-400" aria-pressed="false" data-quarter="3">Quarter 3</button>
-                        <button type="button" class="quarter-tab px-4 py-2 rounded-lg text-sm font-medium bg-white text-gray-700 border border-gray-200 hover:border-gray-400" aria-pressed="false" data-quarter="4">Quarter 4</button>
+                        <button type="button" class="quarter-tab px-4 py-2 rounded-lg text-sm font-medium bg-white text-gray-700 border border-gray-200 hover:border-gray-400" aria-pressed="false" data-quarter="1">Term 1</button>
+                        <button type="button" class="quarter-tab px-4 py-2 rounded-lg text-sm font-medium bg-white text-gray-700 border border-gray-200 hover:border-gray-400" aria-pressed="false" data-quarter="2">Term 2</button>
+                        <button type="button" class="quarter-tab px-4 py-2 rounded-lg text-sm font-medium bg-white text-gray-700 border border-gray-200 hover:border-gray-400" aria-pressed="false" data-quarter="3">Term 3</button>
                     </div>
                     <div id="modulesList" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                         <!-- Modules will be dynamically loaded here -->
@@ -140,13 +139,12 @@
                         </div>
 
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Quarter</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Term</label>
                             <select id="moduleQuarter" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-forest-600 focus:border-transparent">
-                                <option value="">Select quarter</option>
-                                <option value="1">Quarter 1</option>
-                                <option value="2">Quarter 2</option>
-                                <option value="3">Quarter 3</option>
-                                <option value="4">Quarter 4</option>
+                                <option value="">Select term</option>
+                                <option value="1">Term 1</option>
+                                <option value="2">Term 2</option>
+                                <option value="3">Term 3</option>
                             </select>
                         </div>
                         
@@ -229,7 +227,7 @@
         function normalizeQuarterValue(value) {
             if (value === null || value === undefined || value === '') return '';
             const quarter = String(value).trim().replace(/[^0-9]/g, '');
-            return ['1', '2', '3', '4'].includes(quarter) ? quarter : '';
+            return ['1', '2', '3'].includes(quarter) ? quarter : (quarter === '4' ? '3' : ''); // legacy Quarter 4 content counts as Term 3
         }
 
         function getModuleQuarter(module) {
@@ -238,7 +236,7 @@
 
         function getQuarterLabel(module) {
             const quarter = getModuleQuarter(module);
-            return quarter ? `Quarter ${quarter}` : 'No Quarter';
+            return quarter ? `Term ${quarter}` : 'No Term';
         }
 
         function getMissingColumnName(error) {
@@ -537,8 +535,8 @@
                     modulesList.innerHTML = `
                         <div class="col-span-full text-center py-12">
                             <i class="fas fa-calendar-alt text-6xl text-gray-300 mb-4"></i>
-                            <h3 class="text-lg font-medium text-gray-900 mb-2">No Modules in This Quarter</h3>
-                            <p class="text-gray-500">Try another quarter tab or add a new module.</p>
+                            <h3 class="text-lg font-medium text-gray-900 mb-2">No Modules in This Term</h3>
+                            <p class="text-gray-500">Try another term tab or add a new module.</p>
                         </div>
                     `;
                     return;
@@ -662,7 +660,7 @@
 
             try {
                 if (!quarter) {
-                    showToast('Please select a quarter', 'error');
+                    showToast('Please select a term', 'error');
                     return;
                 }
 
@@ -697,6 +695,7 @@
                         description,
                         grade_level: gradeLevel,
                         quarter: Number(quarter),
+                        term_number: Number(quarter),
                         status,
                         updated_at: now
                     };
@@ -759,6 +758,7 @@
                         description,
                         grade_level: gradeLevel,
                         quarter: Number(quarter),
+                        term_number: Number(quarter),
                         status,
                         created_at: now,
                         updated_at: now,

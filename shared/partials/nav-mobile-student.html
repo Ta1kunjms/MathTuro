@@ -70,10 +70,10 @@
 
 <!-- More sheet backdrop + panel -->
 <div id="moreSheetBackdrop" class="more-sheet-backdrop hidden lg:hidden"></div>
-<div id="moreSheet" class="more-sheet hidden lg:hidden" role="dialog" aria-modal="true" aria-label="More navigation options" tabindex="-1">
+<div id="moreSheet" class="more-sheet hidden lg:hidden" role="dialog" aria-modal="true" aria-labelledby="moreSheetTitle" tabindex="-1">
   <div class="more-sheet-handle" aria-hidden="true"></div>
   <div class="more-sheet-header">
-    <h2 class="more-sheet-title">More</h2>
+    <h2 id="moreSheetTitle" class="more-sheet-title">More</h2>
     <button type="button" id="moreSheetClose" class="more-sheet-close" aria-label="Close">
       <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
         <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
@@ -101,7 +101,6 @@
 <script>
   (function () {
     var page = window.location.pathname.split('/').pop().toLowerCase() || 'dashboard.html';
-    var hash = window.location.hash.toLowerCase();
 
     // Every real student destination maps to exactly one navKey, matching
     // the same vocabulary used by student/assets/js/sidebar.js so both nav
@@ -119,7 +118,6 @@
       'presentations.html': 'presentations',
       'view-presentation.html': 'presentations'
     };
-    var activeNavKey = hash === '#progress' ? 'progress' : (pageNavKeyMap[page] || null);
 
     // navKeys that live inside the More sheet rather than as a direct tab.
     var moreNavKeys = { presentations: true, progress: true };
@@ -131,7 +129,21 @@
     var moreSheetBackdrop = document.getElementById('moreSheetBackdrop');
     var moreSheetClose = document.getElementById('moreSheetClose');
 
-    if (activeNavKey && tabBar) {
+    // Recomputed on hashchange too: Progress lives at dashboard.html#progress,
+    // so moving between Dashboard and Progress doesn't reload the page.
+    function applyActiveNav() {
+      if (!tabBar) return;
+      var hash = window.location.hash.toLowerCase();
+      var activeNavKey = hash === '#progress' ? 'progress' : (pageNavKeyMap[page] || null);
+
+      Array.prototype.forEach.call(document.querySelectorAll('#mobileTabBar [data-nav-key], #moreSheet [data-nav-key]'), function (el) {
+        el.classList.remove('active');
+        el.removeAttribute('aria-current');
+      });
+      if (moreTrigger) moreTrigger.classList.remove('active');
+      if (moreIndicatorDot) moreIndicatorDot.classList.add('hidden');
+      if (!activeNavKey) return;
+
       if (moreNavKeys[activeNavKey]) {
         // The More trigger gets the visual parent-active treatment only —
         // aria-current="page" belongs to the one real current destination
@@ -153,6 +165,8 @@
         }
       }
     }
+    applyActiveNav();
+    window.addEventListener('hashchange', applyActiveNav);
 
     // Reserve body space for the fixed bottom bar.
     document.body.classList.add('has-mobile-nav');
@@ -225,6 +239,14 @@
 
       moreSheetClose.addEventListener('click', closeMoreSheet);
       moreSheetBackdrop.addEventListener('click', closeMoreSheet);
+
+      // A link to the current page (e.g. dashboard.html#progress while on the
+      // dashboard) doesn't navigate away, so close the sheet explicitly.
+      Array.prototype.forEach.call(moreSheet.querySelectorAll('a[href]'), function (link) {
+        link.addEventListener('click', function () {
+          if (!moreSheet.classList.contains('hidden')) closeMoreSheet();
+        });
+      });
     }
   })();
 </script>

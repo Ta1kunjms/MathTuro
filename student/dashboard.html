@@ -675,6 +675,10 @@
                 if (window.location.hash === '#progress') {
                     showMyProgress();
                 }
+                // Tapping Progress while already on the dashboard only changes the hash
+                window.addEventListener('hashchange', () => {
+                    if (window.location.hash === '#progress') showMyProgress();
+                });
 
             } catch (error) {
                 console.error('Dashboard initialization error:', error);

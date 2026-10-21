@@ -36,6 +36,7 @@
 * **⚠️ REGRESSION (2026-10-20 ~16:00):** `migration_phase5_exp_gamification_and_leaderboard.sql` was re-run on staging. Its `CREATE OR REPLACE` statements overwrote the gated wrappers `submit_and_grade_assessment`, `submit_and_grade_regular_quiz` and `submit_regular_quiz_score` with the ungated bodies. Probe: Student B's submit to the locked M2 pre-test reached the answer-count check (no "locked" error), and the legacy score RPC returned "Invalid score bounds". The `get_assessment_questions_for_student` fix survived. **⚠️ Happened again ~16:30** (Phase 5 re-run after the push; probes show both wrappers ungated). Re-run guards were added to the Phase 3 and Phase 5 migrations so this can't recur (see 16:35 entry); staging still needs both remediation files re-run. Earlier: **resolved 16:15**, when the user re-ran both remediation files. Probes show "Assessment locked by module progression" and "This quiz is graded automatically…", and the Phase 4–5 suite is back to 17/17. Any re-run of the Phase 3 or 5 migrations must be followed by both remediation files.
 
 ### 🎯 The Immediate Next Action (Do This First)
+0. **Client additions WS1–WS5 (2026-10-22 07:55): committed locally on `main` (`fff0cb4..a1255d9`), NOT pushed.** Before `git push origin main` (production deploy), the user must run `database/migration_client_additions_objectives_terms_admin_leaderboard.sql` in the production SQL Editor (`ynkzcybctsstpqxdoweq`) and its 3 read-only checks. It adds `modules.lesson_objectives`, backfills `term_number` (Q1→T1, Q2→T2, Q3/Q4→T3) and adds the admin-only `get_admin_exp_leaderboard` RPC. The pages degrade safely without it, but objectives won't save and the leaderboard shows "needs a database update". Static-verified only; no browser QA (extension disconnected, local dev server failed to start).
 1. ✅ Legacy quiz-score fix applied on staging by the user (2026-10-20 15:45); `verify_phase4_5_authenticated_api.ps1` now **17/17 PASS**. Caveat: the probe was rejected by the "graded automatically" branch; the `p_total = total_items` and locked-quiz branches were not individually exercised (no question-free quiz fixture on staging).
 2. ✅ Done (APPROVE PLAN, 2026-10-20 14:45): migration file saved; font preference restored on all student pages; `public/test-supabase.html` removed.
 3. Upload a small PDF to M1 via `teacher/manage-presentations.html` to cover the signed-URL check.
@@ -238,6 +239,20 @@ Status key: not audited · legacy · partially migrated · implemented, static-v
 ---
 
 ## 4. Session Changelog & History (Chronological Ledger)
+
+### [2026-10-22 07:55] — Client Additions WS1–WS5 (main, not pushed)
+* **Author / Agent:** Claude Code
+* **Goal / Context:** Remaining client requests: teacher reports grading, lesson objectives/term-week/attachments, Quarter→Term, admin EXP leaderboard, dyslexia font toggle. Decisions by user: Q1→T1, Q2→T2, Q3+Q4→T3; quizzes/presentations attach one-module-each via existing `module_id`.
+* **Files Modified:**
+  - WS1 `teacher/reports.html`: A–Z by last name; [Pre-Test]/[Quizzes]/[Post-Test] columns; every attempt listed; per-assessment 75% (Missing/Passed/Failed, overall Incomplete); no combined average; exports updated.
+  - WS3 teacher/admin `manage-modules|quizzes|videos`, `lessonplan`/`lesson-plan`: Term 1–3 labels/tabs/selects, Q4 read as T3; module saves also write `term_number`; new module columns no longer permanently blacklisted in localStorage.
+  - WS2 `teacher/manage-modules.html`, `teacher/edit-module.html`, `shared/js/modules.js`, `student/modules.html`, `student/module-view.html`: Lesson Objectives + Week fields; checkbox pickers attach existing quizzes/presentations (legacy external Quiz URL UI removed); student cards ordered Term→Week→order and show objectives; module view shows objectives and attached presentations. Fixed: edit-module Order never loaded/saved (`order` vs `order_index`) and `updateModule` reset status to draft on every save.
+  - WS4 `admin/analytics.html` + `database/migration_client_additions_objectives_terms_admin_leaderboard.sql`: EXP leaderboard panel with grade/section filters, top-3 badges, LRN.
+  - WS5 new `shared/js/font-toggle.js`; mounts in student/teacher/admin `sidebar.js` and landing nav; floating switch elsewhere; pre-paint snippet + script on all portal/public pages.
+* **Database / Migrations Applied:** None (migration file written, user to run on production).
+* **Verification / Tests Executed:** Per step: hook diff vs HEAD (only intended removals: Quarter 4 tabs, legacy quiz-URL fields), `node --check` on all JS and inline scripts, Tailwind build with new utilities present, Node harness for WS1 status rules (70% → Failed, override → Passed, partial → Incomplete, A–Z). No browser or authenticated QA.
+* **Blockers / Open Questions:** Module unlock order is still server-side by `order_index` while students now see Term→Week→order; teachers should keep `order_index` consistent (or approve a gating change later). Production SQL + push pending user.
+* **Next Immediate Action:** User runs the migration on production, then approves `git push origin main`; then rendered QA on mathturo.vercel.app.
 
 ### [2026-10-21 22:37] — UI Redesign Council Plan Implemented (S0–S10, B1–B4, B7, B8)
 * **Author / Agent:** Claude Code (council: requirements, UX, CTO, frontend, a11y, security, QA, red-team, synthesizer)
@@ -916,3 +931,33 @@ And update the top section (`## 1. Quick Orientation: "Where We Left Off"`) with
   - Student Subpages: [student/module-view.html](file:///d:/Personal_Projects/MathTuro/student/module-view.html), [student/lesson-view.html](file:///d:/Personal_Projects/MathTuro/student/lesson-view.html), [student/quizzes.html](file:///d:/Personal_Projects/MathTuro/student/quizzes.html), [student/take-quiz.html](file:///d:/Personal_Projects/MathTuro/student/take-quiz.html).
 * **Commit Hash:** `4e90636`
 
+
+### [2026-10-22 07:29] — Git Commit fff0cb4
+* **Author:** Tycoon James Flores
+* **Commit Message:** feat(teacher-reports): per-assessment 75% grading with attempt history
+* **Commit Hash:** `fff0cb4`
+
+### [2026-10-22 07:31] — Git Commit 96b89e7
+* **Author:** Tycoon James Flores
+* **Commit Message:** feat(cms): DepEd Terms 1-3 instead of Quarters in teacher and admin authoring
+* **Commit Hash:** `96b89e7`
+
+### [2026-10-22 07:34] — Git Commit 57e3d1e
+* **Author:** Tycoon James Flores
+* **Commit Message:** feat(student-modules): lesson objectives, attached presentations, term/week order
+* **Commit Hash:** `57e3d1e`
+
+### [2026-10-22 07:41] — Git Commit a8d1169
+* **Author:** Tycoon James Flores
+* **Commit Message:** feat(teacher-modules): lesson objectives, week sequencing, attach quizzes and presentations
+* **Commit Hash:** `a8d1169`
+
+### [2026-10-22 07:42] — Git Commit 9583d8a
+* **Author:** Tycoon James Flores
+* **Commit Message:** feat(admin): system-wide EXP leaderboard with grade/section filters
+* **Commit Hash:** `9583d8a`
+
+### [2026-10-22 07:53] — Git Commit a1255d9
+* **Author:** Tycoon James Flores
+* **Commit Message:** feat(a11y): dyslexia-friendly font switch on every portal and public page
+* **Commit Hash:** `a1255d9`

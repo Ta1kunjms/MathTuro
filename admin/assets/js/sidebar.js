@@ -47,7 +47,7 @@ function createAdminSidebar() {
                 </div>
             </div>
 
-            <nav class="p-4 space-y-2 flex-1 overflow-y-auto" aria-label="Admin navigation">
+            <nav class="p-4 space-y-2 flex-1 overflow-y-auto pb-32" aria-label="Admin navigation">
                 <a href="dashboard.html" class="nav-link flex items-center space-x-3 px-3 py-2 rounded-lg text-gray-300 hover:bg-gray-800 hover:text-white transition-colors" data-section="dashboard">
                     <i class="fas fa-tachometer-alt"></i>
                     <span>Dashboard</span>
@@ -117,6 +117,7 @@ function createAdminSidebar() {
             </nav>
 
             <div class="absolute bottom-0 left-0 right-0 p-4 border-t border-gray-800 bg-gray-900">
+                <div data-font-toggle-mount data-variant="dark" class="mb-1"></div>
                 <button id="logoutButton" class="w-full flex items-center space-x-3 px-3 py-2 text-left text-gray-300 hover:bg-gray-800 hover:text-white transition-colors">
                     <i class="fas fa-sign-out-alt"></i>
                     <span>Logout</span>
@@ -141,6 +142,8 @@ function createAdminSidebar() {
         } else {
             sidebarContainer.innerHTML = sidebarHTML;
         }
+        // Dyslexia-friendly font switch (shared/js/font-toggle.js), mounted above Logout
+        if (window.MathTuroFont) window.MathTuroFont.mountAll();
         // Icons are decorative; every control has a visible text label
         sidebarContainer.querySelectorAll('i.fas').forEach(icon => icon.setAttribute('aria-hidden', 'true'));
     }

@@ -3,6 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script>
+        // Apply the saved dyslexia-friendly font before first paint (switch: shared/js/font-toggle.js)
+        (function () {
+            try {
+                if (localStorage.getItem('mathturo_font_pref') === 'dyslexic') {
+                    document.documentElement.setAttribute('data-font', 'dyslexic');
+                }
+            } catch (e) { /* localStorage unavailable: keep the default font */ }
+        })();
+    </script>
     <link rel="stylesheet" href="../dist/styles.css">
     <script src="../shared/js/device.js"></script>
     <link rel="icon" type="image/png" href="../Logo/MATHURO-LOGO-v2.png">
@@ -1065,5 +1075,6 @@
             }
         });
     </script>
+    <script src="../shared/js/font-toggle.js"></script>
 </body>
 </html>

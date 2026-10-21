@@ -4,7 +4,7 @@
 document.addEventListener('DOMContentLoaded', function () {
   const sidebarHTML = `
     <aside id="teacherSidebar" class="fixed left-0 top-0 h-screen w-72 bg-white border-r border-line z-50 transform -translate-x-full lg:translate-x-0 transition-transform duration-300 flex flex-col">
-        <div class="sidebar-scrollable flex-1 overflow-y-auto">
+        <div class="sidebar-scrollable flex-1 overflow-y-auto pb-36">
             <!-- Logo -->
             <div class="p-6 border-b border-line">
                 <a href="dashboard.html" class="flex items-center space-x-3">
@@ -94,6 +94,7 @@ document.addEventListener('DOMContentLoaded', function () {
         
         <!-- Bottom Actions -->
         <div class="absolute bottom-0 left-0 right-0 p-4 border-t border-gray-100 bg-white">
+            <div data-font-toggle-mount data-variant="light" class="mb-1"></div>
             <button id="logoutButton" class="w-full flex items-center space-x-3 px-4 py-3 text-red-600 hover:bg-red-50 rounded-xl transition-colors">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
@@ -107,6 +108,8 @@ document.addEventListener('DOMContentLoaded', function () {
   const sidebarContainer = document.getElementById('sidebar');
   if (sidebarContainer) {
     sidebarContainer.innerHTML = sidebarHTML;
+    // Dyslexia-friendly font switch (shared/js/font-toggle.js), mounted above Logout
+    if (window.MathTuroFont) window.MathTuroFont.mountAll();
     // Nav icons are decorative; each link already has a visible text label
     sidebarContainer.querySelectorAll('svg').forEach(svg => svg.setAttribute('aria-hidden', 'true'));
   }

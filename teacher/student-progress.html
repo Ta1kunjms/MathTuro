@@ -288,6 +288,16 @@
     <script src="assets/js/sidebar.js"></script>
     <script src="assets/js/teacher.js"></script>
     <script>
+        // Escape text for innerHTML templates
+        function escText(value) {
+            return String(value ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+        }
+
+        // Encode a value as a JS string literal that is safe inside an inline on* attribute
+        function jsArg(value) {
+            return escText(JSON.stringify(String(value ?? '')));
+        }
+
         // State management
         let currentState = {
             gradeLevel: null,
@@ -419,11 +429,11 @@
                 } else {
                     gradeGrid.innerHTML = data.map(grade => `
                         <div class="bg-white rounded-xl border border-gray-200 p-6 card-hover cursor-pointer" 
-                             onclick="selectGradeLevel('${grade.id}', '${grade.name}')">
+                             onclick="selectGradeLevel('${grade.id}', ${jsArg(grade.name)})">
                             <div class="flex items-center justify-between">
                                 <div>
-                                    <h3 class="font-semibold text-gray-900 text-lg">${grade.name}</h3>
-                                    <p class="text-sm text-gray-500 mt-1">${grade.description || `View sections in ${grade.name}`}</p>
+                                    <h3 class="font-semibold text-gray-900 text-lg">${escText(grade.name)}</h3>
+                                    <p class="text-sm text-gray-500 mt-1">${escText(grade.description || `View sections in ${grade.name}`)}</p>
                                 </div>
                                 <div class="w-10 h-10 bg-forest-100 rounded-full flex items-center justify-center">
                                     <svg class="w-5 h-5 text-forest-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -438,7 +448,7 @@
                 console.error('Error loading grade levels:', err);
                 document.getElementById('gradeLevelGrid').innerHTML = `
                     <div class="col-span-full text-center py-8 text-red-400">
-                        <p>Failed to load grade levels: ${err.message}</p>
+                        <p>Failed to load grade levels: ${escText(err.message)}</p>
                     </div>
                 `;
             }
@@ -473,17 +483,17 @@
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
                             </svg>
                             <p>No sections available</p>
-                            <p class="text-sm text-gray-500 mt-1">No sections found for ${gradeLevelName}</p>
+                            <p class="text-sm text-gray-500 mt-1">No sections found for ${escText(gradeLevelName)}</p>
                         </div>
                     `;
                 } else {
                     sectionGrid.innerHTML = data.map(section => `
                         <div class="bg-white rounded-xl border border-gray-200 p-6 card-hover cursor-pointer" 
-                             onclick="selectSection('${section.id}', '${section.name}')">
+                             onclick="selectSection('${section.id}', ${jsArg(section.name)})">
                             <div class="flex items-center justify-between">
                                 <div>
-                                    <h3 class="font-semibold text-gray-900 text-lg">${section.name}</h3>
-                                    <p class="text-sm text-gray-500 mt-1">${section.description || `View students in ${section.name}`}</p>
+                                    <h3 class="font-semibold text-gray-900 text-lg">${escText(section.name)}</h3>
+                                    <p class="text-sm text-gray-500 mt-1">${escText(section.description || `View students in ${section.name}`)}</p>
                                 </div>
                                 <div class="w-10 h-10 bg-forest-100 rounded-full flex items-center justify-center">
                                     <svg class="w-5 h-5 text-forest-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -498,7 +508,7 @@
                 console.error('Error loading sections:', err);
                 document.getElementById('sectionGrid').innerHTML = `
                     <div class="col-span-full text-center py-8 text-red-400">
-                        <p>Failed to load sections: ${err.message}</p>
+                        <p>Failed to load sections: ${escText(err.message)}</p>
                     </div>
                 `;
             }
@@ -554,7 +564,7 @@
                     studentTableBody.innerHTML = `
                         <tr>
                             <td colspan="5" class="text-center py-8 text-gray-400">
-                                No students found in ${sectionName}
+                                No students found in ${escText(sectionName)}
                             </td>
                         </tr>
                     `;
@@ -564,24 +574,23 @@
                         const initials = displayName.trim().charAt(0).toUpperCase() || 'S';
                         const gradeLabel = student.grade_level_text || student.grade_level || gradeLevelName || '-';
                         const sectionLabel = student.section_text || student.section || sectionName || '-';
-                        const safeName = displayName.replace(/'/g, "\\'");
 
                         return `
                             <tr class="hover:bg-gray-50">
                                 <td class="px-4 py-4">
                                     <div class="flex items-center gap-3">
-                                        <div class="w-10 h-10 rounded-full bg-green-100 text-green-700 font-semibold flex items-center justify-center">${initials}</div>
-                                        <span class="font-medium text-gray-900">${displayName}</span>
+                                        <div class="w-10 h-10 rounded-full bg-green-100 text-green-700 font-semibold flex items-center justify-center">${escText(initials)}</div>
+                                        <span class="font-medium text-gray-900">${escText(displayName)}</span>
                                     </div>
                                 </td>
-                                <td class="px-4 py-4 text-gray-600">${gradeLabel}</td>
-                                <td class="px-4 py-4 text-gray-600">${sectionLabel}</td>
-                                <td class="px-4 py-4 text-gray-700">${student.email || '-'}</td>
+                                <td class="px-4 py-4 text-gray-600">${escText(gradeLabel)}</td>
+                                <td class="px-4 py-4 text-gray-600">${escText(sectionLabel)}</td>
+                                <td class="px-4 py-4 text-gray-700">${escText(student.email || '-')}</td>
                                 <td class="px-4 py-4 text-right">
                                     <button
                                         class="inline-flex items-center justify-center w-9 h-9 rounded-lg text-forest-600 hover:bg-forest-50"
                                         title="View Student Quizzes"
-                                        onclick="selectStudent('${student.id}', '${safeName}')">
+                                        onclick="selectStudent('${student.id}', ${jsArg(displayName)})">
                                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
                                         </svg>
@@ -595,7 +604,7 @@
                 console.error('Error loading students:', err);
                 document.getElementById('studentTableBody').innerHTML = `
                     <tr>
-                        <td colspan="5" class="text-center py-8 text-red-400">Failed to load students: ${err.message}</td>
+                        <td colspan="5" class="text-center py-8 text-red-400">Failed to load students: ${escText(err.message)}</td>
                     </tr>
                 `;
             }
@@ -645,7 +654,7 @@
             } catch (err) {
                 console.error('Error loading quizzes:', err);
                 document.getElementById('quizzesTableBody').innerHTML = `
-                    <tr><td colspan="5" class="text-center py-8 text-red-400">Failed to load quizzes: ${err.message}</td></tr>
+                    <tr><td colspan="5" class="text-center py-8 text-red-400">Failed to load quizzes: ${escText(err.message)}</td></tr>
                 `;
             }
         }
@@ -759,7 +768,7 @@
                 console.error('Error loading formal assessments:', err);
                 const tableBody = document.getElementById('formalAssessmentsTableBody');
                 if (tableBody) {
-                    tableBody.innerHTML = `<tr><td colspan="7" class="text-center py-6 text-red-500">Error: ${err.message}</td></tr>`;
+                    tableBody.innerHTML = `<tr><td colspan="7" class="text-center py-6 text-red-500">Error: ${escText(err.message)}</td></tr>`;
                 }
             }
         }

@@ -351,8 +351,8 @@
     </main>
 
     <!-- Quiz Submission Form Modal -->
-    <div id="quizModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
-        <div class="bg-white rounded-2xl p-6 lg:p-8 max-w-md w-full mx-4 shadow-2xl">
+    <div id="quizModal" class="fixed inset-0 flex items-center justify-center z-50 hidden">
+        <div class="bg-white rounded-2xl p-6 lg:p-8 max-w-md w-full mx-4" style="border:2px solid #1c1b1a; box-shadow:6px 6px 0 0 #1c1b1a;">
             <div class="flex items-center space-x-3 mb-6">
                 <div class="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center">
                     <svg class="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -418,13 +418,13 @@
                     <button
                         type="button"
                         id="cancelQuiz"
-                        class="flex-1 px-4 py-3 text-gray-700 border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors"
+                        class="flex-1 px-4 py-3 rounded-xl font-bold" style="border:2px solid #1c1b1a; box-shadow:2px 2px 0 0 #1c1b1a; background:#fff;"
                     >
                         Cancel
                     </button>
                     <button
                         type="submit"
-                        class="flex-1 px-4 py-3 bg-forest-800 text-white rounded-xl hover:bg-forest-900 transition-colors"
+                        class="flex-1 px-4 py-3 bg-forest-800 text-white rounded-xl font-bold hover:bg-forest-900"
                     >
                         Submit Score
                     </button>

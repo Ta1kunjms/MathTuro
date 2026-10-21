@@ -217,9 +217,9 @@
     </main>
 
     <!-- Submit Formal Assessment Modal -->
-    <div id="submitAssessmentModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-        <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl">
-            <div class="flex items-center justify-between pb-4 border-b border-gray-100">
+    <div id="submitAssessmentModal" class="hidden fixed inset-0 flex items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-2xl max-w-md w-full p-6" style="border:2px solid #1c1b1a; box-shadow:6px 6px 0 0 #1c1b1a;">
+            <div class="flex items-center justify-between pb-4" style="border-bottom:2px solid #1c1b1a;">
                 <div>
                     <h3 class="text-xl font-bold text-gray-800" id="asmtModalTitle">Submit Assessment</h3>
                     <p class="text-sm text-gray-500" id="asmtModalSubtitle"></p>
@@ -245,17 +245,17 @@
                     <p class="text-xs text-gray-500 mt-2">Enter your verified paper test score. Maximum 3 attempts.</p>
                 </div>
                 <div class="flex space-x-3 pt-2">
-                    <button type="button" onclick="closeSubmitAssessmentModal()" class="flex-1 px-4 py-2.5 border border-gray-300 rounded-xl text-gray-700 font-medium hover:bg-gray-50 transition-colors">Cancel</button>
-                    <button type="submit" id="asmtSubmitBtn" class="flex-1 px-4 py-2.5 bg-forest-800 text-white rounded-xl font-medium hover:bg-forest-900 transition-colors">Submit Score</button>
+                    <button type="button" onclick="closeSubmitAssessmentModal()" class="flex-1 px-4 py-2.5 rounded-xl font-bold" style="border:2px solid #1c1b1a; box-shadow:2px 2px 0 0 #1c1b1a; background:#fff;">Cancel</button>
+                    <button type="submit" id="asmtSubmitBtn" class="flex-1 px-4 py-2.5 bg-forest-800 text-white rounded-xl font-bold hover:bg-forest-900">Submit Score</button>
                 </div>
             </form>
         </div>
     </div>
 
     <!-- Submit Quiz Modal -->
-    <div id="submitQuizModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-        <div class="bg-white rounded-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto">
-            <div class="p-6 border-b border-gray-100 flex items-center justify-between">
+    <div id="submitQuizModal" class="hidden fixed inset-0 flex items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto" style="border:2px solid #1c1b1a; box-shadow:6px 6px 0 0 #1c1b1a;">
+            <div class="p-6 flex items-center justify-between" style="border-bottom:2px solid #1c1b1a;">
                 <div>
                     <h3 class="text-xl font-bold text-gray-800">Submit Quiz Score</h3>
                     <p id="submitQuizTitle" class="text-sm text-gray-500"></p>
@@ -301,8 +301,8 @@
 
                 <!-- Submit Button -->
                 <div class="flex space-x-4 pt-2">
-                    <button type="button" onclick="closeSubmitQuizModal()" class="flex-1 px-6 py-3 border border-gray-300 rounded-xl font-medium text-gray-700 hover:bg-gray-50">Cancel</button>
-                    <button type="submit" id="submitScoreBtn" class="flex-1 px-6 py-3 bg-forest-800 text-white rounded-xl font-medium hover:bg-forest-900 transition-colors flex items-center justify-center space-x-2">
+                    <button type="button" onclick="closeSubmitQuizModal()" class="flex-1 px-6 py-3 rounded-xl font-bold" style="border:2px solid #1c1b1a; box-shadow:2px 2px 0 0 #1c1b1a; background:#fff;">Cancel</button>
+                    <button type="submit" id="submitScoreBtn" class="flex-1 px-6 py-3 bg-forest-800 text-white rounded-xl font-bold hover:bg-forest-900 flex items-center justify-center space-x-2">
                         <span>Submit Score</span>
                     </button>
                 </div>

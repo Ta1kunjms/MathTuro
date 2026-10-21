@@ -96,10 +96,10 @@
     </main>
 
     <!-- Add/Edit Quiz Modal -->
-    <div id="quizModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center">
-        <div class="bg-white rounded-lg shadow-xl max-w-2xl w-full mx-4" style="max-height:90vh; display:flex; flex-direction:column;">
-            <div class="p-6 border-b border-gray-200">
-                <h3 id="modalTitle" class="text-xl font-semibold">Add New Quiz</h3>
+    <div id="quizModal" class="fixed inset-0 z-50 hidden flex items-center justify-center">
+        <div class="bg-white rounded-2xl max-w-2xl w-full mx-4" style="max-height:90vh; display:flex; flex-direction:column; border:2px solid #1c1b1a; box-shadow:6px 6px 0 0 #1c1b1a;">
+            <div class="p-6" style="border-bottom:2px solid #1c1b1a;">
+                <h3 id="modalTitle" class="text-xl font-bold" style="font-family:'Fredoka',system-ui,sans-serif;">Add New Quiz</h3>
             </div>
             <form id="quizForm" onsubmit="handleQuizSubmit(event)" style="display:flex; flex-direction:column; flex:1; overflow:hidden;">
                 <div class="p-6 space-y-4" style="overflow-y:auto; flex:1;">
@@ -162,9 +162,9 @@
                     </div>
                 </div>
                 
-                <div style="padding:16px 24px; border-top:1px solid #e5e7eb; display:flex; justify-content:flex-end; gap:12px; background:white; flex-shrink:0;">
-                    <button type="button" onclick="closeQuizModal()" class="px-4 py-2 text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50">Cancel</button>
-                    <button type="submit" class="bg-forest-600 hover:bg-forest-800" style="color:white; padding:8px 20px; border-radius:8px; border:none; cursor:pointer; font-weight:600; font-size:14px; display:inline-flex; align-items:center; gap:8px;">
+                <div style="padding:16px 24px; border-top:2px solid #1c1b1a; display:flex; justify-content:flex-end; gap:12px; background:#faf9f7; flex-shrink:0;">
+                    <button type="button" onclick="closeQuizModal()" style="padding:8px 16px; border:2px solid #1c1b1a; box-shadow:2px 2px 0 0 #1c1b1a; border-radius:0.75rem; font-weight:700; background:#fff; cursor:pointer;">Cancel</button>
+                    <button type="submit" class="bg-forest-600 hover:bg-forest-800" style="color:white; padding:8px 20px; border-radius:0.75rem; border:2px solid #1c1b1a; box-shadow:2px 2px 0 0 #1c1b1a; cursor:pointer; font-weight:700; font-size:14px; display:inline-flex; align-items:center; gap:8px;">
                         <i id="submitIcon" class="fas fa-save"></i>
                         <span id="submitText">Save Quiz</span>
                     </button>

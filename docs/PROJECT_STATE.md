@@ -76,14 +76,19 @@
 76:      - All modal dialogs across admin, teacher, and student portals receive dark ink backdrops with blur (`bg-ink-900/60 backdrop-blur-sm`), 2px ink borders, and 6px/8px offset shadows (`shadow-[8px_8px_0_0_#1c1b1a]`).
 77:      - All text, password, search, number inputs, textareas, and select dropdowns across all portals receive 2px ink borders with 2px offset shadows (`shadow-[2px_2px_0_0_#1c1b1a]`).
 78:      - Tactile action and secondary/cancel buttons with hover/active transitions (`active:translate-x-0.5 active:translate-y-0.5 active:shadow-none`).
-79:    - **Users & Administration:** Updated [admin/users.html](file:///d:/Personal_Projects/MathTuro/admin/users.html) with neo-brutalist search bar, stat cards, role tabs, tactile action buttons, User Modal, and Archive Modal.
-80: 13. **Immediate Next Action:**
-81:    - **Commit & Deploy:** User commits local UI unification changes on `main` and pushes to origin.
-82:    - **Live Production End-to-End Walkthrough:**
-83:      1. Register a test student at `https://mathturo.vercel.app/public/register.html`.
-84:      2. Verify registration completes and account is marked pending.
-85:      3. Log in as Teacher (`teacher@mathturo.com`) or Admin (`admin@mathturo.com`) and approve the student.
-86:      4. Log in as the approved student and verify full dashboard access.
+13. **Comprehensive Subpage Modal, Dialog & Overlay Unification (2026-10-22 04:35):**
+   - **All Portals Covered:** Completed neo-brutalist styling of all secondary subpage modals, dialogs, drawers, upload dropzones, tables, and buttons across:
+     - Admin: [admin/grade-levels.html](file:///d:/Personal_Projects/MathTuro/admin/grade-levels.html), [admin/sections.html](file:///d:/Personal_Projects/MathTuro/admin/sections.html), [admin/lesson-plan.html](file:///d:/Personal_Projects/MathTuro/admin/lesson-plan.html), [admin/manage-modules.html](file:///d:/Personal_Projects/MathTuro/admin/manage-modules.html), [admin/manage-quizzes.html](file:///d:/Personal_Projects/MathTuro/admin/manage-quizzes.html), [admin/manage-videos.html](file:///d:/Personal_Projects/MathTuro/admin/manage-videos.html), [admin/users.html](file:///d:/Personal_Projects/MathTuro/admin/users.html), [admin/assets/css/admin.css](file:///d:/Personal_Projects/MathTuro/admin/assets/css/admin.css).
+     - Teacher: [teacher/manage-modules.html](file:///d:/Personal_Projects/MathTuro/teacher/manage-modules.html), [teacher/edit-module.html](file:///d:/Personal_Projects/MathTuro/teacher/edit-module.html), [teacher/manage-questions.html](file:///d:/Personal_Projects/MathTuro/teacher/manage-questions.html), [teacher/manage-quizzes.html](file:///d:/Personal_Projects/MathTuro/teacher/manage-quizzes.html), [teacher/manage-presentations.html](file:///d:/Personal_Projects/MathTuro/teacher/manage-presentations.html), [teacher/manage-videos.html](file:///d:/Personal_Projects/MathTuro/teacher/manage-videos.html), [teacher/student-progress.html](file:///d:/Personal_Projects/MathTuro/teacher/student-progress.html), [teacher/submissions.html](file:///d:/Personal_Projects/MathTuro/teacher/submissions.html), [teacher/assets/css/teacher.css](file:///d:/Personal_Projects/MathTuro/teacher/assets/css/teacher.css).
+     - Student: [student/module-view.html](file:///d:/Personal_Projects/MathTuro/student/module-view.html), [student/lesson-view.html](file:///d:/Personal_Projects/MathTuro/student/lesson-view.html), [student/quizzes.html](file:///d:/Personal_Projects/MathTuro/student/quizzes.html), [student/take-quiz.html](file:///d:/Personal_Projects/MathTuro/student/take-quiz.html), [student/assets/css/student.css](file:///d:/Personal_Projects/MathTuro/student/assets/css/student.css).
+     - Systemic Base: [shared/css/base.css](file:///d:/Personal_Projects/MathTuro/shared/css/base.css) (upload zones, loading/mobile overlays, secondary/export buttons, stat icon boxes, status badges, toast notifications, shimmer animation).
+14. **Immediate Next Action:**
+   - **Commit & Push to Main:** User commits working tree changes on `main` and runs `git push origin main` in terminal to trigger automatic production Vercel deployment.
+   - **Live Production End-to-End Walkthrough:**
+     1. Register a test student at `https://mathturo.vercel.app/public/register.html`.
+     2. Verify registration completes and account is marked pending.
+     3. Log in as Teacher (`teacher@mathturo.com`) or Admin (`admin@mathturo.com`) and approve the student.
+     4. Log in as the approved student and verify full dashboard access.
 
 ---
 
@@ -891,4 +896,22 @@ And update the top section (`## 1. Quick Orientation: "Where We Left Off"`) with
   - [shared/css/base.css](file:///d:/Personal_Projects/MathTuro/shared/css/base.css): Extended systemic rules to explicitly style `#modalContainer`, `#modalContent`, `#searchModal`, `#reviewModal`, `#notificationPanel`, and all dropdown menus across all portals.
   - [student/assets/css/student.css](file:///d:/Personal_Projects/MathTuro/student/assets/css/student.css): Added tactile card, streak chip, hero strip, and sidebar borders.
 
+
+
+### [2026-10-22 04:16] — Git Commit 8b8572f
+* **Author:** Tycoon James Flores
+* **Commit Message:** feat: systemic rounded neo-brutalism UI unification across all portals, modals, searches, and inputs
+* **Commit Hash:** `8b8572f`
+
+### [2026-10-22 04:38] — Subpage Modals, Dialogs, Drawers & Systemic Overlays Unification
+* **Author:** Antigravity & Tycoon James Flores
+* **Status:** Complete across all Admin, Teacher, and Student subpages directly on `main`.
+* **Scope & Files Unified:**
+  - `shared/css/base.css`: Added global neo-brutalist styling for active quarter tabs, gradient text overrides (solid ink with Fredoka bold), upload zones (dashed ink with warm hover), loading/mobile overlay backdrops, secondary/cancel buttons (`border-2 border-ink-900 shadow-[2px_2px_0_0_#1c1b1a]`), export/action buttons (`bg-green-600`, `bg-red-700`), stat icon boxes, status and role pill badges (`border-1.5 border-ink-900 shadow-[1px_1px_0_0_#1c1b1a]`), toast notifications (`shadow-[4px_4px_0_0_#1c1b1a]`), modal footer top border overrides, and smooth skeleton shimmers.
+  - `admin/assets/css/admin.css`: Enhanced admin stat and action cards with hover lift transitions, added charcoal sidebar border, dashed import zone styling, and accessible dialog overrides.
+  - `teacher/assets/css/teacher.css`: Added stat card hover lifts, plum-tinted dashed lessonplan/pdf upload zones, content table headers with 2px ink borders, approve/reject button states, and status badges.
+  - `student/assets/css/student.css`: Added student content card hover lifts, tactile tab indicators, and clean borders.
+  - Admin Subpages: [admin/grade-levels.html](file:///d:/Personal_Projects/MathTuro/admin/grade-levels.html), [admin/sections.html](file:///d:/Personal_Projects/MathTuro/admin/sections.html), [admin/lesson-plan.html](file:///d:/Personal_Projects/MathTuro/admin/lesson-plan.html), [admin/manage-modules.html](file:///d:/Personal_Projects/MathTuro/admin/manage-modules.html), [admin/manage-quizzes.html](file:///d:/Personal_Projects/MathTuro/admin/manage-quizzes.html), [admin/manage-videos.html](file:///d:/Personal_Projects/MathTuro/admin/manage-videos.html), [admin/users.html](file:///d:/Personal_Projects/MathTuro/admin/users.html) updated with 2px ink borders, 6px offset shadows, and tactile modal buttons.
+  - Teacher Subpages: [teacher/manage-modules.html](file:///d:/Personal_Projects/MathTuro/teacher/manage-modules.html), [teacher/edit-module.html](file:///d:/Personal_Projects/MathTuro/teacher/edit-module.html), [teacher/manage-questions.html](file:///d:/Personal_Projects/MathTuro/teacher/manage-questions.html), [teacher/manage-quizzes.html](file:///d:/Personal_Projects/MathTuro/teacher/manage-quizzes.html), [teacher/manage-presentations.html](file:///d:/Personal_Projects/MathTuro/teacher/manage-presentations.html), [teacher/manage-videos.html](file:///d:/Personal_Projects/MathTuro/teacher/manage-videos.html), [teacher/student-progress.html](file:///d:/Personal_Projects/MathTuro/teacher/student-progress.html), [teacher/submissions.html](file:///d:/Personal_Projects/MathTuro/teacher/submissions.html) updated with tactile modal wrappers, ink borders, and neo-brutalist confirm/cancel action pairs.
+  - Student Subpages: [student/module-view.html](file:///d:/Personal_Projects/MathTuro/student/module-view.html), [student/lesson-view.html](file:///d:/Personal_Projects/MathTuro/student/lesson-view.html), [student/quizzes.html](file:///d:/Personal_Projects/MathTuro/student/quizzes.html), [student/take-quiz.html](file:///d:/Personal_Projects/MathTuro/student/take-quiz.html).
 

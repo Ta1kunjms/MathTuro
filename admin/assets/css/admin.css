@@ -266,6 +266,16 @@ main .bg-white.rounded-xl {
   border: 2px solid #1c1b1a !important;
   box-shadow: 4px 4px 0 0 #1c1b1a !important;
   border-radius: 1rem !important;
+  transition: transform 0.1s ease, box-shadow 0.1s ease !important;
+}
+
+.admin-card:hover,
+.stat-card:hover,
+.action-card:hover,
+.admin-stat-card:hover,
+.user-card:hover {
+  transform: translate(-2px, -2px) !important;
+  box-shadow: 6px 6px 0 0 #1c1b1a !important;
 }
 
 /* Tactile badges */
@@ -280,9 +290,37 @@ main .bg-white.rounded-xl {
 /* Admin table header & cells */
 .admin-table th {
   border-bottom: 2px solid #1c1b1a !important;
+  background-color: #faf9f7 !important;
 }
 
 .admin-table td {
   border-bottom: 1px solid #e4e1da !important;
+}
+
+/* Settings & system-status page cards */
+.settings-card,
+.settings-section,
+.system-card,
+main section.bg-white {
+  border: 2px solid #1c1b1a !important;
+  box-shadow: 4px 4px 0 0 #1c1b1a !important;
+  border-radius: 1rem !important;
+}
+
+/* Analytics progress bars */
+[id*="Bar"].h-full.rounded-full {
+  border-radius: 9999px !important;
+}
+
+/* Activity log hover */
+.activity-log-item:hover {
+  background: #f2f0ec !important;
+  border-left-color: #1c1b1a !important;
+}
+
+/* Admin sidebar border */
+#adminSidebar,
+nav#adminSidebar {
+  border-right: 2px solid #1c1b1a !important;
 }
 

@@ -89,10 +89,10 @@
     </main>
 
     <!-- Add/Edit Lesson Plan Modal -->
-    <div id="lessonModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center">
-        <div class="bg-white rounded-lg shadow-xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
-            <div class="p-6 border-b border-gray-200">
-                <h3 id="modalTitle" class="text-xl font-semibold">Add New Lesson Plan File</h3>
+    <div id="lessonModal" class="fixed inset-0 z-50 hidden flex items-center justify-center">
+        <div class="bg-white rounded-2xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto" style="border:2px solid #1c1b1a; box-shadow:6px 6px 0 0 #1c1b1a;">
+            <div class="p-6 flex items-center justify-between" style="border-bottom:2px solid #1c1b1a;">
+                <h3 id="modalTitle" class="text-xl font-bold" style="font-family:'Fredoka',system-ui,sans-serif;">Add New Lesson Plan File</h3>
             </div>
             <form id="lessonForm" onsubmit="handleLessonSubmit(event)">
                 <div class="p-6 space-y-4">
@@ -143,9 +143,9 @@
                     </div>
                 </div>
                 
-                <div class="p-6 border-t border-gray-200 flex justify-end space-x-3">
-                    <button type="button" onclick="closeLessonModal()" class="px-4 py-2 text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50">Cancel</button>
-                    <button type="submit" class="px-4 py-2 bg-forest-600 text-white rounded-lg hover:bg-forest-800">
+                <div class="p-6 flex justify-end space-x-3" style="border-top:2px solid #1c1b1a; background:#faf9f7;">
+                    <button type="button" onclick="closeLessonModal()" style="padding:8px 16px; border:2px solid #1c1b1a; box-shadow:2px 2px 0 0 #1c1b1a; border-radius:0.75rem; font-weight:700; background:#fff; cursor:pointer;">Cancel</button>
+                    <button type="submit" class="px-4 py-2 bg-forest-600 text-white rounded-xl font-bold hover:bg-forest-800">
                         <i id="submitIcon" class="fas fa-save mr-2"></i>
                         <span id="submitText">Save Lesson Plan File</span>
                     </button>

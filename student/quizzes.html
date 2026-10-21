@@ -216,9 +216,9 @@
     </main>
 
     <!-- Submit Score Modal -->
-    <div id="submitModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-        <div class="bg-white rounded-2xl w-full max-w-md shadow-2xl">
-            <div class="flex items-center justify-between p-6 border-b border-gray-100">
+    <div id="submitModal" class="hidden fixed inset-0 flex items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-2xl w-full max-w-md" style="border:2px solid #1c1b1a; box-shadow:6px 6px 0 0 #1c1b1a;">
+            <div class="flex items-center justify-between p-6" style="border-bottom:2px solid #1c1b1a;">
                 <h2 class="text-xl font-bold text-gray-900">Submit Quiz Score</h2>
                 <button onclick="closeSubmitModal()" class="p-2 text-gray-500 hover:text-gray-700 rounded-lg hover:bg-gray-100">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -247,12 +247,12 @@
                 </div>
 
                 <div class="flex space-x-3 pt-4">
-                    <button type="button" onclick="closeSubmitModal()" 
-                        class="flex-1 px-6 py-3 border border-gray-300 rounded-xl font-medium text-gray-700 hover:bg-gray-50 transition-colors">
+                    <button type="button" onclick="closeSubmitModal()"
+                        class="flex-1 px-6 py-3 rounded-xl font-bold" style="border:2px solid #1c1b1a; box-shadow:2px 2px 0 0 #1c1b1a; background:#fff;">
                         Cancel
                     </button>
-                    <button type="submit" id="submitBtn" 
-                        class="flex-1 px-6 py-3 bg-forest-800 text-white rounded-xl font-medium hover:bg-forest-900 transition-colors">
+                    <button type="submit" id="submitBtn"
+                        class="flex-1 px-6 py-3 bg-forest-800 text-white rounded-xl font-bold hover:bg-forest-900">
                         Submit Score
                     </button>
                 </div>

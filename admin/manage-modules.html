@@ -106,10 +106,10 @@
     </main>
 
     <!-- Add/Edit Module Modal -->
-    <div id="moduleModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center">
-        <div class="bg-white rounded-lg shadow-xl max-w-2xl w-full mx-4" style="max-height:90vh; display:flex; flex-direction:column;">
-            <div class="p-6 border-b border-gray-200">
-                <h3 id="modalTitle" class="text-xl font-semibold">Add New Module</h3>
+    <div id="moduleModal" class="fixed inset-0 z-50 hidden flex items-center justify-center">
+        <div class="bg-white rounded-2xl max-w-2xl w-full mx-4" style="max-height:90vh; display:flex; flex-direction:column; border:2px solid #1c1b1a; box-shadow:6px 6px 0 0 #1c1b1a;">
+            <div class="p-6" style="border-bottom:2px solid #1c1b1a;">
+                <h3 id="modalTitle" class="text-xl font-bold text-ink-900" style="font-family:'Fredoka',system-ui,sans-serif;">Add New Module</h3>
             </div>
             <form id="moduleForm" onsubmit="handleModuleSubmit(event)" style="display:flex; flex-direction:column; flex:1; overflow:hidden;">
                 <div class="p-6 space-y-4" style="overflow-y:auto; flex:1;">
@@ -195,9 +195,9 @@
                     </div>
                 </div>
                 
-                <div style="padding:16px 24px; border-top:1px solid #e5e7eb; display:flex; justify-content:flex-end; gap:12px; background:white; flex-shrink:0;">
-                    <button type="button" onclick="closeModuleModal()" class="px-4 py-2 text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50">Cancel</button>
-                    <button type="submit" class="bg-forest-600 hover:bg-forest-800 text-white px-5 py-2 rounded-lg font-semibold text-sm inline-flex items-center gap-2 transition-colors">
+                <div style="padding:16px 24px; border-top:2px solid #1c1b1a; display:flex; justify-content:flex-end; gap:12px; background:#faf9f7; flex-shrink:0;">
+                    <button type="button" onclick="closeModuleModal()" class="px-4 py-2 font-bold border-2 border-ink-900 rounded-xl bg-white hover:bg-paper-50" style="border:2px solid #1c1b1a; box-shadow:2px 2px 0 0 #1c1b1a; border-radius:0.75rem; font-weight:700;">Cancel</button>
+                    <button type="submit" class="bg-forest-600 hover:bg-forest-800 text-white px-5 py-2 rounded-xl font-bold text-sm inline-flex items-center gap-2">
                         <i id="submitIcon" class="fas fa-save"></i>
                         <span id="submitText">Save Module</span>
                     </button>

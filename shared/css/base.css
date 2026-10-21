@@ -855,3 +855,181 @@ button.quarter-tab:active {
   transform: translate(1px, 1px);
 }
 
+/* Active quarter tab */
+.quarter-tab[aria-pressed="true"],
+button.quarter-tab[aria-pressed="true"],
+.quarter-tab.active,
+button.quarter-tab.active {
+  box-shadow: none !important;
+  transform: translate(1px, 1px) !important;
+}
+
+/* 6. Gradient-Text Override — flatten to ink */
+.gradient-text {
+  background: none !important;
+  -webkit-background-clip: unset !important;
+  background-clip: unset !important;
+  -webkit-text-fill-color: #1c1b1a !important;
+  color: #1c1b1a !important;
+  font-family: 'Fredoka', system-ui, sans-serif !important;
+  font-weight: 700 !important;
+}
+
+/* 7. Glass Sidebar — remove blur, solidify */
+.glass-sidebar {
+  background: #ffffff !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  border-right: 2px solid #1c1b1a !important;
+  box-shadow: 2px 0 0 0 #1c1b1a !important;
+}
+
+/* 8. Upload Zones */
+.upload-zone,
+[id*="uploadZone"],
+#uploadZone {
+  border: 2px dashed #1c1b1a !important;
+  border-radius: 1rem !important;
+  background-color: #faf9f7 !important;
+  transition: background-color 0.15s ease, box-shadow 0.15s ease !important;
+}
+
+.upload-zone:hover,
+[id*="uploadZone"]:hover {
+  background-color: #f2f0ec !important;
+  box-shadow: 2px 2px 0 0 #1c1b1a !important;
+}
+
+/* 9. Loading Overlay */
+#loadingOverlay {
+  background-color: rgba(28, 27, 26, 0.65) !important;
+  backdrop-filter: blur(4px) !important;
+  -webkit-backdrop-filter: blur(4px) !important;
+}
+
+/* 10. Mobile Overlay */
+#mobileOverlay {
+  background-color: rgba(28, 27, 26, 0.45) !important;
+}
+
+/* 11. Secondary / Cancel Buttons — broader coverage (border-gray-300) */
+button.border-gray-300,
+a.border-gray-300 {
+  border: 2px solid #1c1b1a !important;
+  box-shadow: 2px 2px 0 0 #1c1b1a !important;
+  border-radius: 0.75rem !important;
+  font-weight: 700 !important;
+  background-color: #ffffff !important;
+  color: #1c1b1a !important;
+  transition: transform 0.1s ease, box-shadow 0.1s ease, background-color 0.15s ease !important;
+}
+
+button.border-gray-300:hover,
+a.border-gray-300:hover {
+  background-color: #f2f0ec !important;
+  box-shadow: 3px 3px 0 0 #1c1b1a !important;
+  transform: translate(-1px, -1px);
+}
+
+button.border-gray-300:active,
+a.border-gray-300:active {
+  box-shadow: none !important;
+  transform: translate(2px, 2px);
+}
+
+/* 12. Export / Utility Buttons (bg-green-600, bg-red-600, bg-gray-600) */
+button.bg-green-600,
+a.bg-green-600,
+button.bg-green-700,
+a.bg-green-700,
+button.bg-red-700,
+a.bg-red-700 {
+  border: 2px solid #1c1b1a !important;
+  box-shadow: 2px 2px 0 0 #1c1b1a !important;
+  font-weight: 700 !important;
+  transition: transform 0.1s ease, box-shadow 0.1s ease, background-color 0.15s ease !important;
+}
+
+button.bg-green-600:hover,
+a.bg-green-600:hover,
+button.bg-green-700:hover,
+a.bg-green-700:hover,
+button.bg-red-700:hover,
+a.bg-red-700:hover {
+  box-shadow: 3px 3px 0 0 #1c1b1a !important;
+  transform: translate(-1px, -1px);
+}
+
+button.bg-green-600:active,
+button.bg-green-700:active,
+button.bg-red-700:active {
+  box-shadow: none !important;
+  transform: translate(2px, 2px);
+}
+
+/* 13. Stat Icon Boxes (bg-green-100, bg-red-100 rounded-xl) */
+.bg-green-100.rounded-xl,
+.bg-red-100.rounded-xl,
+.bg-amber-100.rounded-xl,
+.bg-blue-100.rounded-xl,
+.bg-purple-100.rounded-xl,
+.bg-green-50.rounded-xl,
+.bg-red-50.rounded-xl {
+  border: 1.5px solid #1c1b1a !important;
+}
+
+/* 14. Status / Role Badge ink borders */
+span.bg-green-100,
+span.bg-red-100,
+span.bg-amber-100,
+span.bg-yellow-100,
+span.bg-blue-100,
+span.bg-purple-100,
+span.bg-gray-100,
+.badge,
+.status-badge {
+  border: 1.5px solid #1c1b1a !important;
+  box-shadow: 1px 1px 0 0 #1c1b1a !important;
+}
+
+/* 15. System Status Indicator Dots */
+.indicator,
+div.indicator {
+  border: 1.5px solid #1c1b1a !important;
+  box-shadow: 1px 1px 0 0 #1c1b1a !important;
+}
+
+/* 16. Toast Notifications */
+.toast,
+[id*="toast"]:not(input):not(select),
+[id*="Toast"]:not(input):not(select),
+[class*="toast"]:not(input):not(select) {
+  border: 2px solid #1c1b1a !important;
+  box-shadow: 4px 4px 0 0 #1c1b1a !important;
+  border-radius: 1rem !important;
+}
+
+/* 17. Modal Footer — ink border-top override */
+div[id*="Modal"] > div > form > div:last-child,
+div[id*="Modal"] > div > div:last-child.flex,
+div[id*="modal"] > div > form > div:last-child,
+div[role="dialog"] > div > form > div:last-child,
+div[role="dialog"] > div > div:last-child.flex {
+  border-top: 2px solid #1c1b1a !important;
+  background-color: #faf9f7 !important;
+}
+
+/* 18. Shimmer Loader Animation — remove gradient flicker */
+@keyframes shimmer {
+  from { background-position: -200% 0; }
+  to { background-position: 200% 0; }
+}
+
+.animate-pulse,
+[class*="shimmer"],
+[class*="skeleton"] {
+  background: linear-gradient(90deg, #f2f0ec 25%, #e8e5df 50%, #f2f0ec 75%) !important;
+  background-size: 200% 100% !important;
+  animation: shimmer 1.5s infinite !important;
+}
+

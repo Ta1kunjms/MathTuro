@@ -1299,6 +1299,14 @@ main .bg-white.rounded-xl {
   border: 2px solid #1c1b1a !important;
   box-shadow: 4px 4px 0 0 #1c1b1a !important;
   border-radius: 1rem !important;
+  transition: transform 0.1s ease, box-shadow 0.1s ease !important;
+}
+
+.stat-card:hover,
+.module-card:hover,
+.quick-action-card:hover {
+  transform: translate(-2px, -2px) !important;
+  box-shadow: 6px 6px 0 0 #1c1b1a !important;
 }
 
 /* Sidebar right border */
@@ -1309,5 +1317,47 @@ main .bg-white.rounded-xl {
 /* Top header border */
 header.border-b {
   border-bottom: 2px solid #1c1b1a !important;
+}
+
+/* Quiz / module status badges */
+.quiz-status-pending,
+.quiz-status-approved,
+.quiz-status-graded {
+  border: 1.5px solid #1c1b1a !important;
+  box-shadow: 1px 1px 0 0 #1c1b1a !important;
+  font-weight: 700 !important;
+}
+
+/* Module status chip (Completed/Locked/Available) */
+span.bg-green-100,
+span.bg-red-100,
+span.bg-amber-100,
+span.bg-gray-100 {
+  border: 1.5px solid #1c1b1a !important;
+  box-shadow: 1px 1px 0 0 #1c1b1a !important;
+  font-weight: 700 !important;
+}
+
+/* Take-quiz answer option highlight */
+.answer-option.selected,
+.quiz-option.selected {
+  border: 2px solid #1b4332 !important;
+  box-shadow: 2px 2px 0 0 #1c1b1a !important;
+}
+
+/* Learn-quarter tabs */
+.learn-quarter-tab,
+button.learn-quarter-tab {
+  border: 2px solid #1c1b1a !important;
+  box-shadow: 2px 2px 0 0 #1c1b1a !important;
+  border-radius: 0.75rem !important;
+  font-weight: 700 !important;
+  transition: transform 0.1s ease, box-shadow 0.1s ease !important;
+}
+
+.learn-quarter-tab.active,
+button.learn-quarter-tab[aria-pressed="true"] {
+  box-shadow: none !important;
+  transform: translate(1px, 1px) !important;
 }
 

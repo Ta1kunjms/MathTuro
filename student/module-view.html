@@ -118,6 +118,10 @@
                         <div>
                             <h2 id="moduleName" class="text-2xl font-bold text-gray-800 mb-2"></h2>
                             <p id="moduleDescription" class="text-gray-600"></p>
+                            <div id="moduleObjectives" class="hidden mt-1">
+                                <h3 class="text-sm font-bold text-gray-800 mb-2">Lesson Objectives</h3>
+                                <ul id="moduleObjectivesList" class="list-disc pl-5 space-y-1 text-gray-700"></ul>
+                            </div>
                         </div>
                         <span id="moduleType" class="learn-count-chip"></span>
                     </div>
@@ -141,6 +145,14 @@
                     <div id="videosList" class="p-6 grid grid-cols-1 md:grid-cols-2 gap-4">
                         <!-- Videos will be loaded here -->
                     </div>
+                </div>
+
+                <!-- Presentations Section (all presentations attached to this module) -->
+                <div id="presentationsSection" class="hidden bg-white rounded-2xl border-2 border-ink-900">
+                    <div class="p-6 border-b border-gray-100">
+                        <h3 class="text-lg font-bold text-gray-800">Presentations</h3>
+                    </div>
+                    <ul id="presentationsList" class="p-6 grid grid-cols-1 md:grid-cols-2 gap-4"></ul>
                 </div>
             </div>
 
@@ -680,16 +692,32 @@
                 
                 module.quizzes = (quizzesData || []).filter(quiz => isInStudentScope(quiz, studentAssignment));
 
+                // Presentations attached to this module (non-fatal: the module still renders without them)
+                try {
+                    const { data: presentationsData, error: presentationsError } = await getSupabase()
+                        .from('presentations')
+                        .select('id, title, description, page_count, order_index')
+                        .eq('module_id', moduleId)
+                        .eq('is_published', true)
+                        .order('order_index', { ascending: true });
+                    if (presentationsError) throw presentationsError;
+                    module.presentations = presentationsData || [];
+                } catch (presentationsLoadError) {
+                    console.warn('Could not load module presentations:', presentationsLoadError);
+                    module.presentations = [];
+                }
+
                 // Update header
                 document.getElementById('moduleTitle').textContent = module.title;
                 document.getElementById('moduleName').textContent = module.title;
-                document.getElementById('moduleDescription').textContent = module.description || 'No description available';
+                renderModuleIntro();
                 document.getElementById('moduleType').textContent = module.content_type === 'pdf' ? 'PDF Document' : 'Image Gallery';
 
                 // Render content
                 await loadFormalAssessments();
                 renderContent();
                 renderVideos();
+                renderPresentations();
                 renderQuizzes();
                 await markModuleOpened();
                 await syncStudentStreakFromModuleOpen();
@@ -786,6 +814,59 @@
                     </div>
                 `;
             }
+        }
+
+        // Teacher-defined Lesson Objectives (one per line) replace the generic
+        // description; the description is only the fallback when none are set.
+        function renderModuleIntro() {
+            const objectives = String(module.lesson_objectives || '')
+                .split(/\r?\n/)
+                .map(line => line.replace(/^\s*(?:[-*•]|\d+[.)])\s*/, '').trim())
+                .filter(Boolean);
+            const descriptionEl = document.getElementById('moduleDescription');
+            const objectivesEl = document.getElementById('moduleObjectives');
+            const listEl = document.getElementById('moduleObjectivesList');
+
+            if (objectives.length) {
+                listEl.innerHTML = '';
+                objectives.forEach(text => {
+                    const li = document.createElement('li');
+                    li.textContent = text;
+                    listEl.appendChild(li);
+                });
+                objectivesEl.classList.remove('hidden');
+                descriptionEl.classList.add('hidden');
+            } else {
+                objectivesEl.classList.add('hidden');
+                descriptionEl.classList.remove('hidden');
+                descriptionEl.textContent = module.description || 'No description available';
+            }
+        }
+
+        // Render presentations (same content gate as videos)
+        function renderPresentations() {
+            const section = document.getElementById('presentationsSection');
+            const list = document.getElementById('presentationsList');
+
+            if (!isContentUnlocked || !module.presentations || module.presentations.length === 0) {
+                section.classList.add('hidden');
+                return;
+            }
+
+            section.classList.remove('hidden');
+            list.innerHTML = module.presentations.map(presentation => `
+                <li>
+                    <a href="view-presentation.html?presentation_id=${encodeURIComponent(presentation.id)}" class="flex items-start gap-3 p-4 rounded-xl border-2 border-ink-900 bg-white hover:bg-forest-50 transition-colors">
+                        <span class="w-10 h-10 flex-shrink-0 rounded-lg bg-forest-100 text-forest-800 flex items-center justify-center" aria-hidden="true">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
+                        </span>
+                        <span class="min-w-0">
+                            <span class="block font-semibold text-gray-800">${escapeHtml(presentation.title)}</span>
+                            <span class="block text-sm text-gray-500 line-clamp-2">${escapeHtml(presentation.description || (presentation.page_count ? presentation.page_count + ' pages' : 'Open presentation'))}</span>
+                        </span>
+                    </a>
+                </li>
+            `).join('');
         }
 
         // Render videos

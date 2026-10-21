@@ -243,6 +243,28 @@
             return normalizeQuarterValue(module?.quarter ?? module?.module_quarter ?? module?.quarter_number);
         }
 
+        // Curriculum order: Term -> Week -> teacher order_index (unset values last)
+        function compareModuleSequence(a, b) {
+            const key = m => [
+                Number(getModuleQuarter(m)) || 99,
+                Number(m.week_number) || 99,
+                Number(m.order_index) || 9999
+            ];
+            const ka = key(a), kb = key(b);
+            for (let i = 0; i < ka.length; i++) {
+                if (ka[i] !== kb[i]) return ka[i] - kb[i];
+            }
+            return String(a.title || '').localeCompare(String(b.title || ''));
+        }
+
+        // Teacher-entered Lesson Objectives, one per line (leading bullets/numbers dropped)
+        function getLessonObjectives(module) {
+            return String(module?.lesson_objectives || '')
+                .split(/\r?\n/)
+                .map(line => line.replace(/^\s*(?:[-*•]|\d+[.)])\s*/, '').trim())
+                .filter(Boolean);
+        }
+
         function getQuarterLabel(module) {
             const quarter = getModuleQuarter(module);
             return quarter ? `Term ${quarter}` : '';
@@ -493,7 +515,8 @@
             const filtered = query
                 ? statusFiltered.filter(m =>
                     (m.title || '').toLowerCase().includes(query) ||
-                    ((m.description || '').toLowerCase().includes(query))
+                    ((m.description || '').toLowerCase().includes(query)) ||
+                    ((m.lesson_objectives || '').toLowerCase().includes(query))
                 )
                 : statusFiltered;
 
@@ -508,9 +531,13 @@
             empty.classList.add('hidden');
             grid.classList.remove('hidden');
             
-            grid.innerHTML = filtered.map(module => {
+            grid.innerHTML = [...filtered].sort(compareModuleSequence).map(module => {
                 const subtitle = module.topic || module.subject || module.grade_level_text || module.grade_level || 'Learning Module';
-                const description = module.description || 'Open this module to start learning and explore the lesson activities.';
+                const objectives = getLessonObjectives(module);
+                const description = objectives.length
+                    ? `Objectives: ${objectives.join(' • ')}`
+                    : (module.description || 'Open this module to start learning and explore the lesson activities.');
+                const weekNumber = Number(module.week_number) || null;
                 const pdfSource = module.pdf_url || module.file_path || '';
                 const pdfPreviewUrl = resolveLearningMaterialUrl(pdfSource);
                 const lowerFilePath = String(pdfSource).toLowerCase();
@@ -547,7 +574,7 @@
                         <div class="px-5 py-4 flex flex-col flex-1">
                             <h3 class="text-lg font-bold text-gray-900 mb-1 line-clamp-1">${escapeHtml(module.title)}</h3>
                             <p class="text-sm font-medium text-gray-600 mb-1 line-clamp-1">${escapeHtml(subtitle)}</p>
-                            ${quarterLabel ? `<p class="text-xs font-semibold text-forest-800 mb-2">${quarterLabel}</p>` : ''}
+                            ${quarterLabel || weekNumber ? `<p class="text-xs font-semibold text-forest-800 mb-2">${[quarterLabel, weekNumber ? `Week ${weekNumber}` : ''].filter(Boolean).join(' · ')}</p>` : ''}
                             <p class="module-description text-xs text-gray-500 leading-snug mb-4 flex-1">${escapeHtml(description)}</p>
                             <div class="learn-module-card-cta ${isLocked ? 'is-locked' : ''}">
                                 ${statusLabel}

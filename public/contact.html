@@ -3,191 +3,241 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script>
+        (function () {
+            try {
+                if (localStorage.getItem('mathturo_font_pref') === 'dyslexic') {
+                    document.documentElement.setAttribute('data-font', 'dyslexic');
+                }
+            } catch (e) { /* localStorage unavailable */ }
+        })();
+    </script>
     <link rel="stylesheet" href="../dist/styles.css">
     <script src="../shared/js/device.js"></script>
     <link rel="icon" type="image/png" href="Logo/MATHURO-LOGO-v2.png">
     <title>Contact Us - MathTuro LMS</title>
     <link rel="stylesheet" href="shared/css/base.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Nunito:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
-        @media (max-width: 768px) {
-            .rounded-lg, .shadow-md, .p-8, .gap-8 {
-                max-width: 100% !important;
-                min-width: 0 !important;
-                width: 100% !important;
-                margin: 0 0 1.5rem 0 !important;
-                padding: 1.25rem !important;
-                box-sizing: border-box;
-            }
-            .grid-cols-2 {
-                grid-template-columns: 1fr !important;
-            }
+        :root {
+            --font-family-display: 'Fredoka', system-ui, sans-serif;
+            --font-family-base: 'Nunito', system-ui, sans-serif;
+        }
+        body {
+            font-family: var(--font-family-base);
+            color: #1c1b1a;
+            background-color: #faf8f5;
+        }
+        h1, h2, h3, h4, .font-display {
+            font-family: var(--font-family-display);
         }
     </style>
 </head>
-<body class="bg-gray-100 min-h-screen">
+<body class="bg-paper-50 min-h-screen text-ink-900 flex flex-col">
     <!-- Skip Link for Accessibility -->
-    <a href="#main-content" class="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 bg-blue-600 text-white px-4 py-2 rounded-md z-50">
+    <a href="#main-content" class="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 bg-forest-600 text-white px-4 py-2 rounded-xl border-2 border-ink-900 shadow-[2px_2px_0_0_#1c1b1a] z-50 font-bold">
         Skip to main content
     </a>
 
-    <!-- Navigation -->
-    <nav class="bg-white shadow-sm border-b" aria-label="Main navigation">
-        <div class="container mx-auto px-4 py-3 flex justify-between items-center">
-            <div class="flex items-center space-x-3">
-                <a href="index.html" class="flex items-center space-x-2">
-                    <img src="Logo/MATHURO-LOGO-v2.png" alt="MathTuro" class="h-10 w-10 object-contain">
-                    <span class="text-xl font-bold text-gray-800">MathTuro LMS</span>
-                </a>
-            </div>
-            <div class="flex items-center space-x-4">
-                <a href="about.html" class="text-gray-600 hover:text-[#005801]">About</a>
-                <a href="contact.html" class="text-[#005801] font-medium">Contact</a>
-                <a href="login.html" class="px-4 py-2 bg-[#005801] text-white rounded-md hover:bg-[#004601] transition-colors">
+    <!-- Top Navigation -->
+    <header class="w-full px-4 sm:px-6 lg:px-8 pt-4 pb-2">
+        <nav class="max-w-6xl mx-auto bg-paper-50 border-2 border-ink-900 rounded-2xl px-5 py-3.5 flex items-center justify-between shadow-[3px_3px_0_0_#1c1b1a]" aria-label="Main navigation">
+            <a href="index.html" class="flex items-center gap-3 group">
+                <img src="Logo/MATHURO-LOGO-v2.png" alt="MathTuro Logo" class="h-10 w-10 object-contain">
+                <span class="font-display font-bold text-xl sm:text-2xl tracking-tight text-ink-900">MathTuro</span>
+            </a>
+            <div class="flex items-center gap-2 sm:gap-4 text-sm font-bold">
+                <a href="about.html" class="px-3 py-1.5 rounded-xl hover:bg-paper-100 text-ink-900 transition-colors">About</a>
+                <a href="contact.html" class="px-3 py-1.5 rounded-xl bg-forest-100 text-forest-900 border-2 border-ink-900 shadow-[2px_2px_0_0_#1c1b1a]">Contact</a>
+                <a href="login.html" class="px-4 py-2 bg-forest-600 text-white rounded-xl border-2 border-ink-900 shadow-[2px_2px_0_0_#1c1b1a] hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-[3px_3px_0_0_#1c1b1a] transition-all">
                     Login
                 </a>
             </div>
-        </div>
-    </nav>
+        </nav>
+    </header>
 
-    <!-- Hero Section -->
-    <section class="bg-gradient-to-r from-[#005801] to-[#006B01] text-white py-16">
-        <div class="container mx-auto px-4 text-center">
-            <div class="flex justify-center gap-6 mb-6">
-                <img src="Logo/University-Seal-Official.png" alt="MSU-GenSan" class="h-16 object-contain">
-                <img src="Logo/COED-LOGO-4k.png" alt="COED" class="h-16 object-contain">
-                <img src="Logo/LEMMA-logo.jpg" alt="LEMMA" class="h-16 object-contain">
+    <!-- Main Content -->
+    <main id="main-content" class="flex-1 py-10 px-4 sm:px-6 lg:px-8">
+        <div class="max-w-5xl mx-auto space-y-8">
+            <!-- Institutional Header Banner -->
+            <div class="bg-white border-2 border-ink-900 rounded-2xl p-6 sm:p-8 shadow-[4px_4px_0_0_#1c1b1a] text-center">
+                <div class="flex justify-center items-center gap-4 sm:gap-6 mb-5 flex-wrap">
+                    <img src="Logo/University-Seal-Official.png" alt="MSU-GenSan Seal" class="h-14 sm:h-16 object-contain">
+                    <img src="Logo/COED-LOGO-4k.png" alt="COED Logo" class="h-14 sm:h-16 object-contain">
+                    <img src="Logo/LEMMA-logo.jpg" alt="LEMMA Logo" class="h-14 sm:h-16 object-contain rounded-full border border-ink-900">
+                </div>
+                <h1 class="text-3xl sm:text-4xl font-black text-ink-900 mb-2 tracking-tight">Contact MathTuro</h1>
+                <p class="text-base text-ink-700 max-w-2xl mx-auto font-medium">
+                    Have questions about Grade 7 Mathematics modules, researcher collaboration, or student accounts? Reach out to the MathTuro academic research team.
+                </p>
             </div>
-            <h1 class="text-4xl font-bold mb-4">Contact Us</h1>
-            <p class="text-lg max-w-2xl mx-auto">
-                Have questions? We'd love to hear from you. Send us a message and we'll respond as soon as possible.
-            </p>
-        </div>
-    </section>
 
-    <!-- Contact Content -->
-    <section id="main-content" class="py-12" aria-label="Contact form">
-        <div class="container mx-auto px-4">
-            <div class="max-w-4xl mx-auto">
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-                    <!-- Contact Form -->
-                    <div class="bg-white rounded-lg shadow-md p-8">
-                        <h2 class="text-2xl font-bold text-gray-800 mb-6">Send us a Message</h2>
-                        <form id="contactForm" class="space-y-4">
-                            <div>
-                                <label for="name" class="block text-sm font-medium text-gray-700 mb-1">
-                                    Your Name
-                                </label>
-                                <input
-                                    type="text"
-                                    id="name"
-                                    name="name"
-                                    required
-                                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                    placeholder="John Doe"
-                                >
-                            </div>
-                            <div>
-                                <label for="email" class="block text-sm font-medium text-gray-700 mb-1">
-                                    Email Address
-                                </label>
-                                <input
-                                    type="email"
-                                    id="email"
-                                    name="email"
-                                    required
-                                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                    placeholder="you@example.com"
-                                >
-                            </div>
-                            <div>
-                                <label for="subject" class="block text-sm font-medium text-gray-700 mb-1">
-                                    Subject
-                                </label>
-                                <input
-                                    type="text"
-                                    id="subject"
-                                    name="subject"
-                                    required
-                                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                    placeholder="How can we help?"
-                                >
-                            </div>
-                            <div>
-                                <label for="message" class="block text-sm font-medium text-gray-700 mb-1">
-                                    Message
-                                </label>
-                                <textarea
-                                    id="message"
-                                    name="message"
-                                    required
-                                    rows="5"
-                                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                    placeholder="Your message here..."
-                                ></textarea>
-                            </div>
-                            <button
-                                type="submit"
-                                class="w-full py-2 px-4 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+            <!-- Grid Layout -->
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+                <!-- Contact Form -->
+                <div class="lg:col-span-7 bg-white border-2 border-ink-900 rounded-2xl p-6 sm:p-8 shadow-[4px_4px_0_0_#1c1b1a]">
+                    <h2 class="text-2xl font-black text-ink-900 mb-2 tracking-tight">Send Us a Message</h2>
+                    <p class="text-sm text-ink-500 mb-6 font-semibold">We will respond to your educational inquiry promptly.</p>
+
+                    <form id="contactForm" class="space-y-4">
+                        <div>
+                            <label for="name" class="block text-sm font-bold text-ink-900 mb-1.5">
+                                Full Name <span class="text-red-600">*</span>
+                            </label>
+                            <input
+                                type="text"
+                                id="name"
+                                name="name"
+                                required
+                                class="w-full px-4 py-2.5 bg-paper-50 border-2 border-ink-900 rounded-xl text-ink-900 font-semibold focus:outline-none focus:bg-white focus:shadow-[2px_2px_0_0_#1c1b1a] transition-all text-sm"
+                                placeholder="e.g., Juan Dela Cruz"
                             >
-                                Send Message
-                            </button>
-                        </form>
+                        </div>
+                        <div>
+                            <label for="email" class="block text-sm font-bold text-ink-900 mb-1.5">
+                                Email Address <span class="text-red-600">*</span>
+                            </label>
+                            <input
+                                type="email"
+                                id="email"
+                                name="email"
+                                required
+                                class="w-full px-4 py-2.5 bg-paper-50 border-2 border-ink-900 rounded-xl text-ink-900 font-semibold focus:outline-none focus:bg-white focus:shadow-[2px_2px_0_0_#1c1b1a] transition-all text-sm"
+                                placeholder="juan.delacruz@deped.gov.ph"
+                            >
+                        </div>
+                        <div>
+                            <label for="affiliation" class="block text-sm font-bold text-ink-900 mb-1.5">
+                                School / Division / Institution
+                            </label>
+                            <input
+                                type="text"
+                                id="affiliation"
+                                name="affiliation"
+                                class="w-full px-4 py-2.5 bg-paper-50 border-2 border-ink-900 rounded-xl text-ink-900 font-semibold focus:outline-none focus:bg-white focus:shadow-[2px_2px_0_0_#1c1b1a] transition-all text-sm"
+                                placeholder="e.g., General Santos City National High School"
+                            >
+                        </div>
+                        <div>
+                            <label for="subject" class="block text-sm font-bold text-ink-900 mb-1.5">
+                                Subject <span class="text-red-600">*</span>
+                            </label>
+                            <input
+                                type="text"
+                                id="subject"
+                                name="subject"
+                                required
+                                class="w-full px-4 py-2.5 bg-paper-50 border-2 border-ink-900 rounded-xl text-ink-900 font-semibold focus:outline-none focus:bg-white focus:shadow-[2px_2px_0_0_#1c1b1a] transition-all text-sm"
+                                placeholder="e.g., Grade 7 Module Access Inquiry"
+                            >
+                        </div>
+                        <div>
+                            <label for="message" class="block text-sm font-bold text-ink-900 mb-1.5">
+                                Message <span class="text-red-600">*</span>
+                            </label>
+                            <textarea
+                                id="message"
+                                name="message"
+                                required
+                                rows="4"
+                                class="w-full px-4 py-2.5 bg-paper-50 border-2 border-ink-900 rounded-xl text-ink-900 font-semibold focus:outline-none focus:bg-white focus:shadow-[2px_2px_0_0_#1c1b1a] transition-all text-sm"
+                                placeholder="Write your message here..."
+                            ></textarea>
+                        </div>
+                        <button
+                            type="submit"
+                            class="w-full py-3 px-6 bg-forest-600 text-white font-black text-sm uppercase tracking-wide rounded-xl border-2 border-ink-900 shadow-[3px_3px_0_0_#1c1b1a] hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-[4px_4px_0_0_#1c1b1a] active:translate-x-0.5 active:translate-y-0.5 active:shadow-[1px_1px_0_0_#1c1b1a] transition-all"
+                        >
+                            Submit Inquiry
+                        </button>
+                    </form>
+
+                    <div id="contactFeedback" class="hidden mt-4 p-4 rounded-xl bg-forest-100 border-2 border-ink-900 text-forest-900 text-sm font-bold text-center">
+                        Salamat! Your message has been received. Our academic team will respond via your provided email.
+                    </div>
+                </div>
+
+                <!-- Institutional Coordinates -->
+                <div class="lg:col-span-5 space-y-6">
+                    <!-- Location Card -->
+                    <div class="bg-white border-2 border-ink-900 rounded-2xl p-6 sm:p-7 shadow-[4px_4px_0_0_#1c1b1a] space-y-4">
+                        <h2 class="text-xl font-black text-ink-900 mb-3 flex items-center gap-2">
+                            <span>📍</span> Institutional Headquarters
+                        </h2>
+                        <div class="text-sm text-ink-700 space-y-1 leading-relaxed">
+                            <p class="font-bold text-ink-900">Mindanao State University - General Santos City</p>
+                            <p>College of Education &bull; LEMMA</p>
+                            <p>Brgy. Fatima, General Santos City</p>
+                            <p>9500 South Cotabato, Philippines</p>
+                        </div>
                     </div>
 
-                    <!-- Contact Information -->
-                    <div class="space-y-6">
-                        <div class="bg-white rounded-lg shadow-md p-8">
-                            <h2 class="text-2xl font-bold text-gray-800 mb-6">Contact Information</h2>
-                            <div class="space-y-4">
-                                <div class="flex items-start space-x-3">
-                                    <span class="text-blue-500 text-xl">📧</span>
-                                    <div>
-                                        <h3 class="font-medium text-gray-800">Email</h3>
-                                        <p class="text-gray-600">support@example.com</p>
-                                    </div>
+                    <!-- Contact Channels -->
+                    <div class="bg-white border-2 border-ink-900 rounded-2xl p-6 sm:p-7 shadow-[4px_4px_0_0_#1c1b1a] space-y-4">
+                        <h2 class="text-xl font-black text-ink-900 mb-3 flex items-center gap-2">
+                            <span>📞</span> Official Communications
+                        </h2>
+                        <div class="space-y-3 text-sm">
+                            <div class="flex items-start gap-3">
+                                <span class="font-bold text-base">📧</span>
+                                <div>
+                                    <p class="text-xs font-bold text-ink-500 uppercase">Academic Support</p>
+                                    <a href="mailto:mathturo.msugensan@gmail.com" class="font-bold text-forest-800 underline">
+                                        mathturo.msugensan@gmail.com
+                                    </a>
                                 </div>
-                                <div class="flex items-start space-x-3">
-                                    <span class="text-blue-500 text-xl">📞</span>
-                                    <div>
-                                        <h3 class="font-medium text-gray-800">Phone</h3>
-                                        <p class="text-gray-600">+1 (555) 123-4567</p>
-                                    </div>
+                            </div>
+                            <div class="flex items-start gap-3">
+                                <span class="font-bold text-base">📱</span>
+                                <div>
+                                    <p class="text-xs font-bold text-ink-500 uppercase">Research Hotline</p>
+                                    <p class="font-bold text-ink-900">+63 912 364 0851</p>
                                 </div>
-                                <div class="flex items-start space-x-3">
-                                    <span class="text-blue-500 text-xl">📍</span>
-                                    <div>
-                                        <h3 class="font-medium text-gray-800">Address</h3>
-                                        <p class="text-gray-600">123 Education Street<br>Learning City, LC 12345</p>
-                                    </div>
+                            </div>
+                            <div class="flex items-start gap-3">
+                                <span class="font-bold text-base">🏛️</span>
+                                <div>
+                                    <p class="text-xs font-bold text-ink-500 uppercase">MSU Trunkline</p>
+                                    <p class="font-bold text-ink-900">+63 (083) 552-4408</p>
                                 </div>
                             </div>
                         </div>
+                    </div>
 
-                        <div class="bg-white rounded-lg shadow-md p-8">
-                            <h2 class="text-xl font-bold text-gray-800 mb-4">Office Hours</h2>
-                            <div class="space-y-2 text-gray-600">
-                                <p><strong>Monday - Friday:</strong> 9:00 AM - 6:00 PM</p>
-                                <p><strong>Saturday:</strong> 10:00 AM - 4:00 PM</p>
-                                <p><strong>Sunday:</strong> Closed</p>
-                            </div>
+                    <!-- Office Hours -->
+                    <div class="bg-paper-100 border-2 border-ink-900 rounded-2xl p-6 shadow-[3px_3px_0_0_#1c1b1a]">
+                        <h3 class="font-black text-ink-900 text-sm uppercase tracking-wide mb-2 flex items-center gap-2">
+                            <span>🕒</span> Academic Office Hours
+                        </h3>
+                        <div class="text-xs font-semibold text-ink-700 space-y-1">
+                            <p><strong>Monday – Friday:</strong> 8:00 AM – 5:00 PM (PST / UTC+8)</p>
+                            <p><strong>Saturday – Sunday:</strong> Closed (Academic Recess)</p>
+                            <p class="text-ink-500 mt-2 italic">*Online learning modules and quiz submissions are active 24/7.*</p>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
-    </section>
+    </main>
 
     <!-- Footer -->
-    <footer class="bg-gray-800 text-gray-300 py-8">
-        <div class="container mx-auto px-4 text-center">
-            <p class="text-sm text-gray-500">&copy; 2026 MathTuro LMS. All rights reserved.</p>
+    <footer class="w-full bg-white border-t-2 border-ink-900 py-6 text-center text-xs font-bold text-ink-500 mt-8">
+        <div class="max-w-6xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-4">
+            <p>&copy; 2026 MathTuro LMS &bull; MSU-GSC College of Education &bull; LEMMA</p>
+            <div class="flex items-center gap-4">
+                <a href="terms.html" class="hover:text-ink-900 underline">Terms of Service</a>
+                <a href="privacy.html" class="hover:text-ink-900 underline">Privacy Policy</a>
+                <a href="contact.html" class="text-forest-600 underline">Contact Us</a>
+            </div>
         </div>
     </footer>
 
     <script>
         document.getElementById('contactForm').addEventListener('submit', function(e) {
             e.preventDefault();
-            alert('Thank you for your message! We will get back to you soon.');
+            document.getElementById('contactFeedback').classList.remove('hidden');
             this.reset();
         });
     </script>

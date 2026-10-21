@@ -3,154 +3,143 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script>
+        (function () {
+            try {
+                if (localStorage.getItem('mathturo_font_pref') === 'dyslexic') {
+                    document.documentElement.setAttribute('data-font', 'dyslexic');
+                }
+            } catch (e) { /* localStorage unavailable */ }
+        })();
+    </script>
     <link rel="stylesheet" href="../dist/styles.css">
     <script src="../shared/js/device.js"></script>
     <link rel="icon" type="image/png" href="Logo/MATHURO-LOGO-v2.png">
-    <title>Guest Modules</title>
+    <title>Guest Learning Modules - MathTuro LMS</title>
+    <link rel="stylesheet" href="shared/css/base.css">
     <script src="../shared/js/supabase-lib.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800;900&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Nunito:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
-        body { font-family: 'Inter', sans-serif; background: #f5f5f5; color: #1f2937; }
-        .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
-        h1 { color: #005801; font-size: 2.5rem; font-weight: 700; margin-bottom: 1rem; text-align: center; }
-        .filter-tabs { display: flex; justify-content: center; margin-bottom: 3rem; gap: 1rem; flex-wrap: wrap; }
-        .filter-tab { padding: 0.75rem 1.5rem; border: 1px solid #e5e7eb; border-radius: 25px; background: white; color: #6b7280; cursor: pointer; transition: all 0.3s ease; font-weight: 500; }
-        .filter-tab:hover { background: #f3f4f6; color: #005801; border-color: #005801; }
-        .filter-tab.active { background: #005801; color: white; border-color: #005801; }
-        .modules-grid { display: grid; grid-template-columns: repeat(5, minmax(180px, 1fr)); gap: 1.2rem; margin-bottom: 3rem; justify-items: start; }
-        .module-card { background: white; border-radius: 16px; padding: 1rem; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05); transition: all 0.3s ease; cursor: pointer; border: 2px solid transparent; min-width: 180px; max-width: 220px; }
-                @media (max-width: 768px) {
-                    .modules-grid {
-                        grid-template-columns: 1fr !important;
-                        gap: 1.2rem !important;
-                    }
-                    .module-card {
-                        max-width: 100% !important;
-                        min-width: 0 !important;
-                        width: 100% !important;
-                        margin: 0 0 1.5rem 0 !important;
-                        padding: 1.25rem !important;
-                        box-sizing: border-box;
-                    }
-                }
-        .module-card:hover { transform: translateY(-5px); box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1); border-color: #005801; }
-        .module-icon { width: 80px; height: 80px; border-radius: 20px; display: flex; align-items: center; justify-content: center; font-size: 2rem; margin-bottom: 1.5rem; }
-        .icon-green { background: linear-gradient(135deg, #005801 0%, #34C759 100%); color: white; }
-        .icon-purple { background: linear-gradient(135deg, #7C0058 0%, #C6008D 100%); color: white; }
-        .icon-orange { background: linear-gradient(135deg, #FEA501 0%, #FFC860 100%); color: white; }
-        .icon-blue { background: linear-gradient(135deg, #0066FF 0%, #00CCFF 100%); color: white; }
-        .module-title { font-size: 1.5rem; font-weight: 700; color: #1f2937; margin-bottom: 1rem; }
-        .module-description { color: #6b7280; line-height: 1.6; margin-bottom: 1.5rem; }
-        .view-btn { width: 100%; padding: 0.75rem; background: #005801; color: white; border: none; border-radius: 12px; font-weight: 600; cursor: pointer; transition: all 0.3s ease; font-size: 1rem; }
-        .view-btn:hover { background: #004601; }
-        .empty-state { text-align: center; padding: 4rem 0; grid-column: 1 / -1; }
-        .empty-state h3 { font-size: 1.5rem; color: #6b7280; margin-bottom: 0.5rem; }
-        .empty-state p { color: #9ca3af; max-width: 400px; margin: 0 auto; }
-        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.5); z-index: 1000; align-items: center; justify-content: center; }
-        .modal.active { display: flex; }
-        .modal-content { background: white; border-radius: 20px; padding: 2.5rem; max-width: 500px; width: 90%; text-align: center; animation: slideUp 0.3s ease; }
-        @keyframes slideUp { from { transform: translateY(30px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
-        .modal h2 { font-size: 1.5rem; color: #1f2937; margin-bottom: 1rem; font-weight: 700; }
-        .modal p { color: #6b7280; margin-bottom: 2rem; line-height: 1.6; }
-        .modal-buttons { display: flex; gap: 1rem; justify-content: center; }
-        .modal-btn { padding: 0.75rem 1.5rem; border-radius: 12px; font-weight: 600; cursor: pointer; transition: all 0.3s ease; border: none; font-size: 1rem; }
-        .modal-btn-primary { background: #005801; color: white; }
-        .modal-btn-primary:hover { background: #004601; }
-        .modal-btn-secondary { background: #e5e7eb; color: #374151; }
-        .modal-btn-secondary:hover { background: #d1d5db; }
-        .loading { text-align: center; padding: 4rem 0; }
-        .spinner { border: 4px solid #f3f4f6; border-top: 4px solid #005801; border-radius: 50%; width: 50px; height: 50px; animation: spin 1s linear infinite; margin: 0 auto 1rem; }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-        .loading p { color: #6b7280; font-size: 1rem; }
+        :root {
+            --font-family-display: 'Fredoka', system-ui, sans-serif;
+            --font-family-base: 'Nunito', system-ui, sans-serif;
+        }
+        body {
+            font-family: var(--font-family-base);
+            color: #1c1b1a;
+            background-color: #faf8f5;
+        }
+        h1, h2, h3, h4, .font-display {
+            font-family: var(--font-family-display);
+        }
+        .module-description {
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
     </style>
 </head>
-<body>
-    <div class="container">
-        <button onclick="window.history.back()" aria-label="Back" style="background:none;border:none;position:absolute;left:32px;top:32px;cursor:pointer;padding:0;z-index:10;">
-            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="none" viewBox="0 0 24 24" stroke="currentColor" style="color:#005801;">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
-            </svg>
-        </button>
-        <h1>Guest Modules</h1>
-        <div class="filter-tabs">
-            <button class="filter-tab active" data-quarter="all">All Modules</button>
-            <button class="filter-tab" data-quarter="1">Quarter 1</button>
-            <button class="filter-tab" data-quarter="2">Quarter 2</button>
-            <button class="filter-tab" data-quarter="3">Quarter 3</button>
-            <button class="filter-tab" data-quarter="4">Quarter 4</button>
-        </div>
-        <div id="loading" class="loading">
-            <div class="spinner"></div>
-            <p>Loading modules...</p>
-        </div>
-        <div id="modulesGrid" class="modules-grid"></div>
-        <div id="emptyState" class="empty-state" style="display: none;">
-            <h3>No Modules Found</h3>
-            <p>No modules are available for this quarter yet. Check back soon for new content!</p>
-        </div>
-    </div>
+<body class="bg-paper-50 min-h-screen text-ink-900 flex flex-col">
+    <!-- Skip Link for Accessibility -->
+    <a href="#main-content" class="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 bg-forest-600 text-white px-4 py-2 rounded-xl border-2 border-ink-900 shadow-[2px_2px_0_0_#1c1b1a] z-50 font-bold">
+        Skip to main content
+    </a>
 
-    <div id="loginModal" class="modal">
-        <div class="modal-content">
-            <h2>Login Required</h2>
-            <p>You need to sign up or sign in to view this module. Create an account to get access to all our learning resources.</p>
-            <div class="modal-buttons">
-                <button class="modal-btn modal-btn-primary" onclick="window.location.href='register.html'">Sign Up</button>
-                <button class="modal-btn modal-btn-secondary" onclick="document.getElementById('loginModal').classList.remove('active')">Cancel</button>
+    <!-- Top Navigation -->
+    <header class="w-full px-4 sm:px-6 lg:px-8 pt-4 pb-2">
+        <nav class="max-w-6xl mx-auto bg-paper-50 border-2 border-ink-900 rounded-2xl px-5 py-3.5 flex items-center justify-between shadow-[3px_3px_0_0_#1c1b1a]" aria-label="Main navigation">
+            <a href="index.html" class="flex items-center gap-3 group">
+                <img src="Logo/MATHURO-LOGO-v2.png" alt="MathTuro Logo" class="h-10 w-10 object-contain">
+                <span class="font-display font-bold text-xl sm:text-2xl tracking-tight text-ink-900">MathTuro</span>
+            </a>
+            <div class="flex items-center gap-2 sm:gap-4 text-sm font-bold">
+                <a href="about.html" class="px-3 py-1.5 rounded-xl hover:bg-paper-100 text-ink-900 transition-colors">About</a>
+                <a href="contact.html" class="px-3 py-1.5 rounded-xl hover:bg-paper-100 text-ink-900 transition-colors">Contact</a>
+                <a href="login.html" class="px-4 py-2 bg-forest-600 text-white rounded-xl border-2 border-ink-900 shadow-[2px_2px_0_0_#1c1b1a] hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-[3px_3px_0_0_#1c1b1a] transition-all">
+                    Login
+                </a>
+            </div>
+        </nav>
+    </header>
+
+    <!-- Main Content -->
+    <main id="main-content" class="flex-1 max-w-6xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+        <!-- Title & Filter Header -->
+        <div class="bg-white border-2 border-ink-900 rounded-2xl p-6 sm:p-8 shadow-[4px_4px_0_0_#1c1b1a] flex flex-col md:flex-row md:items-center md:justify-between gap-6">
+            <div>
+                <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-forest-100 border-2 border-ink-900 text-forest-900 text-xs font-bold uppercase tracking-wide mb-3">
+                    Guest Curriculum Catalog
+                </div>
+                <h1 class="text-3xl sm:text-4xl font-black text-ink-900 tracking-tight">Grade 7 Math Modules</h1>
+                <p class="text-sm sm:text-base text-ink-700 font-semibold mt-1">Preview curriculum modules aligned with Philippine DepEd competencies</p>
+            </div>
+
+            <!-- Quarter Tabs -->
+            <div class="flex flex-wrap gap-2" id="quarterTabs" role="tablist" aria-label="Quarter filters">
+                <button type="button" class="quarter-tab px-4 py-2 rounded-xl text-xs sm:text-sm font-black uppercase tracking-wide border-2 border-ink-900 shadow-[2px_2px_0_0_#1c1b1a] transition-all bg-forest-600 text-white" data-quarter="all">All</button>
+                <button type="button" class="quarter-tab px-4 py-2 rounded-xl text-xs sm:text-sm font-black uppercase tracking-wide border-2 border-ink-900 shadow-[2px_2px_0_0_#1c1b1a] transition-all bg-paper-50 text-ink-900 hover:bg-paper-100" data-quarter="1">Q1</button>
+                <button type="button" class="quarter-tab px-4 py-2 rounded-xl text-xs sm:text-sm font-black uppercase tracking-wide border-2 border-ink-900 shadow-[2px_2px_0_0_#1c1b1a] transition-all bg-paper-50 text-ink-900 hover:bg-paper-100" data-quarter="2">Q2</button>
+                <button type="button" class="quarter-tab px-4 py-2 rounded-xl text-xs sm:text-sm font-black uppercase tracking-wide border-2 border-ink-900 shadow-[2px_2px_0_0_#1c1b1a] transition-all bg-paper-50 text-ink-900 hover:bg-paper-100" data-quarter="3">Q3</button>
+                <button type="button" class="quarter-tab px-4 py-2 rounded-xl text-xs sm:text-sm font-black uppercase tracking-wide border-2 border-ink-900 shadow-[2px_2px_0_0_#1c1b1a] transition-all bg-paper-50 text-ink-900 hover:bg-paper-100" data-quarter="4">Q4</button>
+            </div>
+        </div>
+
+        <!-- Modules Grid Container -->
+        <div id="modulesGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 items-stretch">
+            <div class="col-span-full py-16 text-center bg-white border-2 border-ink-900 rounded-2xl shadow-[4px_4px_0_0_#1c1b1a]">
+                <div class="inline-block animate-spin rounded-full h-10 w-10 border-4 border-forest-600 border-t-transparent mb-4"></div>
+                <p class="text-base font-bold text-ink-700">Loading learning modules from Supabase...</p>
+            </div>
+        </div>
+    </main>
+
+    <!-- Sign-in Required Modal -->
+    <div id="signinModal" class="hidden fixed inset-0 bg-ink-900/60 backdrop-blur-xs flex items-center justify-center z-50 p-4" role="dialog" aria-modal="true" aria-labelledby="signinTitle">
+        <div class="bg-white border-2 border-ink-900 rounded-2xl max-w-md w-full p-6 sm:p-8 shadow-[6px_6px_0_0_#1c1b1a] animate-in fade-in zoom-in-95 duration-150">
+            <div class="w-12 h-12 rounded-xl bg-forest-100 border-2 border-ink-900 flex items-center justify-center text-2xl mb-4">
+                🔒
+            </div>
+            <h2 id="signinTitle" class="text-2xl font-black text-ink-900 mb-2">Student Access Required</h2>
+            <p class="text-sm font-semibold text-ink-700 mb-6 leading-relaxed">
+                To view interactive lessons, download PDF materials, and take diagnostic pre-tests, please sign in with your verified student account.
+            </p>
+            <div class="flex items-center gap-3 justify-end">
+                <button type="button" onclick="closeSigninModal()" class="px-4 py-2.5 bg-paper-50 text-ink-900 font-bold text-sm rounded-xl border-2 border-ink-900 shadow-[2px_2px_0_0_#1c1b1a] hover:bg-paper-100 transition-all">
+                    Cancel
+                </button>
+                <a href="login.html" class="px-5 py-2.5 bg-forest-600 text-white font-black text-sm rounded-xl border-2 border-ink-900 shadow-[3px_3px_0_0_#1c1b1a] hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-[4px_4px_0_0_#1c1b1a] transition-all">
+                    Sign In &rarr;
+                </a>
             </div>
         </div>
     </div>
 
+    <!-- Footer -->
+    <footer class="w-full bg-white border-t-2 border-ink-900 py-6 text-center text-xs font-bold text-ink-500 mt-12">
+        <div class="max-w-6xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-4">
+            <p>&copy; 2026 MathTuro LMS &bull; MSU-GSC College of Education &bull; LEMMA</p>
+            <div class="flex items-center gap-4">
+                <a href="terms.html" class="hover:text-ink-900 underline">Terms of Service</a>
+                <a href="privacy.html" class="hover:text-ink-900 underline">Privacy Policy</a>
+                <a href="contact.html" class="hover:text-ink-900 underline">Contact Us</a>
+            </div>
+        </div>
+    </footer>
+
     <script src="../shared/js/runtime-config.js"></script>
     <script src="../shared/js/config.js"></script>
     <script src="../shared/js/supabase.js"></script>
-    <script src="../shared/js/utils.js"></script>
-
     <script>
         let allModules = [];
-        let filteredModules = [];
+        let activeQuarterFilter = 'all';
 
-        document.addEventListener('DOMContentLoaded', async function() {
-            try {
-                await loadModules();
-                setupEventListeners();
-                filterByQuarter('all');
-            } catch (error) {
-                console.error('Error initializing page:', error);
-                displayError('Failed to load modules');
-            }
+        document.addEventListener('DOMContentLoaded', async () => {
+            setupQuarterTabs();
+            await loadModules();
         });
-
-        async function loadModules() {
-            try {
-                const { data, error } = await getSupabase()
-                    .from('modules')
-                    .select('*')
-                    .order('title');
-
-                if (error) throw error;
-                allModules = data;
-                filteredModules = [...allModules];
-            } catch (error) {
-                console.error('Error loading modules:', error);
-                displayError('Failed to fetch modules');
-            }
-        }
-
-        function setupEventListeners() {
-            document.querySelectorAll('.filter-tab').forEach(button => {
-                button.addEventListener('click', function() {
-                    const quarter = this.getAttribute('data-quarter');
-                    filterByQuarter(quarter);
-                });
-            });
-
-            document.getElementById('loginModal').addEventListener('click', function(e) {
-                if (e.target === this) {
-                    this.classList.remove('active');
-                }
-            });
-        }
 
         function normalizeQuarterValue(value) {
             if (value === null || value === undefined || value === '') return '';
@@ -158,67 +147,132 @@
             return ['1', '2', '3', '4'].includes(quarter) ? quarter : '';
         }
 
-        function filterByQuarter(quarter) {
-            document.querySelectorAll('.filter-tab').forEach(button => {
-                button.classList.remove('active');
-                if (button.getAttribute('data-quarter') === quarter) {
-                    button.classList.add('active');
+        function setupQuarterTabs() {
+            document.querySelectorAll('.quarter-tab').forEach(tab => {
+                tab.addEventListener('click', () => {
+                    activeQuarterFilter = tab.dataset.quarter || 'all';
+                    updateQuarterTabs();
+                    renderModules();
+                });
+            });
+            updateQuarterTabs();
+        }
+
+        function updateQuarterTabs() {
+            document.querySelectorAll('.quarter-tab').forEach(tab => {
+                const isActive = (tab.dataset.quarter || 'all') === activeQuarterFilter;
+                if (isActive) {
+                    tab.className = 'quarter-tab px-4 py-2 rounded-xl text-xs sm:text-sm font-black uppercase tracking-wide border-2 border-ink-900 shadow-[2px_2px_0_0_#1c1b1a] transition-all bg-forest-600 text-white';
+                } else {
+                    tab.className = 'quarter-tab px-4 py-2 rounded-xl text-xs sm:text-sm font-black uppercase tracking-wide border-2 border-ink-900 shadow-[2px_2px_0_0_#1c1b1a] transition-all bg-paper-50 text-ink-900 hover:bg-paper-100';
                 }
             });
-
-            if (quarter === 'all') {
-                filteredModules = [...allModules];
-            } else {
-                filteredModules = allModules.filter(module => normalizeQuarterValue(module?.quarter ?? module?.module_quarter ?? module?.quarter_number) === quarter);
-            }
-
-            displayModules(filteredModules);
         }
 
-        function displayModules(modules) {
-            const modulesGrid = document.getElementById('modulesGrid');
-            const loadingDiv = document.getElementById('loading');
-            const emptyStateDiv = document.getElementById('emptyState');
+        function resolveLearningMaterialUrl(rawPath) {
+            if (!rawPath) return '';
+            const value = String(rawPath).trim();
+            if (!value) return '';
+            if (/^https?:\/\//i.test(value)) return value;
 
-            loadingDiv.style.display = 'none';
+            const normalizedPath = value
+                .replace(/^\/+/, '')
+                .replace(/^learning-materials\//i, '');
+            if (!normalizedPath) return '';
 
-            if (modules.length === 0) {
-                modulesGrid.style.display = 'none';
-                emptyStateDiv.style.display = 'block';
-            } else {
-                modulesGrid.style.display = 'grid';
-                emptyStateDiv.style.display = 'none';
+            try {
+                const { data } = getSupabase().storage.from('learning-materials').getPublicUrl(normalizedPath);
+                return data?.publicUrl || value;
+            } catch (error) {
+                console.warn('Failed to resolve URL:', error);
+                return value;
+            }
+        }
 
-                modulesGrid.innerHTML = modules.map(module => `
-                    <div class="module-card" onclick="showLoginModal()">
-                        <div class="module-icon icon-green">📚</div>
-                        <h3 class="module-title">${module.title}</h3>
-                        <p class="module-description" style="margin-bottom: 0.5rem; color: #005801; font-weight: 600;">${(() => {
-                            const quarter = normalizeQuarterValue(module?.quarter ?? module?.module_quarter ?? module?.quarter_number);
-                            return quarter ? `Quarter ${quarter}` : 'No Quarter';
-                        })()}</p>
-                        <p class="module-description">${module.description || 'No description available'}</p>
-                        <button class="view-btn">View Module</button>
+        async function loadModules() {
+            try {
+                const { data, error } = await getSupabase()
+                    .from('modules')
+                    .select('*')
+                    .order('created_at', { ascending: false });
+
+                if (error) throw error;
+                allModules = data || [];
+                renderModules();
+            } catch (error) {
+                console.error('Error loading modules:', error);
+                const container = document.getElementById('modulesGrid');
+                container.innerHTML = `
+                    <div class="col-span-full py-12 px-4 text-center bg-white border-2 border-ink-900 rounded-2xl shadow-[4px_4px_0_0_#1c1b1a]">
+                        <p class="font-bold text-red-600 mb-2">Notice: Unable to reach module service.</p>
+                        <p class="text-sm text-ink-500">Please check your internet connection or sign in to continue.</p>
                     </div>
-                `).join('');
+                `;
             }
         }
 
-        function showLoginModal() {
-            document.getElementById('loginModal').classList.add('active');
+        function renderModules() {
+            const container = document.getElementById('modulesGrid');
+            const filtered = activeQuarterFilter === 'all'
+                ? allModules
+                : allModules.filter(module => normalizeQuarterValue(module?.quarter ?? module?.module_quarter ?? module?.quarter_number) === activeQuarterFilter);
+
+            if (filtered.length === 0) {
+                container.innerHTML = `
+                    <div class="col-span-full py-16 px-4 text-center bg-white border-2 border-ink-900 rounded-2xl shadow-[4px_4px_0_0_#1c1b1a]">
+                        <p class="text-lg font-black text-ink-900 mb-1">No Modules Found for Quarter ${activeQuarterFilter}</p>
+                        <p class="text-sm text-ink-500 font-semibold">Learning modules for this period are currently being curated by our educators.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = filtered.map(module => {
+                const quarter = normalizeQuarterValue(module?.quarter ?? module?.module_quarter ?? module?.quarter_number);
+                const subtitle = module.topic || module.subject || module.grade_level_text || 'Grade 7 Mathematics';
+                const description = module.description || 'Interactive learning module with lessons, presentations, and competency-aligned assessments.';
+                const thumbnailSource = module.thumbnail_url || module.cover_image || module.image_url || '';
+                const thumbnail = resolveLearningMaterialUrl(thumbnailSource) || 'Logo/MATHURO-LOGO-v2.png';
+
+                return `
+                    <article class="bg-white border-2 border-ink-900 rounded-2xl overflow-hidden shadow-[4px_4px_0_0_#1c1b1a] hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-[6px_6px_0_0_#1c1b1a] transition-all flex flex-col cursor-pointer" onclick="openSigninModal()">
+                        <div class="h-44 bg-paper-100 border-b-2 border-ink-900 relative overflow-hidden flex items-center justify-center p-4">
+                            <img src="${thumbnail}" alt="${escapeHtml(module.title || 'Module')}" class="max-h-full max-w-full object-contain" onerror="this.onerror=null; this.src='Logo/MATHURO-LOGO-v2.png';">
+                            <span class="absolute top-3 right-3 px-3 py-1 rounded-full bg-forest-100 border-2 border-ink-900 text-forest-900 text-xs font-black uppercase tracking-wider shadow-[2px_2px_0_0_#1c1b1a]">
+                                ${quarter ? `Quarter ${quarter}` : 'Module'}
+                            </span>
+                        </div>
+                        <div class="p-5 flex flex-col flex-1">
+                            <p class="text-xs font-black text-forest-800 uppercase tracking-wide mb-1.5">${escapeHtml(subtitle)}</p>
+                            <h2 class="text-xl font-black text-ink-900 tracking-tight mb-2 line-clamp-2">${escapeHtml(module.title || 'Untitled Module')}</h2>
+                            <p class="text-xs text-ink-700 leading-relaxed font-semibold mb-6 flex-1 module-description">${escapeHtml(description)}</p>
+                            <button type="button" class="w-full py-2.5 px-4 bg-paper-50 text-ink-900 font-black text-xs uppercase tracking-wide rounded-xl border-2 border-ink-900 shadow-[2px_2px_0_0_#1c1b1a] hover:bg-forest-600 hover:text-white transition-all text-center">
+                                Open Module &rarr;
+                            </button>
+                        </div>
+                    </article>
+                `;
+            }).join('');
         }
 
-        function displayError(message) {
-            const modulesGrid = document.getElementById('modulesGrid');
-            const loadingDiv = document.getElementById('loading');
-            const emptyStateDiv = document.getElementById('emptyState');
-
-            loadingDiv.style.display = 'none';
-            modulesGrid.style.display = 'none';
-            emptyStateDiv.style.display = 'block';
-            emptyStateDiv.querySelector('h3').textContent = 'Error';
-            emptyStateDiv.querySelector('p').textContent = message;
+        function openSigninModal() {
+            document.getElementById('signinModal').classList.remove('hidden');
         }
+
+        function closeSigninModal() {
+            document.getElementById('signinModal').classList.add('hidden');
+        }
+
+        function escapeHtml(text) {
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        document.getElementById('signinModal').addEventListener('click', (e) => {
+            if (e.target.id === 'signinModal') closeSigninModal();
+        });
     </script>
 </body>
 </html>

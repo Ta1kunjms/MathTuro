@@ -3,165 +3,131 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script>
+        (function () {
+            try {
+                if (localStorage.getItem('mathturo_font_pref') === 'dyslexic') {
+                    document.documentElement.setAttribute('data-font', 'dyslexic');
+                }
+            } catch (e) { /* localStorage unavailable */ }
+        })();
+    </script>
     <link rel="stylesheet" href="../dist/styles.css">
     <script src="../shared/js/device.js"></script>
     <link rel="icon" type="image/png" href="Logo/MATHURO-LOGO-v2.png">
     <title>Learning Modules - MathTuro LMS</title>
+    <link rel="stylesheet" href="shared/css/base.css">
     <script src="../shared/js/supabase-lib.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Nunito:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
-        body { font-family: 'Inter', system-ui, sans-serif; }
-                @media (max-width: 768px) {
-                    .module-card,
-                    .lesson-card,
-                    .quiz-card,
-                    .video-card {
-                        max-width: 100% !important;
-                        min-width: 0 !important;
-                        width: 100% !important;
-                        margin: 0 0 1.5rem 0 !important;
-                        padding: 1.25rem !important;
-                        box-sizing: border-box;
-                    }
-                    .modules-grid,
-                    .cards-row {
-                        display: flex !important;
-                        flex-direction: column !important;
-                        gap: 1.5rem !important;
-                    }
-                }
-        
-        .gradient-text {
-            background: linear-gradient(135deg, #005801 0%, #22c55e 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
+        :root {
+            --font-family-display: 'Fredoka', system-ui, sans-serif;
+            --font-family-base: 'Nunito', system-ui, sans-serif;
         }
-        
-        .glass-sidebar {
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(20px);
+        body {
+            font-family: var(--font-family-base);
+            color: #1c1b1a;
+            background-color: #faf8f5;
         }
-        
-        .sidebar-link {
-            transition: all 0.2s ease;
+        h1, h2, h3, h4, .font-display {
+            font-family: var(--font-family-display);
         }
-        
-        .sidebar-link:hover, .sidebar-link.active {
-            background: linear-gradient(135deg, #005801 0%, #16a34a 100%);
-            color: white;
-        }
-        
-        .sidebar-link.active {
-            box-shadow: 0 4px 15px rgba(0, 88, 1, 0.3);
-        }
-        
-        .module-card {
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            width: 100%;
-            max-width: 250px;
-            cursor: pointer;
-            background: #ffffff;
-            border: 1px solid #e5e7eb;
-        }
-        
-        .module-card:hover {
-            transform: translateY(-6px);
-            box-shadow: 0 24px 40px -18px rgba(17, 24, 39, 0.18);
-        }
-
-        .module-preview-image {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-
-        .module-preview-frame {
-            width: 100%;
-            height: 100%;
-            border: 0;
-            background: #fff;
-        }
-
-        .module-preview-shell {
-            width: 100%;
-            height: 150px;
-            background: linear-gradient(180deg, #f8fafc 0%, #e5e7eb 100%);
-            overflow: hidden;
-            border-radius: 1.4rem 1.4rem 0 0;
-        }
-
         .module-description {
             display: -webkit-box;
             -webkit-line-clamp: 3;
             -webkit-box-orient: vertical;
             overflow: hidden;
         }
-
-        .module-chip {
-            display: inline-flex;
-            align-items: center;
-            padding: 0.35rem 0.75rem;
-            border-radius: 999px;
-            font-size: 0.72rem;
-            font-weight: 600;
-            line-height: 1;
-        }
-
-        .module-chip-primary {
-            background: #ecfdf3;
-            color: #005801;
-        }
-
-        .module-chip-secondary {
-            background: #f3f4f6;
-            color: #6b7280;
-        }
-        
-        ::-webkit-scrollbar { width: 6px; }
-        ::-webkit-scrollbar-track { background: #f1f1f1; }
-        ::-webkit-scrollbar-thumb { background: #005801; border-radius: 3px; }
     </style>
 </head>
-<body class="bg-gray-50 min-h-screen">
-    <main class="min-h-screen max-w-7xl mx-auto px-4 py-8">
+<body class="bg-paper-50 min-h-screen text-ink-900 flex flex-col">
+    <!-- Skip Link for Accessibility -->
+    <a href="#main-content" class="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 bg-forest-600 text-white px-4 py-2 rounded-xl border-2 border-ink-900 shadow-[2px_2px_0_0_#1c1b1a] z-50 font-bold">
+        Skip to main content
+    </a>
 
-        <div class="mb-8 relative">
-            <button onclick="window.history.back()" aria-label="Back" style="background:none;border:none;position:absolute;left:-48px;top:0;cursor:pointer;padding:0;z-index:10;">
-                <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="none" viewBox="0 0 24 24" stroke="currentColor" style="color:#005801;">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
-                </svg>
-            </button>
-            <h1 class="text-3xl font-bold text-gray-800">Learning Modules</h1>
-            <p class="text-gray-500">Browse modules by quarter</p>
+    <!-- Top Navigation -->
+    <header class="w-full px-4 sm:px-6 lg:px-8 pt-4 pb-2">
+        <nav class="max-w-6xl mx-auto bg-paper-50 border-2 border-ink-900 rounded-2xl px-5 py-3.5 flex items-center justify-between shadow-[3px_3px_0_0_#1c1b1a]" aria-label="Main navigation">
+            <a href="index.html" class="flex items-center gap-3 group">
+                <img src="Logo/MATHURO-LOGO-v2.png" alt="MathTuro Logo" class="h-10 w-10 object-contain">
+                <span class="font-display font-bold text-xl sm:text-2xl tracking-tight text-ink-900">MathTuro</span>
+            </a>
+            <div class="flex items-center gap-2 sm:gap-4 text-sm font-bold">
+                <a href="about.html" class="px-3 py-1.5 rounded-xl hover:bg-paper-100 text-ink-900 transition-colors">About</a>
+                <a href="contact.html" class="px-3 py-1.5 rounded-xl hover:bg-paper-100 text-ink-900 transition-colors">Contact</a>
+                <a href="login.html" class="px-4 py-2 bg-forest-600 text-white rounded-xl border-2 border-ink-900 shadow-[2px_2px_0_0_#1c1b1a] hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-[3px_3px_0_0_#1c1b1a] transition-all">
+                    Login
+                </a>
+            </div>
+        </nav>
+    </header>
+
+    <!-- Main Content -->
+    <main id="main-content" class="flex-1 max-w-6xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+        <!-- Title & Filter Header -->
+        <div class="bg-white border-2 border-ink-900 rounded-2xl p-6 sm:p-8 shadow-[4px_4px_0_0_#1c1b1a] flex flex-col md:flex-row md:items-center md:justify-between gap-6">
+            <div>
+                <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-forest-100 border-2 border-ink-900 text-forest-900 text-xs font-bold uppercase tracking-wide mb-3">
+                    DepEd Grade 7 Mathematics
+                </div>
+                <h1 class="text-3xl sm:text-4xl font-black text-ink-900 tracking-tight">Learning Modules</h1>
+                <p class="text-sm sm:text-base text-ink-700 font-semibold mt-1">Explore curriculum competencies structured by school quarter</p>
+            </div>
+
+            <!-- Quarter Tabs -->
+            <div class="flex flex-wrap gap-2" id="quarterTabs" role="tablist" aria-label="Quarter filters">
+                <button type="button" class="quarter-tab px-4 py-2 rounded-xl text-xs sm:text-sm font-black uppercase tracking-wide border-2 border-ink-900 shadow-[2px_2px_0_0_#1c1b1a] transition-all bg-forest-600 text-white" data-quarter="all">All</button>
+                <button type="button" class="quarter-tab px-4 py-2 rounded-xl text-xs sm:text-sm font-black uppercase tracking-wide border-2 border-ink-900 shadow-[2px_2px_0_0_#1c1b1a] transition-all bg-paper-50 text-ink-900 hover:bg-paper-100" data-quarter="1">Q1</button>
+                <button type="button" class="quarter-tab px-4 py-2 rounded-xl text-xs sm:text-sm font-black uppercase tracking-wide border-2 border-ink-900 shadow-[2px_2px_0_0_#1c1b1a] transition-all bg-paper-50 text-ink-900 hover:bg-paper-100" data-quarter="2">Q2</button>
+                <button type="button" class="quarter-tab px-4 py-2 rounded-xl text-xs sm:text-sm font-black uppercase tracking-wide border-2 border-ink-900 shadow-[2px_2px_0_0_#1c1b1a] transition-all bg-paper-50 text-ink-900 hover:bg-paper-100" data-quarter="3">Q3</button>
+                <button type="button" class="quarter-tab px-4 py-2 rounded-xl text-xs sm:text-sm font-black uppercase tracking-wide border-2 border-ink-900 shadow-[2px_2px_0_0_#1c1b1a] transition-all bg-paper-50 text-ink-900 hover:bg-paper-100" data-quarter="4">Q4</button>
+            </div>
         </div>
 
-        <div class="mb-6 flex flex-wrap gap-2" id="quarterTabs">
-            <button type="button" class="quarter-tab px-4 py-2 rounded-xl text-sm font-medium bg-brand text-white" data-quarter="all">All Modules</button>
-            <button type="button" class="quarter-tab px-4 py-2 rounded-xl text-sm font-medium bg-white text-gray-700 border border-gray-200 hover:border-brand/40" data-quarter="1">Quarter 1</button>
-            <button type="button" class="quarter-tab px-4 py-2 rounded-xl text-sm font-medium bg-white text-gray-700 border border-gray-200 hover:border-brand/40" data-quarter="2">Quarter 2</button>
-            <button type="button" class="quarter-tab px-4 py-2 rounded-xl text-sm font-medium bg-white text-gray-700 border border-gray-200 hover:border-brand/40" data-quarter="3">Quarter 3</button>
-            <button type="button" class="quarter-tab px-4 py-2 rounded-xl text-sm font-medium bg-white text-gray-700 border border-gray-200 hover:border-brand/40" data-quarter="4">Quarter 4</button>
-        </div>
-
-        <div id="modulesGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-5 justify-items-start items-start">
-            <div class="col-span-full py-12 text-center">
-                <div class="inline-block animate-spin rounded-full h-8 w-8 border-4 border-brand border-t-transparent mb-4"></div>
-                <p class="text-gray-500">Loading modules...</p>
+        <!-- Modules Grid Container -->
+        <div id="modulesGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 items-stretch">
+            <div class="col-span-full py-16 text-center bg-white border-2 border-ink-900 rounded-2xl shadow-[4px_4px_0_0_#1c1b1a]">
+                <div class="inline-block animate-spin rounded-full h-10 w-10 border-4 border-forest-600 border-t-transparent mb-4"></div>
+                <p class="text-base font-bold text-ink-700">Loading learning modules from Supabase...</p>
             </div>
         </div>
     </main>
 
-    <div id="signinModal" class="hidden fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-        <div class="bg-white rounded-2xl max-w-md w-full p-6">
-            <h2 class="text-xl font-bold text-gray-800 mb-2">Sign in required</h2>
-            <p class="text-gray-600 mb-6">You need to sign in before you can view module content.</p>
-            <div class="flex gap-3 justify-end">
-                <button type="button" onclick="closeSigninModal()" class="px-4 py-2 border border-gray-200 text-gray-700 rounded-xl hover:bg-gray-50">Cancel</button>
-                <a href="login.html" class="px-4 py-2 bg-brand text-white rounded-xl hover:bg-brand-dark">Sign in</a>
+    <!-- Sign-in Required Modal -->
+    <div id="signinModal" class="hidden fixed inset-0 bg-ink-900/60 backdrop-blur-xs flex items-center justify-center z-50 p-4" role="dialog" aria-modal="true" aria-labelledby="signinTitle">
+        <div class="bg-white border-2 border-ink-900 rounded-2xl max-w-md w-full p-6 sm:p-8 shadow-[6px_6px_0_0_#1c1b1a] animate-in fade-in zoom-in-95 duration-150">
+            <div class="w-12 h-12 rounded-xl bg-forest-100 border-2 border-ink-900 flex items-center justify-center text-2xl mb-4">
+                🔒
+            </div>
+            <h2 id="signinTitle" class="text-2xl font-black text-ink-900 mb-2">Student Access Required</h2>
+            <p class="text-sm font-semibold text-ink-700 mb-6 leading-relaxed">
+                To view interactive lessons, download PDF materials, and take diagnostic pre-tests, please sign in with your verified student account.
+            </p>
+            <div class="flex items-center gap-3 justify-end">
+                <button type="button" onclick="closeSigninModal()" class="px-4 py-2.5 bg-paper-50 text-ink-900 font-bold text-sm rounded-xl border-2 border-ink-900 shadow-[2px_2px_0_0_#1c1b1a] hover:bg-paper-100 transition-all">
+                    Cancel
+                </button>
+                <a href="login.html" class="px-5 py-2.5 bg-forest-600 text-white font-black text-sm rounded-xl border-2 border-ink-900 shadow-[3px_3px_0_0_#1c1b1a] hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-[4px_4px_0_0_#1c1b1a] transition-all">
+                    Sign In &rarr;
+                </a>
             </div>
         </div>
     </div>
+
+    <!-- Footer -->
+    <footer class="w-full bg-white border-t-2 border-ink-900 py-6 text-center text-xs font-bold text-ink-500 mt-12">
+        <div class="max-w-6xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-4">
+            <p>&copy; 2026 MathTuro LMS &bull; MSU-GSC College of Education &bull; LEMMA</p>
+            <div class="flex items-center gap-4">
+                <a href="terms.html" class="hover:text-ink-900 underline">Terms of Service</a>
+                <a href="privacy.html" class="hover:text-ink-900 underline">Privacy Policy</a>
+                <a href="contact.html" class="hover:text-ink-900 underline">Contact Us</a>
+            </div>
+        </div>
+    </footer>
 
     <script src="../shared/js/runtime-config.js"></script>
     <script src="../shared/js/config.js"></script>
@@ -195,36 +161,30 @@
         function updateQuarterTabs() {
             document.querySelectorAll('.quarter-tab').forEach(tab => {
                 const isActive = (tab.dataset.quarter || 'all') === activeQuarterFilter;
-                tab.classList.toggle('bg-brand', isActive);
-                tab.classList.toggle('text-white', isActive);
-                tab.classList.toggle('bg-white', !isActive);
-                tab.classList.toggle('text-gray-700', !isActive);
-                tab.classList.toggle('border', !isActive);
-                tab.classList.toggle('border-gray-200', !isActive);
+                if (isActive) {
+                    tab.className = 'quarter-tab px-4 py-2 rounded-xl text-xs sm:text-sm font-black uppercase tracking-wide border-2 border-ink-900 shadow-[2px_2px_0_0_#1c1b1a] transition-all bg-forest-600 text-white';
+                } else {
+                    tab.className = 'quarter-tab px-4 py-2 rounded-xl text-xs sm:text-sm font-black uppercase tracking-wide border-2 border-ink-900 shadow-[2px_2px_0_0_#1c1b1a] transition-all bg-paper-50 text-ink-900 hover:bg-paper-100';
+                }
             });
         }
 
         function resolveLearningMaterialUrl(rawPath) {
             if (!rawPath) return '';
-
             const value = String(rawPath).trim();
             if (!value) return '';
-
-            if (/^https?:\/\//i.test(value)) {
-                return value;
-            }
+            if (/^https?:\/\//i.test(value)) return value;
 
             const normalizedPath = value
                 .replace(/^\/+/, '')
                 .replace(/^learning-materials\//i, '');
-
             if (!normalizedPath) return '';
 
             try {
                 const { data } = getSupabase().storage.from('learning-materials').getPublicUrl(normalizedPath);
                 return data?.publicUrl || value;
             } catch (error) {
-                console.warn('Failed to resolve learning material URL:', error);
+                console.warn('Failed to resolve URL:', error);
                 return value;
             }
         }
@@ -242,7 +202,12 @@
             } catch (error) {
                 console.error('Error loading modules:', error);
                 const container = document.getElementById('modulesGrid');
-                container.innerHTML = '<div class="col-span-full py-12 text-center text-red-500">Failed to load modules.</div>';
+                container.innerHTML = `
+                    <div class="col-span-full py-12 px-4 text-center bg-white border-2 border-ink-900 rounded-2xl shadow-[4px_4px_0_0_#1c1b1a]">
+                        <p class="font-bold text-red-600 mb-2">Notice: Unable to reach module service.</p>
+                        <p class="text-sm text-ink-500">Please check your internet connection or sign in to continue.</p>
+                    </div>
+                `;
             }
         }
 
@@ -253,44 +218,39 @@
                 : allModules.filter(module => normalizeQuarterValue(module?.quarter ?? module?.module_quarter ?? module?.quarter_number) === activeQuarterFilter);
 
             if (filtered.length === 0) {
-                container.innerHTML = '<div class="col-span-full py-12 text-center text-gray-500">No modules found for this quarter.</div>';
+                container.innerHTML = `
+                    <div class="col-span-full py-16 px-4 text-center bg-white border-2 border-ink-900 rounded-2xl shadow-[4px_4px_0_0_#1c1b1a]">
+                        <p class="text-lg font-black text-ink-900 mb-1">No Modules Found for Quarter ${activeQuarterFilter}</p>
+                        <p class="text-sm text-ink-500 font-semibold">Learning modules for this period are currently being curated by our educators.</p>
+                    </div>
+                `;
                 return;
             }
 
             container.innerHTML = filtered.map(module => {
                 const quarter = normalizeQuarterValue(module?.quarter ?? module?.module_quarter ?? module?.quarter_number);
-                const subtitle = module.topic || module.subject || module.grade_level_text || module.grade_level || 'Learning Module';
-                const description = module.description || 'Open this module to start learning and explore the lesson activities.';
-                const pdfSource = module.pdf_url || module.file_path || '';
-                const pdfPreviewUrl = resolveLearningMaterialUrl(pdfSource);
-                const lowerFilePath = String(pdfSource).toLowerCase();
-                const isPdf = String(module.content_type || '').toLowerCase() === 'pdf' || lowerFilePath.includes('.pdf') || Boolean(module.pdf_url);
+                const subtitle = module.topic || module.subject || module.grade_level_text || 'Grade 7 Mathematics';
+                const description = module.description || 'Interactive learning module with lessons, presentations, and competency-aligned assessments.';
                 const thumbnailSource = module.thumbnail_url || module.cover_image || module.image_url || '';
-                const thumbnail = resolveLearningMaterialUrl(thumbnailSource) || pdfPreviewUrl || '../Logo/MATHURO-LOGO-v2.png';
-
-                const previewMedia = isPdf && pdfPreviewUrl
-                    ? `<iframe src="${pdfPreviewUrl}#page=1&view=FitH&toolbar=0&navpanes=0&scrollbar=0" class="module-preview-frame" title="${escapeHtml(module.title || 'Module')}"></iframe>`
-                    : `<img src="${thumbnail}" class="module-preview-image" alt="${escapeHtml(module.title || 'Module')}" onerror="this.onerror=null; this.src='../Logo/MATHURO-LOGO-v2.png';">`;
+                const thumbnail = resolveLearningMaterialUrl(thumbnailSource) || 'Logo/MATHURO-LOGO-v2.png';
 
                 return `
-                    <div class="module-card rounded-[1.6rem] shadow-lg overflow-hidden" onclick="openSigninModal()">
-                        <div class="flex flex-col min-h-[320px]">
-                            <div class="module-preview-shell">
-                                ${previewMedia}
-                            </div>
-                            <div class="px-4 py-4 flex flex-col flex-1 min-w-0 bg-white">
-                                <div class="flex flex-wrap gap-2 mb-3">
-                                    <span class="module-chip module-chip-primary">${quarter ? `Quarter ${quarter}` : 'Module'}</span>
-                                    <span class="module-chip module-chip-secondary">${escapeHtml(subtitle)}</span>
-                                </div>
-                                <h3 class="text-xl font-bold text-gray-900 mb-2 line-clamp-2">${escapeHtml(module.title || 'Untitled Module')}</h3>
-                                <p class="module-description text-sm text-gray-600 leading-6 mb-4 flex-1">${escapeHtml(description)}</p>
-                                <div class="w-full py-2.5 bg-brand text-white rounded-full text-center text-sm font-semibold hover:bg-brand-dark transition-colors">
-                                    Open
-                                </div>
-                            </div>
+                    <article class="bg-white border-2 border-ink-900 rounded-2xl overflow-hidden shadow-[4px_4px_0_0_#1c1b1a] hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-[6px_6px_0_0_#1c1b1a] transition-all flex flex-col cursor-pointer" onclick="openSigninModal()">
+                        <div class="h-44 bg-paper-100 border-b-2 border-ink-900 relative overflow-hidden flex items-center justify-center p-4">
+                            <img src="${thumbnail}" alt="${escapeHtml(module.title || 'Module')}" class="max-h-full max-w-full object-contain" onerror="this.onerror=null; this.src='Logo/MATHURO-LOGO-v2.png';">
+                            <span class="absolute top-3 right-3 px-3 py-1 rounded-full bg-forest-100 border-2 border-ink-900 text-forest-900 text-xs font-black uppercase tracking-wider shadow-[2px_2px_0_0_#1c1b1a]">
+                                ${quarter ? `Quarter ${quarter}` : 'Module'}
+                            </span>
                         </div>
-                    </div>
+                        <div class="p-5 flex flex-col flex-1">
+                            <p class="text-xs font-black text-forest-800 uppercase tracking-wide mb-1.5">${escapeHtml(subtitle)}</p>
+                            <h2 class="text-xl font-black text-ink-900 tracking-tight mb-2 line-clamp-2">${escapeHtml(module.title || 'Untitled Module')}</h2>
+                            <p class="text-xs text-ink-700 leading-relaxed font-semibold mb-6 flex-1 module-description">${escapeHtml(description)}</p>
+                            <button type="button" class="w-full py-2.5 px-4 bg-paper-50 text-ink-900 font-black text-xs uppercase tracking-wide rounded-xl border-2 border-ink-900 shadow-[2px_2px_0_0_#1c1b1a] hover:bg-forest-600 hover:text-white transition-all text-center">
+                                Open Module &rarr;
+                            </button>
+                        </div>
+                    </article>
                 `;
             }).join('');
         }
@@ -310,10 +270,8 @@
             return div.innerHTML;
         }
 
-        document.getElementById('signinModal').addEventListener('click', (event) => {
-            if (event.target.id === 'signinModal') {
-                closeSigninModal();
-            }
+        document.getElementById('signinModal').addEventListener('click', (e) => {
+            if (e.target.id === 'signinModal') closeSigninModal();
         });
     </script>
 </body>

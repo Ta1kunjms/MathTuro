@@ -3,125 +3,212 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script>
+        (function () {
+            try {
+                if (localStorage.getItem('mathturo_font_pref') === 'dyslexic') {
+                    document.documentElement.setAttribute('data-font', 'dyslexic');
+                }
+            } catch (e) { /* localStorage unavailable */ }
+        })();
+    </script>
     <link rel="stylesheet" href="../dist/styles.css">
     <script src="../shared/js/device.js"></script>
     <link rel="icon" type="image/png" href="Logo/MATHURO-LOGO-v2.png">
-    <title>Privacy Policy - MathTuro LMS</title>
+    <title>Privacy Policy (R.A. 10173) - MathTuro LMS</title>
     <link rel="stylesheet" href="shared/css/base.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Nunito:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
-        @media (max-width: 768px) {
-            .rounded-lg, .shadow-md, .p-8 {
-                max-width: 100% !important;
-                min-width: 0 !important;
-                width: 100% !important;
-                margin: 0 0 1.5rem 0 !important;
-                padding: 1.25rem !important;
-                box-sizing: border-box;
-            }
+        :root {
+            --font-family-display: 'Fredoka', system-ui, sans-serif;
+            --font-family-base: 'Nunito', system-ui, sans-serif;
+        }
+        body {
+            font-family: var(--font-family-base);
+            color: #1c1b1a;
+            background-color: #faf8f5;
+        }
+        h1, h2, h3, h4, .font-display {
+            font-family: var(--font-family-display);
         }
     </style>
 </head>
-<body class="bg-gray-100 min-h-screen">
+<body class="bg-paper-50 min-h-screen text-ink-900 flex flex-col">
     <!-- Skip Link for Accessibility -->
-    <a href="#main-content" class="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 bg-blue-600 text-white px-4 py-2 rounded-md z-50">
+    <a href="#main-content" class="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 bg-forest-600 text-white px-4 py-2 rounded-xl border-2 border-ink-900 shadow-[2px_2px_0_0_#1c1b1a] z-50 font-bold">
         Skip to main content
     </a>
 
-    <!-- Navigation -->
-    <nav class="bg-white shadow-sm border-b" aria-label="Main navigation">
-        <div class="container mx-auto px-4 py-3 flex justify-between items-center">
-            <div class="flex items-center space-x-3">
-                <a href="index.html" class="flex items-center space-x-2">
-                    <img src="Logo/MATHURO-LOGO-v2.png" alt="MathTuro" class="h-10 w-10 object-contain">
-                    <span class="text-xl font-bold text-gray-800">MathTuro LMS</span>
-                </a>
-            </div>
-            <div class="flex items-center space-x-4">
-                <a href="about.html" class="text-gray-600 hover:text-[#005801]">About</a>
-                <a href="contact.html" class="text-gray-600 hover:text-[#005801]">Contact</a>
-                <a href="login.html" class="px-4 py-2 bg-[#005801] text-white rounded-md hover:bg-[#004601] transition-colors">
+    <!-- Top Navigation -->
+    <header class="w-full px-4 sm:px-6 lg:px-8 pt-4 pb-2">
+        <nav class="max-w-6xl mx-auto bg-paper-50 border-2 border-ink-900 rounded-2xl px-5 py-3.5 flex items-center justify-between shadow-[3px_3px_0_0_#1c1b1a]" aria-label="Main navigation">
+            <a href="index.html" class="flex items-center gap-3 group">
+                <img src="Logo/MATHURO-LOGO-v2.png" alt="MathTuro Logo" class="h-10 w-10 object-contain">
+                <span class="font-display font-bold text-xl sm:text-2xl tracking-tight text-ink-900">MathTuro</span>
+            </a>
+            <div class="flex items-center gap-2 sm:gap-4 text-sm font-bold">
+                <a href="about.html" class="px-3 py-1.5 rounded-xl hover:bg-paper-100 text-ink-900 transition-colors">About</a>
+                <a href="contact.html" class="px-3 py-1.5 rounded-xl hover:bg-paper-100 text-ink-900 transition-colors">Contact</a>
+                <a href="login.html" class="px-4 py-2 bg-forest-600 text-white rounded-xl border-2 border-ink-900 shadow-[2px_2px_0_0_#1c1b1a] hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-[3px_3px_0_0_#1c1b1a] transition-all">
                     Login
                 </a>
             </div>
-        </div>
-    </nav>
+        </nav>
+    </header>
 
-    <!-- Content -->
-    <section id="main-content" class="py-12" aria-label="Privacy policy content">
-        <div class="container mx-auto px-4">
-            <div class="max-w-4xl mx-auto bg-white rounded-lg shadow-md p-8">
-                <h1 class="text-3xl font-bold text-gray-800 mb-6">Privacy Policy</h1>
-                <p class="text-gray-500 mb-6">Last updated: February 1, 2026</p>
-
-                <div class="space-y-6 text-gray-600">
-                    <section>
-                        <h2 class="text-xl font-semibold text-gray-800 mb-3">1. Introduction</h2>
-                        <p>
-                            Welcome to the Learning Management System. We are committed to protecting your personal information and your right to privacy. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you use our platform.
-                        </p>
-                    </section>
-
-                    <section>
-                        <h2 class="text-xl font-semibold text-gray-800 mb-3">2. Information We Collect</h2>
-                        <p class="mb-2">We collect information that you provide directly to us, including:</p>
-                        <ul class="list-disc list-inside space-y-1 ml-4">
-                            <li>Name and email address when you register</li>
-                            <li>Login credentials and authentication data</li>
-                            <li>Learning progress and quiz submission data</li>
-                            <li>Uploaded files and screenshots</li>
-                            <li>Communication data when you contact us</li>
-                        </ul>
-                    </section>
-
-                    <section>
-                        <h2 class="text-xl font-semibold text-gray-800 mb-3">3. How We Use Your Information</h2>
-                        <p class="mb-2">We use the collected information to:</p>
-                        <ul class="list-disc list-inside space-y-1 ml-4">
-                            <li>Provide and maintain our learning platform</li>
-                            <li>Track your learning progress</li>
-                            <li>Enable teachers to review and grade submissions</li>
-                            <li>Improve our services and user experience</li>
-                            <li>Communicate with you about your account</li>
-                        </ul>
-                    </section>
-
-                    <section>
-                        <h2 class="text-xl font-semibold text-gray-800 mb-3">4. Data Security</h2>
-                        <p>
-                            We implement appropriate technical and organizational measures to protect your personal information. However, no method of transmission over the Internet is 100% secure, and we cannot guarantee absolute security.
-                        </p>
-                    </section>
-
-                    <section>
-                        <h2 class="text-xl font-semibold text-gray-800 mb-3">5. Your Rights</h2>
-                        <p class="mb-2">You have the right to:</p>
-                        <ul class="list-disc list-inside space-y-1 ml-4">
-                            <li>Access your personal data</li>
-                            <li>Correct inaccurate data</li>
-                            <li>Request deletion of your data</li>
-                            <li>Object to processing of your data</li>
-                            <li>Data portability</li>
-                        </ul>
-                    </section>
-
-                    <section>
-                        <h2 class="text-xl font-semibold text-gray-800 mb-3">6. Contact Us</h2>
-                        <p>
-                            If you have any questions about this Privacy Policy, please contact us at:
-                            <br><br>
-                            Email: support@example.com<br>
-                            Phone: +1 (555) 123-4567
-                        </p>
-                    </section>
+    <!-- Main Content -->
+    <main id="main-content" class="flex-1 py-10 px-4 sm:px-6 lg:px-8">
+        <div class="max-w-4xl mx-auto space-y-8">
+            <!-- Header Card -->
+            <div class="bg-white border-2 border-ink-900 rounded-2xl p-6 sm:p-8 shadow-[4px_4px_0_0_#1c1b1a]">
+                <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-forest-100 border-2 border-ink-900 text-forest-900 text-xs font-bold uppercase tracking-wide mb-4">
+                    Republic Act No. 10173 Compliant
                 </div>
+                <h1 class="text-3xl sm:text-4xl font-black text-ink-900 mb-3 tracking-tight">Privacy Policy</h1>
+                <p class="text-sm font-semibold text-ink-500 mb-2">
+                    In compliance with the <strong>Data Privacy Act of 2012 (R.A. 10173)</strong>, its Implementing Rules and Regulations (IRR), and relevant issuances of the National Privacy Commission (NPC) of the Philippines.
+                </p>
+                <p class="text-xs text-ink-500">Effective Date: February 2026 | Mindanao State University - General Santos City</p>
+            </div>
+
+            <!-- Content Sections -->
+            <div class="bg-white border-2 border-ink-900 rounded-2xl p-6 sm:p-8 shadow-[4px_4px_0_0_#1c1b1a] space-y-8 text-ink-900 text-base leading-relaxed">
+                <!-- Section 1 -->
+                <section>
+                    <h2 class="text-xl sm:text-2xl font-bold text-ink-900 mb-3 flex items-center gap-2">
+                        <span class="w-8 h-8 rounded-xl bg-forest-100 border-2 border-ink-900 flex items-center justify-center text-sm font-black">1</span>
+                        Institutional Scope & Mandate
+                    </h2>
+                    <p class="text-ink-700">
+                        MathTuro Learning Management System is an academic research platform developed under the <strong>Mindanao State University - General Santos City (MSU-GSC) College of Education</strong>, in coordination with the <strong>League of Enthusiastic Math Majors and Advocates (LEMMA)</strong>. MathTuro processes educational data exclusively for academic evaluation, student assessment, and educational research aligned with the Department of Education (DepEd) curriculum guidelines.
+                    </p>
+                </section>
+
+                <!-- Section 2 -->
+                <section>
+                    <h2 class="text-xl sm:text-2xl font-bold text-ink-900 mb-3 flex items-center gap-2">
+                        <span class="w-8 h-8 rounded-xl bg-forest-100 border-2 border-ink-900 flex items-center justify-center text-sm font-black">2</span>
+                        Personal Information We Collect
+                    </h2>
+                    <p class="text-ink-700 mb-4">
+                        Pursuant to the principle of proportionality under Section 11 of R.A. 10173, MathTuro collects only necessary personal and academic data:
+                    </p>
+                    <div class="grid sm:grid-cols-2 gap-4">
+                        <div class="p-4 rounded-xl bg-paper-50 border-2 border-ink-900 shadow-[2px_2px_0_0_#1c1b1a]">
+                            <h3 class="font-bold text-forest-800 mb-2">Student Information</h3>
+                            <ul class="list-disc list-inside text-sm space-y-1 text-ink-700">
+                                <li>Full Name and Email Address</li>
+                                <li>12-Digit Learner Reference Number (LRN)</li>
+                                <li>Grade Level, Section, and School Year</li>
+                                <li>Gender (for DepEd demographic tracking)</li>
+                                <li>Quiz scores, completion timestamps, EXP</li>
+                            </ul>
+                        </div>
+                        <div class="p-4 rounded-xl bg-paper-50 border-2 border-ink-900 shadow-[2px_2px_0_0_#1c1b1a]">
+                            <h3 class="font-bold text-plum-800 mb-2">Educator & Administrator Data</h3>
+                            <ul class="list-disc list-inside text-sm space-y-1 text-ink-700">
+                                <li>Full Name and Institutional Email</li>
+                                <li>Designated Role and Assigned Classes</li>
+                                <li>Module authoring and assessment logs</li>
+                                <li>Grading and verification audit trails</li>
+                            </ul>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Section 3 -->
+                <section>
+                    <h2 class="text-xl sm:text-2xl font-bold text-ink-900 mb-3 flex items-center gap-2">
+                        <span class="w-8 h-8 rounded-xl bg-forest-100 border-2 border-ink-900 flex items-center justify-center text-sm font-black">3</span>
+                        Legal Basis for Processing
+                    </h2>
+                    <p class="text-ink-700 mb-3">
+                        Personal and academic information is processed under the lawful criteria set forth in <strong>Section 12 and Section 13 of R.A. 10173</strong>:
+                    </p>
+                    <ul class="list-disc list-inside space-y-2 text-ink-700 ml-2">
+                        <li><strong>Consent:</strong> Given explicitly by learners, parents/legal guardians, or educators upon account registration.</li>
+                        <li><strong>Legitimate Academic Interest:</strong> Facilitating formative and summative mathematics assessments under DepEd Order No. 8, s. 2015.</li>
+                        <li><strong>Educational Research:</strong> Aggregated, anonymized learning analytics to assess pedagogy and educational software effectiveness.</li>
+                    </ul>
+                </section>
+
+                <!-- Section 4 -->
+                <section>
+                    <h2 class="text-xl sm:text-2xl font-bold text-ink-900 mb-3 flex items-center gap-2">
+                        <span class="w-8 h-8 rounded-xl bg-forest-100 border-2 border-ink-900 flex items-center justify-center text-sm font-black">4</span>
+                        Data Protection & Technical Safeguards
+                    </h2>
+                    <p class="text-ink-700 mb-4">
+                        To safeguard student and educator data against accidental loss, unauthorized access, or unlawful destruction:
+                    </p>
+                    <div class="grid sm:grid-cols-3 gap-3">
+                        <div class="p-3.5 bg-paper-50 border-2 border-ink-900 rounded-xl">
+                            <p class="font-bold text-xs uppercase tracking-wide text-forest-800 mb-1">Row Level Security</p>
+                            <p class="text-xs text-ink-700">Granular PostgreSQL policies strictly isolate student records to authorized teachers and authenticated owners.</p>
+                        </div>
+                        <div class="p-3.5 bg-paper-50 border-2 border-ink-900 rounded-xl">
+                            <p class="font-bold text-xs uppercase tracking-wide text-forest-800 mb-1">Encrypted Transit</p>
+                            <p class="text-xs text-ink-700">All transmissions are secured via TLS 1.3/HTTPS, ensuring answer keys and credentials are never exposed.</p>
+                        </div>
+                        <div class="p-3.5 bg-paper-50 border-2 border-ink-900 rounded-xl">
+                            <p class="font-bold text-xs uppercase tracking-wide text-forest-800 mb-1">Zero Key Leakage</p>
+                            <p class="text-xs text-ink-700">Assessment questions and answers are graded server-side via Security Definer RPCs; students cannot access answer keys.</p>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Section 5 -->
+                <section>
+                    <h2 class="text-xl sm:text-2xl font-bold text-ink-900 mb-3 flex items-center gap-2">
+                        <span class="w-8 h-8 rounded-xl bg-forest-100 border-2 border-ink-900 flex items-center justify-center text-sm font-black">5</span>
+                        Your Rights under R.A. 10173
+                    </h2>
+                    <p class="text-ink-700 mb-3">
+                        Under Section 16 of the Data Privacy Act, every student and teacher enjoys the following statutory rights:
+                    </p>
+                    <div class="space-y-2 text-sm text-ink-700">
+                        <p><strong>1. Right to be Informed:</strong> To understand how personal data is collected, processed, and safeguarded.</p>
+                        <p><strong>2. Right to Access:</strong> To request a copy of your personal data, quiz attempts, and learning records.</p>
+                        <p><strong>3. Right to Rectification:</strong> To dispute and request prompt correction of inaccurate or incomplete records.</p>
+                        <p><strong>4. Right to Erasure or Blocking:</strong> To request the suspension, withdrawal, or removal of your personal information from the active system.</p>
+                        <p><strong>5. Right to File a Complaint:</strong> To lodge a formal complaint with the National Privacy Commission (<a href="https://privacy.gov.ph" target="_blank" rel="noopener noreferrer" class="text-forest-600 underline font-bold">privacy.gov.ph</a>) if you believe your privacy rights have been violated.</p>
+                    </div>
+                </section>
+
+                <!-- Section 6 -->
+                <section class="p-5 rounded-2xl bg-paper-100 border-2 border-ink-900">
+                    <h2 class="text-xl font-bold text-ink-900 mb-2">Data Protection Officer Contact</h2>
+                    <p class="text-sm text-ink-700 leading-relaxed">
+                        For inquiries, data access requests, or privacy concerns regarding MathTuro LMS:
+                    </p>
+                    <div class="mt-3 text-sm font-semibold text-ink-900 space-y-1">
+                        <p><strong>Office:</strong> College of Education, Mindanao State University - General Santos City</p>
+                        <p><strong>Address:</strong> Brgy. Fatima, General Santos City, 9500 South Cotabato, Philippines</p>
+                        <p><strong>Email:</strong> <a href="mailto:mathturo.msugensan@gmail.com" class="text-forest-600 underline">mathturo.msugensan@gmail.com</a></p>
+                    </div>
+                </section>
+            </div>
+
+            <!-- Back to Home -->
+            <div class="text-center pt-2 pb-6">
+                <a href="index.html" class="inline-flex items-center gap-2 px-5 py-2.5 bg-paper-50 text-ink-900 font-bold text-sm rounded-xl border-2 border-ink-900 shadow-[3px_3px_0_0_#1c1b1a] hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-[4px_4px_0_0_#1c1b1a] transition-all">
+                    &larr; Return to MathTuro Home
+                </a>
             </div>
         </div>
-    </section>
+    </main>
 
     <!-- Footer -->
-    <footer class="bg-gray-800 text-gray-300 py-8">
-        <div class="container mx-auto px-4 text-center">
-            <p class="text-sm text-gray-500">&copy; 2026 MathTuro LMS. All rights reserved.</p>
+    <footer class="w-full bg-white border-t-2 border-ink-900 py-6 text-center text-xs font-bold text-ink-500">
+        <div class="max-w-6xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-4">
+            <p>&copy; 2026 MathTuro LMS &bull; MSU-GSC College of Education &bull; LEMMA</p>
+            <div class="flex items-center gap-4">
+                <a href="terms.html" class="hover:text-ink-900 underline">Terms of Service</a>
+                <a href="privacy.html" class="text-forest-600 underline">Privacy Policy</a>
+                <a href="contact.html" class="hover:text-ink-900 underline">Contact Us</a>
+            </div>
         </div>
     </footer>
 </body>

@@ -3,134 +3,191 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script>
+        (function () {
+            try {
+                if (localStorage.getItem('mathturo_font_pref') === 'dyslexic') {
+                    document.documentElement.setAttribute('data-font', 'dyslexic');
+                }
+            } catch (e) { /* localStorage unavailable */ }
+        })();
+    </script>
     <link rel="stylesheet" href="../dist/styles.css">
     <script src="../shared/js/device.js"></script>
     <link rel="icon" type="image/png" href="Logo/MATHURO-LOGO-v2.png">
     <title>Terms of Service - MathTuro LMS</title>
     <link rel="stylesheet" href="shared/css/base.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Nunito:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
-        @media (max-width: 768px) {
-            .rounded-lg, .shadow-md, .p-8 {
-                max-width: 100% !important;
-                min-width: 0 !important;
-                width: 100% !important;
-                margin: 0 0 1.5rem 0 !important;
-                padding: 1.25rem !important;
-                box-sizing: border-box;
-            }
+        :root {
+            --font-family-display: 'Fredoka', system-ui, sans-serif;
+            --font-family-base: 'Nunito', system-ui, sans-serif;
+        }
+        body {
+            font-family: var(--font-family-base);
+            color: #1c1b1a;
+            background-color: #faf8f5;
+        }
+        h1, h2, h3, h4, .font-display {
+            font-family: var(--font-family-display);
         }
     </style>
 </head>
-<body class="bg-gray-100 min-h-screen">
+<body class="bg-paper-50 min-h-screen text-ink-900 flex flex-col">
     <!-- Skip Link for Accessibility -->
-    <a href="#main-content" class="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 bg-blue-600 text-white px-4 py-2 rounded-md z-50">
+    <a href="#main-content" class="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 bg-forest-600 text-white px-4 py-2 rounded-xl border-2 border-ink-900 shadow-[2px_2px_0_0_#1c1b1a] z-50 font-bold">
         Skip to main content
     </a>
 
-    <!-- Navigation -->
-    <nav class="bg-white shadow-sm border-b" aria-label="Main navigation">
-        <div class="container mx-auto px-4 py-3 flex justify-between items-center">
-            <div class="flex items-center space-x-3">
-                <a href="index.html" class="flex items-center space-x-2">
-                    <img src="Logo/MATHURO-LOGO-v2.png" alt="MathTuro" class="h-10 w-10 object-contain">
-                    <span class="text-xl font-bold text-gray-800">MathTuro LMS</span>
-                </a>
-            </div>
-            <div class="flex items-center space-x-4">
-                <a href="about.html" class="text-gray-600 hover:text-[#005801]">About</a>
-                <a href="contact.html" class="text-gray-600 hover:text-[#005801]">Contact</a>
-                <a href="login.html" class="px-4 py-2 bg-[#005801] text-white rounded-md hover:bg-[#004601] transition-colors">
+    <!-- Top Navigation -->
+    <header class="w-full px-4 sm:px-6 lg:px-8 pt-4 pb-2">
+        <nav class="max-w-6xl mx-auto bg-paper-50 border-2 border-ink-900 rounded-2xl px-5 py-3.5 flex items-center justify-between shadow-[3px_3px_0_0_#1c1b1a]" aria-label="Main navigation">
+            <a href="index.html" class="flex items-center gap-3 group">
+                <img src="Logo/MATHURO-LOGO-v2.png" alt="MathTuro Logo" class="h-10 w-10 object-contain">
+                <span class="font-display font-bold text-xl sm:text-2xl tracking-tight text-ink-900">MathTuro</span>
+            </a>
+            <div class="flex items-center gap-2 sm:gap-4 text-sm font-bold">
+                <a href="about.html" class="px-3 py-1.5 rounded-xl hover:bg-paper-100 text-ink-900 transition-colors">About</a>
+                <a href="contact.html" class="px-3 py-1.5 rounded-xl hover:bg-paper-100 text-ink-900 transition-colors">Contact</a>
+                <a href="login.html" class="px-4 py-2 bg-forest-600 text-white rounded-xl border-2 border-ink-900 shadow-[2px_2px_0_0_#1c1b1a] hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-[3px_3px_0_0_#1c1b1a] transition-all">
                     Login
                 </a>
             </div>
-        </div>
-    </nav>
+        </nav>
+    </header>
 
-    <!-- Content -->
-    <section id="main-content" class="py-12" aria-label="Terms of service content">
-        <div class="container mx-auto px-4">
-            <div class="max-w-4xl mx-auto bg-white rounded-lg shadow-md p-8">
-                <h1 class="text-3xl font-bold text-gray-800 mb-6">Terms of Service</h1>
-                <p class="text-gray-500 mb-6">Last updated: February 1, 2026</p>
-
-                <div class="space-y-6 text-gray-600">
-                    <section>
-                        <h2 class="text-xl font-semibold text-gray-800 mb-3">1. Acceptance of Terms</h2>
-                        <p>
-                            By accessing and using the Learning Management System, you accept and agree to be bound by the terms and provision of this agreement. If you do not agree to these terms, please do not use our service.
-                        </p>
-                    </section>
-
-                    <section>
-                        <h2 class="text-xl font-semibold text-gray-800 mb-3">2. User Accounts</h2>
-                        <p class="mb-2">When you create an account with us, you must:</p>
-                        <ul class="list-disc list-inside space-y-1 ml-4">
-                            <li>Provide accurate and complete information</li>
-                            <li>Maintain the security of your password</li>
-                            <li>Promptly update any changes to your information</li>
-                            <li>Accept responsibility for all activities under your account</li>
-                        </ul>
-                    </section>
-
-                    <section>
-                        <h2 class="text-xl font-semibold text-gray-800 mb-3">3. Acceptable Use</h2>
-                        <p class="mb-2">You agree not to:</p>
-                        <ul class="list-disc list-inside space-y-1 ml-4">
-                            <li>Use the service for any unlawful purpose</li>
-                            <li>Share your login credentials with others</li>
-                            <li>Upload malicious content or files</li>
-                            <li>Attempt to gain unauthorized access to the system</li>
-                            <li>Interfere with other users' learning experience</li>
-                            <li>Submit fraudulent quiz scores or assignments</li>
-                        </ul>
-                    </section>
-
-                    <section>
-                        <h2 class="text-xl font-semibold text-gray-800 mb-3">4. Content Ownership</h2>
-                        <p>
-                            All learning materials, content, and features available through the platform remain the property of the Learning Management System and its content creators. You may not reproduce, distribute, or create derivative works without prior written permission.
-                        </p>
-                    </section>
-
-                    <section>
-                        <h2 class="text-xl font-semibold text-gray-800 mb-3">5. User Content</h2>
-                        <p>
-                            By uploading content (such as quiz screenshots and submissions), you grant us a non-exclusive license to use, store, and display that content for the purpose of providing our services. You retain ownership of your original content.
-                        </p>
-                    </section>
-
-                    <section>
-                        <h2 class="text-xl font-semibold text-gray-800 mb-3">6. Service Modifications</h2>
-                        <p>
-                            We reserve the right to modify, suspend, or discontinue any part of the service at any time without notice. We shall not be liable to you or any third party for any modification, suspension, or discontinuance.
-                        </p>
-                    </section>
-
-                    <section>
-                        <h2 class="text-xl font-semibold text-gray-800 mb-3">7. Limitation of Liability</h2>
-                        <p>
-                            The Learning Management System is provided "as is" without warranties of any kind. We are not liable for any damages arising from your use of the service, including but not limited to direct, indirect, incidental, or consequential damages.
-                        </p>
-                    </section>
-
-                    <section>
-                        <h2 class="text-xl font-semibold text-gray-800 mb-3">8. Contact Information</h2>
-                        <p>
-                            For any questions regarding these Terms of Service, please contact us at:
-                            <br><br>
-                            Email: support@example.com<br>
-                            Phone: +1 (555) 123-4567
-                        </p>
-                    </section>
+    <!-- Main Content -->
+    <main id="main-content" class="flex-1 py-10 px-4 sm:px-6 lg:px-8">
+        <div class="max-w-4xl mx-auto space-y-8">
+            <!-- Header Card -->
+            <div class="bg-white border-2 border-ink-900 rounded-2xl p-6 sm:p-8 shadow-[4px_4px_0_0_#1c1b1a]">
+                <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-forest-100 border-2 border-ink-900 text-forest-900 text-xs font-bold uppercase tracking-wide mb-4">
+                    Governed by Philippine Laws & DepEd Standards
                 </div>
+                <h1 class="text-3xl sm:text-4xl font-black text-ink-900 mb-3 tracking-tight">Terms of Service</h1>
+                <p class="text-sm font-semibold text-ink-500 mb-2">
+                    These Terms govern your access to and use of MathTuro LMS, an educational platform aligned with <strong>R.A. 10533</strong> (Enhanced Basic Education Act of 2013), <strong>R.A. 8293</strong> (Intellectual Property Code), and <strong>R.A. 10173</strong> (Data Privacy Act of 2012).
+                </p>
+                <p class="text-xs text-ink-500">Last Revised: February 2026 | Mindanao State University - General Santos City</p>
+            </div>
+
+            <!-- Content Sections -->
+            <div class="bg-white border-2 border-ink-900 rounded-2xl p-6 sm:p-8 shadow-[4px_4px_0_0_#1c1b1a] space-y-8 text-ink-900 text-base leading-relaxed">
+                <!-- Section 1 -->
+                <section>
+                    <h2 class="text-xl sm:text-2xl font-bold text-ink-900 mb-3 flex items-center gap-2">
+                        <span class="w-8 h-8 rounded-xl bg-forest-100 border-2 border-ink-900 flex items-center justify-center text-sm font-black">1</span>
+                        Acceptance & Educational Purpose
+                    </h2>
+                    <p class="text-ink-700">
+                        By accessing MathTuro LMS, you agree to comply with these Terms of Service. MathTuro is developed as an interactive learning management system dedicated to enhancing Grade 7 Mathematics proficiency in Philippine secondary schools. Use of this platform is restricted to enrolled students, authorized educators, and academic researchers from MSU-GSC and collaborating educational institutions.
+                    </p>
+                </section>
+
+                <!-- Section 2 -->
+                <section>
+                    <h2 class="text-xl sm:text-2xl font-bold text-ink-900 mb-3 flex items-center gap-2">
+                        <span class="w-8 h-8 rounded-xl bg-forest-100 border-2 border-ink-900 flex items-center justify-center text-sm font-black">2</span>
+                        User Accounts & DepEd LRN Verification
+                    </h2>
+                    <p class="text-ink-700 mb-3">
+                        Student and teacher accounts require authentic verification:
+                    </p>
+                    <ul class="list-disc list-inside space-y-2 text-ink-700 ml-2">
+                        <li><strong>Student Registration:</strong> Learners must register with their genuine 12-digit Learner Reference Number (LRN) issued by the Department of Education. Student accounts remain in a pending queue until verified and approved by the institution administrator.</li>
+                        <li><strong>Account Security:</strong> You are strictly responsible for maintaining credential confidentiality. Sharing student or teacher accounts with unauthorized individuals is prohibited.</li>
+                    </ul>
+                </section>
+
+                <!-- Section 3 -->
+                <section>
+                    <h2 class="text-xl sm:text-2xl font-bold text-ink-900 mb-3 flex items-center gap-2">
+                        <span class="w-8 h-8 rounded-xl bg-forest-100 border-2 border-ink-900 flex items-center justify-center text-sm font-black">3</span>
+                        Academic Integrity & Assessment Protocol
+                    </h2>
+                    <p class="text-ink-700 mb-3">
+                        MathTuro enforces strict progression gating under DepEd Order No. 8, s. 2015 and verified assessment rules:
+                    </p>
+                    <div class="space-y-3 text-sm text-ink-700">
+                        <div class="p-3.5 bg-paper-50 border-2 border-ink-900 rounded-xl">
+                            <strong>Attempt Limits & Gating:</strong> Pre-tests, lesson quizzes, and post-tests enforce a strict 3-attempt maximum. Post-test module progression requires a passing threshold of $\ge 75\%$.
+                        </div>
+                        <div class="p-3.5 bg-paper-50 border-2 border-ink-900 rounded-xl">
+                            <strong>Anti-Cheat & Anti-Bypass:</strong> Submitting fake scores, intercepting PostgREST endpoints, running automated scripts, or attempting to extract answer keys from the server is a violation of academic integrity and will result in immediate account suspension.
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Section 4 -->
+                <section>
+                    <h2 class="text-xl sm:text-2xl font-bold text-ink-900 mb-3 flex items-center gap-2">
+                        <span class="w-8 h-8 rounded-xl bg-forest-100 border-2 border-ink-900 flex items-center justify-center text-sm font-black">4</span>
+                        Intellectual Property Rights (R.A. 8293)
+                    </h2>
+                    <p class="text-ink-700 mb-2">
+                        Under the <strong>Intellectual Property Code of the Philippines (Republic Act No. 8293)</strong>:
+                    </p>
+                    <p class="text-ink-700">
+                        All modules, interactive worksheets, tutorial videos, quiz questions, presentation slides, brand marks, and software code on MathTuro are protected by copyright owned by the researchers of <strong>Mindanao State University - General Santos City College of Education</strong>, <strong>LEMMA</strong>, and contributing DepEd educators. Students and teachers are granted a revocable, non-exclusive license for personal educational study only. Unauthorized commercial redistribution, resale, or scraping is strictly prohibited.
+                    </p>
+                </section>
+
+                <!-- Section 5 -->
+                <section>
+                    <h2 class="text-xl sm:text-2xl font-bold text-ink-900 mb-3 flex items-center gap-2">
+                        <span class="w-8 h-8 rounded-xl bg-forest-100 border-2 border-ink-900 flex items-center justify-center text-sm font-black">5</span>
+                        Accessibility & Accommodations (R.A. 7277 / R.A. 9442)
+                    </h2>
+                    <p class="text-ink-700">
+                        Pursuant to Republic Act No. 7277, as amended by R.A. 9442 (Magna Carta for Persons with Disabilities), MathTuro LMS incorporates accessibility accommodations including the self-hosted <strong>OpenDyslexic</strong> typeface option, high-contrast visual cues, and keyboard-accessible navigation to ensure inclusive mathematics education for all learners.
+                    </p>
+                </section>
+
+                <!-- Section 6 -->
+                <section>
+                    <h2 class="text-xl sm:text-2xl font-bold text-ink-900 mb-3 flex items-center gap-2">
+                        <span class="w-8 h-8 rounded-xl bg-forest-100 border-2 border-ink-900 flex items-center justify-center text-sm font-black">6</span>
+                        Governing Law & Dispute Resolution
+                    </h2>
+                    <p class="text-ink-700">
+                        These Terms shall be governed and interpreted under the laws of the Republic of the Philippines. Any disputes arising in connection with the platform shall fall under the jurisdiction of the proper courts of General Santos City, South Cotabato, Philippines.
+                    </p>
+                </section>
+
+                <!-- Institutional Footer Contact -->
+                <section class="p-5 rounded-2xl bg-paper-100 border-2 border-ink-900">
+                    <h2 class="text-xl font-bold text-ink-900 mb-2">Contact & Inquiries</h2>
+                    <p class="text-sm text-ink-700">
+                        For institutional partnerships or questions regarding these terms:
+                    </p>
+                    <div class="mt-2 text-sm font-semibold text-ink-900">
+                        <p>College of Education &bull; Mindanao State University - General Santos City</p>
+                        <p>Brgy. Fatima, General Santos City, 9500 South Cotabato, Philippines</p>
+                        <p>Email: <a href="mailto:mathturo.msugensan@gmail.com" class="text-forest-600 underline">mathturo.msugensan@gmail.com</a></p>
+                    </div>
+                </section>
+            </div>
+
+            <!-- Back to Home -->
+            <div class="text-center pt-2 pb-6">
+                <a href="index.html" class="inline-flex items-center gap-2 px-5 py-2.5 bg-paper-50 text-ink-900 font-bold text-sm rounded-xl border-2 border-ink-900 shadow-[3px_3px_0_0_#1c1b1a] hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-[4px_4px_0_0_#1c1b1a] transition-all">
+                    &larr; Return to MathTuro Home
+                </a>
             </div>
         </div>
-    </section>
+    </main>
 
     <!-- Footer -->
-    <footer class="bg-gray-800 text-gray-300 py-8">
-        <div class="container mx-auto px-4 text-center">
-            <p class="text-sm text-gray-500">&copy; 2026 MathTuro LMS. All rights reserved.</p>
+    <footer class="w-full bg-white border-t-2 border-ink-900 py-6 text-center text-xs font-bold text-ink-500">
+        <div class="max-w-6xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-4">
+            <p>&copy; 2026 MathTuro LMS &bull; MSU-GSC College of Education &bull; LEMMA</p>
+            <div class="flex items-center gap-4">
+                <a href="terms.html" class="text-forest-600 underline">Terms of Service</a>
+                <a href="privacy.html" class="hover:text-ink-900 underline">Privacy Policy</a>
+                <a href="contact.html" class="hover:text-ink-900 underline">Contact Us</a>
+            </div>
         </div>
     </footer>
 </body>

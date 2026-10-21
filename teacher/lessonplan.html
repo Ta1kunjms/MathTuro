@@ -8,10 +8,23 @@
   <title>Lesson Plan Manager - MathTuro LMS</title>
   <link rel="icon" type="image/png" href="../Logo/MATHURO-LOGO-v2.png">
   <script src="../shared/js/supabase-lib.js"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Nunito:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
   <style>
-    body { font-family: 'Inter', system-ui, sans-serif; }
+    :root {
+        --font-family-display: 'Fredoka', system-ui, sans-serif;
+        --font-family-base: 'Nunito', system-ui, sans-serif;
+    }
+    body {
+        font-family: var(--font-family-base);
+        color: #1c1b1a;
+        background-color: #faf8f5;
+    }
+    h1, h2, h3, h4, .font-display {
+        font-family: var(--font-family-display);
+    }
 
     .gradient-text {
             color: #720455;

@@ -4,15 +4,21 @@ param (
     [Parameter(Mandatory=$true)] [string]$StudentAEmail,
     [Parameter(Mandatory=$true)] [string]$StudentAPassword,
     [Parameter(Mandatory=$true)] [string]$StudentBEmail,
-    [Parameter(Mandatory=$true)] [string]$StudentBPassword
+    [Parameter(Mandatory=$true)] [string]$StudentBPassword,
+    [string]$BaseUrl = $(if ($env:SUPABASE_URL) { $env:SUPABASE_URL } else { "https://ynkzcybctsstpqxdoweq.supabase.co" }),
+    [string]$AnonKey = $(if ($env:SUPABASE_ANON_KEY) { $env:SUPABASE_ANON_KEY } else { "" })
 )
 
-# Phase 4 (archiving) & Phase 5 (EXP / leaderboard) staging checks.
+# Phase 4 (archiving) & Phase 5 (EXP / leaderboard) production checks.
 # Read-only except one reversible self-archive probe on Student B.
 
 $ErrorActionPreference = "Continue"
-$BASE = "https://jlmdvcmdvkvdxpfkqivh.supabase.co"
-$ANON = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpsbWR2Y21kdmt2ZHhwZmtxaXZoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTAyMjE1MDAsImV4cCI6MjEwNTc5NzUwMH0.Scu5UYF_zLKFg4y4Rm3MWC-pGQqBJRwBwUGMhwBiRqQ"
+$BASE = $BaseUrl
+$ANON = $AnonKey
+
+if ([string]::IsNullOrWhiteSpace($ANON)) {
+    Write-Warning "SUPABASE_ANON_KEY / -AnonKey is empty. Set `$env:SUPABASE_ANON_KEY or supply -AnonKey to authenticate against $BASE."
+}
 
 $Results = [System.Collections.Generic.List[PSObject]]::new()
 function Add-TestResult {

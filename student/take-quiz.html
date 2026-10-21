@@ -22,82 +22,112 @@
     <link rel="icon" type="image/png" href="../Logo/MATHURO-LOGO-v2.png">
     <title>Take Quiz - MathTuro LMS</title>
     <script src="../shared/js/supabase-lib.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Nunito:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
     <style>
-        body { font-family: 'Inter', system-ui, sans-serif; }
-        .gradient-text {
-            color: #1b4332;
+        :root {
+            --font-family-display: 'Fredoka', system-ui, sans-serif;
+            --font-family-base: 'Nunito', system-ui, sans-serif;
         }
+        body {
+            font-family: var(--font-family-base);
+            color: #1c1b1a;
+            background-color: #faf8f5;
+        }
+        h1, h2, h3, h4, .font-display {
+            font-family: var(--font-family-display);
+        }
+
         .sidebar-link { transition: all 0.2s ease; }
         .sidebar-link:hover, .sidebar-link.active {
             background: #1b4332; color: white;
         }
-        .sidebar-link.active { box-shadow: 0 4px 15px rgba(27, 67, 50,0.3); }
 
         /* Quiz question card */
         .question-card {
             background: white;
-            border: 2px solid #e5e7eb;
-            border-radius: 20px;
-            transition: border-color 0.2s;
+            border: 2px solid #1c1b1a;
+            border-radius: 1.25rem;
+            box-shadow: 3px 3px 0 0 #1c1b1a;
+            transition: all 0.2s ease;
         }
-        .question-card.answered { border-color: #86efac; }
+        .question-card.answered {
+            border-color: #1c1b1a;
+            box-shadow: 4px 4px 0 0 #2f7756;
+        }
 
         /* Option button */
         .opt-btn {
             width: 100%;
             text-align: left;
             padding: 14px 18px;
-            border: 2px solid #e5e7eb;
-            border-radius: 14px;
+            border: 2px solid #1c1b1a;
+            border-radius: 1rem;
             font-size: 15px;
-            font-weight: 500;
-            color: #374151;
-            background: white;
+            font-weight: 700;
+            color: #1c1b1a;
+            background: #faf8f5;
             cursor: pointer;
-            transition: all 0.15s;
+            box-shadow: 2px 2px 0 0 #1c1b1a;
+            transition: all 0.15s ease;
             display: flex;
             align-items: center;
             gap: 12px;
         }
-        .opt-btn:hover { border-color: #1b4332; background: #f0fdf4; }
-        .opt-btn.selected {
-            border-color: #1b4332;
+        .opt-btn:hover {
             background: #f0f7f3;
-            color: #14532d;
+            transform: translate(-1px, -1px);
+            box-shadow: 3px 3px 0 0 #1c1b1a;
+        }
+        .opt-btn.selected {
+            border-color: #1c1b1a;
+            background: #dcece3;
+            box-shadow: 3px 3px 0 0 #1b4332;
+            color: #122d22;
         }
         .opt-letter {
-            width: 30px; height: 30px;
+            width: 32px; height: 32px;
             border-radius: 50%;
-            background: #f3f4f6;
+            border: 2px solid #1c1b1a;
+            background: white;
             display: flex; align-items: center; justify-content: center;
-            font-size: 13px; font-weight: 700;
-            color: #6b7280;
+            font-size: 13px; font-weight: 800;
+            color: #1c1b1a;
             flex-shrink: 0;
             transition: all 0.15s;
         }
         .opt-btn.selected .opt-letter {
-            background: #1b4332; color: white;
+            background: #1b4332;
+            color: white;
         }
 
         /* Identification input */
         .id-input {
             width: 100%;
             padding: 14px 18px;
-            border: 2px solid #e5e7eb;
-            border-radius: 14px;
+            border: 2px solid #1c1b1a;
+            border-radius: 1rem;
             font-size: 15px;
             font-family: inherit;
-            transition: border-color 0.2s;
+            font-weight: 700;
+            background: #faf8f5;
+            box-shadow: 2px 2px 0 0 #1c1b1a;
+            transition: all 0.2s;
         }
-        .id-input:focus { outline: none; border-color: #1b4332; box-shadow: 0 0 0 3px rgba(27, 67, 50,0.1); }
-        .id-input.filled { border-color: #86efac; }
+        .id-input:focus {
+            outline: none;
+            background: white;
+            box-shadow: 3px 3px 0 0 #1c1b1a;
+        }
+        .id-input.filled { border-color: #1b4332; }
 
         /* Progress bar */
         .quiz-progress-bar {
-            height: 6px;
-            background: #e2e8f0;
+            height: 8px;
+            background: #e4e1da;
+            border: 2px solid #1c1b1a;
             border-radius: 999px;
             overflow: hidden;
         }
@@ -128,7 +158,7 @@
     <link rel="stylesheet" href="../shared/css/base.css">
     <link rel="stylesheet" href="assets/css/student.css">
 </head>
-<body class="bg-gray-50 min-h-screen">
+<body class="bg-paper-50 min-h-screen text-ink-900">
 
     <!-- Mobile bottom navigation -->
     <div data-include="nav-mobile-student" data-depth="../"></div>
@@ -138,27 +168,27 @@
 
     <main class="lg:ml-72 min-h-screen">
         <!-- Header -->
-        <header class="bg-white border-b border-gray-200 sticky top-0 z-30">
+        <header class="bg-white border-b-2 border-ink-900 sticky top-0 z-30">
             <div class="flex items-center justify-between px-4 lg:px-8 py-4">
-                <button id="mobileMenuBtn" class="lg:hidden p-2 text-gray-600 hover:text-forest-800 rounded-lg">
+                <button id="mobileMenuBtn" class="lg:hidden p-2 text-ink-900 hover:text-forest-800 rounded-lg">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
                     </svg>
                 </button>
                 <div class="flex-1 min-w-0">
-                    <a id="backLink" href="quizzes.html" class="text-sm text-gray-500 hover:text-forest-800 transition-colors">
+                    <a id="backLink" href="quizzes.html" class="text-xs font-bold text-ink-500 hover:text-forest-800 transition-colors uppercase tracking-wide">
                         <i class="fas fa-arrow-left mr-1"></i>Back
                     </a>
-                    <h1 id="quizTitle" class="text-xl font-bold text-gray-800 truncate mt-0.5">Loading…</h1>
+                    <h1 id="quizTitle" class="text-xl sm:text-2xl font-black text-ink-900 truncate mt-0.5 tracking-tight">Loading…</h1>
                 </div>
                 <!-- Timer (shown if time limit set) -->
-                <div id="timerDisplay" class="hidden bg-amber-50 border border-amber-200 rounded-xl px-4 py-2 text-sm font-bold text-amber-700">
-                    <i class="fas fa-clock mr-1"></i><span id="timerText">--:--</span>
+                <div id="timerDisplay" class="hidden bg-amber-100 border-2 border-ink-900 rounded-xl px-4 py-2 text-sm font-black text-ink-900 shadow-[2px_2px_0_0_#1c1b1a]">
+                    <i class="fas fa-clock mr-1 text-amber-800"></i><span id="timerText">--:--</span>
                 </div>
             </div>
             <!-- Progress Bar -->
             <div class="px-4 lg:px-8 pb-3" id="progressBarWrapper">
-                <div class="flex justify-between text-xs text-gray-500 mb-1">
+                <div class="flex justify-between text-xs font-bold text-ink-700 mb-1">
                     <span id="progressLabel">0 / 0 answered</span>
                     <span id="progressPct">0%</span>
                 </div>
@@ -172,21 +202,21 @@
         <div class="p-4 lg:p-8 max-w-3xl mx-auto">
 
             <!-- Loading State -->
-            <div id="loadingState" class="text-center py-20">
-                <div class="w-16 h-16 bg-forest-800/10 rounded-full flex items-center justify-center mx-auto mb-4 animate-pulse">
+            <div id="loadingState" class="text-center py-20 bg-white border-2 border-ink-900 rounded-2xl shadow-[4px_4px_0_0_#1c1b1a]">
+                <div class="w-16 h-16 bg-forest-100 border-2 border-ink-900 rounded-2xl flex items-center justify-center mx-auto mb-4 animate-pulse shadow-[2px_2px_0_0_#1c1b1a]">
                     <i class="fas fa-brain text-forest-800 text-2xl"></i>
                 </div>
-                <p class="text-gray-500">Loading questions…</p>
+                <p class="text-ink-700 font-bold">Loading questions from Supabase…</p>
             </div>
 
             <!-- Error State -->
-            <div id="errorState" class="hidden text-center py-20">
-                <div class="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <i class="fas fa-lock text-red-500 text-2xl"></i>
+            <div id="errorState" class="hidden text-center py-20 bg-white border-2 border-ink-900 rounded-2xl shadow-[4px_4px_0_0_#1c1b1a] p-8">
+                <div class="w-16 h-16 bg-red-100 border-2 border-ink-900 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-[2px_2px_0_0_#1c1b1a]">
+                    <i class="fas fa-lock text-red-600 text-2xl"></i>
                 </div>
-                <h3 id="errorTitle" class="text-xl font-semibold text-gray-900 mb-2">Access Locked</h3>
-                <p id="errorMsg" class="text-gray-500 mb-6"></p>
-                <a href="module-view.html" class="inline-flex items-center gap-2 bg-forest-800 text-white px-6 py-3 rounded-xl font-medium hover:bg-forest-900 transition-colors">
+                <h3 id="errorTitle" class="text-2xl font-black text-ink-900 mb-2">Access Locked</h3>
+                <p id="errorMsg" class="text-ink-700 font-semibold mb-6"></p>
+                <a href="module-view.html" class="inline-flex items-center gap-2 bg-forest-600 text-white px-6 py-3 rounded-xl font-bold border-2 border-ink-900 shadow-[3px_3px_0_0_#1c1b1a] hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-[4px_4px_0_0_#1c1b1a] transition-all">
                     <i class="fas fa-arrow-left"></i>Back to Module
                 </a>
             </div>
@@ -196,48 +226,48 @@
                 <div id="questionsList"></div>
 
                 <!-- Submit -->
-                <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 text-center">
-                    <p id="submitHint" class="text-sm text-gray-500 mb-4">Answer all questions before submitting.</p>
+                <div class="bg-white rounded-2xl border-2 border-ink-900 shadow-[3px_3px_0_0_#1c1b1a] p-6 text-center">
+                    <p id="submitHint" class="text-sm font-bold text-ink-500 mb-4">Answer all questions before submitting.</p>
                     <button id="btnSubmitQuiz"
-                        class="inline-flex items-center gap-2 bg-forest-800 text-white px-8 py-3 rounded-xl font-semibold hover:bg-forest-900 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                        class="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-forest-600 text-white px-8 py-3.5 rounded-xl border-2 border-ink-900 shadow-[3px_3px_0_0_#1c1b1a] font-black text-sm uppercase tracking-wide hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-[4px_4px_0_0_#1c1b1a] transition-all disabled:opacity-40 disabled:cursor-not-allowed"
                         disabled>
-                        <i class="fas fa-paper-plane"></i>Submit Quiz
+                        <i class="fas fa-paper-plane"></i>Submit Assessment
                     </button>
                 </div>
             </div>
 
             <!-- Result State -->
             <div id="resultSection" class="hidden">
-                <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-8 text-center">
+                <div class="bg-white rounded-2xl border-2 border-ink-900 shadow-[4px_4px_0_0_#1c1b1a] p-8 text-center">
                     <div class="flex justify-center mb-6">
                         <div id="resultRing" class="result-ring">
-                            <p id="resultPct" class="text-3xl font-bold text-gray-900">0%</p>
-                            <p class="text-xs text-gray-500 mt-1">Score</p>
+                            <p id="resultPct" class="text-3xl font-black text-ink-900">0%</p>
+                            <p class="text-xs font-bold text-ink-500 uppercase tracking-wide mt-1">Score</p>
                         </div>
                     </div>
-                    <h2 id="resultTitle" class="text-2xl font-bold text-gray-900 mb-2">Quiz Submitted</h2>
-                    <p id="resultSubtitle" class="text-gray-500 mb-6"></p>
+                    <h2 id="resultTitle" class="text-2xl font-black text-ink-900 mb-2">Assessment Submitted</h2>
+                    <p id="resultSubtitle" class="text-sm font-semibold text-ink-700 mb-6"></p>
                     <div class="grid grid-cols-2 gap-4 max-w-xs mx-auto mb-8">
-                        <div class="bg-gray-50 rounded-xl p-4 text-center">
-                            <p id="resultScore" class="text-2xl font-bold text-gray-900">—</p>
-                            <p class="text-xs text-gray-500">Score</p>
+                        <div class="bg-paper-50 border-2 border-ink-900 rounded-xl p-4 text-center shadow-[2px_2px_0_0_#1c1b1a]">
+                            <p id="resultScore" class="text-2xl font-black text-ink-900">—</p>
+                            <p class="text-xs font-bold text-ink-500 uppercase tracking-wide">Points</p>
                         </div>
-                        <div class="bg-gray-50 rounded-xl p-4 text-center">
-                            <p id="resultRemaining" class="text-2xl font-bold text-gray-900">—</p>
-                            <p class="text-xs text-gray-500">Remaining Attempts</p>
+                        <div class="bg-paper-50 border-2 border-ink-900 rounded-xl p-4 text-center shadow-[2px_2px_0_0_#1c1b1a]">
+                            <p id="resultRemaining" class="text-2xl font-black text-ink-900">—</p>
+                            <p class="text-xs font-bold text-ink-500 uppercase tracking-wide">Attempts Left</p>
                         </div>
                     </div>
                     <!-- Student Feedback Contract: ONLY aggregate data, no item-level details -->
-                    <div class="bg-amber-50 border border-amber-200 rounded-xl p-3 text-sm text-amber-700 mb-6 max-w-sm mx-auto text-left">
-                        <i class="fas fa-info-circle mr-1"></i>
-                        Detailed question results are reviewed by your teacher only.
+                    <div class="bg-paper-100 border-2 border-ink-900 rounded-xl p-3 text-xs font-bold text-ink-700 mb-6 max-w-sm mx-auto text-center">
+                        <i class="fas fa-info-circle mr-1 text-forest-800"></i>
+                        Diagnostic assessment recorded under DepEd evaluation standards.
                     </div>
                     <div class="flex flex-col sm:flex-row gap-3 justify-center">
                         <a id="resultBackBtn" href="quizzes.html"
-                            class="inline-flex items-center gap-2 border border-gray-300 text-gray-700 px-6 py-3 rounded-xl font-medium hover:bg-gray-50 transition-colors">
+                            class="inline-flex items-center justify-center gap-2 bg-paper-50 border-2 border-ink-900 shadow-[2px_2px_0_0_#1c1b1a] text-ink-900 px-6 py-3 rounded-xl font-black text-xs uppercase tracking-wide hover:bg-paper-100 transition-all">
                             <i class="fas fa-list"></i>Back to Quizzes
                         </a>
-                        <button id="btnRetryQuiz" class="hidden inline-flex items-center gap-2 bg-forest-800 text-white px-6 py-3 rounded-xl font-medium hover:bg-forest-900 transition-colors">
+                        <button id="btnRetryQuiz" class="hidden inline-flex items-center justify-center gap-2 bg-forest-600 border-2 border-ink-900 shadow-[3px_3px_0_0_#1c1b1a] text-white px-6 py-3 rounded-xl font-black text-xs uppercase tracking-wide hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-[4px_4px_0_0_#1c1b1a] transition-all">
                             <i class="fas fa-redo"></i>Try Again
                         </button>
                     </div>

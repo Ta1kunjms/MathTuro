@@ -377,7 +377,7 @@
                 inputHtml = '<div class="space-y-2 mt-4">' +
                     (q.options || []).map(opt =>
                         '<button type="button" class="opt-btn" data-qid="' + q.id + '" data-val="' + esc(opt.id) + '" onclick="selectMC(this)">' +
-                        '<span class="opt-letter">' + opt.id + '</span>' +
+                        '<span class="opt-letter">' + esc(opt.id) + '</span>' +
                         '<span>' + esc(opt.text) + '</span></button>'
                     ).join('') + '</div>';
             } else if (q.question_type === 'true_false') {
@@ -577,7 +577,7 @@
         const t = document.getElementById('toast');
         t.className = 'fixed bottom-4 right-4 px-6 py-3 rounded-xl shadow-lg z-50 flex items-center space-x-2 ' +
             (type==='success'?'bg-green-500 text-white':type==='error'?'bg-red-500 text-white':'bg-gray-800 text-white');
-        t.innerHTML = '<i class="fas fa-' + (type==='success'?'check-circle':type==='error'?'exclamation-circle':'info-circle') + '"></i><span>' + msg + '</span>';
+        t.innerHTML = '<i class="fas fa-' + (type==='success'?'check-circle':type==='error'?'exclamation-circle':'info-circle') + '"></i><span>' + esc(msg) + '</span>';
         t.classList.remove('hidden');
         setTimeout(() => t.classList.add('hidden'), 4000);
     }

@@ -279,6 +279,12 @@ async function createModule(moduleData) {
         description: moduleData.description,
         order_index: nextOrder,
         status: 'draft',
+        ...pickOptionalModuleFields({
+          lesson_objectives: moduleData.lesson_objectives,
+          term_number: moduleData.term_number,
+          quarter: moduleData.quarter,
+          week_number: moduleData.week_number
+        }),
         teacher_id: user.id,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
@@ -324,6 +330,16 @@ async function createModule(moduleData) {
   - Handles database update errors
   - Shows alert for errors
 */
+// Optional module fields: only written when the caller provides them, so a
+// partial edit never clears or resets columns it didn't show.
+function pickOptionalModuleFields(moduleData) {
+  const fields = {};
+  ['status', 'order_index', 'lesson_objectives', 'term_number', 'quarter', 'week_number'].forEach(key => {
+    if (moduleData[key] !== undefined) fields[key] = moduleData[key];
+  });
+  return fields;
+}
+
 async function updateModule(moduleId, moduleData) {
   try {
     // Check user role
@@ -346,8 +362,7 @@ async function updateModule(moduleId, moduleData) {
       .update({
         title: moduleData.title,
         description: moduleData.description,
-        status: moduleData.status ?? 'draft',
-        order_index: moduleData.order_index,
+        ...pickOptionalModuleFields(moduleData),
         updated_at: new Date().toISOString()
       })
       .eq('id', moduleId);

@@ -211,33 +211,26 @@
                     <textarea id="moduleDescription" rows="3" class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-plum-800 focus:border-transparent" placeholder="Brief description of the module..."></textarea>
                 </div>
 
-                <!-- Optional Quiz Setup -->
-                <div class="border border-gray-200 rounded-xl p-4 bg-amber-50/40">
-                    <div class="flex items-center space-x-2 mb-3">
-                        <i class="fas fa-clipboard-list text-amber-600"></i>
-                        <h4 class="text-sm font-semibold text-gray-800">Optional Quiz Setup</h4>
-                    </div>
-                    <p class="text-xs text-gray-600 mb-4">Add a quiz now so students can see it immediately in module view.</p>
-                    <div class="space-y-4">
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Quiz URL</label>
-                            <input type="url" id="moduleQuizUrl" class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-plum-800 focus:border-transparent" placeholder="https://forms.google.com/...">
-                            <p class="text-xs text-gray-500 mt-1">Leave blank if you do not want to add a quiz yet.</p>
-                        </div>
-                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-2">Quiz Title</label>
-                                <input type="text" id="moduleQuizTitle" class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-plum-800 focus:border-transparent" placeholder="Auto: Module Title Quiz">
-                            </div>
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-2">Total Items</label>
-                                <input type="number" id="moduleQuizTotalItems" min="1" value="10" class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-plum-800 focus:border-transparent" placeholder="10">
-                            </div>
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-2">Passing Score</label>
-                                <input type="number" id="moduleQuizPassingScore" min="0" value="0" class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-plum-800 focus:border-transparent" placeholder="0">
-                            </div>
-                        </div>
+                <!-- Lesson Objectives -->
+                <div>
+                    <label for="moduleLessonObjectives" class="block text-sm font-medium text-gray-700 mb-2">Lesson Objectives</label>
+                    <textarea id="moduleLessonObjectives" rows="4" aria-describedby="moduleLessonObjectivesHint" class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-plum-800 focus:border-transparent" placeholder="e.g. Add and subtract dissimilar fractions"></textarea>
+                    <p id="moduleLessonObjectivesHint" class="text-xs text-gray-500 mt-1">One objective per line. Students see these at the top of the module.</p>
+                </div>
+
+                <!-- Attach existing quizzes and presentations -->
+                <div class="border border-gray-200 rounded-xl p-4">
+                    <h4 class="text-sm font-semibold text-gray-800">Attach Quizzes &amp; Presentations</h4>
+                    <p class="text-xs text-gray-600 mt-1 mb-4">Choose any of your existing quizzes and presentations. Attaching an item moves it into this module.</p>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <fieldset>
+                            <legend class="block text-sm font-medium text-gray-700 mb-2">Quizzes</legend>
+                            <div id="moduleAttachQuizzes" class="max-h-48 overflow-y-auto space-y-1 border border-gray-200 rounded-lg p-2 text-sm"><p class="text-gray-500 p-1">Loading…</p></div>
+                        </fieldset>
+                        <fieldset>
+                            <legend class="block text-sm font-medium text-gray-700 mb-2">Presentations</legend>
+                            <div id="moduleAttachPresentations" class="max-h-48 overflow-y-auto space-y-1 border border-gray-200 rounded-lg p-2 text-sm"><p class="text-gray-500 p-1">Loading…</p></div>
+                        </fieldset>
                     </div>
                 </div>
 
@@ -318,7 +311,7 @@
                 </div>
 
                 <!-- Status -->
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-2">Term *</label>
                         <select id="moduleQuarter" required class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-plum-800 focus:border-transparent">
@@ -326,6 +319,24 @@
                             <option value="1">Term 1</option>
                             <option value="2">Term 2</option>
                             <option value="3">Term 3</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="moduleWeek" class="block text-sm font-medium text-gray-700 mb-2">Week</label>
+                        <select id="moduleWeek" class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-plum-800 focus:border-transparent">
+                            <option value="">Not set</option>
+                            <option value="1">Week 1</option>
+                            <option value="2">Week 2</option>
+                            <option value="3">Week 3</option>
+                            <option value="4">Week 4</option>
+                            <option value="5">Week 5</option>
+                            <option value="6">Week 6</option>
+                            <option value="7">Week 7</option>
+                            <option value="8">Week 8</option>
+                            <option value="9">Week 9</option>
+                            <option value="10">Week 10</option>
+                            <option value="11">Week 11</option>
+                            <option value="12">Week 12</option>
                         </select>
                     </div>
                     <div>
@@ -1008,24 +1019,16 @@
                 const selectedGradeLevelId = document.getElementById('moduleGradeLevel').value || null;
                 const selectedSectionId = document.getElementById('moduleSection').value || null;
                 const moduleStatus = document.getElementById('moduleStatus').value;
-                const quizUrl = document.getElementById('moduleQuizUrl').value.trim();
-                const quizTitleInput = document.getElementById('moduleQuizTitle').value.trim();
-                const quizTotalItemsInput = parseInt(document.getElementById('moduleQuizTotalItems').value, 10);
-                const quizPassingScoreInput = parseInt(document.getElementById('moduleQuizPassingScore').value, 10);
+                const lessonObjectives = document.getElementById('moduleLessonObjectives').value.trim();
+                const weekValue = document.getElementById('moduleWeek').value;
+                const attachQuizIds = getCheckedValues('moduleAttachQuizzes');
+                const attachPresentationIds = getCheckedValues('moduleAttachPresentations');
                 const resolvedScope = validateAndResolveScope(selectedGradeLevelId, selectedSectionId);
                 let pdfUrl = null;
                 let imageUrls = [];
 
                 if (!selectedQuarter) throw new Error('Please select a term');
                 if (!moduleTitle) throw new Error('Please enter a module title');
-                if (quizUrl && !isValidHttpUrl(quizUrl)) throw new Error('Please enter a valid quiz URL (http/https)');
-
-                const quizTotalItems = Number.isFinite(quizTotalItemsInput) && quizTotalItemsInput > 0 ? quizTotalItemsInput : 10;
-                const quizPassingScore = Number.isFinite(quizPassingScoreInput) && quizPassingScoreInput >= 0 ? quizPassingScoreInput : 0;
-
-                if (quizPassingScore > quizTotalItems) {
-                    throw new Error('Quiz passing score cannot be greater than total items');
-                }
 
                 // Upload files
                 if (contentType === 'pdf') {
@@ -1048,6 +1051,8 @@
                     image_urls: imageUrls.length > 0 ? imageUrls : null,
                     quarter: Number(selectedQuarter),
                     term_number: Number(selectedQuarter),
+                    week_number: weekValue ? Number(weekValue) : null,
+                    lesson_objectives: lessonObjectives || null,
                     grade_level: getGradeLevelNameById(resolvedScope.gradeLevelId),
                     grade_level_id: resolvedScope.gradeLevelId,
                     section_id: resolvedScope.sectionId,
@@ -1057,30 +1062,11 @@
 
                 if (error) throw error;
 
-                // Optional: create a linked quiz for this module
-                if (quizUrl && data?.id) {
-                    const now = new Date().toISOString();
-                    const quizTitle = quizTitleInput || `${moduleTitle} Quiz`;
-
-                    await insertQuizWithFallback({
-                        title: quizTitle,
-                        description: moduleDescription || `Quiz for ${moduleTitle}`,
-                        quiz_url: quizUrl,
-                        module_id: data.id,
-                        quarter: Number(selectedQuarter),
-                        grade_level: getGradeLevelNameById(resolvedScope.gradeLevelId),
-                        grade_level_id: resolvedScope.gradeLevelId,
-                        section_id: resolvedScope.sectionId,
-                        total_items: quizTotalItems,
-                        passing_score: quizPassingScore,
-                        is_published: moduleStatus === 'published',
-                        teacher_id: currentUser.id,
-                        created_at: now,
-                        updated_at: now
-                    });
+                if (data?.id && (attachQuizIds.length || attachPresentationIds.length)) {
+                    await attachContentToModule(data.id, attachQuizIds, attachPresentationIds);
                 }
 
-                showToast(quizUrl ? 'Module and quiz created successfully!' : 'Module created successfully!', 'success');
+                showToast('Module created successfully!', 'success');
                 closeCreateModuleModal();
                 await loadModules();
             } catch (error) {
@@ -1133,18 +1119,12 @@
                 .map(q => `<option value="${q}" ${q === selectedQuarter ? 'selected' : ''}>Term ${q}</option>`)
                 .join('');
 
-            // Fetch attached quiz and video for this module
-            let linkedQuiz = null;
-            try {
-                const { data: quizData } = await getSupabase()
-                    .from('quizzes')
-                    .select('*')
-                    .eq('module_id', moduleId)
-                    .maybeSingle();
-                linkedQuiz = quizData || null;
-            } catch (e) {
-                console.warn('Could not fetch quiz for module:', e);
-            }
+            // Quizzes/presentations for the attach pickers
+            const attachable = await loadAttachableContent();
+            detailAttachState = {
+                moduleId,
+                attachedQuizIds: attachable.quizzes.filter(q => q.module_id === moduleId).map(q => q.id)
+            };
 
             let linkedVideo = null;
             try {
@@ -1217,8 +1197,8 @@
                     </div>
 
                     <div class="border-t pt-6">
-                        <h4 class="font-semibold text-gray-800 mb-4">Access Scope</h4>
-                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <h4 class="font-semibold text-gray-800 mb-4">Module Details</h4>
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-2">Term</label>
                                 <select id="detailModuleQuarter" class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-plum-800 focus:border-transparent">
@@ -1238,15 +1218,26 @@
                                     ${sectionOptions}
                                 </select>
                             </div>
+                            <div>
+                                <label for="detailModuleWeek" class="block text-sm font-medium text-gray-700 mb-2">Week</label>
+                                <select id="detailModuleWeek" class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-plum-800 focus:border-transparent">
+                                    ${weekOptionsHtml(module.week_number)}
+                                </select>
+                            </div>
+                        </div>
+                        <div class="mt-4">
+                            <label for="detailModuleObjectives" class="block text-sm font-medium text-gray-700 mb-2">Lesson Objectives</label>
+                            <textarea id="detailModuleObjectives" rows="4" aria-describedby="detailModuleObjectivesHint" class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-plum-800 focus:border-transparent">${escapeAttachText(module.lesson_objectives || '')}</textarea>
+                            <p id="detailModuleObjectivesHint" class="text-xs text-gray-500 mt-1">One objective per line.</p>
                         </div>
                         <div class="mt-4 flex justify-end">
-                            <button onclick="saveModuleAccess('${module.id}')" class="px-4 py-2 bg-plum-800 text-white rounded-lg text-sm hover:bg-plum-900 transition-colors">Save Access Scope</button>
+                            <button onclick="saveModuleAccess('${module.id}')" class="px-4 py-2 bg-plum-800 text-white rounded-lg text-sm hover:bg-plum-900 transition-colors">Save Module Details</button>
                         </div>
                     </div>
 
                     <!-- Associated Video & Quiz Management Section -->
                     <div class="border-t pt-6 space-y-6">
-                        <h4 class="font-semibold text-gray-800 text-lg">Attached Video & Quiz</h4>
+                        <h4 class="font-semibold text-gray-800 text-lg">Attached Video, Quizzes &amp; Presentations</h4>
                         
                         <!-- Attached Video Form -->
                         <div class="border border-gray-200 rounded-xl p-5 bg-blue-50/30">
@@ -1287,50 +1278,29 @@
                             </div>
                         </div>
 
-                        <!-- Attached Quiz Form -->
-                        <div class="border border-gray-200 rounded-xl p-5 bg-amber-50/30">
-                            <div class="flex items-center justify-between mb-4">
-                                <div class="flex items-center space-x-2">
-                                    <div class="w-8 h-8 bg-amber-100 rounded-lg flex items-center justify-center text-amber-600">
-                                        <i class="fas fa-clipboard-list"></i>
-                                    </div>
-                                    <h5 class="font-medium text-gray-800">Module Quiz</h5>
-                                </div>
-                                ${linkedQuiz ? '<span class="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-green-100 text-green-700">Attached</span>' : '<span class="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-gray-100 text-gray-500">None</span>'}
+                        <!-- Attached Quizzes & Presentations -->
+                        <div class="border border-gray-200 rounded-xl p-5">
+                            <h5 class="font-medium text-gray-800 mb-1">Quizzes &amp; Presentations</h5>
+                            <p class="text-xs text-gray-600 mb-4">Check the quizzes and presentations that belong to this module. Unchecking a quiz detaches it.</p>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <fieldset>
+                                    <legend class="block text-sm font-medium text-gray-700 mb-2">Quizzes</legend>
+                                    <div id="detailAttachQuizzes" class="max-h-56 overflow-y-auto space-y-1 border border-gray-200 rounded-lg p-2 text-sm"></div>
+                                </fieldset>
+                                <fieldset>
+                                    <legend class="block text-sm font-medium text-gray-700 mb-2">Presentations</legend>
+                                    <div id="detailAttachPresentations" class="max-h-56 overflow-y-auto space-y-1 border border-gray-200 rounded-lg p-2 text-sm"></div>
+                                </fieldset>
                             </div>
-
-                            <div class="space-y-4">
-                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    <div>
-                                        <label class="block text-xs font-medium text-gray-700 mb-1">Quiz Title</label>
-                                        <input type="text" id="detailQuizTitle" value="${linkedQuiz?.title || ''}" placeholder="e.g., ${module.title} Quiz" class="w-full px-4 py-2.5 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-plum-800">
-                                    </div>
-                                    <div>
-                                        <label class="block text-xs font-medium text-gray-700 mb-1">Quiz URL (Google Form, Quizizz, Kahoot, etc.)</label>
-                                        <input type="url" id="detailQuizUrl" value="${linkedQuiz?.quiz_url || ''}" placeholder="https://forms.google.com/..." class="w-full px-4 py-2.5 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-plum-800">
-                                    </div>
-                                </div>
-                                <div class="grid grid-cols-2 gap-4">
-                                    <div>
-                                        <label class="block text-xs font-medium text-gray-700 mb-1">Total Items</label>
-                                        <input type="number" id="detailQuizTotalItems" min="1" value="${linkedQuiz?.total_items || 10}" class="w-full px-4 py-2.5 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-plum-800">
-                                    </div>
-                                    <div>
-                                        <label class="block text-xs font-medium text-gray-700 mb-1">Passing Score</label>
-                                        <input type="number" id="detailQuizPassingScore" min="0" value="${linkedQuiz?.passing_score || 0}" class="w-full px-4 py-2.5 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-plum-800">
-                                    </div>
-                                </div>
-                                <div class="flex items-center justify-end space-x-2 pt-2">
-                                    ${linkedQuiz ? `<button type="button" onclick="unlinkModuleQuiz('${linkedQuiz.id}', '${module.id}')" class="px-4 py-2 text-sm border border-red-200 text-red-600 hover:bg-red-50 rounded-xl font-medium transition-colors">Unlink Quiz</button>` : ''}
-                                    <button type="button" onclick="saveModuleQuiz('${module.id}', '${linkedQuiz?.id || ''}')" class="px-4 py-2 text-sm bg-plum-800 text-white hover:bg-plum-900 rounded-xl font-medium transition-colors">
-                                        ${linkedQuiz ? 'Update Quiz' : 'Save / Attach Quiz'}
-                                    </button>
-                                </div>
+                            <div class="flex justify-end pt-4">
+                                <button type="button" onclick="saveModuleAttachments('${module.id}')" class="px-4 py-2 text-sm bg-plum-800 text-white hover:bg-plum-900 rounded-xl font-medium transition-colors">Save Attachments</button>
                             </div>
                         </div>
                     </div>
                 </div>
             `;
+            renderAttachList('detailAttachQuizzes', attachable.quizzes, moduleId);
+            renderAttachList('detailAttachPresentations', attachable.presentations, moduleId, true);
 
             document.getElementById('moduleDetailModal').classList.remove('hidden');
         }
@@ -1339,6 +1309,8 @@
             const quarter = document.getElementById('detailModuleQuarter')?.value || null;
             const gradeLevelId = document.getElementById('detailModuleGradeLevel')?.value || null;
             const sectionId = document.getElementById('detailModuleSection')?.value || null;
+            const weekValue = document.getElementById('detailModuleWeek')?.value || '';
+            const lessonObjectives = (document.getElementById('detailModuleObjectives')?.value || '').trim();
 
             try {
                 const resolvedScope = validateAndResolveScope(gradeLevelId, sectionId);
@@ -1349,6 +1321,8 @@
                 const { error } = await updateModuleWithFallback(moduleId, {
                     quarter: Number(quarter),
                     term_number: Number(quarter),
+                    week_number: weekValue ? Number(weekValue) : null,
+                    lesson_objectives: lessonObjectives || null,
                     grade_level: getGradeLevelNameById(resolvedScope.gradeLevelId),
                     grade_level_id: resolvedScope.gradeLevelId,
                     section_id: resolvedScope.sectionId
@@ -1496,106 +1470,94 @@
             }
         }
 
-        async function saveModuleQuiz(moduleId, existingQuizId) {
-            const title = document.getElementById('detailQuizTitle')?.value?.trim();
-            const quizUrl = document.getElementById('detailQuizUrl')?.value?.trim();
-            const totalItemsInput = parseInt(document.getElementById('detailQuizTotalItems')?.value, 10);
-            const passingScoreInput = parseInt(document.getElementById('detailQuizPassingScore')?.value, 10);
-
-            if (!quizUrl) {
-                showToast('Please enter a quiz URL', 'error');
-                return;
-            }
-            if (!isValidHttpUrl(quizUrl)) {
-                showToast('Please enter a valid quiz URL (http/https)', 'error');
-                return;
-            }
-
-            const quizTotalItems = Number.isFinite(totalItemsInput) && totalItemsInput > 0 ? totalItemsInput : 10;
-            const quizPassingScore = Number.isFinite(passingScoreInput) && passingScoreInput >= 0 ? passingScoreInput : 0;
-
-            if (quizPassingScore > quizTotalItems) {
-                showToast('Passing score cannot exceed total items', 'error');
-                return;
-            }
-
-            try {
-                const module = modules.find(m => m.id === moduleId);
-                const resolvedScope = validateAndResolveScope(resolveGradeLevelId(module), module.section_id);
-                const quarter = getModuleQuarter(module);
-                const quizTitle = title || `${module.title} Quiz`;
-                const now = new Date().toISOString();
-
-                if (existingQuizId) {
-                    let updateQuery = getSupabase()
-                        .from('quizzes')
-                        .update({
-                            title: quizTitle,
-                            quiz_url: quizUrl,
-                            total_items: quizTotalItems,
-                            passing_score: quizPassingScore,
-                            quarter: quarter ? Number(quarter) : null,
-                            grade_level: getGradeLevelNameById(resolvedScope.gradeLevelId),
-                            grade_level_id: resolvedScope.gradeLevelId,
-                            section_id: resolvedScope.sectionId,
-                            updated_at: now
-                        })
-                        .eq('id', existingQuizId);
-
-                    if (currentUser?.role === 'teacher') {
-                        updateQuery = updateQuery.eq('teacher_id', currentUser.id);
-                    }
-                    const { error } = await updateQuery;
-                    if (error) throw error;
-                } else {
-                    await insertQuizWithFallback({
-                        title: quizTitle,
-                        description: module.description || `Quiz for ${module.title}`,
-                        quiz_url: quizUrl,
-                        module_id: moduleId,
-                        quarter: quarter ? Number(quarter) : null,
-                        grade_level: getGradeLevelNameById(resolvedScope.gradeLevelId),
-                        grade_level_id: resolvedScope.gradeLevelId,
-                        section_id: resolvedScope.sectionId,
-                        total_items: quizTotalItems,
-                        passing_score: quizPassingScore,
-                        is_published: module.status === 'published',
-                        teacher_id: currentUser.id,
-                        created_at: now,
-                        updated_at: now
-                    });
-                }
-
-                showToast('Quiz saved for this module!', 'success');
-                await openModuleDetail(moduleId);
-            } catch (error) {
-                console.error('Error saving module quiz:', error);
-                showToast(error.message || 'Failed to save quiz attachment', 'error');
-            }
-        }
-
-        async function unlinkModuleQuiz(quizId, moduleId) {
-            if (!confirm('Unlink this quiz from the module?')) return;
-            try {
-                let updateQuery = getSupabase()
-                    .from('quizzes')
-                    .update({ module_id: null })
-                    .eq('id', quizId);
-                if (currentUser?.role === 'teacher') {
-                    updateQuery = updateQuery.eq('teacher_id', currentUser.id);
-                }
-                const { error } = await updateQuery;
-                if (error) throw error;
-
-                showToast('Quiz unlinked successfully', 'success');
-                await openModuleDetail(moduleId);
-            } catch (error) {
-                console.error('Error unlinking quiz:', error);
-                showToast('Failed to unlink quiz', 'error');
-            }
-        }
-
         // Modal functions
+        // Existing native quizzes and presentations the user can attach to a module
+        async function loadAttachableContent() {
+            let quizQuery = getSupabase().from('quizzes').select('id, title, module_id').order('title', { ascending: true });
+            let presentationQuery = getSupabase().from('presentations').select('id, title, module_id').order('title', { ascending: true });
+            if (currentUser?.role === 'teacher') {
+                quizQuery = quizQuery.eq('teacher_id', currentUser.id);
+                presentationQuery = presentationQuery.eq('uploaded_by', currentUser.id);
+            }
+            const [quizResult, presentationResult] = await Promise.all([quizQuery, presentationQuery]);
+            if (quizResult.error) console.warn('Could not load quizzes to attach:', quizResult.error);
+            if (presentationResult.error) console.warn('Could not load presentations to attach:', presentationResult.error);
+            return { quizzes: quizResult.data || [], presentations: presentationResult.data || [] };
+        }
+
+        function escapeAttachText(value) {
+            return String(value ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+        }
+
+        // Checkbox list for the attach pickers. Items in another module say so,
+        // since attaching moves them. Presentations always belong to exactly one
+        // module (module_id is required), so an attached one can't be unchecked.
+        function renderAttachList(containerId, items, currentModuleId, lockAttached = false) {
+            const container = document.getElementById(containerId);
+            if (!container) return;
+            if (!items.length) {
+                container.innerHTML = '<p class="text-gray-500 p-1">Nothing to attach yet.</p>';
+                return;
+            }
+            container.innerHTML = items.map(item => {
+                const attachedHere = !!currentModuleId && item.module_id === currentModuleId;
+                const elsewhere = item.module_id && !attachedHere
+                    ? (modules.find(m => m.id === item.module_id)?.title || 'another module')
+                    : '';
+                const inputId = `${containerId}_${item.id}`;
+                return `
+                    <div class="flex items-start gap-2 p-1">
+                        <input type="checkbox" id="${inputId}" value="${escapeAttachText(item.id)}" class="mt-1 w-4 h-4 flex-shrink-0" ${attachedHere ? 'checked' : ''} ${attachedHere && lockAttached ? 'disabled' : ''}>
+                        <label for="${inputId}" class="text-gray-800">${escapeAttachText(item.title || 'Untitled')}${elsewhere ? `<span class="block text-xs text-gray-500">Currently in: ${escapeAttachText(elsewhere)}</span>` : ''}${attachedHere && lockAttached ? '<span class="block text-xs text-gray-500">Attached here. Attach it to another module to move it.</span>' : ''}</label>
+                    </div>`;
+            }).join('');
+        }
+
+        function getCheckedValues(containerId) {
+            return Array.from(document.querySelectorAll(`#${containerId} input[type="checkbox"]:checked:not(:disabled)`)).map(input => input.value);
+        }
+
+        // Point the chosen quizzes/presentations at the module. Quizzes that were
+        // attached here and are now unchecked are detached (module_id = null).
+        async function attachContentToModule(moduleId, quizIds, presentationIds, previouslyAttachedQuizIds = []) {
+            const supabase = getSupabase();
+            const detachQuizIds = previouslyAttachedQuizIds.filter(id => !quizIds.includes(id));
+            if (quizIds.length) {
+                const { error } = await supabase.from('quizzes').update({ module_id: moduleId }).in('id', quizIds);
+                if (error) throw error;
+            }
+            if (detachQuizIds.length) {
+                const { error } = await supabase.from('quizzes').update({ module_id: null }).in('id', detachQuizIds);
+                if (error) throw error;
+            }
+            if (presentationIds.length) {
+                const { error } = await supabase.from('presentations').update({ module_id: moduleId }).in('id', presentationIds);
+                if (error) throw error;
+            }
+        }
+
+        let detailAttachState = { moduleId: null, attachedQuizIds: [] };
+
+        async function saveModuleAttachments(moduleId) {
+            try {
+                const quizIds = getCheckedValues('detailAttachQuizzes');
+                const presentationIds = getCheckedValues('detailAttachPresentations');
+                const previous = detailAttachState.moduleId === moduleId ? detailAttachState.attachedQuizIds : [];
+                await attachContentToModule(moduleId, quizIds, presentationIds, previous);
+                showToast('Attachments saved', 'success');
+                await openModuleDetail(moduleId);
+            } catch (error) {
+                console.error('Error saving attachments:', error);
+                showToast(error.message || 'Failed to save attachments', 'error');
+            }
+        }
+
+        function weekOptionsHtml(selectedWeek) {
+            const selected = selectedWeek ? String(selectedWeek) : '';
+            return '<option value="">Not set</option>' + Array.from({ length: 12 }, (_, i) => String(i + 1))
+                .map(w => `<option value="${w}" ${w === selected ? 'selected' : ''}>Week ${w}</option>`).join('');
+        }
+
         function openCreateModuleModal() {
             document.getElementById('createModuleModal').classList.remove('hidden');
             document.getElementById('createModuleForm').reset();
@@ -1606,6 +1568,10 @@
             selectedImages = [];
             removePdf();
             document.getElementById('imagesPreview').classList.add('hidden');
+            loadAttachableContent().then(({ quizzes, presentations }) => {
+                renderAttachList('moduleAttachQuizzes', quizzes, null);
+                renderAttachList('moduleAttachPresentations', presentations, null);
+            });
         }
 
         function closeCreateModuleModal() {

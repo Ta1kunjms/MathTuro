@@ -765,9 +765,68 @@
             }
         }
 
+        // Accessible replacement for window.prompt(): resolves with the trimmed
+        // reason, or null when cancelled. Escape and the backdrop cancel.
+        function askRejectionReason(title) {
+            return new Promise(resolve => {
+                const opener = document.activeElement;
+                const overlay = document.createElement('div');
+                overlay.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4';
+                overlay.innerHTML = `
+                    <div role="dialog" aria-modal="true" aria-labelledby="rejectDialogTitle" class="bg-white rounded-2xl w-full max-w-md p-6">
+                        <h2 id="rejectDialogTitle" class="text-lg font-bold text-gray-900 mb-4"></h2>
+                        <label for="rejectReasonInput" class="block text-sm font-medium text-gray-700 mb-2">Reason for rejection</label>
+                        <textarea id="rejectReasonInput" rows="3" class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-forest-600/20 focus:border-forest-600" aria-describedby="rejectReasonError"></textarea>
+                        <p id="rejectReasonError" class="hidden text-sm text-red-700 mt-2">Enter a reason before rejecting.</p>
+                        <div class="flex gap-3 mt-6">
+                            <button type="button" data-action="cancel" class="flex-1 py-3 border border-gray-300 text-gray-700 rounded-xl font-semibold hover:bg-gray-50">Cancel</button>
+                            <button type="button" data-action="confirm" class="flex-1 py-3 bg-red-600 text-white rounded-xl font-semibold hover:bg-red-700">Reject</button>
+                        </div>
+                    </div>`;
+                overlay.querySelector('#rejectDialogTitle').textContent = title;
+                document.body.appendChild(overlay);
+
+                const input = overlay.querySelector('#rejectReasonInput');
+                const errorEl = overlay.querySelector('#rejectReasonError');
+                const focusable = () => Array.from(overlay.querySelectorAll('textarea, button'));
+
+                function close(result) {
+                    document.removeEventListener('keydown', onKeydown, true);
+                    overlay.remove();
+                    if (opener && typeof opener.focus === 'function') opener.focus();
+                    resolve(result);
+                }
+                function confirm() {
+                    const reason = input.value.trim();
+                    if (!reason) {
+                        errorEl.classList.remove('hidden');
+                        input.setAttribute('aria-invalid', 'true');
+                        input.focus();
+                        return;
+                    }
+                    close(reason);
+                }
+                function onKeydown(e) {
+                    if (e.key === 'Escape') { e.preventDefault(); close(null); return; }
+                    if (e.key === 'Tab') {
+                        const items = focusable();
+                        const first = items[0], last = items[items.length - 1];
+                        if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+                        else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+                    }
+                }
+
+                overlay.querySelector('[data-action="cancel"]').addEventListener('click', () => close(null));
+                overlay.querySelector('[data-action="confirm"]').addEventListener('click', confirm);
+                overlay.addEventListener('click', e => { if (e.target === overlay) close(null); });
+                document.addEventListener('keydown', onKeydown, true);
+                input.focus();
+            });
+        }
+
         async function rejectStudent(userId) {
-            const reason = window.prompt('Reason for rejection:');
-            if (!reason || !reason.trim()) return;
+            const reason = await askRejectionReason('Reject student account');
+            if (!reason) return;
 
             try {
                 const { error } = await getSupabase().rpc('reject_student_account', {
@@ -811,8 +870,8 @@
                 showToast('Select at least one pending student.', 'error');
                 return;
             }
-            const reason = window.prompt('Reason for rejection:');
-            if (!reason || !reason.trim()) return;
+            const reason = await askRejectionReason(`Reject ${targetUserIds.length} selected student account${targetUserIds.length === 1 ? '' : 's'}`);
+            if (!reason) return;
 
             try {
                 const { data, error } = await getSupabase().rpc('bulk_reject_student_accounts', {

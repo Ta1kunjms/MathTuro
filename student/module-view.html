@@ -887,7 +887,7 @@
                             <a href="${quiz.quiz_url}" target="_blank" class="flex-1 text-center px-4 py-2 bg-yellow-50 text-yellow-700 rounded-lg text-sm font-medium hover:bg-yellow-100 transition-colors flex items-center justify-center space-x-1">
                                 <span>Take Quiz ↗</span>
                             </a>
-                            <button onclick="openSubmitQuizModal('${quiz.id}', '${safeTitle.replace(/'/g, "\\'")}', ${quiz.total_items})" 
+                            <button onclick="openSubmitQuizModal('${quiz.id}', ${attrValue(JSON.stringify(quiz.title || ''))}, ${quiz.total_items})" 
                                 ${submission && submission.status === 'approved' ? 'disabled' : ''}
                                 class="flex-1 px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
                                     submission 
@@ -1146,7 +1146,7 @@
                                     View Test Form ↗
                                 </a>
                             ` : ''}
-                            <button onclick="openAssessmentModal('${asmt.id}', '${safeTitle.replace(/'/g, "\\'")}', ${asmt.total_items})"
+                            <button onclick="openAssessmentModal('${asmt.id}', ${attrValue(JSON.stringify(asmt.title || ''))}, ${asmt.total_items})"
                                 ${canSubmit ? '' : 'disabled'}
                                 class="flex-1 py-2 px-3 text-xs font-medium rounded-lg transition-colors ${
                                     canSubmit ? 'bg-forest-800 text-white hover:bg-forest-900' : 'bg-gray-100 text-gray-400 cursor-not-allowed'
@@ -1260,6 +1260,11 @@
             const div = document.createElement('div');
             div.textContent = text;
             return div.innerHTML;
+        }
+
+        // Escape a value for an HTML attribute (also safe for JSON passed to inline on* handlers)
+        function attrValue(value) {
+            return String(value ?? '').replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
         }
 
         function showToast(message, type = 'info') {

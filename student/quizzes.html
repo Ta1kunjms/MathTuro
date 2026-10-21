@@ -458,8 +458,8 @@
                             
                             ${quiz.video && quiz.video.video_url ? `
                                 <div class="mb-3">
-                                    <div class="relative aspect-video rounded-lg overflow-hidden bg-gray-900 cursor-pointer" onclick="playQuizVideo('${quiz.video.video_url}')">
-                                        <img src="${quiz.video.thumbnail_url || getYouTubeThumbnail(quiz.video.video_url) || 'https://via.placeholder.com/320x180?text=Video'}" 
+                                    <div class="relative aspect-video rounded-lg overflow-hidden bg-gray-900 cursor-pointer" onclick="playQuizVideo(${attrValue(JSON.stringify(String(quiz.video.video_url)))})">
+                                        <img src="${attrValue(quiz.video.thumbnail_url || getYouTubeThumbnail(quiz.video.video_url) || 'https://via.placeholder.com/320x180?text=Video')}" 
                                              alt="${escapeHtml(quiz.video.title)}" 
                                              class="w-full h-full object-cover">
                                         <div class="absolute inset-0 flex items-center justify-center bg-black/30 hover:bg-black/50 transition-colors">
@@ -710,6 +710,11 @@
             const div = document.createElement('div');
             div.textContent = text;
             return div.innerHTML;
+        }
+
+        // Escape a value for an HTML attribute (also safe for JSON passed to inline on* handlers)
+        function attrValue(value) {
+            return String(value ?? '').replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
         }
 
         function showToast(message, type = 'info') {

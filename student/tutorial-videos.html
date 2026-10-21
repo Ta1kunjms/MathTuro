@@ -540,10 +540,10 @@
 
             grid.innerHTML = filteredVideos.map(video => {
                 return `
-                    <button type="button" class="learn-video-card w-full text-left" onclick="playVideo(${JSON.stringify(video).replace(/"/g, '&quot;')})">
+                    <button type="button" class="learn-video-card w-full text-left" onclick="playVideo(${attrValue(JSON.stringify(video))})">
                         <div class="aspect-video relative" style="background: #f0f7f3;">
                             ${video.thumbnail_url ?
-                        `<img src="${video.thumbnail_url}" alt="${escapeHtml(video.title)}" class="w-full h-full object-cover">` :
+                        `<img src="${attrValue(video.thumbnail_url)}" alt="${escapeHtml(video.title)}" class="w-full h-full object-cover">` :
                         `<div class="absolute inset-0 flex items-center justify-center">
                                     <svg class="w-12 h-12 text-forest-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/>
@@ -749,6 +749,11 @@
             const div = document.createElement('div');
             div.textContent = text;
             return div.innerHTML;
+        }
+
+        // Escape a value for an HTML attribute (also safe for JSON passed to inline on* handlers)
+        function attrValue(value) {
+            return String(value ?? '').replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
         }
 
         // Show toast notification

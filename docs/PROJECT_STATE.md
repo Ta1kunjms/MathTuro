@@ -10,7 +10,7 @@
 
 ## 1. Quick Orientation: "Where We Left Off" (The 5-Day Memory)
 
-* **Current Date / Last Updated:** 2026-10-20
+* **Current Date / Last Updated:** 2026-10-21 (`supabase-mathturo` MCP confirmed on `jlmdvcmdvkvdxpfkqivh`; staging gating re-checked intact)
 * **Highest Completed & Evidenced Phase:** **Phase 3 assessment security & gating**: authenticated staging suite **40/40 PASS** (2026-10-20 04:23). Phase 2 was verified earlier (`c245b0a`).
 * **Highest Code-Staged Phase:** **Phases 4, 5, 6**: SQL migrations executed on staging and frontend committed in `f7b8435`; authenticated QA for these is still pending.
 * **Verified on staging (Claude Code, `scripts/qa/verify_phase3_authenticated_api.ps1`, rejection reasons confirmed by direct probes):**
@@ -39,6 +39,8 @@
 2. ✅ Done (APPROVE PLAN, 2026-10-20 14:45): migration file saved; font preference restored on all student pages; `public/test-supabase.html` removed.
 3. Upload a small PDF to M1 via `teacher/manage-presentations.html` to cover the signed-URL check.
 4. Browser/visual QA of the redesigned pages (connect the Claude Chrome extension, or the user clicks through).
+5. **UI redesign (2026-10-21 22:37):** council plan approved with defaults D1–D7 and implemented on `develop` in 34 local commits (`c8d3bc0..e45dc05`, **not pushed**): teacher portal on plum, admin maroon/red branding removed, student leftovers on forest, XSS fixes, accessible dialogs/drawers. **Static-verified only. No browser render yet.** See the 2026-10-21 22:37 changelog entry and 3A.8 updates.
+6. **Production (requested by user 2026-10-21, NOT done):** production deploys from `main`, which has diverged from `develop` (`064f00a` landing commit only on `main`). The production Supabase DB has not received the Phase 1–5 migrations or the two remediation files (staging only). Order required: apply migrations to the production DB (SQL Editor, user) → merge `develop` into `main` → Vercel deploys. Frontend-before-DB breaks login/quizzes/approvals.
 
 ---
 
@@ -80,7 +82,148 @@
 
 ---
 
+## 3A. UI Redesign Workstream (Requirements, Status, Decisions)
+
+> **Last audited: 2026-10-21** (read-only source audit; no browser, no staging writes). This section covers the *UI redesign workstreams*, which are tracked separately from the Original Product Roadmap in Section 3. Completing a UI workstream does NOT complete or prove an Original Product Phase (e.g. Student Dashboard Phase 2 ≠ Product Phase 2; Admin UI Phase D ≠ Product Phase 4 accepted; a visible XP number ≠ Phase 5 award rules; UI complete ≠ staging-QA'd ≠ production-ready).
+> Evidence labels: **[src]** = read in repository source on 2026-10-21. **[hist]** = past handoff/conversation/doc claim, not re-verified. No rendered/browser QA was performed in this audit.
+
+### 3A.1 UI Redesign Mandate and Scope
+* Goal: a comprehensive visual revamp across landing/auth, student, teacher and admin portals: navigation, headers, cards, forms, tables, filters, modals, viewers and empty/loading/error states. Not a recolor, not dashboard-landing-only, not three unrelated design systems.
+* Principle: **same MathTuro design DNA, role-appropriate layout and color expression.**
+* UI workstream names (keep distinct from Product Phases 0–6): Student Dashboard Phase 1/2, Student Content Chains 1–4, Student navigation patches, Admin UI Phases A–D, Teacher UI audit/redesign. [hist] Only one UI commit exists in git, `c30b100` (2026-10-20, "visual polish across public, student, and admin portals", 35 files; no teacher files) [src: `git show --stat`]. The workstream phase names above cannot be mapped to commits from the repo alone.
+
+### 3A.2 Visual Reference and Shared Design DNA
+* Direction: rounded neo-brutalist with Duolingo-like friendliness and tactile interaction. Directional reference only: no Duolingo logo/mascot/artwork/assets, no wholesale copy, no childish student UI, no gamification unsupported by real data, no excess animation/confetti/sound.
+* Shared across all portals: type family and hierarchy, spacing rhythm, border philosophy, radius hierarchy, restrained hard-offset shadows, solid-color tactile buttons, input/card/badge/chip construction, icon language, interaction states, `:focus-visible` quality, responsive quality, empty/loading/error states. Dashboards adapt this to functional work and must not copy the landing page's marketing layout or display-scale type.
+* **Landing reference (`public/index.html`; root `index.html` is only a redirect stub) [src]:**
+  * Reflects the intended identity (candidate shared patterns): `bg-paper-50` page, `text-ink-900`, `forest-50` section bands; nav card `border-2 border-ink-900 rounded-2xl shadow-[3px_3px_0_0_#1c1b1a]`; pill CTA `bg-forest-600 text-white border-2 border-ink-900 rounded-full shadow-[2px_2px_0_0_#1c1b1a]` with hover lift (`-translate-x/y-0.5`, bigger shadow) and press (`translate +0.5`, `shadow-none`); one-shot `fadeInUp` and `.reveal` entrance, both guarded by `prefers-reduced-motion`; no gradients, glass or backdrop-blur on the page (0 matches).
+  * Fonts: Fredoka (display, h1–h4) + Nunito (body) from Google Fonts via inline `<style>` in `public/index.html` only.
+  * Legacy/unfinished or ambiguous: (a) `bg-forest-200` (timeline line, `public/index.html:302`) uses a shade that is **not defined** in `tailwind.config.js` and is absent from the built `dist/styles.css`, so it likely renders nothing; (b) the page still loads legacy `shared/css/base.css` (Inter, `--brand #005801`, `--accent-purple #7C0058`) and pulls `shared/js/supabase-lib.js` via a relative path; (c) a decorative mascot with a looping idle bob animation (`mascot-bob`, reduced-motion guarded) is a secondary accent. Whether a mascot is part of the final identity needs user confirmation; (d) logo asset differs by surface (`Logo/1.png` on landing, `Logo/MATHURO-LOGO-v2.png` in the root redirect) so the canonical logo needs confirming; (e) other `public/` pages are not aligned: `public/developer.html`, `public/modules.html`, `public/tutorial-videos.html`, `public/guest-modules.html` still contain gradients/glass/backdrop-blur; `guest-modules.html` and `modules.html` link no `base.css`.
+  * **Typography conflict (needs decision, not silently resolved):** landing = Fredoka + Nunito; `tailwind.config.js` `fontFamily.sans` and `base.css --font-family-base` = Inter; admin pages load Inter. Student/teacher/admin currently render Inter-based text; only landing uses Fredoka/Nunito.
+  * The OpenDyslexic override (`html[data-font="dyslexic"]`) applies to `--font-family-base`; the landing page sets `--font-family-base` to Nunito in an inline `:root` block, which may override the dyslexic variable depending on cascade order. Needs a rendered check.
+* **Token inventory [src: `tailwind.config.js`, `shared/css/base.css`]:**
+  * Tailwind additive tokens: `forest` {50 #f0f7f3, 100 #dcece3, 600 #2f7756, 800 #1b4332, 900 #122d22}; `plum` {50 #fbf1f8, 100 #f5dced, 600 #9a0573, 800 #720455, 900 #4d0339}; `paper` {0, 50, 100}; `ink` {300, 500, 700, 900}; `line` #e4e1da. **Only these shades exist.** Do not use forest-200/300/400/500/700, plum-200–500/700, etc.
+  * Legacy tokens still in use: `primary-*` (Tailwind green scale), `brand` #005801 / `brand-dark` #004601 / `brand-light` #006B01, and **`teacher-50…900` = a pink scale (#fdf2f8 … #831843, `teacher-600` = #db2777)**.
+  * CSS variables: legacy (`--primary-*`, `--brand*`, `--accent-purple #7C0058`, `--spacing-*`, `--radius-*`, `--shadow-*`) plus `--ds-*` redesign primitives/semantics in `base.css` (`--ds-green-*`, `--ds-purple-*`, `--ds-ink-*`, `--ds-paper-*`, `--ds-line-200`, `--ds-color-primary/accent`, `--ds-surface-*`). `teacher.css` defines its own `--teacher-*` vars (`--teacher-600 #720455`, `--teacher-500 #910568`) that **disagree** with the Tailwind `teacher-*` pink scale.
+  * `dist/styles.css` is gitignored and locally built (`npm run build:css`); it contains `forest-600/800`, `plum-600`, `ink-900`, `paper-50` utilities. Any new token utility needs a rebuild; Vercel build behavior was not checked.
+
+### 3A.3 Role Identity and Semantic Color Mapping
+| Role | Dominant | Supporting / accents | Feel | Must not |
+|---|---|---|---|---|
+| Student | dark green `#1b4332` (forest-800) | `#2f7756` (forest-600); restrained purple `#720455` / `#9a0573` (plum-800/600) | encouraging, progress-driven | let purple compete with green |
+| Teacher | dark purple `#720455` (plum-800) | `#9a0573` (plum-600); restrained forest-green accents | instructional, organized, professional | look like gamified student UI recolored, or like admin recolored |
+| Admin | charcoal / near-black / gray neutrals | controlled forest-green and plum accents | operational, calm, compact, data-focused | use red/maroon as brand; become a gray student/teacher |
+
+* Role identity ≠ status meaning. Green = approval/positive/active/published/completed. Amber = pending/review/warning. Red = destructive/error/rejection/failure. Blue = Edit where already established. Neutral gray = draft/inactive/off. Purple = teacher identity + restrained secondary accent, not a status color.
+* A teacher primary authoring/navigation control may be teacher-purple; an explicit Approve/completed state stays semantic green. "Green = positive" does not mean every primary action in every portal is green.
+* Never convey status by color alone (add text, icon or shape).
+
+### 3A.4 Anti-patterns (do not carry forward)
+Glassmorphism/blur panels; gradient buttons; large decorative gradient heroes; glowing orbs/blobs; rainbow icon chips; generic soft-white SaaS cards everywhere; identical-weight card grids; heavy borders or offset shadows on every element; over-rounding; centered body content everywhere; decorative charts with no real data; fake stats/deadlines/schedules/progress/reminders; icon-only meaning without accessible names; hover-only critical actions; childish student UI; lifeless admin UI; a different visual language per role. Use hierarchy: strong for primary actions/content, quiet for supporting, restrained borders/shadows, flat fills, role-appropriate density.
+
+### 3A.5 Portal-Specific Layout Requirements
+* **Student dashboard hierarchy:** (1) compact greeting + streak strip; (2) dominant Continue Learning; (3) real progress snapshot (modules, lessons, daily goal, ring where supported); (4) quieter secondary stats; (5) achievements; (6) supporting activity, quiz results, videos. Do not fabricate a named next lesson without reliable ordering, progress the data can't support, XP transaction/leaderboard completion from a bare XP total, or deadlines/reminders/attendance/messages/assignments.
+* **Student navigation (current approved UI direction; supersedes the older "Core Learning / Quizzes / Progress" recommendation):** desktop sidebar = Dashboard, Modules, Quizzes, Videos, Presentations, Progress; phone bottom bar = Dashboard, Modules, Quizzes, Videos, More; More sheet = Presentations, Progress. Videos and Presentations are different features (separate labels/routes/content), both reachable on phones. Preserve unless a defect is separately approved.
+* **Teacher:** prioritize teaching work: progress/assessment review, manual score entry, attempt history, module/lesson authoring and objectives, native quiz/question management, presentation upload, reports, interventions supported by real data. Dashboard = action-first overview with real attention items only, class/content/progress summaries, authoring shortcuts, then reports/history. Preserve roster access boundaries and alphabetical roster order, manual pre/post score entry, attempt history, override reasons, scoring/progression rules, authoring permissions, private presentation access.
+* **Admin hierarchy:** Tier 1 = real pending **account** approvals; Tier 2 = operational metrics and management shortcuts; Tier 3 = recent users, activity, system information. Pending Account Approvals (`users.approval_status='pending'`) ≠ Pending Quiz Reviews (`quiz_submissions` pending, legacy screenshot-review workflow); keep data source, label and destination separate. User management: student approval queue with visible Approve/Reject, bulk-selection safety (no invisible stale selections), approval/rejection RPC contracts preserved, no invented teacher-approval support. Preserve real settings writes, CRUD, storage operations, filters, reporting, schema-fallback logic. The dashboard's static System Status card must not imply live monitoring; the dedicated System Status page must not be labeled entirely static; simulated response times must be labeled simulated.
+
+### 3A.6 Accessibility and Responsive Acceptance Criteria (all future UI phases)
+Semantic HTML and logical heading nesting; native links/buttons (no div `onclick`, no nested interactive elements); visible `:focus-visible`; accessible names on icon-only controls; visible form labels; text equivalents for meaningful progress/charts/heatmaps; status cues beyond color; contrast ≥ 4.5:1 normal text, ≥ 3:1 large text and meaningful UI/state indicators (do not assume avatar initials are "large text"); touch targets normally ≥ 44×44 px; `prefers-reduced-motion` for movement/transform animation; intentional empty/loading/error states; content not hidden behind fixed nav; safe-area spacing; responsive PDF/image/video embeds; workable mobile tables and filters; overlay focus/dismiss behavior matching the pattern. Review widths: 320 (phone nav/tight controls), 375, 640, 768, 1024, 1280, wider where relevant.
+* Verification honesty: code inspection ≠ rendered QA; a successful build ≠ functional QA; tag/brace balance ≠ valid HTML or runtime correctness. Do not claim a browser/device test ran if none did, and do not carry old "browser tooling unavailable" notes forward as current fact; re-check only when testing is needed.
+* Dyslexia-friendly font (original Product Phase 6): **partially implemented [src]**. Self-hosted OpenDyslexic `@font-face` + `html[data-font="dyslexic"]` in `shared/css/base.css`; `mathturo_font_pref` is read on all 9 `student/*.html` pages and on `public/index|login|register|reset-password.html`. It is **not** read on `public/about|contact|privacy|terms|modules|tutorial-videos|guest-modules|developer.html`, any `teacher/*.html`, or any `admin/*.html`. Where the selectable toggle control lives for non-student surfaces, and whether teacher/admin are in scope for it, needs a decision. Rendered behavior is unverified.
+
+### 3A.7 CSS / Component Isolation and Concurrent-Workspace Rules
+* Several workspaces (Claude Code, Antigravity) may edit this repo. Before any UI implementation: inspect dirty state and establish the specific task diff; do not treat all modified files as this session's; never revert/overwrite/stage/clean another workspace's work; `git status` alone doesn't prove authorship; no broad formatting. (On 2026-10-21 `git status` showed only `docs/PROJECT_STATE.md` modified.)
+* Naming: `dash-*` = student-dashboard-only CSS (`student.css`: ~87 `.dash-*` rules; used by `student/dashboard.html` only); `learn-*` = student content-page CSS (~53 rules; used by modules, module-view, lesson-view, presentations, quizzes, tutorial-videos, view-presentation). Do not reuse `dash-*` as a global prefix. For teacher/admin, audit existing conventions first (teacher: `.sidebar-link`, `.submission-card`, `.module-management-card`; admin: `.admin-stat-card`, `.action-card`, `--admin-*` vars) and propose isolated naming only where needed; no competing global component systems.
+* Shared CSS safety: avoid redefining shared selectors (e.g. `.module-card`) for one page group; flag cross-page/cross-role impact; prefer opt-in scoped styling; changes to `shared/css/base.css`, `tailwind.config.js`, `shared/js/*` or shared partials need explicit scope approval (they affect every role).
+* Functional safety during visual-only work: preserve IDs/render hooks, quiz timers and answer collection, grading RPCs and attempt limits, module/content gating, signed-URL/PDF logic, queries and payload contracts; never add fake data.
+
+### 3A.8 Verified UI Implementation Status (source audit, 2026-10-21)
+Status key: not audited · legacy · partially migrated · implemented, static-verified · rendered/manually verified · blocked · requires clarification. **No surface below is "rendered/manually verified"** because no browser session ran in this audit and no rendered-QA record exists in this file or the repo.
+
+| Surface | Status | Evidence [src] unless marked |
+|---|---|---|
+| Landing / auth (`public/index.html`, `login`, `register`, `reset-password`) | partially migrated | Landing uses forest/ink/paper tokens, hard-offset shadows, no gradients/glass; undefined `forest-200`, still loads legacy `base.css`; font-pref wired. `public/login|register|reset-password.html` carry zero gradients/glass (not visually inspected). Other `public/*` pages legacy (gradients/glass in developer, modules, tutorial-videos, guest-modules). `admin/login.html` uses admin.css, no glass/gradient. |
+| Student dashboard (`student/dashboard.html`) | partially migrated | Compact streak chip, Continue Learning, stat strip, progress snapshot, achievements-before-weekly-activity are present (`dash-*`, `student.css`). Still contains `.glass-sidebar` (backdrop-blur) at the sidebar container, legacy `bg-brand`/`text-brand`/Tailwind-green classes (~40 uses), and gradient CSS in `student.css` (lines ~12, 40, 93). Achievements render as emoji badges (`first_lesson`, `five_lessons`, ...). |
+| Student nav: sidebar + mobile bar | implemented, static-verified | Desktop `student/assets/js/sidebar.js` links Dashboard, Modules, Quizzes, Videos, Presentations, Progress (`dashboard.html#progress`). `shared/partials/nav-mobile-student.html` has Dashboard/Modules/Quizzes/Videos/More with More sheet (Presentations, Progress), `role="dialog"`, `aria-modal`, `aria-expanded`, focus handling; matches the approved structure. Sidebar still styled with legacy `brand`/gray utilities and `glass-sidebar` on dashboard. Rendered behavior unverified; the bottom bar is injected via `shared/js/includes.js`. |
+| Student presentations list/viewer | partially migrated | `student/presentations.html` (new in `c30b100`, `learn-*` classes) and `view-presentation.html`; both still contain gradient and backdrop-blur matches. Signed-URL path unexercised on staging (no PDF fixture). |
+| Student videos (`tutorial-videos.html`) | partially migrated | `learn-*` classes; gradient/backdrop matches remain; shows "Quarter N" label on videos. |
+| Student modules / module-view / lesson-view | partially migrated | `learn-*` classes; gradient/backdrop matches remain; `modules.html` has `learn-quarter-tab` filter (Quarter 1–4). |
+| Student quizzes list / runner | partially migrated | `quizzes.html` uses `learn-*`; `take-quiz.html` only 4 lines changed in `c30b100`, 0 `learn-*`/`dash-*` classes, gradient/blur matches: runner is effectively legacy visually. Grading RPC/timer logic out of scope for visuals; do not touch. |
+| Teacher dashboard + all teacher pages | legacy | 12 pages, all load `teacher.css` + `base.css`; none touched by `c30b100`. Dominant color classes are legacy `brand` green (≈150 uses) with Tailwind `teacher-*` **pink** scale; zero `forest-*`/`plum-*` use; `teacher.css` active sidebar link is a green **gradient** (`#005801→#006B01`), `teacher/assets/js/sidebar.js` sets the same inline gradient and uses `gradient-text`; `.glass-sidebar` present; no `focus-visible`, no `prefers-reduced-motion`. This contradicts the teacher-purple identity, so a teacher redesign has **not started** in source. (A past claim of unknown teacher status is now resolved: legacy.) |
+| Teacher navigation | legacy → **implemented, static-verified (22:37)** | `teacher/assets/js/sidebar.js` now plum with `aria-current`, focus ring, reduced-motion and drawer a11y. Correction: 10 of 12 teacher pages load `shared/js/includes.js` (not `manage-presentations`/`manage-questions`); `nav-mobile-teacher.html` is mounted on none, so teacher phone bottom nav stays deferred (D6). `shared/teacher-sidebar.html` is unused. |
+| Teacher authoring / quiz & question mgmt / presentations | legacy | `manage-modules`, `edit-module`, `lessonplan`, `manage-quizzes`, `manage-questions`, `manage-presentations`, `manage-videos`. Functional Phase 3 pages exist; visuals legacy. |
+| Teacher progress / reports | legacy | `student-progress.html`, `submissions.html`, `reports.html`, `profile.html`. Contains the Phase 2 pre/post score entry and overrides; preserve behavior. |
+| Admin dashboard | partially migrated | `admin/dashboard.html` (changed in `c30b100`): Tier-1 Pending Account Approvals card (source `users.approval_status`, CTA to `users.html`, uses `bg-forest-600`) separated from Tier-2 "Pending Quiz Reviews"; gray/forest/plum tokens; no gradients/glass; static System Status card labeled "Static reference — not live-monitored". |
+| Admin approval queue (`users.html`) | partially migrated | Student queue with Approve/Reject (RPCs `approve_student_account`, reject variant), checkbox select with aria-labels, bulk approve/reject buttons. Still has `.glass-sidebar`, gradient/blur matches, and a legacy admin-approval table using `bg-green-600`/`bg-red-600` and inline `onclick`. Bulk-selection stale-state behavior not rendered-tested. `approveAdmin/rejectAdmin` code exists, so check it against the "student-only approvals" assumption before changing it. |
+| Admin analytics / activity / settings | partially migrated | Pages use `admin.css` + forest tokens, 0 gradient/glass; `analytics.html` and `activity.html` still have some legacy brand/green classes. No `prefers-reduced-motion` in `admin.css`. |
+| Admin system status | partially migrated | Dedicated page does real `users`/`activity_log` queries and a **simulated** response time (`Math.random`, labeled "Approximate — simulated"); ~10 legacy `brand/green` class uses. Mixed real/simulated, so the page is not "entirely static". |
+| Admin sections / grade levels / lesson plans | partially migrated | forest/plum tokens in use; `grade-levels-fixed.html` is a 1-line stub (a stray artifact; disposition needs a decision). `lesson-plan.html` offers "Quarter" in a period select. |
+| Admin content mgmt (`manage-modules|quizzes|videos`) | partially migrated / inconsistent | `manage-modules.html` migrated (forest tokens). **`manage-quizzes.html` and `manage-videos.html` still use maroon `#800000` gradients, `bg-maroon` quarter tabs, and a maroon scrollbar, plus glass/backdrop blur.** This contradicts the "no red/maroon admin brand" rule. |
+| Admin sidebar (`admin/assets/js/sidebar.js`) | implemented, static-verified | Charcoal `bg-gray-900` rail, gray hover states, consistent with the neutral-first admin identity. |
+| Stale docs | superseded | `admin/ADMIN_PORTAL_REFACTOR_SUMMARY.md` and `admin/UI_INCONSISTENCIES.md` describe a **maroon** admin identity, which contradicts the current mandate. Treat as historical; do not follow. Not edited in this task. |
+| `docs/mathturo-staging-program-status.md` | historical (2026-09-28) | Pre-dates the UI workstreams and Phases 3–6 completion; its Phase/status labels are not current. |
+
+### 3A.9 Requirement Conflicts and Decisions Needed
+| # | Conflict | Evidence | Status |
+|---|---|---|---|
+| A | **Weekly Activity.** Original requirement: remove "This Week's Activity". `docs/mathturo-staging-program-status.md:92` marks it "Verified on staging / Maintained / widget removed". Current source still renders it (`student/dashboard.html` "This Week's Activity", `loadWeeklyActivity()`), and later UI work deliberately kept/improved it. | [src] | **Unresolved client/user decision.** Do not remove or redesign until decided. The old "verified removed" claim is not true of current source. |
+| B | **Student navigation.** Older recommendation: Core Learning / Quizzes / Progress (staging doc line 94). Later explicit direction: separate Modules, Quizzes, Videos, Presentations. | [src] nav matches later direction | **Resolved by later explicit direction**; older recommendation is superseded (kept above for history). |
+| C | **Quarter vs Term.** Original: three Terms per school year plus Week. Source still uses Quarter 1–4 in `student/modules.html` tabs, `student/dashboard.html` and `tutorial-videos.html` video labels, `teacher/manage-modules|quizzes|videos|lessonplan.html`, and `admin/manage-modules|quizzes|videos|lesson-plan.html`; only a placeholder in `teacher/manage-presentations.html` says "Term 1 Week 3". Schema field names were not changed or audited here. | [src] | **Unresolved.** Do not rename fields or alter queries without a plan; also needs a decision on 3 vs 4 periods (tabs show 4). |
+| D | **Landing reference partial.** See 3A.2 for approved vs unfinished details, including the typography conflict (Fredoka/Nunito vs Inter), the undefined `forest-200`, and the mascot. | [src] | **Needs user confirmation** before promoting landing details to global rules. |
+| E | **Teacher color token conflict.** Tailwind `teacher-*` is a pink scale; `teacher.css` `--teacher-*` is plum-like; the mandate says plum-800/600. | [src] | Resolve by migrating teacher to `plum-*`; decide whether to retire the pink `teacher-*` scale. |
+| F | **Admin maroon docs vs current mandate.** Two admin docs and `manage-quizzes|videos` code still assert maroon. | [src] | Mandate wins; code is pending migration. |
+| G | **Verification status.** Prior reports relied on static checks. Nothing in this file records rendered/browser QA of any redesigned page. | [hist] | "Implemented"/"static-verified" must not be read as rendered-tested, staging-verified, or production-ready. |
+| H | **Font toggle scope.** See 3A.6: wiring only on student + 4 public pages. | [src] | Needs a decision on teacher/admin/remaining public coverage and where the toggle control is surfaced. |
+
+### 3A.10 Remaining UI Work and Recommended Sequence
+1. **Reconcile design-system/reference mismatches first** (no page rework): decide typography (Fredoka/Nunito vs Inter), fix/avoid the undefined `forest-200`, confirm logo and mascot, define the shared button/card/input/badge/focus recipe from the landing, and decide the teacher token path (plum vs pink `teacher-*`). Needs approval because it touches shared files.
+2. Finish remaining approved **student** work without rebuilding finished sections: `take-quiz.html` visuals (logic frozen), residual `glass-sidebar`/gradient/legacy-brand in the sidebar and content pages, then decide Weekly Activity (A).
+3. Finish **admin**: migrate `manage-quizzes.html` and `manage-videos.html` off maroon/gradient/glass; remove the remaining `glass-sidebar` and legacy admin-approval table styling in `users.html`; align analytics/activity/system-status leftovers.
+4. **Audit and phase the teacher redesign** (currently fully legacy): propose phases (nav/shell → dashboard → progress/submissions/reports → authoring/quiz/presentation pages), scoped by `teacher.css` naming, with the behavior-preservation list in 3A.5.
+5. **Navigation/header/sidebar consistency** per role, including whether teacher/admin get a phone nav (a teacher partial exists but is not wired).
+6. **Cross-portal responsive, accessibility and regression QA** at the 3A.6 widths, rendered in a real browser, including the font toggle and the More sheet. Add `focus-visible` and `prefers-reduced-motion` to teacher/admin CSS.
+7. **Review original client requirements** against the final UI (Weekly Activity, Quarter/Term, dyslexia font coverage).
+* Sequence adjustment: none to the suggested order. Evidence justifies step 1 as the real blocker (token/typography conflicts affect every later step) and shows admin is nearer to done than teacher; teacher is a full phase of work, not a polish pass.
+
+---
+
 ## 4. Session Changelog & History (Chronological Ledger)
+
+### [2026-10-21 22:37] — UI Redesign Council Plan Implemented (S0–S10, B1–B4, B7, B8)
+* **Author / Agent:** Claude Code (council: requirements, UX, CTO, frontend, a11y, security, QA, red-team, synthesizer)
+* **Goal / Context:** User approved the council plan with defaults D1–D7 (teacher = plum; no global font change; teacher-scoped styles; Weekly Activity, Quarter/Term, logo and mascot untouched; teacher/admin dyslexia (B5) and teacher phone nav (B6) deferred; Tailwind glob fix).
+* **Files Modified (34 commits on `develop`, not pushed):**
+  - `tailwind.config.js`: content globs limited to tracked folders (S0); pink `teacher-*` scale removed after zero-usage grep (S10).
+  - Teacher (all 12 pages, `assets/css/teacher.css`, `assets/js/sidebar.js`, `assets/js/teacher.js`): plum identity, flat fills, no glass/gradients, approve/reject kept semantic and ≥4.5:1, `--teacher-*` re-keyed to `--ds-purple-*`, teacher-wide focus ring + reduced motion; `edit-module.html` nested duplicate sidebar fixed (S1–S6).
+  - Admin: `manage-quizzes|videos|modules` maroon removed. Undefined `bg-maroon` had made the active quarter tab invisible. Now neutral tab + `aria-pressed` (S3); `users.html` red only for Reject/Archive, dead hardcoded sidebar removed (S7); `assets/js/sidebar.js` labelled nav, exact-match `aria-current`, Files `aria-expanded` (S9).
+  - Student (all pages, `student.css`, `sidebar.js`) + `public/index.html` `forest-200`→`forest-100` (S8, S8b take-quiz styles only).
+  - Behavior: XSS escaping in `teacher/student-progress|submissions|dashboard`, `teacher.js`, `student/module-view|quizzes|tutorial-videos|take-quiz` (B2); More-sheet Progress hash link fix (`shared/partials/nav-mobile-student.html`, `student/dashboard.html`) (B7); keyboard access for clickable cards + named icon buttons (B4); rejection-reason dialog in `admin/users.html` (B3); score-verify/override dialog in `teacher/student-progress.html` (B1); phone drawer a11y in teacher/admin `sidebar.js` (B8).
+* **Database / Migrations Applied:** None.
+* **Verification / Tests Executed:** Per step: hook diff vs HEAD (IDs/handlers/queries: only the intended handler-argument changes), `node --check` on every JS file and every inline `<script>` across all portals (pass), forbidden-class greps (clean outside the two stale maroon docs), `npx tailwindcss … --minify` (pass; new utilities present). **No rendered/browser QA, no authenticated QA, no deploy.**
+* **Blockers / Open Questions:** Rendered QA at 320–1280px with QA accounts; production requires DB migrations first (see top item 6); decisions A, C, H still open; B5/B6 deferred.
+* **Next Immediate Action:** User decides on push. Then rendered QA on a Vercel preview of `develop` (teacher score dialog, admin reject dialog, More sheet, drawers). Production only after migrations are applied to the production DB.
+
+### [2026-10-21] — CLAUDE.md switched to automatic-development policy
+* **Author / Agent:** Claude Code
+* **Files Modified:** `CLAUDE.md` (Safety, Approval Gate and Workflows sections replaced by `## Automatic Development Policy`: auto-allowed / requires `APPROVE RISKY ACTION: <...>` / always denied). Architecture, Response, Council, Skills, Completion sections unchanged.
+* **Validation:** Text-only change.
+* **Blockers:** None. Council section still ends with `STATUS: AWAITING USER APPROVAL`; it now applies only to council-planned work.
+
+### [2026-10-21] — Project permission allowlist added to `.claude/settings.json`
+* **Author / Agent:** Claude Code
+* **Files Modified:** `.claude/settings.json` (added user-supplied `allow` list; merged user-supplied `deny` list with the existing one, all prior denies kept, incl. `git push *` and PowerShell denies).
+* **Validation:** JSON written by hand; no app code touched.
+* **Blockers:** None. Note: `Bash(cat*)` allow does not block `cat .env` via shell; only the Read tool is denied for `.env*`.
+
+### [2026-10-21] — UI Redesign Requirements Reconciled & Source Audit (Documentation Only)
+* **Author / Agent:** Claude Code
+* **Goal / Context:** Merge the full MathTuro UI redesign mandate, role-color rules, boundaries and an evidence-based status matrix into this file.
+* **Files Modified:** `docs/PROJECT_STATE.md` only (new Section 3A; this entry; top-section pointer).
+* **Database / Migrations Applied:** None.
+* **Verification / Tests Executed:** Read-only grep/sed audit of landing, `tailwind.config.js`, `base.css`, `student.css`, `teacher.css`, `admin.css`, all `student|teacher|admin|public` pages, sidebars and mobile-nav partial; `git show --stat c30b100`. No browser run; no builds; no write operations.
+* **Blockers / Open Questions:** Decisions A, C, D, E, H in 3A.9; rendered QA not done.
+* **Next Immediate Action:** Step 1 of 3A.10 (design-system reconciliation), after user review and approval.
 
 ### [2026-10-20] — State Ledger Creation & Historical Consolidation
 * **Author / Agent:** Antigravity AI
@@ -308,6 +451,31 @@
 * **Files Modified:** `docs/PROJECT_STATE.md` only.
 * **Next Immediate Action:** PDF upload for the signed-URL check; browser QA (Chrome extension); production rollout: Phase 1–5, then both remediation files.
 
+### [2026-10-20 17:30] — MathTuro Supabase MCP Connected for Claude Code
+* **Author / Agent:** User (setup), Claude Code (verification)
+* **Context:** The `claude.ai Supabase` connector is linked to the GensanWorks Supabase account (MathTuro is not visible there). The user added a project-local MCP server `supabase-mathturo` (`https://mcp.supabase.com/mcp?project_ref=jlmdvcmdvkvdxpfkqivh&read_only=true`, local scope, stored in `~/.claude.json` and not in the repo) and authenticated it with the MathTuro account.
+* **Verification:** `claude mcp get supabase-mathturo` → `Connected`, URL includes `project_ref` + `read_only`. The tools aren't loaded in the session that was open during setup; account/project visibility will be checked in the next session.
+* **Notes:** PowerShell 5.1 strips quotes for `claude` (.cmd shim), so `&` in URLs needs `claude --% …`. The VS Code extension may key the project as `d:\…` while the CLI uses `D:\…`; if VS Code doesn't list the server, fall back to a project `.mcp.json`.
+* **Next Immediate Action:** In a new Claude Code session, list tables via `supabase-mathturo` to confirm it's the MathTuro project; then resume the PDF signed-URL check, browser QA and production rollout.
+
+### [2026-10-20 21:00] — supabase-mathturo MCP Not Visible in VS Code Session
+* **Author / Agent:** Claude Code
+* **Goal / Context:** Confirm `supabase-mathturo` points at `jlmdvcmdvkvdxpfkqivh` by listing public tables.
+* **Files Modified:** `docs/PROJECT_STATE.md` only.
+* **Database / Migrations Applied:** None.
+* **Verification / Tests Executed:** `claude mcp get supabase-mathturo` from this session → "No MCP server named supabase-mathturo". Configured: claude.ai Claude Docs, Google Compute Engine, Google Docs, Supabase (GensanWorks), draw.io. No `mcp__supabase-mathturo__*` tools exist. The GensanWorks connector was deliberately NOT used.
+* **Blockers / Open Questions:** The server is stored at local scope under the CLI project key (`D:\…`); the VS Code extension likely keys the project as `d:\…`.
+* **Next Immediate Action:** Add a project `.mcp.json` (needs approval) or re-add the server from this VS Code session, then list tables and resume the PDF signed-URL check, browser QA and production rollout.
+
+### [2026-10-21] — supabase-mathturo MCP Confirmed; Staging Gating Re-checked
+* **Author / Agent:** Claude Code
+* **Goal / Context:** Confirm `supabase-mathturo` points at `jlmdvcmdvkvdxpfkqivh` and continue next actions.
+* **Files Modified:** `docs/PROJECT_STATE.md` only.
+* **Database / Migrations Applied:** None (read-only queries).
+* **Verification / Tests Executed:** `get_project_url` → `https://jlmdvcmdvkvdxpfkqivh.supabase.co`. `list_tables` (public): 25 tables, all `rls_enabled: true`; rows: users 3, modules 2, quizzes 1, module_assessments 3, module_assessment_attempts 7, quiz_questions 16, quiz_attempt_answers 28, exp_transactions 3, presentations 0. Function check: `submit_and_grade_assessment` and `submit_and_grade_regular_quiz` are executable by `authenticated` and call `can_student_access*`; the `*_core` variants are not executable by `authenticated`; `submit_regular_quiz_score` has both the access check and the "graded automatically" guard. Gating is intact. The GensanWorks connector was not used.
+* **Blockers / Open Questions:** PDF signed-URL check needs a user upload; browser QA needs the Chrome extension or a manual click-through (not run this session). Note: the EXP table on staging is `exp_transactions` (earlier notes say `student_exp_ledger`).
+* **Next Immediate Action:** Upload a small PDF to M1 via `teacher/manage-presentations.html`; browser/visual QA; production rollout (Phase 1–5, then both remediation files).
+
 ---
 
 ## 5. Agent Instructions for Appending New Entries
@@ -377,3 +545,184 @@ And update the top section (`## 1. Quick Orientation: "Where We Left Off"`) with
 * **Author:** Tycoon James Flores
 * **Commit Message:** fix(db): guard Phase 3 and 5 migrations against re-runs that drop progression gating
 * **Commit Hash:** `05f2448`
+
+### [2026-10-20 20:49] — Git Commit e94ad32
+* **Author:** Tycoon James Flores
+* **Commit Message:** docs: record staging protections restored
+* **Commit Hash:** `e94ad32`
+
+### [2026-10-20] — Claude Code: supabase-mathturo tools unavailable in session
+* **Author / Agent:** Claude Code
+* **Findings:** `claude mcp list` shows `supabase-mathturo` (project_ref `jlmdvcmdvkvdxpfkqivh`, read_only) as Connected, but its tools were not exposed to the running session (ToolSearch found none). The claude.ai Supabase connector is a different project and was deliberately not used. Public tables were not listed; project ref confirmed only from the MCP config URL.
+* **Files changed:** `docs/PROJECT_STATE.md` only.
+* **Next Action:** Restart the Claude Code session (or `/mcp` reconnect) so `supabase-mathturo` tools load, then list public tables. Remaining items 3–4 in Section 1 need the user (PDF upload, browser QA).
+
+### [2026-10-21 01:40] — Git Commit c8d3bc0
+* **Author:** Tycoon James Flores
+* **Commit Message:** build(css): limit Tailwind content globs to tracked folders
+* **Commit Hash:** `c8d3bc0`
+
+### [2026-10-21 01:41] — Git Commit b7aa4f0
+* **Author:** Tycoon James Flores
+* **Commit Message:** feat(teacher-ui): plum sidebar with accessible active state
+* **Commit Hash:** `b7aa4f0`
+
+### [2026-10-21 01:42] — Git Commit 037a209
+* **Author:** Tycoon James Flores
+* **Commit Message:** fix(teacher): use the shared sidebar on edit-module
+* **Commit Hash:** `037a209`
+
+### [2026-10-21 01:48] — Git Commit a012323
+* **Author:** Tycoon James Flores
+* **Commit Message:** fix(admin-ui): replace undefined maroon classes on content pages
+* **Commit Hash:** `a012323`
+
+### [2026-10-21 02:09] — Git Commit 865ca5f
+* **Author:** Tycoon James Flores
+* **Commit Message:** feat(teacher-ui): plum dashboard and teacher-wide focus/motion styles
+* **Commit Hash:** `865ca5f`
+
+### [2026-10-21 02:10] — Git Commit 1855cfd
+* **Author:** Tycoon James Flores
+* **Commit Message:** feat(teacher-ui): plum student-progress page
+* **Commit Hash:** `1855cfd`
+
+### [2026-10-21 02:10] — Git Commit cef2c55
+* **Author:** Tycoon James Flores
+* **Commit Message:** feat(teacher-ui): plum submissions page
+* **Commit Hash:** `cef2c55`
+
+### [2026-10-21 02:10] — Git Commit 5b924df
+* **Author:** Tycoon James Flores
+* **Commit Message:** feat(teacher-ui): plum reports page
+* **Commit Hash:** `5b924df`
+
+### [2026-10-21 02:12] — Git Commit eab2b83
+* **Author:** Tycoon James Flores
+* **Commit Message:** feat(teacher-ui): plum manage-modules page
+* **Commit Hash:** `eab2b83`
+
+### [2026-10-21 02:12] — Git Commit 2203e9c
+* **Author:** Tycoon James Flores
+* **Commit Message:** feat(teacher-ui): plum edit-module page
+* **Commit Hash:** `2203e9c`
+
+### [2026-10-21 02:12] — Git Commit d8f195e
+* **Author:** Tycoon James Flores
+* **Commit Message:** feat(teacher-ui): plum lessonplan page
+* **Commit Hash:** `d8f195e`
+
+### [2026-10-21 02:12] — Git Commit 7af5dab
+* **Author:** Tycoon James Flores
+* **Commit Message:** feat(teacher-ui): plum manage-quizzes page
+* **Commit Hash:** `7af5dab`
+
+### [2026-10-21 02:12] — Git Commit 38b9bef
+* **Author:** Tycoon James Flores
+* **Commit Message:** feat(teacher-ui): plum manage-questions page
+* **Commit Hash:** `38b9bef`
+
+### [2026-10-21 02:12] — Git Commit 14d081e
+* **Author:** Tycoon James Flores
+* **Commit Message:** feat(teacher-ui): plum manage-presentations page
+* **Commit Hash:** `14d081e`
+
+### [2026-10-21 02:12] — Git Commit 29238d2
+* **Author:** Tycoon James Flores
+* **Commit Message:** feat(teacher-ui): plum manage-videos page
+* **Commit Hash:** `29238d2`
+
+### [2026-10-21 02:12] — Git Commit 7ca7803
+* **Author:** Tycoon James Flores
+* **Commit Message:** feat(teacher-ui): plum profile page
+* **Commit Hash:** `7ca7803`
+
+### [2026-10-21 02:12] — Git Commit da4a027
+* **Author:** Tycoon James Flores
+* **Commit Message:** feat(teacher-ui): plum classes in teacher.js templates
+* **Commit Hash:** `da4a027`
+
+### [2026-10-21 02:12] — Git Commit d71c09b
+* **Author:** Tycoon James Flores
+* **Commit Message:** style(teacher-ui): replace leftover legacy green in inline CSS
+* **Commit Hash:** `d71c09b`
+
+### [2026-10-21 02:12] — Git Commit bfb0851
+* **Author:** Tycoon James Flores
+* **Commit Message:** build(css): remove the unused pink teacher color scale
+* **Commit Hash:** `bfb0851`
+
+### [2026-10-21 02:14] — Git Commit c9b3458
+* **Author:** Tycoon James Flores
+* **Commit Message:** feat(admin-ui): neutral users page, red only for destructive actions
+* **Commit Hash:** `c9b3458`
+
+### [2026-10-21 02:16] — Git Commit 6ba8dbe
+* **Author:** Tycoon James Flores
+* **Commit Message:** feat(student-ui): forest identity on remaining student pages
+* **Commit Hash:** `6ba8dbe`
+
+### [2026-10-21 02:16] — Git Commit 18a3fc4
+* **Author:** Tycoon James Flores
+* **Commit Message:** feat(student-ui): forest styles on the quiz runner
+* **Commit Hash:** `18a3fc4`
+
+### [2026-10-21 02:17] — Git Commit a6f4846
+* **Author:** Tycoon James Flores
+* **Commit Message:** feat(admin-ui): accessible admin sidebar navigation
+* **Commit Hash:** `a6f4846`
+
+### [2026-10-21 22:14] — Git Commit 99f1775
+* **Author:** Tycoon James Flores
+* **Commit Message:** fix(security): escape names in teacher student-progress templates
+* **Commit Hash:** `99f1775`
+
+### [2026-10-21 22:18] — Git Commit 22cddb4
+* **Author:** Tycoon James Flores
+* **Commit Message:** fix(security): escape section names in teacher.js section list
+* **Commit Hash:** `22cddb4`
+
+### [2026-10-21 22:20] — Git Commit 0793841
+* **Author:** Tycoon James Flores
+* **Commit Message:** fix(security): escape names and URLs in teacher submissions
+* **Commit Hash:** `0793841`
+
+### [2026-10-21 22:21] — Git Commit 44f09f2
+* **Author:** Tycoon James Flores
+* **Commit Message:** fix(security): safe screenshot URL and escaped initials on teacher dashboard
+* **Commit Hash:** `44f09f2`
+
+### [2026-10-21 22:21] — Git Commit 71ec1c6
+* **Author:** Tycoon James Flores
+* **Commit Message:** fix(security): safe inline handler arguments on student pages
+* **Commit Hash:** `71ec1c6`
+
+### [2026-10-21 22:22] — Git Commit fca5b4e
+* **Author:** Tycoon James Flores
+* **Commit Message:** fix(security): escape option ids and toast text in the quiz runner
+* **Commit Hash:** `fca5b4e`
+
+### [2026-10-21 22:23] — Git Commit af8ee97
+* **Author:** Tycoon James Flores
+* **Commit Message:** fix(student-nav): Progress in the More sheet works from the dashboard
+* **Commit Hash:** `af8ee97`
+
+### [2026-10-21 22:25] — Git Commit 6bd7f20
+* **Author:** Tycoon James Flores
+* **Commit Message:** fix(a11y): keyboard access for clickable cards and named icon buttons
+* **Commit Hash:** `6bd7f20`
+
+### [2026-10-21 22:26] — Git Commit a14f980
+* **Author:** Tycoon James Flores
+* **Commit Message:** feat(admin): accessible rejection-reason dialog instead of window.prompt
+* **Commit Hash:** `a14f980`
+
+### [2026-10-21 22:31] — Git Commit 4885c33
+* **Author:** Tycoon James Flores
+* **Commit Message:** feat(teacher): accessible score-verification and override dialogs
+* **Commit Hash:** `4885c33`
+
+### [2026-10-21 22:35] — Git Commit e45dc05
+* **Author:** Tycoon James Flores
+* **Commit Message:** fix(a11y): accessible phone drawer for teacher and admin portals
+* **Commit Hash:** `e45dc05`

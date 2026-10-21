@@ -8,6 +8,10 @@ All agents MUST follow this protocol automatically without requiring user interv
    - Append a new entry to `## 4. Session Changelog & History`.
    - `docs/PROJECT_STATE.md` is strictly EXEMPT from the `APPROVE PLAN` lock. Do not pause or prompt the user for permission to update this ledger.
 
+## Mandatory Target Branch & Environment
+- **Active Working Branch:** `main` ONLY. Never branch or commit to `develop`. All work must live directly on `main`.
+- **Target Environment:** Production (`ynkzcybctsstpqxdoweq`), NOT staging. Staging is strictly deprecated.
+
 ## Commands
 - Install: `npm install`
 - Develop: `npm run dev`

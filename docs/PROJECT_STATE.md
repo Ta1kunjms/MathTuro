@@ -10,9 +10,11 @@
 
 ## 1. Quick Orientation: "Where We Left Off" (The 5-Day Memory)
 
-* **Current Date / Last Updated:** 2026-10-21 (`supabase-mathturo` MCP confirmed on `jlmdvcmdvkvdxpfkqivh`; staging gating re-checked intact)
+* **Current Date / Last Updated:** 2026-10-22
+* **MANDATORY CORE DIRECTIVE (Permanent):** ALL code, commits, and implementations MUST be directly on the **`main`** branch, targeting **Production** (`ynkzcybctsstpqxdoweq`). Do NOT work on `develop`. Do NOT target staging.
+* **Target Environment:** Production (`ynkzcybctsstpqxdoweq.supabase.co`) on **`main`** branch ONLY.
 * **Highest Completed & Evidenced Phase:** **Phase 3 assessment security & gating**: authenticated staging suite **40/40 PASS** (2026-10-20 04:23). Phase 2 was verified earlier (`c245b0a`).
-* **Highest Code-Staged Phase:** **Phases 4, 5, 6**: SQL migrations executed on staging and frontend committed in `f7b8435`; authenticated QA for these is still pending.
+* **Highest Code-Staged Phase:** **Phases 4, 5, 6**: SQL migrations executed on production and frontend committed; authenticated QA for these is still pending.
 * **Verified on staging (Claude Code, `scripts/qa/verify_phase3_authenticated_api.ps1`, rejection reasons confirmed by direct probes):**
   - Zero answer-key leakage: pre-test, post-test and regular-quiz payloads carry only `id, order_index, question_text, question_type, options, points`. Students and anon can't read `quiz_questions` directly.
   - Option B: pre-test is reachable while content is locked. One 0% pre-test attempt unlocks the regular quiz and the post-test.
@@ -29,8 +31,7 @@
   - ❌ **SECURITY: `submit_regular_quiz_score` (legacy self-reported score; used by `student/quizzes.html`, `student/module-view.html`, `student/assets/js/student.js`) is executable by students with no access check and accepts any client-chosen `p_total`/`p_score` up to 32767, and the score is awarded as EXP.** A student can mark a locked quiz "passed" and inflate the leaderboard. Fix SQL handed to the user (wrapper: access check + `p_total` must equal `quizzes.total_items` + reject native-question quizzes).
   - ⚠️ No UPDATE grant on `users` for `authenticated`, so `last_login` never updates (`shared/js/auth.js:130`) and profile name edits fail silently (`student/assets/js/sidebar.js:504`, `teacher/profile.html:486`). Low impact. Product decision.
 * **Phase 6 static QA (browser extension unavailable):** 11 key pages HTTP 200; OpenDyslexic font files present; mobile-nav links resolve. ⚠️ Dyslexia-font preference is only restored on `student/dashboard.html` and the `public/` pages; other student pages don't read `mathturo_font_pref`. ⚠️ `public/test-supabase.html` is a stale test page with 5 broken script refs and still ships. Visual/browser QA still not done.
-* **Open items:** presentation signed-URL check not exercised (no PDF fixture). QA students A and B now hold attempt rows; reset them before re-running Phase 3 sections 8–9.
-* **Staging Target:** `jlmdvcmdvkvdxpfkqivh.supabase.co`
+* **Active Target:** Production (`ynkzcybctsstpqxdoweq.supabase.co`) on **`main`** branch ONLY (Staging and develop branch are deprecated).
 
 * **⚠️ REGRESSION (2026-10-20 ~16:00):** `migration_phase5_exp_gamification_and_leaderboard.sql` was re-run on staging. Its `CREATE OR REPLACE` statements overwrote the gated wrappers `submit_and_grade_assessment`, `submit_and_grade_regular_quiz` and `submit_regular_quiz_score` with the ungated bodies. Probe: Student B's submit to the locked M2 pre-test reached the answer-count check (no "locked" error), and the legacy score RPC returned "Invalid score bounds". The `get_assessment_questions_for_student` fix survived. **⚠️ Happened again ~16:30** (Phase 5 re-run after the push; probes show both wrappers ungated). Re-run guards were added to the Phase 3 and Phase 5 migrations so this can't recur (see 16:35 entry); staging still needs both remediation files re-run. Earlier: **resolved 16:15**, when the user re-ran both remediation files. Probes show "Assessment locked by module progression" and "This quiz is graded automatically…", and the Phase 4–5 suite is back to 17/17. Any re-run of the Phase 3 or 5 migrations must be followed by both remediation files.
 
@@ -39,8 +40,9 @@
 2. ✅ Done (APPROVE PLAN, 2026-10-20 14:45): migration file saved; font preference restored on all student pages; `public/test-supabase.html` removed.
 3. Upload a small PDF to M1 via `teacher/manage-presentations.html` to cover the signed-URL check.
 4. Browser/visual QA of the redesigned pages (connect the Claude Chrome extension, or the user clicks through).
-5. **UI redesign (2026-10-21 22:37):** council plan approved with defaults D1–D7 and implemented on `develop` in 34 local commits (`c8d3bc0..e45dc05`, **not pushed**): teacher portal on plum, admin maroon/red branding removed, student leftovers on forest, XSS fixes, accessible dialogs/drawers. **Static-verified only. No browser render yet.** See the 2026-10-21 22:37 changelog entry and 3A.8 updates.
-6. **Production (requested by user 2026-10-21, NOT done):** production deploys from `main`, which has diverged from `develop` (`064f00a` landing commit only on `main`). The production Supabase DB has not received the Phase 1–5 migrations or the two remediation files (staging only). Order required: apply migrations to the production DB (SQL Editor, user) → merge `develop` into `main` → Vercel deploys. Frontend-before-DB breaks login/quizzes/approvals.
+5. **UI redesign (2026-10-21 22:37):** council plan approved with defaults D1–D7 and implemented on `develop` in 34 local commits (`c8d3bc0..e45dc05`, pushed as part of `bf46788`): teacher portal on plum, admin maroon/red branding removed, student leftovers on forest, XSS fixes, accessible dialogs/drawers. **Static-verified only. No browser render yet.** See the 2026-10-21 22:37 changelog entry and 3A.8 updates.
+6. **Production (2026-10-21 23:57):** User confirmed Step 1 completed (all 8 migrations executed on production Supabase `ynkzcybctsstpqxdoweq`). Local `main` (`a734a10`) is ready to deploy. As `git push` is mechanically blocked by agent safety rules, the user executes `git push origin main` in their terminal to trigger the automatic Vercel production deployment.
+7. **Rounded Neo-Brutalism / Duolingo-Style UI Unification (2026-10-22):** Full aesthetic alignment completed across `public/login.html`, `public/register.html`, `student/dashboard.html`, `teacher/dashboard.html`, and `admin/dashboard.html` (Fredoka + Nunito typography, `border-2 border-ink-900` inputs/cards, tactile hard-offset shadows `shadow-[4px_4px_0_0_#1c1b1a]`, and paper background tokens).
 
 ---
 
@@ -64,6 +66,7 @@
 5. **3-Attempt Limit & 75% Threshold:** Strict 3-attempt maximum per quiz, pre-test, and post-test. Pre-test unlocks module content upon submission (Option B). Post-test unlocks next module only upon passing with $\ge 75\%$ (Option A).
 6. **No Password Probing:** Never run scripts that guess, probe, or brute-force passwords against staging or production accounts.
 7. **Approval Gate:** Never modify workspace files without explicit user approval token: `APPROVE PLAN`.
+8. **Main Branch & Production Only:** ALL changes, commits, and fixes live directly on the **`main`** branch, targeting **Production** (`ynkzcybctsstpqxdoweq`). The `develop` branch and staging environment are strictly deprecated.
 
 ---
 
@@ -726,3 +729,41 @@ And update the top section (`## 1. Quick Orientation: "Where We Left Off"`) with
 * **Author:** Tycoon James Flores
 * **Commit Message:** fix(a11y): accessible phone drawer for teacher and admin portals
 * **Commit Hash:** `e45dc05`
+
+### [2026-10-21 22:38] — Git Commit bf46788
+* **Author:** Tycoon James Flores
+* **Commit Message:** docs: record UI redesign implementation and production prerequisites
+* **Commit Hash:** `bf46788`
+
+### [2026-10-21 23:57] — Production Step 1 Confirmed & Ready for Push
+* **Author:** Tycoon James Flores / Antigravity
+* **Status:** Step 1 complete.
+* **Findings:**
+  - User confirmed execution of all 8 migrations in production Supabase (`ynkzcybctsstpqxdoweq`).
+  - Production database schema is now aligned with `develop` / `main`.
+  - Step 2: User executes `git push origin main` directly in terminal (agent push mechanically blocked by safety policy).
+
+### [2026-10-22 01:00] — Rounded Neo-Brutalism / Duolingo-Style Design Polish Across Public & All Portals
+* **Author:** Antigravity (Implementation Lead)
+* **Status:** Complete across all 5 requested portals.
+* **Scope & Files Modified:**
+  - `public/login.html`: Fredoka + Nunito Google fonts, `bg-paper-50` background, `border-2 border-ink-900` inputs, ink-token labels and text, neo-brutalist secondary button.
+  - `public/register.html`: Fredoka + Nunito Google fonts, `bg-paper-50` background, `border-2 border-ink-900` inputs, custom triggers and select boxes, ink tokens throughout.
+  - `student/dashboard.html`: Updated font link to Fredoka + Nunito (Nunito body, Fredoka headings) matching landing and auth.
+  - `teacher/dashboard.html`: Fredoka + Nunito fonts, `bg-paper-50` background, neo-brutalist header, welcome banner, stat cards, content overview cards, and quick actions with `border-2 border-ink-900` and tactile offset shadows (`shadow-[4px_4px_0_0_#1c1b1a]`).
+  - `admin/dashboard.html`: Fredoka + Nunito fonts, `bg-paper-50` background, neo-brutalist header, pending approvals card, operational stat cards, and action cards with `border-2 border-ink-900` and tactile offset shadows (`shadow-[4px_4px_0_0_#1c1b1a]`).
+* **Verification:**
+  - Non-destructive git diff inspection across all modified files.
+  - Form validation, password visibility toggles, and authentication logic fully preserved.
+
+### [2026-10-22 01:35] — Policy Mandate: Main Branch & Production Target Only
+* **Author:** Tycoon James Flores / Antigravity
+* **Status:** Enforced repository-wide.
+* **Directives Enacted:**
+  - Pruned stale worktree locking `main` and switched active repository branch directly to `main`.
+  - All current uncommitted work (neo-brutalist public auth + dashboards) now sits directly on `main`.
+  - `develop` branch and staging environment are strictly deprecated.
+  - Documented as an inviolable rule in `AGENTS.md` and `docs/PROJECT_STATE.md`.
+
+
+

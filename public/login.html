@@ -22,22 +22,22 @@
     <link rel="icon" type="image/png" href="../Logo/1.png">
     <title>Login - MathTuro LMS</title>
     <script src="shared/js/supabase-lib.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Lexend:wght@500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
     <style>
         :root {
-            --font-family-base: 'Atkinson Hyperlegible', system-ui, sans-serif;
+            --font-family-base: 'Nunito', system-ui, sans-serif;
         }
 
         body {
             font-family: var(--font-family-base);
         }
 
-        h1, h2, h3 {
-            font-family: 'Lexend', system-ui, sans-serif;
+        h1, h2, h3, h4, .font-display {
+            font-family: 'Fredoka', system-ui, sans-serif;
         }
 
         .input-focus-effect:focus {
-            box-shadow: 0 0 0 4px rgba(47, 119, 86, 0.15);
+            box-shadow: 0 0 0 4px rgba(47, 119, 86, 0.2);
         }
 
         .role-tab {
@@ -45,21 +45,25 @@
         }
 
         .role-tab.active {
-            background: var(--ds-color-primary, #2f7756);
+            background: #2f7756; /* forest-600 */
             color: white;
         }
 
         .divider-line {
-            background: var(--ds-border-default, #e4e1da);
+            background: #e4e1da; /* paper-200 */
         }
 
         /* Password toggle button */
         .password-toggle:hover {
             color: #2f7756;
         }
+
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after { transition: none !important; animation: none !important; }
+        }
     </style>
 </head>
-<body class="bg-forest-50 min-h-screen flex items-center justify-center px-4 py-10">
+<body class="bg-paper-50 min-h-screen flex items-center justify-center px-4 py-10">
     <!-- Skip Link for Accessibility -->
     <a href="#loginForm" class="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 bg-forest-800 text-white px-4 py-2 rounded-md z-50">
         Skip to login form
@@ -102,7 +106,7 @@
                     <span>Student</span>
                 </button>
                 <button type="button" id="teacherTab"
-                    class="role-tab flex-1 py-2.5 px-5 rounded-full text-sm font-semibold text-gray-600 hover:text-gray-800 flex items-center justify-center space-x-2"
+                    class="role-tab flex-1 py-2.5 px-5 rounded-full text-sm font-semibold text-ink-700 hover:text-ink-900 flex items-center justify-center space-x-2"
                     onclick="selectRole('teacher')">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z"/>
@@ -131,7 +135,7 @@
                             id="email"
                             name="email"
                             required
-                            class="w-full pl-11 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-forest-600 focus:border-transparent input-focus-effect transition-all text-gray-900 placeholder-gray-400"
+                            class="w-full pl-11 pr-4 py-3 bg-white border-2 border-ink-900 rounded-xl focus:outline-none focus:ring-2 focus:ring-forest-600 input-focus-effect transition-all text-ink-900 placeholder-ink-400"
                             placeholder="Enter your email address"
                             autocomplete="email"
                         >
@@ -154,7 +158,7 @@
                             id="password"
                             name="password"
                             required
-                            class="w-full pl-11 pr-12 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-forest-600 focus:border-transparent input-focus-effect transition-all text-gray-900 placeholder-gray-400"
+                            class="w-full pl-11 pr-12 py-3 bg-white border-2 border-ink-900 rounded-xl focus:outline-none focus:ring-2 focus:ring-forest-600 input-focus-effect transition-all text-ink-900 placeholder-ink-400"
                             placeholder="Enter your password"
                             autocomplete="current-password"
                         >
@@ -177,13 +181,13 @@
                             type="checkbox"
                             id="remember"
                             name="remember"
-                            class="w-5 h-5 rounded border-gray-300 text-forest-600 focus:ring-forest-600 focus:ring-offset-0 transition-colors cursor-pointer"
+                            class="w-5 h-5 rounded border-ink-300 text-forest-600 focus:ring-forest-600 focus:ring-offset-0 transition-colors cursor-pointer"
                         >
-                        <span class="ml-3 text-sm text-gray-600 group-hover:text-gray-800 transition-colors">
+                        <span class="ml-3 text-sm text-ink-600 group-hover:text-ink-900 transition-colors">
                             Remember me
                         </span>
                     </label>
-                    <a href="reset-password.html" class="text-sm font-medium text-forest-600 hover:text-forest-800 transition-colors">
+                    <a href="reset-password.html" class="text-sm font-semibold text-forest-600 hover:text-forest-800 transition-colors">
                         Forgot password?
                     </a>
                 </div>
@@ -216,21 +220,21 @@
             <div id="loadingIndicator" class="hidden mt-6">
                 <div class="flex items-center justify-center space-x-3">
                     <div class="w-6 h-6 border-2 border-forest-600 border-t-transparent rounded-full animate-spin"></div>
-                    <span class="text-gray-600 font-medium">Signing you in...</span>
+                    <span class="text-ink-600 font-medium">Signing you in...</span>
                 </div>
             </div>
 
             <!-- Divider -->
             <div class="mt-6 flex items-center">
                 <div class="flex-1 h-px divider-line"></div>
-                <span class="px-4 text-sm text-gray-400 font-medium">New here?</span>
+                <span class="px-4 text-sm text-ink-500 font-medium">New here?</span>
                 <div class="flex-1 h-px divider-line"></div>
             </div>
 
             <!-- Register Link -->
             <div class="mt-4">
                 <a href="register.html"
-                    class="w-full py-3 px-6 rounded-full text-forest-600 font-semibold text-base flex items-center justify-center space-x-2 border-2 border-forest-600/30 hover:border-forest-600 hover:bg-forest-600/5 transition-all">
+                    class="w-full py-3 px-6 rounded-full text-ink-900 font-semibold text-base flex items-center justify-center space-x-2 border-2 border-ink-900 shadow-[3px_3px_0_0_#1c1b1a] hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-[4px_4px_0_0_#1c1b1a] active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all bg-white">
                     <span>Create an Account</span>
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"/>
@@ -240,19 +244,19 @@
 
             <!-- Back to Home -->
             <div class="mt-4 text-center">
-                <a href="index.html" class="text-sm text-gray-500 hover:text-ink-900 transition-colors">
+                <a href="index.html" class="text-sm text-ink-500 hover:text-ink-900 transition-colors">
                     ← Back to Home
                 </a>
             </div>
 
             <!-- Footer -->
             <div class="mt-6 text-center">
-                <div class="flex items-center justify-center space-x-3 text-xs text-gray-400">
-                    <a href="contact.html" class="hover:text-gray-600 transition-colors">Contact Support</a>
+                <div class="flex items-center justify-center space-x-3 text-xs text-ink-400">
+                    <a href="contact.html" class="hover:text-ink-700 transition-colors">Contact Support</a>
                     <span>•</span>
-                    <a href="terms.html" class="hover:text-gray-600 transition-colors">Terms</a>
+                    <a href="terms.html" class="hover:text-ink-700 transition-colors">Terms</a>
                     <span>•</span>
-                    <a href="privacy.html" class="hover:text-gray-600 transition-colors">Privacy</a>
+                    <a href="privacy.html" class="hover:text-ink-700 transition-colors">Privacy</a>
                 </div>
             </div>
         </div>
@@ -292,14 +296,14 @@
 
             if (role === 'student') {
                 studentTab.classList.add('active');
-                studentTab.classList.remove('text-gray-600', 'hover:text-gray-800');
+                studentTab.classList.remove('text-ink-700', 'hover:text-ink-900');
                 teacherTab.classList.remove('active');
-                teacherTab.classList.add('text-gray-600', 'hover:text-gray-800');
+                teacherTab.classList.add('text-ink-700', 'hover:text-ink-900');
             } else {
                 teacherTab.classList.add('active');
-                teacherTab.classList.remove('text-gray-600', 'hover:text-gray-800');
+                teacherTab.classList.remove('text-ink-700', 'hover:text-ink-900');
                 studentTab.classList.remove('active');
-                studentTab.classList.add('text-gray-600', 'hover:text-gray-800');
+                studentTab.classList.add('text-ink-700', 'hover:text-ink-900');
             }
         }
 

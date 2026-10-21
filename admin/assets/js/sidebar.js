@@ -207,6 +207,8 @@ function createAdminSidebar() {
             mobileOverlay.classList.add('hidden');
         });
     }
+
+    enhanceMobileDrawer(sidebar);
 }
 
 function toggleFilesDropdown() {
@@ -258,3 +260,42 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 });
+
+// Phone drawer accessibility: pages toggle the drawer <aside> themselves, so this mirrors that state onto the menu button
+// and adds Escape-to-close plus focus moving into and back out of the drawer.
+// Skipped when a page already manages aria-expanded on its menu button.
+function enhanceMobileDrawer(drawer) {
+  const button = document.getElementById('mobileMenuBtn');
+  const overlay = document.getElementById('mobileOverlay');
+  if (!button || !drawer || button.hasAttribute('aria-expanded')) return;
+
+  if (!drawer.id) drawer.id = 'portalSidebarDrawer';
+  if (!button.getAttribute('aria-label')) button.setAttribute('aria-label', 'Open navigation menu');
+  button.setAttribute('aria-controls', drawer.id);
+
+  const isPhoneLayout = () => window.matchMedia('(max-width: 1023px)').matches;
+  const isOpen = () => isPhoneLayout() && !drawer.classList.contains('-translate-x-full');
+
+  let wasOpen = isOpen();
+  button.setAttribute('aria-expanded', String(wasOpen));
+
+  const onChange = () => {
+    const nowOpen = isOpen();
+    button.setAttribute('aria-expanded', String(nowOpen));
+    if (nowOpen && !wasOpen) {
+      const first = drawer.querySelector('a[href], button:not([disabled])');
+      if (first) first.focus();
+    } else if (!nowOpen && wasOpen && drawer.contains(document.activeElement)) {
+      button.focus();
+    }
+    wasOpen = nowOpen;
+  };
+  new MutationObserver(onChange).observe(drawer, { attributes: true, attributeFilter: ['class'] });
+
+  document.addEventListener('keydown', e => {
+    if (e.key !== 'Escape' || !isOpen()) return;
+    drawer.classList.add('-translate-x-full');
+    if (overlay) overlay.classList.add('hidden');
+    button.focus();
+  });
+}

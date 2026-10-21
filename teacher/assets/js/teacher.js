@@ -13,6 +13,16 @@
   - uploads.js - for file upload functionality
 */
 
+// Escape text for innerHTML templates
+function escText(value) {
+  return String(value ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
+
+// Encode a value as a JS string literal that is safe inside an inline on* attribute
+function jsArg(value) {
+  return escText(JSON.stringify(String(value ?? '')));
+}
+
 /*
   Function Name: approveQuizSubmission
   Purpose:
@@ -675,13 +685,13 @@ async function loadTeacherSections(teacherId) {
         <div class="p-4 hover:bg-gray-50 transition-colors">
           <div class="flex items-center justify-between">
             <div>
-              <h4 class="font-semibold text-gray-800">${section.name}</h4>
-              <p class="text-sm text-gray-600">${section.grade_levels?.name || 'N/A'}</p>
+              <h4 class="font-semibold text-gray-800">${escText(section.name)}</h4>
+              <p class="text-sm text-gray-600">${escText(section.grade_levels?.name || 'N/A')}</p>
             </div>
             <div class="text-right">
               <p class="text-sm font-medium text-plum-800">${students.length} Students</p>
               <button 
-                onclick="viewSectionStudents('${section.id}', '${section.name}')"
+                onclick="viewSectionStudents('${section.id}', ${jsArg(section.name)})"
                 class="text-xs text-plum-800 hover:text-plum-900 mt-1"
               >
                 View Students

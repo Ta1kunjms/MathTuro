@@ -1161,3 +1161,35 @@ And update the top section (`## 1. Quick Orientation: "Where We Left Off"`) with
   2. Run `git push origin main`.
   3. Verify in browser: test modal widths (~75% screen width), verify Publish/Unpublish toggle on tests/quizzes, and verify "Save & Build Questionnaire" redirect to Question Manager.
   4. Proceed to Batch 3 (CSV/JSON Bulk Import & Export).
+
+### [2026-10-23 02:52] — Git Commit d7fc301
+* **Author:** Tycoon James Flores
+* **Commit Message:** feat(quizzes): unify questionnaire flow, add assessment publish controls, and widen modals to 75vw
+* **Commit Hash:** `d7fc301`
+
+### [2026-10-23 03:05] -- Antigravity Session: Quiz CMS v2 Batch 3 (CSV & JSON Bulk Import & Export)
+* **Status:** Implemented on `main` (Production target `ynkzcybctsstpqxdoweq`).
+* **Scope Completed:**
+  - **Question Manager Export (`teacher/manage-questions.html`):**
+    - Added an "Export" dropdown menu in the sticky header supporting **Export as CSV** and **Export as JSON**.
+    - **CSV Export:** RFC-4180 compliant with UTF-8 BOM (\uFEFF) for native Microsoft Excel and Google Sheets compatibility. Formats options, part labels, numeric tolerance, and points cleanly.
+    - **JSON Export:** Serializes full question objects with clean 2-space indentation.
+  - **Question Manager Bulk Import (`teacher/manage-questions.html`):**
+    - Added an "Import" button opening `#importModal` (75% viewport width, neo-brutalist styled).
+    - **Ready-Made Sample Templates:** Instant downloads for `MathTuro_Questions_Template.csv` and `MathTuro_Questions_Template.json` containing examples of all 5 supported question types (Multiple Choice, True/False, Identification, Fill in the Blank, Numeric).
+    - **Upload Dropzone:** Drag-and-drop and file selection for `.csv` and `.json` files.
+    - **Live In-Browser Parser & Validator:**
+      - Parses RFC-4180 CSV (handling quoted commas, double quotes, multiline text) and JSON arrays.
+      - Type aliases normalization (e.g. `mc`, `tf`, `id`, `fib`, `num`).
+      - Live preview table showing item number, type badge, question text, correct answer, points, and real-time validation badges (green valid vs red error with tooltip explanation).
+    - **Import Strategies:**
+      - **Append Questions:** Preserves existing questions and appends imported items with adjusted sequential `order_index`.
+      - **Replace All:** Deletes existing questions for the quiz/assessment and replaces them with the imported batch.
+    - **Database Sync:** Performs batch insert to `public.quiz_questions` and updates `total_items` on the parent quiz or assessment.
+* **Files Modified:**
+  - `teacher/manage-questions.html`
+  - `docs/PROJECT_STATE.md`
+* **Next Immediate Action:**
+  1. Review `git diff` and commit changes to `main` (Author: Tycoon James Flores).
+  2. Run `git push origin main`.
+  3. Verify in browser: open Question Manager for any quiz/test, download CSV/JSON template, test import and export flows.

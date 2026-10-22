@@ -121,12 +121,37 @@
                     <p class="text-sm text-gray-500 hidden sm:block" id="pageSubtitle">Loading…</p>
                 </div>
                 <div class="flex items-center space-x-2 sm:space-x-3">
-                    <button id="btnTogglePublish" onclick="togglePublishStatus()" class="hidden inline-flex items-center space-x-1.5 px-3 sm:px-4 py-2 rounded-xl font-bold border-2 border-ink-900 shadow-[2px_2px_0_0_#1c1b1a] transition-all">
+                    <!-- Export Dropdown -->
+                    <div class="relative">
+                        <button id="btnExportMenu" onclick="toggleExportMenu(event)" 
+                            class="inline-flex items-center space-x-1.5 px-3 py-2 rounded-xl font-bold border-2 border-ink-900 shadow-[2px_2px_0_0_#1c1b1a] bg-white hover:bg-gray-50 transition-all text-sm">
+                            <i class="fas fa-file-export text-gray-700"></i>
+                            <span class="hidden sm:inline">Export</span>
+                            <i class="fas fa-chevron-down text-xs ml-0.5 text-gray-500"></i>
+                        </button>
+                        <div id="exportDropdown" class="hidden absolute right-0 mt-2 w-48 bg-white border-2 border-ink-900 rounded-xl shadow-[4px_4px_0_0_#1c1b1a] py-1 z-50">
+                            <button onclick="exportQuestionsAsCsv()" class="w-full text-left px-4 py-2.5 text-xs font-bold text-gray-700 hover:bg-purple-50 hover:text-plum-800 flex items-center gap-2">
+                                <i class="fas fa-file-csv text-green-600 text-sm w-4"></i>Export as CSV (.csv)
+                            </button>
+                            <button onclick="exportQuestionsAsJson()" class="w-full text-left px-4 py-2.5 text-xs font-bold text-gray-700 hover:bg-purple-50 hover:text-plum-800 flex items-center gap-2">
+                                <i class="fas fa-file-code text-amber-600 text-sm w-4"></i>Export as JSON (.json)
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Import Button -->
+                    <button id="btnOpenImport" onclick="openImportModal()" 
+                        class="inline-flex items-center space-x-1.5 px-3 py-2 rounded-xl font-bold border-2 border-ink-900 shadow-[2px_2px_0_0_#1c1b1a] bg-white hover:bg-gray-50 transition-all text-sm">
+                        <i class="fas fa-file-import text-plum-800"></i>
+                        <span class="hidden sm:inline">Import</span>
+                    </button>
+
+                    <button id="btnTogglePublish" onclick="togglePublishStatus()" class="hidden inline-flex items-center space-x-1.5 px-3 sm:px-4 py-2 rounded-xl font-bold border-2 border-ink-900 shadow-[2px_2px_0_0_#1c1b1a] transition-all text-sm">
                         <i class="fas fa-globe"></i>
                         <span>Publish</span>
                     </button>
                     <button id="btnAddQuestion"
-                        class="inline-flex items-center space-x-2 bg-plum-800 text-white px-4 py-2 rounded-xl font-bold hover:bg-plum-900 transition-colors border-2 border-ink-900 shadow-[2px_2px_0_0_#1c1b1a]">
+                        class="inline-flex items-center space-x-2 bg-plum-800 text-white px-4 py-2 rounded-xl font-bold hover:bg-plum-900 transition-colors border-2 border-ink-900 shadow-[2px_2px_0_0_#1c1b1a] text-sm">
                         <i class="fas fa-plus"></i>
                         <span class="hidden sm:inline">Add Question</span>
                     </button>
@@ -371,6 +396,124 @@
                     </button>
                 </div>
             </form>
+        </div>
+    </div>
+
+    <!-- ===== BULK IMPORT MODAL ===== -->
+    <div id="importModal" class="hidden fixed inset-0 flex items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-2xl w-[94vw] md:w-[75vw] max-w-5xl max-h-[92vh] overflow-y-auto" style="border:2px solid #1c1b1a; box-shadow:6px 6px 0 0 #1c1b1a;">
+            <div class="flex items-center justify-between p-6" style="border-bottom:2px solid #1c1b1a;">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-xl bg-purple-100 border-2 border-ink-900 flex items-center justify-center text-plum-800 shadow-[2px_2px_0_0_#1c1b1a]">
+                        <i class="fas fa-file-import text-lg"></i>
+                    </div>
+                    <div>
+                        <h2 class="text-xl font-bold text-gray-900">Bulk Import Questions</h2>
+                        <p class="text-xs text-gray-500">Upload questions from a CSV or JSON questionnaire file</p>
+                    </div>
+                </div>
+                <button type="button" onclick="closeImportModal()" class="p-2 text-gray-500 hover:text-gray-700 rounded-lg hover:bg-gray-100">
+                    <i class="fas fa-times text-lg"></i>
+                </button>
+            </div>
+
+            <div class="p-6 space-y-6">
+                <!-- Step 1: Template Downloads -->
+                <div class="p-4 bg-purple-50/70 rounded-xl border border-purple-200 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                    <div>
+                        <p class="text-sm font-bold text-plum-900 flex items-center gap-1.5">
+                            <i class="fas fa-lightbulb text-amber-500"></i>Need a ready-made template?
+                        </p>
+                        <p class="text-xs text-purple-800 mt-0.5">Download our sample template containing examples for all 5 question types (MC, T/F, Identification, Fill in Blank, Numeric).</p>
+                    </div>
+                    <div class="flex gap-2 flex-wrap flex-shrink-0">
+                        <button type="button" onclick="downloadCsvTemplate()" class="px-3 py-1.5 text-xs font-bold bg-white text-plum-800 border-2 border-ink-900 rounded-lg shadow-[2px_2px_0_0_#1c1b1a] hover:bg-purple-100 active:translate-x-0.5 active:translate-y-0.5">
+                            <i class="fas fa-file-csv mr-1 text-green-600"></i>CSV Template
+                        </button>
+                        <button type="button" onclick="downloadJsonTemplate()" class="px-3 py-1.5 text-xs font-bold bg-white text-plum-800 border-2 border-ink-900 rounded-lg shadow-[2px_2px_0_0_#1c1b1a] hover:bg-purple-100 active:translate-x-0.5 active:translate-y-0.5">
+                            <i class="fas fa-file-code mr-1 text-amber-600"></i>JSON Template
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Step 2: Upload Dropzone -->
+                <div>
+                    <label class="block text-sm font-bold text-gray-700 mb-2">Select Questionnaire File (.csv or .json)</label>
+                    <div id="importDropzone"
+                        class="border-2 border-dashed border-gray-300 hover:border-plum-800 rounded-2xl p-6 text-center cursor-pointer transition-colors bg-gray-50 hover:bg-purple-50/20">
+                        <input type="file" id="importFileInput" accept=".csv,.json,application/json,text/csv" class="hidden" onchange="handleImportFileSelect(event)">
+                        <div class="w-12 h-12 bg-white border-2 border-ink-900 rounded-xl flex items-center justify-center mx-auto mb-2 text-plum-800 shadow-[2px_2px_0_0_#1c1b1a]">
+                            <i class="fas fa-cloud-upload-alt text-xl"></i>
+                        </div>
+                        <p class="font-bold text-gray-800 text-sm" id="importFilePrompt">Click to browse or drag and drop your file here</p>
+                        <p class="text-xs text-gray-500 mt-1" id="importFileSubtext">Supports UTF-8 CSV or JSON up to 5MB</p>
+                    </div>
+                </div>
+
+                <!-- Step 3: Parsing & Validation Preview -->
+                <div id="importPreviewSection" class="hidden space-y-4">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-2">
+                            <span class="text-sm font-bold text-gray-800">Preview & Validation</span>
+                            <span id="previewCountBadge" class="text-xs px-2 py-0.5 rounded-full font-bold bg-blue-100 text-blue-800">0 questions</span>
+                        </div>
+                        <div class="flex items-center gap-3 text-xs font-semibold">
+                            <span class="text-emerald-700"><i class="fas fa-check-circle mr-1"></i><span id="validCount">0</span> Valid</span>
+                            <span class="text-red-700"><i class="fas fa-exclamation-circle mr-1"></i><span id="invalidCount">0</span> Invalid</span>
+                        </div>
+                    </div>
+
+                    <div class="border-2 border-ink-900 rounded-xl overflow-hidden shadow-[2px_2px_0_0_#1c1b1a] max-h-64 overflow-y-auto">
+                        <table class="w-full text-left text-xs border-collapse">
+                            <thead class="bg-gray-100 text-gray-700 font-bold border-b-2 border-ink-900 sticky top-0">
+                                <tr>
+                                    <th class="p-2.5 w-12 text-center">#</th>
+                                    <th class="p-2.5 w-24">Type</th>
+                                    <th class="p-2.5">Question Text</th>
+                                    <th class="p-2.5 w-32">Correct Answer</th>
+                                    <th class="p-2.5 w-16 text-center">Pts</th>
+                                    <th class="p-2.5 w-28 text-center">Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="previewTableBody" class="divide-y divide-gray-200 bg-white">
+                                <!-- Populated dynamically -->
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Step 4: Import Mode -->
+                    <div class="p-4 bg-gray-50 border border-gray-200 rounded-xl">
+                        <span class="block text-xs font-bold uppercase text-gray-600 mb-2 tracking-wide">Import Strategy</span>
+                        <div class="flex flex-col sm:flex-row gap-4">
+                            <label class="flex items-start gap-2 cursor-pointer text-xs font-bold text-gray-800">
+                                <input type="radio" name="importMode" value="append" checked class="mt-0.5 text-plum-800 focus:ring-plum-800">
+                                <div>
+                                    <span>Append Questions</span>
+                                    <p class="text-[11px] font-normal text-gray-500">Keep current questions and append these after them.</p>
+                                </div>
+                            </label>
+                            <label class="flex items-start gap-2 cursor-pointer text-xs font-bold text-red-700">
+                                <input type="radio" name="importMode" value="replace" class="mt-0.5 text-red-600 focus:ring-red-600">
+                                <div>
+                                    <span>Replace All Existing Questions</span>
+                                    <p class="text-[11px] font-normal text-gray-500">Clear existing questions in this test and insert imported items.</p>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex gap-3 pt-2">
+                    <button type="button" onclick="closeImportModal()"
+                        class="px-6 py-3 rounded-xl font-bold border-2 border-ink-900 shadow-[2px_2px_0_0_#1c1b1a] bg-white hover:bg-gray-50">
+                        Cancel
+                    </button>
+                    <button type="button" id="btnExecuteImport" onclick="executeImport()" disabled
+                        class="flex-1 py-3 bg-plum-800 text-white rounded-xl font-bold hover:bg-plum-900 disabled:opacity-50 disabled:cursor-not-allowed border-2 border-ink-900 shadow-[2px_2px_0_0_#1c1b1a]">
+                        <i class="fas fa-file-import mr-1.5"></i>Confirm & Import Questions
+                    </button>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -939,6 +1082,653 @@
         t.innerHTML = '<i class="fas fa-' + (type==='success'?'check-circle':type==='error'?'exclamation-circle':'info-circle') + '"></i><span>' + msg + '</span>';
         t.classList.remove('hidden');
         setTimeout(() => t.classList.add('hidden'), 3500);
+    }
+
+    // ─── Export & Import Engine (Batch 3) ──────────────────────────────
+    let parsedImportQuestions = [];
+
+    function toggleExportMenu(e) {
+        e.stopPropagation();
+        const menu = document.getElementById('exportDropdown');
+        if (menu) menu.classList.toggle('hidden');
+    }
+
+    document.addEventListener('click', (e) => {
+        const menu = document.getElementById('exportDropdown');
+        if (menu && !menu.classList.contains('hidden') && !e.target.closest('#btnExportMenu')) {
+            menu.classList.add('hidden');
+        }
+    });
+
+    function getSanitizedExportFilename(ext) {
+        const title = (currentContextMeta?.title || 'questions')
+            .toLowerCase()
+            .replace(/[^a-z0-9]+/g, '_')
+            .replace(/^_+|_+$/g, '');
+        return `${title || 'questions'}.${ext}`;
+    }
+
+    function exportQuestionsAsJson() {
+        document.getElementById('exportDropdown')?.classList.add('hidden');
+        if (questions.length === 0) {
+            showToast('No questions to export.', 'info');
+            return;
+        }
+
+        const dataToExport = questions.map((q, idx) => ({
+            part_label: q.part_label || null,
+            order_index: idx + 1,
+            question_type: q.question_type,
+            question_text: q.question_text,
+            points: q.points || 1,
+            correct_answer: q.correct_answer,
+            options: q.options || null,
+            numeric_tolerance: q.numeric_tolerance || null,
+            explanation: q.explanation || null
+        }));
+
+        const jsonStr = JSON.stringify(dataToExport, null, 2);
+        const blob = new Blob([jsonStr], { type: 'application/json;charset=utf-8;' });
+        triggerDownload(blob, getSanitizedExportFilename('json'));
+        showToast('Exported ' + questions.length + ' questions to JSON', 'success');
+    }
+
+    function exportQuestionsAsCsv() {
+        document.getElementById('exportDropdown')?.classList.add('hidden');
+        if (questions.length === 0) {
+            showToast('No questions to export.', 'info');
+            return;
+        }
+
+        const headers = ['part_label', 'order_index', 'question_type', 'question_text', 'points', 'correct_answer', 'options', 'numeric_tolerance', 'explanation'];
+        const rows = [headers.join(',')];
+
+        questions.forEach((q, idx) => {
+            let optionsStr = '';
+            if (q.question_type === 'multiple_choice' && Array.isArray(q.options)) {
+                optionsStr = q.options.map(o => `${o.id}: ${o.text}`).join(' | ');
+            } else if (q.question_type === 'true_false') {
+                optionsStr = 'True | False';
+            }
+
+            const values = [
+                q.part_label || '',
+                idx + 1,
+                q.question_type || 'multiple_choice',
+                q.question_text || '',
+                q.points || 1,
+                q.correct_answer || '',
+                optionsStr,
+                q.numeric_tolerance !== null && q.numeric_tolerance !== undefined ? q.numeric_tolerance : '',
+                q.explanation || ''
+            ];
+
+            const escapedRow = values.map(csvEscape).join(',');
+            rows.push(escapedRow);
+        });
+
+        // Add UTF-8 BOM so Excel opens with proper character encoding
+        const csvContent = '\uFEFF' + rows.join('\r\n');
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        triggerDownload(blob, getSanitizedExportFilename('csv'));
+        showToast('Exported ' + questions.length + ' questions to CSV', 'success');
+    }
+
+    function csvEscape(val) {
+        if (val === null || val === undefined) return '""';
+        const str = String(val);
+        if (str.includes(',') || str.includes('"') || str.includes('\n') || str.includes('\r')) {
+            return `"${str.replace(/"/g, '""')}"`;
+        }
+        return `"${str}"`;
+    }
+
+    function triggerDownload(blob, filename) {
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+    }
+
+    function downloadCsvTemplate() {
+        const csv = '\uFEFF' + [
+            'part_label,order_index,question_type,question_text,points,correct_answer,options,numeric_tolerance,explanation',
+            '"Part I - Multiple Choice",1,"multiple_choice","What is the perimeter of a rectangle with length 8cm and width 5cm?",1,"B","A: 13cm | B: 26cm | C: 40cm | D: 30cm","","Perimeter = 2*(length + width) = 2*(8+5) = 26cm"',
+            '"Part I - Multiple Choice",2,"true_false","A triangle can have two right angles.",1,"False","True | False","","The sum of angles in a flat triangle is 180 degrees."',
+            '"Part II - Identification",3,"identification","What do you call a polygon with eight sides?",1,"Octagon","","","An octagon is an 8-sided polygon."',
+            '"Part III - Fill in the Blank",4,"fill_in_blank","Solve for x in the equation 2x + 6 = 14.",2,"4|x=4|x = 4","","","2x = 8 => x = 4. Pipe symbol | provides alternative correct answers."',
+            '"Part IV - Numeric",5,"numeric","Calculate the value of pi rounded to two decimal places.",1,"3.14","",0.01,"Values between 3.13 and 3.15 are accepted due to 0.01 tolerance."'
+        ].join('\r\n');
+
+        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+        triggerDownload(blob, 'MathTuro_Questions_Template.csv');
+        showToast('CSV Template downloaded', 'success');
+    }
+
+    function downloadJsonTemplate() {
+        const template = [
+            {
+                "part_label": "Part I - Multiple Choice",
+                "order_index": 1,
+                "question_type": "multiple_choice",
+                "question_text": "What is the perimeter of a rectangle with length 8cm and width 5cm?",
+                "points": 1,
+                "correct_answer": "B",
+                "options": [
+                    { "id": "A", "text": "13cm" },
+                    { "id": "B", "text": "26cm" },
+                    { "id": "C", "text": "40cm" },
+                    { "id": "D", "text": "30cm" }
+                ],
+                "numeric_tolerance": null,
+                "explanation": "Perimeter = 2*(length + width) = 2*(8+5) = 26cm"
+            },
+            {
+                "part_label": "Part I - Multiple Choice",
+                "order_index": 2,
+                "question_type": "true_false",
+                "question_text": "A triangle can have two right angles.",
+                "points": 1,
+                "correct_answer": "False",
+                "options": [
+                    { "id": "True", "text": "True" },
+                    { "id": "False", "text": "False" }
+                ],
+                "numeric_tolerance": null,
+                "explanation": "The sum of angles in a flat triangle is 180 degrees."
+            },
+            {
+                "part_label": "Part II - Identification",
+                "order_index": 3,
+                "question_type": "identification",
+                "question_text": "What do you call a polygon with eight sides?",
+                "points": 1,
+                "correct_answer": "Octagon",
+                "options": null,
+                "numeric_tolerance": null,
+                "explanation": "An octagon is an 8-sided polygon."
+            },
+            {
+                "part_label": "Part III - Fill in the Blank",
+                "order_index": 4,
+                "question_type": "fill_in_blank",
+                "question_text": "Solve for x in the equation 2x + 6 = 14.",
+                "points": 2,
+                "correct_answer": "4|x=4|x = 4",
+                "options": null,
+                "numeric_tolerance": null,
+                "explanation": "2x = 8 => x = 4. Pipe symbol | provides alternative correct answers."
+            },
+            {
+                "part_label": "Part IV - Numeric",
+                "order_index": 5,
+                "question_type": "numeric",
+                "question_text": "Calculate the value of pi rounded to two decimal places.",
+                "points": 1,
+                "correct_answer": "3.14",
+                "options": null,
+                "numeric_tolerance": 0.01,
+                "explanation": "Values between 3.13 and 3.15 are accepted due to 0.01 tolerance."
+            }
+        ];
+
+        const blob = new Blob([JSON.stringify(template, null, 2)], { type: 'application/json;charset=utf-8;' });
+        triggerDownload(blob, 'MathTuro_Questions_Template.json');
+        showToast('JSON Template downloaded', 'success');
+    }
+
+    // ─── Import Dialog & Parser ─────────────────────────────────────────
+    function openImportModal() {
+        parsedImportQuestions = [];
+        const fileInput = document.getElementById('importFileInput');
+        if (fileInput) fileInput.value = '';
+        document.getElementById('importFilePrompt').textContent = 'Click to browse or drag and drop your file here';
+        document.getElementById('importFileSubtext').textContent = 'Supports UTF-8 CSV or JSON up to 5MB';
+        document.getElementById('importPreviewSection').classList.add('hidden');
+        document.getElementById('btnExecuteImport').disabled = true;
+        setupImportDropzone();
+        document.getElementById('importModal').classList.remove('hidden');
+    }
+
+    function closeImportModal() {
+        document.getElementById('importModal').classList.add('hidden');
+        parsedImportQuestions = [];
+    }
+
+    function setupImportDropzone() {
+        const dropzone = document.getElementById('importDropzone');
+        if (!dropzone || dropzone.dataset.bound) return;
+        dropzone.dataset.bound = 'true';
+
+        dropzone.addEventListener('click', () => {
+            document.getElementById('importFileInput').click();
+        });
+
+        ['dragenter', 'dragover'].forEach(name => {
+            dropzone.addEventListener(name, (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                dropzone.classList.add('border-plum-800', 'bg-purple-50/40');
+            });
+        });
+
+        ['dragleave', 'drop'].forEach(name => {
+            dropzone.addEventListener(name, (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                dropzone.classList.remove('border-plum-800', 'bg-purple-50/40');
+            });
+        });
+
+        dropzone.addEventListener('drop', (e) => {
+            const files = e.dataTransfer?.files;
+            if (files && files.length > 0) {
+                processImportFile(files[0]);
+            }
+        });
+    }
+
+    function handleImportFileSelect(e) {
+        const file = e.target.files?.[0];
+        if (file) processImportFile(file);
+    }
+
+    function processImportFile(file) {
+        const name = file.name.toLowerCase();
+        if (!name.endsWith('.csv') && !name.endsWith('.json')) {
+            showToast('Invalid file format. Please upload a .csv or .json file.', 'error');
+            return;
+        }
+
+        document.getElementById('importFilePrompt').innerHTML = `<i class="fas fa-check-circle text-green-600 mr-1.5"></i>${esc(file.name)}`;
+        document.getElementById('importFileSubtext').textContent = `${(file.size / 1024).toFixed(1)} KB — Parsing...`;
+
+        const reader = new FileReader();
+        reader.onload = (event) => {
+            const content = event.target?.result;
+            if (!content) {
+                showToast('Uploaded file is empty.', 'error');
+                return;
+            }
+
+            try {
+                if (name.endsWith('.json')) {
+                    parseJsonContent(content);
+                } else {
+                    parseCsvContent(content);
+                }
+            } catch (err) {
+                console.error('File parsing error:', err);
+                showToast('Failed to parse file: ' + err.message, 'error');
+            }
+        };
+
+        reader.onerror = () => {
+            showToast('Error reading file from disk.', 'error');
+        };
+
+        reader.readAsText(file);
+    }
+
+    function parseJsonContent(content) {
+        let rawData;
+        try {
+            rawData = JSON.parse(content);
+        } catch (e) {
+            throw new Error('Invalid JSON syntax: ' + e.message);
+        }
+
+        const items = Array.isArray(rawData) ? rawData : (rawData.questions || [rawData]);
+        if (items.length === 0) {
+            throw new Error('No question items found in JSON array');
+        }
+
+        validateAndPreviewQuestions(items.map(item => normalizeQuestionObject(item)));
+    }
+
+    function parseCsvContent(content) {
+        const parsedRows = parseRFC4180CSV(content);
+        if (parsedRows.length < 2) {
+            throw new Error('CSV must contain a header row and at least one data row');
+        }
+
+        // Header mapping
+        const headers = parsedRows[0].map(h => String(h).trim().toLowerCase().replace(/[^a-z0-9_]/g, ''));
+        const colMap = {};
+        headers.forEach((h, idx) => {
+            if (h.includes('part')) colMap.part_label = idx;
+            else if (h.includes('order')) colMap.order_index = idx;
+            else if (h.includes('type')) colMap.question_type = idx;
+            else if (h.includes('text') || h.includes('question')) colMap.question_text = idx;
+            else if (h.includes('point')) colMap.points = idx;
+            else if (h.includes('answer') || h.includes('correct')) colMap.correct_answer = idx;
+            else if (h.includes('option') || h.includes('choice')) colMap.options = idx;
+            else if (h.includes('tolerance')) colMap.numeric_tolerance = idx;
+            else if (h.includes('explain')) colMap.explanation = idx;
+        });
+
+        if (colMap.question_text === undefined) {
+            throw new Error('CSV header missing "question_text" column');
+        }
+
+        const items = [];
+        for (let r = 1; r < parsedRows.length; r++) {
+            const row = parsedRows[r];
+            if (row.length === 0 || (row.length === 1 && !row[0].trim())) continue; // Skip blank line
+
+            const rawObj = {
+                part_label: colMap.part_label !== undefined ? row[colMap.part_label] : null,
+                order_index: colMap.order_index !== undefined ? row[colMap.order_index] : r,
+                question_type: colMap.question_type !== undefined ? row[colMap.question_type] : 'multiple_choice',
+                question_text: colMap.question_text !== undefined ? row[colMap.question_text] : '',
+                points: colMap.points !== undefined ? row[colMap.points] : 1,
+                correct_answer: colMap.correct_answer !== undefined ? row[colMap.correct_answer] : '',
+                options: colMap.options !== undefined ? row[colMap.options] : '',
+                numeric_tolerance: colMap.numeric_tolerance !== undefined ? row[colMap.numeric_tolerance] : null,
+                explanation: colMap.explanation !== undefined ? row[colMap.explanation] : ''
+            };
+
+            items.push(normalizeQuestionObject(rawObj));
+        }
+
+        if (items.length === 0) {
+            throw new Error('No question rows found in CSV');
+        }
+
+        validateAndPreviewQuestions(items);
+    }
+
+    function parseRFC4180CSV(text) {
+        const lines = [];
+        let row = [];
+        let cell = '';
+        let insideQuotes = false;
+        let i = 0;
+        const str = text.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+
+        while (i < str.length) {
+            const char = str[i];
+            const next = str[i + 1];
+
+            if (char === '"') {
+                if (insideQuotes && next === '"') {
+                    cell += '"';
+                    i += 2;
+                    continue;
+                } else {
+                    insideQuotes = !insideQuotes;
+                    i++;
+                    continue;
+                }
+            }
+
+            if (char === ',' && !insideQuotes) {
+                row.push(cell.trim());
+                cell = '';
+                i++;
+                continue;
+            }
+
+            if (char === '\n' && !insideQuotes) {
+                row.push(cell.trim());
+                lines.push(row);
+                row = [];
+                cell = '';
+                i++;
+                continue;
+            }
+
+            cell += char;
+            i++;
+        }
+
+        if (cell.length > 0 || row.length > 0) {
+            row.push(cell.trim());
+            lines.push(row);
+        }
+
+        return lines;
+    }
+
+    function normalizeQuestionType(type) {
+        if (!type) return 'multiple_choice';
+        const t = String(type).trim().toLowerCase().replace(/[\s\-_/]/g, '');
+        if (['multiplechoice', 'mc', 'choice'].includes(t)) return 'multiple_choice';
+        if (['truefalse', 'tf', 'boolean'].includes(t)) return 'true_false';
+        if (['identification', 'id', 'shortanswer'].includes(t)) return 'identification';
+        if (['fillinblank', 'fib', 'fillintheblank'].includes(t)) return 'fill_in_blank';
+        if (['numeric', 'num', 'number', 'math'].includes(t)) return 'numeric';
+        return type;
+    }
+
+    function normalizeQuestionObject(raw) {
+        const type = normalizeQuestionType(raw.question_type);
+        let options = null;
+
+        if (type === 'multiple_choice') {
+            if (Array.isArray(raw.options)) {
+                options = raw.options.map((opt, i) => {
+                    if (typeof opt === 'string') {
+                        const id = String.fromCharCode(65 + i);
+                        return { id, text: opt.trim() };
+                    }
+                    return { id: opt.id || String.fromCharCode(65 + i), text: String(opt.text || '').trim() };
+                });
+            } else if (typeof raw.options === 'string' && raw.options.trim()) {
+                const parts = raw.options.split('|').map(p => p.trim()).filter(Boolean);
+                options = parts.map((part, i) => {
+                    const match = part.match(/^([A-Za-z0-9])\s*[:\.\)]\s*(.*)$/);
+                    if (match) {
+                        return { id: match[1].toUpperCase(), text: match[2].trim() };
+                    }
+                    return { id: String.fromCharCode(65 + i), text: part };
+                });
+            }
+        } else if (type === 'true_false') {
+            options = [{ id: 'True', text: 'True' }, { id: 'False', text: 'False' }];
+        }
+
+        let correct = String(raw.correct_answer || '').trim();
+        if (type === 'true_false') {
+            const cLower = correct.toLowerCase();
+            if (['t', 'true', '1'].includes(cLower)) correct = 'True';
+            else if (['f', 'false', '0'].includes(cLower)) correct = 'False';
+        }
+
+        let tolerance = null;
+        if (type === 'numeric' && raw.numeric_tolerance !== undefined && raw.numeric_tolerance !== null && raw.numeric_tolerance !== '') {
+            tolerance = parseFloat(raw.numeric_tolerance);
+            if (isNaN(tolerance) || tolerance < 0) tolerance = 0;
+        }
+
+        return {
+            part_label: raw.part_label ? String(raw.part_label).trim() : null,
+            order_index: parseInt(raw.order_index, 10) || 1,
+            question_type: type,
+            question_text: String(raw.question_text || '').trim(),
+            points: Math.max(1, parseInt(raw.points, 10) || 1),
+            correct_answer: correct,
+            options: options,
+            numeric_tolerance: tolerance,
+            explanation: raw.explanation ? String(raw.explanation).trim() : null
+        };
+    }
+
+    function validateQuestion(q) {
+        const errors = [];
+        if (!q.question_text) errors.push('Question text is empty');
+        if (!['multiple_choice', 'true_false', 'identification', 'fill_in_blank', 'numeric'].includes(q.question_type)) {
+            errors.push('Unknown type: ' + q.question_type);
+        }
+        if (!q.correct_answer) errors.push('Missing correct answer');
+
+        if (q.question_type === 'multiple_choice') {
+            if (!Array.isArray(q.options) || q.options.length < 2) {
+                errors.push('Needs at least 2 options');
+            } else if (q.options.some(o => !o.text)) {
+                errors.push('Option has empty text');
+            } else {
+                const optIds = q.options.map(o => o.id.toUpperCase());
+                const optTexts = q.options.map(o => o.text.trim().toLowerCase());
+                const cUpper = q.correct_answer.toUpperCase();
+                const cLower = q.correct_answer.toLowerCase();
+
+                if (!optIds.includes(cUpper)) {
+                    // Check if answer matched option text instead of letter ID
+                    const textIdx = optTexts.indexOf(cLower);
+                    if (textIdx !== -1) {
+                        q.correct_answer = q.options[textIdx].id;
+                    } else {
+                        errors.push(`Answer "${q.correct_answer}" not in options (${optIds.join(', ')})`);
+                    }
+                }
+            }
+        } else if (q.question_type === 'true_false') {
+            if (!['True', 'False'].includes(q.correct_answer)) {
+                errors.push('Answer must be True or False');
+            }
+        } else if (q.question_type === 'numeric') {
+            if (isNaN(Number(q.correct_answer))) {
+                errors.push('Answer must be a numeric value');
+            }
+        }
+
+        return errors;
+    }
+
+    function validateAndPreviewQuestions(items) {
+        parsedImportQuestions = items.map((q, idx) => {
+            const errors = validateQuestion(q);
+            return {
+                ...q,
+                temp_index: idx + 1,
+                isValid: errors.length === 0,
+                errorText: errors.join('; ')
+            };
+        });
+
+        const validCount = parsedImportQuestions.filter(q => q.isValid).length;
+        const invalidCount = parsedImportQuestions.length - validCount;
+
+        document.getElementById('previewCountBadge').textContent = `${parsedImportQuestions.length} questions`;
+        document.getElementById('validCount').textContent = validCount;
+        document.getElementById('invalidCount').textContent = invalidCount;
+
+        const tbody = document.getElementById('previewTableBody');
+        tbody.innerHTML = parsedImportQuestions.map(q => {
+            const typeBadge = q.question_type === 'multiple_choice' ? '<span class="text-plum-800 font-bold">MC</span>'
+                : q.question_type === 'true_false' ? '<span class="text-blue-700 font-bold">T/F</span>'
+                : q.question_type === 'identification' ? '<span class="text-amber-700 font-bold">ID</span>'
+                : q.question_type === 'fill_in_blank' ? '<span class="text-emerald-700 font-bold">FIB</span>'
+                : '<span class="text-cyan-700 font-bold">NUM</span>';
+
+            const statusBadge = q.isValid 
+                ? '<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-green-100 text-green-800 border border-green-200"><i class="fas fa-check mr-1"></i>Valid</span>'
+                : `<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-red-100 text-red-800 border border-red-200 cursor-help" title="${escA(q.errorText)}"><i class="fas fa-exclamation-triangle mr-1"></i>Error</span>`;
+
+            return `
+            <tr class="hover:bg-gray-50 ${q.isValid ? '' : 'bg-red-50/30'}">
+                <td class="p-2.5 text-center font-bold text-gray-500">${q.temp_index}</td>
+                <td class="p-2.5">${typeBadge}</td>
+                <td class="p-2.5">
+                    <p class="font-medium text-gray-900 line-clamp-1">${esc(q.question_text)}</p>
+                    ${q.part_label ? `<p class="text-[10px] text-gray-400"><i class="fas fa-bookmark mr-1"></i>${esc(q.part_label)}</p>` : ''}
+                    ${q.errorText ? `<p class="text-[10px] text-red-600 font-bold mt-0.5"><i class="fas fa-times mr-1"></i>${esc(q.errorText)}</p>` : ''}
+                </td>
+                <td class="p-2.5 font-bold text-gray-700 truncate max-w-[120px]">${esc(q.correct_answer)}</td>
+                <td class="p-2.5 text-center font-bold text-gray-700">${q.points}</td>
+                <td class="p-2.5 text-center">${statusBadge}</td>
+            </tr>`;
+        }).join('');
+
+        document.getElementById('importPreviewSection').classList.remove('hidden');
+        document.getElementById('btnExecuteImport').disabled = (validCount === 0);
+    }
+
+    async function executeImport() {
+        const validItems = parsedImportQuestions.filter(q => q.isValid);
+        if (validItems.length === 0) {
+            showToast('No valid questions to import.', 'error');
+            return;
+        }
+
+        const mode = document.querySelector('input[name="importMode"]:checked')?.value || 'append';
+        const invalidCount = parsedImportQuestions.length - validItems.length;
+
+        if (invalidCount > 0) {
+            if (!confirm(`Warning: ${invalidCount} invalid questions will be skipped. Only ${validItems.length} valid questions will be imported. Continue?`)) {
+                return;
+            }
+        }
+
+        if (mode === 'replace') {
+            if (!confirm(`Are you sure you want to REPLACE ALL ${questions.length} existing questions with ${validItems.length} imported questions? All existing question data will be removed.`)) {
+                return;
+            }
+        }
+
+        const btn = document.getElementById('btnExecuteImport');
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Importing...';
+
+        try {
+            const col = QUIZ_ID ? 'quiz_id' : 'assessment_id';
+            const sb = getSupabase();
+
+            // Handle Replace mode
+            if (mode === 'replace' && questions.length > 0) {
+                const { error: delError } = await sb.from('quiz_questions').delete().eq(col, OWNER_ID);
+                if (delError) throw delError;
+            }
+
+            const startIndex = (mode === 'replace') ? 0 : questions.length;
+            const now = new Date().toISOString();
+
+            const payloads = validItems.map((q, idx) => {
+                const item = {
+                    question_text: q.question_text,
+                    question_type: q.question_type,
+                    part_label: q.part_label || null,
+                    options: q.options || null,
+                    correct_answer: q.correct_answer,
+                    numeric_tolerance: q.numeric_tolerance,
+                    points: q.points || 1,
+                    order_index: startIndex + idx + 1,
+                    explanation: q.explanation || null,
+                    created_at: now,
+                    updated_at: now
+                };
+                if (QUIZ_ID) item.quiz_id = QUIZ_ID;
+                else item.assessment_id = ASMT_ID;
+                return item;
+            });
+
+            // Batch insert into quiz_questions
+            const { error: insError } = await sb.from('quiz_questions').insert(payloads);
+            if (insError) throw insError;
+
+            // Update parent total_items
+            const newTotalCount = startIndex + payloads.length;
+            const parentTable = QUIZ_ID ? 'quizzes' : 'module_assessments';
+            await sb.from(parentTable).update({
+                total_items: newTotalCount,
+                updated_at: now
+            }).eq('id', OWNER_ID);
+
+            closeImportModal();
+            showToast(`Successfully imported ${payloads.length} questions!`, 'success');
+            await loadQuestions();
+        } catch (err) {
+            console.error('Import execution error:', err);
+            showToast('Failed to import questions: ' + (err.message || 'Error'), 'error');
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-file-import mr-1.5"></i>Confirm & Import Questions';
+        }
     }
     </script>
     <script src="../shared/js/font-toggle.js"></script>

@@ -1160,6 +1160,40 @@
                 console.warn('Could not fetch teacher videos:', e);
             }
 
+            // Fetch Pre-Test and Post-Test for this module
+            let moduleAssessmentsList = [];
+            try {
+                const { data: asmts } = await getSupabase()
+                    .from('module_assessments')
+                    .select('id, assessment_type, title, is_published, total_items, passing_threshold, quiz_url')
+                    .eq('module_id', moduleId);
+                moduleAssessmentsList = asmts || [];
+            } catch (e) {
+                console.warn('Could not fetch module assessments:', e);
+            }
+            const preTest = moduleAssessmentsList.find(a => a.assessment_type === 'pre_test');
+            const postTest = moduleAssessmentsList.find(a => a.assessment_type === 'post_test');
+
+            let preTestQCount = 0;
+            let postTestQCount = 0;
+            const asmtIds = [preTest?.id, postTest?.id].filter(Boolean);
+            if (asmtIds.length > 0) {
+                try {
+                    const { data: qData } = await getSupabase()
+                        .from('quiz_questions')
+                        .select('assessment_id')
+                        .in('assessment_id', asmtIds);
+                    (qData || []).forEach(row => {
+                        if (row.assessment_id === preTest?.id) preTestQCount++;
+                        if (row.assessment_id === postTest?.id) postTestQCount++;
+                    });
+                } catch (e) {
+                    console.warn('Could not fetch question counts:', e);
+                }
+            }
+
+            const linkedQuizzes = attachable.quizzes.filter(q => q.module_id === moduleId);
+
             document.getElementById('detailModuleTitle').textContent = module.title;
             
             const content = document.getElementById('moduleDetailContent');
@@ -1245,9 +1279,130 @@
                         </div>
                     </div>
 
-                    <!-- Associated Video & Quiz Management Section -->
+                    <!-- Module Assessments & Quizzes Section -->
+                    <div class="border-t pt-6 space-y-4">
+                        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                            <div>
+                                <h4 class="font-bold text-gray-900 text-lg">Module Assessments &amp; Quizzes</h4>
+                                <p class="text-xs text-gray-500">Manage diagnostic pre-test, summative post-test, and native quizzes for this module.</p>
+                            </div>
+                            <a href="manage-quizzes.html" 
+                               class="px-3 py-1.5 text-xs font-bold bg-plum-800 text-white rounded-xl hover:bg-plum-900 inline-flex items-center gap-1.5 self-start sm:self-auto shadow-[2px_2px_0_0_#1c1b1a] border-2 border-ink-900 transition-all">
+                                <i class="fas fa-plus"></i> Create Regular Quiz
+                            </a>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <!-- Pre-Test Card -->
+                            <div class="border-2 border-ink-900 rounded-xl p-4 bg-yellow-50/40 shadow-[3px_3px_0_0_#1c1b1a]">
+                                <div class="flex items-start justify-between mb-2">
+                                    <div class="flex items-center gap-2">
+                                        <div class="w-8 h-8 rounded-lg bg-yellow-100 border border-yellow-300 flex items-center justify-center text-yellow-700 font-bold text-sm">
+                                            <i class="fas fa-play-circle"></i>
+                                        </div>
+                                        <div>
+                                            <h5 class="font-bold text-gray-900 text-sm">Diagnostic Pre-Test</h5>
+                                            <p class="text-[11px] text-gray-500">Unlocks lessons &amp; post-test</p>
+                                        </div>
+                                    </div>
+                                    ${preTest ? `
+                                        <span class="px-2 py-0.5 rounded-full text-xs font-bold ${preTest.is_published ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}">
+                                            ${preTest.is_published ? 'Published' : 'Draft'}
+                                        </span>
+                                    ` : '<span class="px-2 py-0.5 rounded-full text-xs font-bold bg-gray-100 text-gray-500">Not Added</span>'}
+                                </div>
+                                <div class="text-xs text-gray-600 mb-3 flex items-center gap-3">
+                                    <span><i class="fas fa-list-ol mr-1"></i>${preTestQCount} questions</span>
+                                    <span><i class="fas fa-check mr-1"></i>Diagnostic (0% pass)</span>
+                                </div>
+                                <div>
+                                    ${preTest ? `
+                                        <a href="manage-questions.html?assessment_id=${preTest.id}" 
+                                           class="w-full py-2 px-3 text-xs font-bold bg-yellow-600 text-white hover:bg-yellow-700 rounded-lg flex items-center justify-center gap-1.5 border border-yellow-700 transition-colors">
+                                            <i class="fas fa-edit"></i> Manage Pre-Test Questions (${preTestQCount})
+                                        </a>
+                                    ` : `
+                                        <button type="button" onclick="createAssessmentForModule('${module.id}', 'pre_test')" 
+                                                class="w-full py-2 px-3 text-xs font-bold bg-white text-yellow-800 hover:bg-yellow-50 rounded-lg flex items-center justify-center gap-1.5 border-2 border-yellow-600 transition-colors">
+                                            <i class="fas fa-plus"></i> Add Pre-Test to Module
+                                        </button>
+                                    `}
+                                </div>
+                            </div>
+
+                            <!-- Post-Test Card -->
+                            <div class="border-2 border-ink-900 rounded-xl p-4 bg-emerald-50/40 shadow-[3px_3px_0_0_#1c1b1a]">
+                                <div class="flex items-start justify-between mb-2">
+                                    <div class="flex items-center gap-2">
+                                        <div class="w-8 h-8 rounded-lg bg-emerald-100 border border-emerald-300 flex items-center justify-center text-emerald-700 font-bold text-sm">
+                                            <i class="fas fa-flag-checkered"></i>
+                                        </div>
+                                        <div>
+                                            <h5 class="font-bold text-gray-900 text-sm">Summative Post-Test</h5>
+                                            <p class="text-[11px] text-gray-500">Passing unlocks next module (75%)</p>
+                                        </div>
+                                    </div>
+                                    ${postTest ? `
+                                        <span class="px-2 py-0.5 rounded-full text-xs font-bold ${postTest.is_published ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}">
+                                            ${postTest.is_published ? 'Published' : 'Draft'}
+                                        </span>
+                                    ` : '<span class="px-2 py-0.5 rounded-full text-xs font-bold bg-gray-100 text-gray-500">Not Added</span>'}
+                                </div>
+                                <div class="text-xs text-gray-600 mb-3 flex items-center gap-3">
+                                    <span><i class="fas fa-list-ol mr-1"></i>${postTestQCount} questions</span>
+                                    <span><i class="fas fa-percentage mr-1"></i>Pass: 75%</span>
+                                </div>
+                                <div>
+                                    ${postTest ? `
+                                        <a href="manage-questions.html?assessment_id=${postTest.id}" 
+                                           class="w-full py-2 px-3 text-xs font-bold bg-emerald-700 text-white hover:bg-emerald-800 rounded-lg flex items-center justify-center gap-1.5 border border-emerald-800 transition-colors">
+                                            <i class="fas fa-edit"></i> Manage Post-Test Questions (${postTestQCount})
+                                        </a>
+                                    ` : `
+                                        <button type="button" onclick="createAssessmentForModule('${module.id}', 'post_test')" 
+                                                class="w-full py-2 px-3 text-xs font-bold bg-white text-emerald-800 hover:bg-emerald-50 rounded-lg flex items-center justify-center gap-1.5 border-2 border-emerald-600 transition-colors">
+                                            <i class="fas fa-plus"></i> Add Post-Test to Module
+                                        </button>
+                                    `}
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Attached Regular Quizzes List -->
+                        <div class="border border-gray-200 rounded-xl p-4 bg-gray-50/50">
+                            <div class="flex items-center justify-between mb-3">
+                                <h5 class="font-bold text-gray-800 text-sm flex items-center gap-2">
+                                    <i class="fas fa-clipboard-list text-plum-800"></i>
+                                    Attached Regular Quizzes (${linkedQuizzes.length})
+                                </h5>
+                                <a href="manage-quizzes.html" class="text-xs text-plum-800 font-bold hover:underline">Quiz Manager &rarr;</a>
+                            </div>
+                            ${linkedQuizzes.length > 0 ? `
+                                <div class="space-y-2">
+                                    ${linkedQuizzes.map(q => `
+                                        <div class="flex items-center justify-between p-2.5 bg-white border border-gray-200 rounded-lg shadow-sm">
+                                            <div class="flex items-center gap-2 min-w-0">
+                                                <span class="w-2 h-2 rounded-full ${q.is_published ? 'bg-green-500' : 'bg-yellow-500'}"></span>
+                                                <span class="font-semibold text-gray-900 text-xs truncate">${escapeAttachText(q.title)}</span>
+                                                <span class="text-[10px] text-gray-400 font-medium">(${q.total_items || 0} items)</span>
+                                            </div>
+                                            <a href="manage-questions.html?quiz_id=${q.id}" class="px-2.5 py-1 text-xs font-bold bg-purple-100 text-purple-700 hover:bg-purple-200 rounded-lg transition-colors flex items-center gap-1">
+                                                <i class="fas fa-list-ol"></i> Manage Questions
+                                            </a>
+                                        </div>
+                                    `).join('')}
+                                </div>
+                            ` : `
+                                <div class="text-center py-3 text-xs text-gray-500">
+                                    No regular quizzes linked yet. Check a quiz below or click "Create Regular Quiz" to author one.
+                                </div>
+                            `}
+                        </div>
+                    </div>
+
+                    <!-- Associated Video & Presentations Section -->
                     <div class="border-t pt-6 space-y-6">
-                        <h4 class="font-semibold text-gray-800 text-lg">Attached Video, Quizzes &amp; Presentations</h4>
+                        <h4 class="font-semibold text-gray-800 text-lg">Attached Video &amp; Content</h4>
                         
                         <!-- Attached Video Form -->
                         <div class="border border-gray-200 rounded-xl p-5 bg-blue-50/30">
@@ -1288,10 +1443,10 @@
                             </div>
                         </div>
 
-                        <!-- Attached Quizzes & Presentations -->
+                        <!-- Attached Quizzes & Presentations Picker -->
                         <div class="border border-gray-200 rounded-xl p-5">
-                            <h5 class="font-medium text-gray-800 mb-1">Quizzes &amp; Presentations</h5>
-                            <p class="text-xs text-gray-600 mb-4">Check the quizzes and presentations that belong to this module. Unchecking a quiz detaches it.</p>
+                            <h5 class="font-medium text-gray-800 mb-1">Attach Quizzes &amp; Presentations</h5>
+                            <p class="text-xs text-gray-600 mb-4">Check existing quizzes and presentations to attach to this module. Unchecking detaches them.</p>
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <fieldset>
                                     <legend class="block text-sm font-medium text-gray-700 mb-2">Quizzes</legend>
@@ -1590,6 +1745,46 @@
 
         function closeModuleDetailModal() {
             document.getElementById('moduleDetailModal').classList.add('hidden');
+        }
+
+        async function createAssessmentForModule(moduleId, type) {
+            try {
+                if (!currentUser?.id) {
+                    showToast('You must be logged in to create assessments', 'error');
+                    return;
+                }
+                const isPostTest = type === 'post_test';
+                const title = isPostTest ? 'Summative Post-Test' : 'Diagnostic Pre-Test';
+                const now = new Date().toISOString();
+                const payload = {
+                    module_id: moduleId,
+                    assessment_type: type,
+                    title: title,
+                    created_by: currentUser.id,
+                    teacher_id: currentUser.id,
+                    total_items: 1,
+                    passing_threshold: isPostTest ? 75 : 0,
+                    passing_score: isPostTest ? 75 : 0,
+                    created_at: now,
+                    updated_at: now
+                };
+                const { data, error } = await getSupabase()
+                    .from('module_assessments')
+                    .insert(payload)
+                    .select()
+                    .single();
+
+                if (error) throw error;
+                showToast(`Created ${title}. Redirecting to question editor...`, 'success');
+                if (data?.id) {
+                    setTimeout(() => {
+                        window.location.href = `manage-questions.html?assessment_id=${data.id}`;
+                    }, 500);
+                }
+            } catch (err) {
+                console.error('Failed to create assessment for module:', err);
+                showToast(err.message || 'Failed to create assessment', 'error');
+            }
         }
 
         async function deleteModule(moduleId) {

@@ -1099,3 +1099,30 @@ And update the top section (`## 1. Quick Orientation: "Where We Left Off"`) with
   1. Run `database/migration_school_year_format_and_registration_fix.sql` in Supabase SQL Editor.
   2. Test student signup on `public/register.html` with format `2026-2027`.
 
+### [2026-10-23 01:55] -- Antigravity Session: Module Assessment Cards & Unified Native Quizzes
+* **Status:** Implemented on `main` (Production target `ynkzcybctsstpqxdoweq`).
+* **Scope Completed:**
+  - **Teacher Module Management (`teacher/manage-modules.html`):**
+    - Clicking a module card now presents a dedicated "Assessments & Quizzes" section in the detail drawer.
+    - Teachers can view Diagnostic Pre-Test, Summative Post-Test, and attached regular quizzes cards.
+    - Added "Add Pre-Test" and "Add Post-Test" action buttons with `createAssessmentForModule()` helper that automatically provisions the assessment in `public.module_assessments` (with `created_by`, `total_items: 1`, `passing_threshold`) and opens `manage-questions.html?assessment_id=...`.
+    - Added "Manage Questions" links with question count badges for each test.
+  - **Student Quizzes Portal (`student/quizzes.html`):**
+    - Unified regular quizzes with pre/post-tests: primary action is now "Take Quiz" directing to `take-quiz.html?quiz_id=...`.
+    - Auxiliary "External Form" button displays when `quiz.quiz_url` is present, alongside external screenshot submission modal.
+  - **Student Module Viewer (`student/module-view.html`):**
+    - Updated quiz cards in `renderQuizzes()` so every quiz has a primary "Take Quiz" / "Retake Quiz" button routing into `take-quiz.html?quiz_id=...&module_id=...`.
+    - Preserved auxiliary "Form" external link button and screenshot upload modal when `quiz.quiz_url` is present.
+  - **Teacher Quiz Manager (`teacher/manage-quizzes.html`):**
+    - Fixed `confirmAsmtModule()` creation payload to set `created_by: currentUser.id`, `passing_threshold: isPost ? 75 : 0`, and `total_items: 1` matching database check constraints.
+* **Files Modified:**
+  - `teacher/manage-modules.html`
+  - `student/quizzes.html`
+  - `student/module-view.html`
+  - `teacher/manage-quizzes.html`
+  - `docs/PROJECT_STATE.md`
+* **Next Immediate Action:**
+  1. Review `git diff` and commit changes to `main` (Author: Tycoon James Flores).
+  2. Run `git push origin main`.
+  3. Verify in browser: open module card in Teacher portal to add/manage Pre/Post-tests, and verify student Take Quiz flow.
+  4. Proceed to Batch 3 (CSV/JSON Bulk Import & Export) planning/approval.

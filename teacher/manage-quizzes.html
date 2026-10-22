@@ -1088,12 +1088,16 @@
 
             try {
                 const now = new Date().toISOString();
+                const isPost = selectedPickerType === 'post_test';
                 const asmtPayload = {
                     module_id: moduleId,
                     assessment_type: selectedPickerType,
-                    title: selectedPickerType === 'pre_test' ? 'Diagnostic Pre-Test' : 'Summative Post-Test',
+                    title: isPost ? 'Summative Post-Test' : 'Diagnostic Pre-Test',
+                    created_by: currentUser.id,
                     teacher_id: currentUser.id,
-                    passing_score: selectedPickerType === 'post_test' ? 75 : 0,
+                    total_items: 1,
+                    passing_threshold: isPost ? 75 : 0,
+                    passing_score: isPost ? 75 : 0,
                     created_at: now,
                     updated_at: now
                 };

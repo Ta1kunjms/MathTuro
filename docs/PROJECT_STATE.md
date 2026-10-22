@@ -36,7 +36,7 @@
 * **⚠️ REGRESSION (2026-10-20 ~16:00):** `migration_phase5_exp_gamification_and_leaderboard.sql` was re-run on staging. Its `CREATE OR REPLACE` statements overwrote the gated wrappers `submit_and_grade_assessment`, `submit_and_grade_regular_quiz` and `submit_regular_quiz_score` with the ungated bodies. Probe: Student B's submit to the locked M2 pre-test reached the answer-count check (no "locked" error), and the legacy score RPC returned "Invalid score bounds". The `get_assessment_questions_for_student` fix survived. **⚠️ Happened again ~16:30** (Phase 5 re-run after the push; probes show both wrappers ungated). Re-run guards were added to the Phase 3 and Phase 5 migrations so this can't recur (see 16:35 entry); staging still needs both remediation files re-run. Earlier: **resolved 16:15**, when the user re-ran both remediation files. Probes show "Assessment locked by module progression" and "This quiz is graded automatically…", and the Phase 4–5 suite is back to 17/17. Any re-run of the Phase 3 or 5 migrations must be followed by both remediation files.
 
 ### 🎯 The Immediate Next Action (Do This First)
-0. **Client additions WS1–WS5 (2026-10-22 07:55): committed locally on `main` (`fff0cb4..a1255d9`), NOT pushed.** Before `git push origin main` (production deploy), the user must run `database/migration_client_additions_objectives_terms_admin_leaderboard.sql` in the production SQL Editor (`ynkzcybctsstpqxdoweq`) and its 3 read-only checks. It adds `modules.lesson_objectives`, backfills `term_number` (Q1→T1, Q2→T2, Q3/Q4→T3) and adds the admin-only `get_admin_exp_leaderboard` RPC. The pages degrade safely without it, but objectives won't save and the leaderboard shows "needs a database update". Static-verified only; no browser QA (extension disconnected, local dev server failed to start).
+0. **Client additions WS1–WS5: DEPLOYED (2026-10-22).** User ran `database/migration_client_additions_objectives_terms_admin_leaderboard.sql` on production (`ynkzcybctsstpqxdoweq`) and pushed `main` (`origin/main` = `9ab2b85`, Vercel production). **Still unverified in a browser.** Next: production smoke QA on `https://mathturo.vercel.app` (teacher Reports, module create/edit with objectives/week/attachments, student module page and presentations, admin EXP leaderboard, "Aa" font switch, Term labels), then the open items below (PDF signed-URL check, unlock order vs Term/Week).
 1. ✅ Legacy quiz-score fix applied on staging by the user (2026-10-20 15:45); `verify_phase4_5_authenticated_api.ps1` now **17/17 PASS**. Caveat: the probe was rejected by the "graded automatically" branch; the `p_total = total_items` and locked-quiz branches were not individually exercised (no question-free quiz fixture on staging).
 2. ✅ Done (APPROVE PLAN, 2026-10-20 14:45): migration file saved; font preference restored on all student pages; `public/test-supabase.html` removed.
 3. Upload a small PDF to M1 via `teacher/manage-presentations.html` to cover the signed-URL check.
@@ -961,3 +961,8 @@ And update the top section (`## 1. Quick Orientation: "Where We Left Off"`) with
 * **Author:** Tycoon James Flores
 * **Commit Message:** feat(a11y): dyslexia-friendly font switch on every portal and public page
 * **Commit Hash:** `a1255d9`
+
+### [2026-10-22 07:55] — Git Commit 9ab2b85
+* **Author:** Tycoon James Flores
+* **Commit Message:** docs: record client additions WS1-WS5 and production prerequisites
+* **Commit Hash:** `9ab2b85`

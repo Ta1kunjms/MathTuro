@@ -1126,3 +1126,38 @@ And update the top section (`## 1. Quick Orientation: "Where We Left Off"`) with
   2. Run `git push origin main`.
   3. Verify in browser: open module card in Teacher portal to add/manage Pre/Post-tests, and verify student Take Quiz flow.
   4. Proceed to Batch 3 (CSV/JSON Bulk Import & Export) planning/approval.
+
+### [2026-10-23 01:59] — Git Commit 6290240
+* **Author:** Tycoon James Flores
+* **Commit Message:** feat(quizzes): unify native quiz runner with pre/post tests and add assessment management cards to module drawer
+* **Commit Hash:** `6290240`
+
+### [2026-10-23 02:45] -- Antigravity Session: Unified Quiz CMS Questionnaire Flow, Assessment Publish Controls & 75% Width Modals
+* **Status:** Implemented on `main` (Production target `ynkzcybctsstpqxdoweq`).
+* **Scope Completed:**
+  - **Question Manager (`teacher/manage-questions.html`):**
+    - Added `#btnTogglePublish` button directly in the sticky top header next to "Add Question" for Pre-Test, Post-Test, and regular Quizzes.
+    - Added `currentContextMeta` tracking, dynamic state badges (`Published` / `Draft`), and `togglePublishStatus()` that updates `is_published` in `module_assessments` (or `quizzes`) and synchronizes `total_items >= 1` to satisfy DB check constraints.
+    - Widened `#questionModal` to `w-[94vw] md:w-[75vw] max-w-6xl` (~75% viewport width) so modal layouts are spacious and not vertically cramped.
+  - **Module Management (`teacher/manage-modules.html`):**
+    - Widened `#createModuleModal` and `#moduleDetailModal` to `w-[94vw] md:w-[75vw] max-w-6xl` (~75% width).
+    - Injected `#quickAddQuizModal` (`w-[94vw] md:w-[60vw] max-w-3xl`) for rapid module-attached quiz creation.
+    - Added dedicated **"Add Quiz to Module"** button alongside Pre-Test and Post-Test in the Assessments & Quizzes section.
+    - Added inline **Publish / Unpublish** toggle buttons directly onto Pre-Test, Post-Test, and regular Quiz cards in `#moduleDetailContent`.
+    - Added `toggleAssessmentPublish()`, `toggleQuizPublish()`, `openQuickAddQuizModal()`, and `handleQuickAddQuizSubmit()` (which creates the quiz and redirects immediately to `manage-questions.html?quiz_id=${data.id}`).
+  - **Quiz Management (`teacher/manage-quizzes.html`):**
+    - Widened `#quizModal` and `#submissionsModal` to `w-[94vw] md:w-[75vw] max-w-6xl` (~75% width).
+    - Widened `#asmtModulePickerModal` and `#typePickerModal` to `w-[94vw] md:w-[60vw] max-w-3xl`.
+    - Updated `#submitBtn` in `#quizModal` to `"Save & Build Questionnaire â†’"` with direct redirect to `manage-questions.html?quiz_id=...`.
+    - Added inline **Publish / Unpublish** toggle buttons for both regular quizzes and pre/post tests directly on the quiz cards in `renderQuizzes()`.
+    - Added `toggleAssessmentPublish()` and `toggleQuizPublish()` with automatic total item count calculation and live reload.
+* **Files Modified:**
+  - `teacher/manage-questions.html`
+  - `teacher/manage-modules.html`
+  - `teacher/manage-quizzes.html`
+  - `docs/PROJECT_STATE.md`
+* **Next Immediate Action:**
+  1. Review `git diff` and commit changes to `main` (Author: Tycoon James Flores).
+  2. Run `git push origin main`.
+  3. Verify in browser: test modal widths (~75% screen width), verify Publish/Unpublish toggle on tests/quizzes, and verify "Save & Build Questionnaire" redirect to Question Manager.
+  4. Proceed to Batch 3 (CSV/JSON Bulk Import & Export).

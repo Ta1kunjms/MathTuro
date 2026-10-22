@@ -201,7 +201,7 @@
 
     <!-- Create Module Modal -->
     <div id="createModuleModal" class="hidden fixed inset-0 flex items-center justify-center z-50 p-4">
-        <div class="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto" style="border:2px solid #1c1b1a; box-shadow:6px 6px 0 0 #1c1b1a;">
+        <div class="bg-white rounded-2xl w-[94vw] md:w-[75vw] max-w-6xl max-h-[90vh] overflow-y-auto" style="border:2px solid #1c1b1a; box-shadow:6px 6px 0 0 #1c1b1a;">
             <div class="p-6 flex items-center justify-between sticky top-0 bg-white z-10" style="border-bottom:2px solid #1c1b1a;">
                 <h3 class="text-xl font-bold text-gray-800">Create New Module</h3>
                 <button onclick="closeCreateModuleModal()" class="p-2 text-gray-500 hover:text-gray-700 rounded-lg hover:bg-gray-100">
@@ -385,7 +385,7 @@
 
     <!-- Module Detail Modal -->
     <div id="moduleDetailModal" class="hidden fixed inset-0 flex items-center justify-center z-50 p-4">
-        <div class="bg-white rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto" style="border:2px solid #1c1b1a; box-shadow:6px 6px 0 0 #1c1b1a;">
+        <div class="bg-white rounded-2xl w-[94vw] md:w-[75vw] max-w-6xl max-h-[90vh] overflow-y-auto" style="border:2px solid #1c1b1a; box-shadow:6px 6px 0 0 #1c1b1a;">
             <div class="p-6 flex items-center justify-between sticky top-0 bg-white z-10" style="border-bottom:2px solid #1c1b1a;">
                 <h3 id="detailModuleTitle" class="text-xl font-bold text-gray-800">Module Details</h3>
                 <button onclick="closeModuleDetailModal()" class="p-2 text-gray-500 hover:text-gray-700 rounded-lg hover:bg-gray-100">
@@ -395,6 +395,54 @@
             <div id="moduleDetailContent" class="p-6">
                 <!-- Content loaded dynamically -->
             </div>
+        </div>
+    </div>
+
+    <!-- Quick Add Quiz to Module Modal -->
+    <div id="quickAddQuizModal" class="hidden fixed inset-0 flex items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-2xl w-[94vw] md:w-[60vw] max-w-3xl max-h-[90vh] overflow-y-auto" style="border:2px solid #1c1b1a; box-shadow:6px 6px 0 0 #1c1b1a;">
+            <div class="p-6 flex items-center justify-between sticky top-0 bg-white z-10" style="border-bottom:2px solid #1c1b1a;">
+                <div>
+                    <h3 class="text-xl font-bold text-gray-800">Add Quiz to Module</h3>
+                    <p class="text-xs text-gray-500">Create a native quiz and immediately build its questionnaire.</p>
+                </div>
+                <button onclick="closeQuickAddQuizModal()" class="p-2 text-gray-500 hover:text-gray-700 rounded-lg hover:bg-gray-100">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <form id="quickAddQuizForm" onsubmit="handleQuickAddQuizSubmit(event)" class="p-6 space-y-5">
+                <input type="hidden" id="quickQuizModuleId">
+                <div>
+                    <label class="block text-sm font-bold text-gray-700 mb-1">Quiz Title *</label>
+                    <input type="text" id="quickQuizTitle" required 
+                        class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-plum-800 focus:border-transparent font-medium"
+                        placeholder="e.g., Module 1 Mastery Quiz">
+                </div>
+                <div>
+                    <label class="block text-sm font-bold text-gray-700 mb-1">Description (Optional)</label>
+                    <textarea id="quickQuizDescription" rows="2"
+                        class="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-plum-800 focus:border-transparent text-sm"
+                        placeholder="What concepts does this quiz evaluate?"></textarea>
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-bold text-gray-700 mb-1">Passing Score</label>
+                        <input type="number" id="quickQuizPassingScore" min="0" value="5"
+                            class="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-plum-800 text-sm font-bold">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-bold text-gray-700 mb-1">Time Limit (min)</label>
+                        <input type="number" id="quickQuizTimeLimit" min="0" value="20"
+                            class="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-plum-800 text-sm font-bold">
+                    </div>
+                </div>
+                <div class="flex gap-3 pt-3">
+                    <button type="button" onclick="closeQuickAddQuizModal()" class="flex-1 py-3 rounded-xl font-bold border-2 border-ink-900 shadow-[2px_2px_0_0_#1c1b1a] bg-white">Cancel</button>
+                    <button type="submit" id="btnQuickAddQuizSubmit" class="flex-1 py-3 rounded-xl font-bold text-white bg-plum-800 hover:bg-plum-900 shadow-[2px_2px_0_0_#1c1b1a] border-2 border-ink-900 flex items-center justify-center gap-2">
+                        <i class="fas fa-pencil-alt"></i> Create &amp; Build Questionnaire &rarr;
+                    </button>
+                </div>
+            </form>
         </div>
     </div>
 
@@ -1286,10 +1334,10 @@
                                 <h4 class="font-bold text-gray-900 text-lg">Module Assessments &amp; Quizzes</h4>
                                 <p class="text-xs text-gray-500">Manage diagnostic pre-test, summative post-test, and native quizzes for this module.</p>
                             </div>
-                            <a href="manage-quizzes.html" 
-                               class="px-3 py-1.5 text-xs font-bold bg-plum-800 text-white rounded-xl hover:bg-plum-900 inline-flex items-center gap-1.5 self-start sm:self-auto shadow-[2px_2px_0_0_#1c1b1a] border-2 border-ink-900 transition-all">
-                                <i class="fas fa-plus"></i> Create Regular Quiz
-                            </a>
+                            <button type="button" onclick="openQuickAddQuizModal('${module.id}', ${attrValue(JSON.stringify(module.title || ''))})" 
+                               class="px-3.5 py-2 text-xs font-bold bg-plum-800 text-white rounded-xl hover:bg-plum-900 inline-flex items-center gap-1.5 self-start sm:self-auto shadow-[2px_2px_0_0_#1c1b1a] border-2 border-ink-900 transition-all">
+                                <i class="fas fa-plus"></i> Add Quiz to Module
+                            </button>
                         </div>
 
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -1306,9 +1354,15 @@
                                         </div>
                                     </div>
                                     ${preTest ? `
-                                        <span class="px-2 py-0.5 rounded-full text-xs font-bold ${preTest.is_published ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}">
-                                            ${preTest.is_published ? 'Published' : 'Draft'}
-                                        </span>
+                                        <div class="flex items-center gap-1.5">
+                                            <span class="px-2 py-0.5 rounded-full text-xs font-bold ${preTest.is_published ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}">
+                                                ${preTest.is_published ? 'Published' : 'Draft'}
+                                            </span>
+                                            <button type="button" onclick="toggleAssessmentPublish('${preTest.id}', ${!preTest.is_published}, '${module.id}')"
+                                                    class="px-2 py-0.5 rounded-md text-[11px] font-bold border transition-colors ${preTest.is_published ? 'bg-white text-gray-700 border-gray-300 hover:bg-gray-100' : 'bg-green-600 text-white border-green-700 hover:bg-green-700'}">
+                                                ${preTest.is_published ? '<i class="fas fa-eye-slash mr-1"></i>Unpublish' : '<i class="fas fa-globe mr-1"></i>Publish'}
+                                            </button>
+                                        </div>
                                     ` : '<span class="px-2 py-0.5 rounded-full text-xs font-bold bg-gray-100 text-gray-500">Not Added</span>'}
                                 </div>
                                 <div class="text-xs text-gray-600 mb-3 flex items-center gap-3">
@@ -1343,9 +1397,15 @@
                                         </div>
                                     </div>
                                     ${postTest ? `
-                                        <span class="px-2 py-0.5 rounded-full text-xs font-bold ${postTest.is_published ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}">
-                                            ${postTest.is_published ? 'Published' : 'Draft'}
-                                        </span>
+                                        <div class="flex items-center gap-1.5">
+                                            <span class="px-2 py-0.5 rounded-full text-xs font-bold ${postTest.is_published ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}">
+                                                ${postTest.is_published ? 'Published' : 'Draft'}
+                                            </span>
+                                            <button type="button" onclick="toggleAssessmentPublish('${postTest.id}', ${!postTest.is_published}, '${module.id}')"
+                                                    class="px-2 py-0.5 rounded-md text-[11px] font-bold border transition-colors ${postTest.is_published ? 'bg-white text-gray-700 border-gray-300 hover:bg-gray-100' : 'bg-green-600 text-white border-green-700 hover:bg-green-700'}">
+                                                ${postTest.is_published ? '<i class="fas fa-eye-slash mr-1"></i>Unpublish' : '<i class="fas fa-globe mr-1"></i>Publish'}
+                                            </button>
+                                        </div>
                                     ` : '<span class="px-2 py-0.5 rounded-full text-xs font-bold bg-gray-100 text-gray-500">Not Added</span>'}
                                 </div>
                                 <div class="text-xs text-gray-600 mb-3 flex items-center gap-3">
@@ -1375,26 +1435,40 @@
                                     <i class="fas fa-clipboard-list text-plum-800"></i>
                                     Attached Regular Quizzes (${linkedQuizzes.length})
                                 </h5>
-                                <a href="manage-quizzes.html" class="text-xs text-plum-800 font-bold hover:underline">Quiz Manager &rarr;</a>
+                                <button type="button" onclick="openQuickAddQuizModal('${module.id}', ${attrValue(JSON.stringify(module.title || ''))})" 
+                                        class="text-xs text-plum-800 font-bold hover:underline flex items-center gap-1">
+                                    <i class="fas fa-plus"></i> Add Quiz
+                                </button>
                             </div>
                             ${linkedQuizzes.length > 0 ? `
                                 <div class="space-y-2">
                                     ${linkedQuizzes.map(q => `
                                         <div class="flex items-center justify-between p-2.5 bg-white border border-gray-200 rounded-lg shadow-sm">
                                             <div class="flex items-center gap-2 min-w-0">
-                                                <span class="w-2 h-2 rounded-full ${q.is_published ? 'bg-green-500' : 'bg-yellow-500'}"></span>
+                                                <span class="w-2 h-2 rounded-full ${q.is_published ? 'bg-green-500' : 'bg-yellow-500'}" title="${q.is_published ? 'Published' : 'Draft'}"></span>
                                                 <span class="font-semibold text-gray-900 text-xs truncate">${escapeAttachText(q.title)}</span>
                                                 <span class="text-[10px] text-gray-400 font-medium">(${q.total_items || 0} items)</span>
+                                                <span class="px-1.5 py-0.5 text-[10px] rounded font-bold ${q.is_published ? 'bg-green-50 text-green-700' : 'bg-yellow-50 text-yellow-700'}">${q.is_published ? 'Published' : 'Draft'}</span>
                                             </div>
-                                            <a href="manage-questions.html?quiz_id=${q.id}" class="px-2.5 py-1 text-xs font-bold bg-purple-100 text-purple-700 hover:bg-purple-200 rounded-lg transition-colors flex items-center gap-1">
-                                                <i class="fas fa-list-ol"></i> Manage Questions
-                                            </a>
+                                            <div class="flex items-center gap-2">
+                                                <button type="button" onclick="toggleQuizPublish('${q.id}', ${!q.is_published}, '${module.id}')"
+                                                        class="px-2 py-1 text-[11px] font-bold rounded-lg border transition-colors ${q.is_published ? 'bg-white text-gray-700 border-gray-200 hover:bg-gray-100' : 'bg-green-50 text-green-700 border-green-300 hover:bg-green-100'}">
+                                                    ${q.is_published ? '<i class="fas fa-eye-slash mr-1"></i>Unpublish' : '<i class="fas fa-globe mr-1"></i>Publish'}
+                                                </button>
+                                                <a href="manage-questions.html?quiz_id=${q.id}" class="px-2.5 py-1 text-xs font-bold bg-purple-100 text-purple-700 hover:bg-purple-200 rounded-lg transition-colors flex items-center gap-1">
+                                                    <i class="fas fa-list-ol"></i> Manage Questions
+                                                </a>
+                                            </div>
                                         </div>
                                     `).join('')}
                                 </div>
                             ` : `
-                                <div class="text-center py-3 text-xs text-gray-500">
-                                    No regular quizzes linked yet. Check a quiz below or click "Create Regular Quiz" to author one.
+                                <div class="text-center py-4 text-xs text-gray-500 space-y-2">
+                                    <p>No regular quizzes attached to this module yet.</p>
+                                    <button type="button" onclick="openQuickAddQuizModal('${module.id}', ${attrValue(JSON.stringify(module.title || ''))})" 
+                                            class="px-4 py-2 text-xs font-bold bg-white text-plum-800 hover:bg-plum-50 rounded-lg inline-flex items-center gap-1.5 border-2 border-plum-800 transition-colors shadow-sm">
+                                        <i class="fas fa-plus"></i> Add Quiz &amp; Build Questionnaire
+                                    </button>
                                 </div>
                             `}
                         </div>
@@ -1784,6 +1858,118 @@
             } catch (err) {
                 console.error('Failed to create assessment for module:', err);
                 showToast(err.message || 'Failed to create assessment', 'error');
+            }
+        }
+
+        async function toggleAssessmentPublish(asmtId, targetState, moduleId) {
+            try {
+                const { error } = await getSupabase()
+                    .from('module_assessments')
+                    .update({
+                        is_published: !!targetState,
+                        updated_at: new Date().toISOString()
+                    })
+                    .eq('id', asmtId);
+                if (error) throw error;
+                showToast(targetState ? 'Assessment published! Visible to students.' : 'Assessment unpublished (Saved as Draft).', 'success');
+                await openModuleDetail(moduleId);
+            } catch (err) {
+                console.error('Failed to toggle assessment publish:', err);
+                showToast('Error updating publish status: ' + err.message, 'error');
+            }
+        }
+
+        async function toggleQuizPublish(quizId, targetState, moduleId) {
+            try {
+                const { error } = await getSupabase()
+                    .from('quizzes')
+                    .update({
+                        is_published: !!targetState,
+                        updated_at: new Date().toISOString()
+                    })
+                    .eq('id', quizId);
+                if (error) throw error;
+                showToast(targetState ? 'Quiz published! Visible to students.' : 'Quiz unpublished (Saved as Draft).', 'success');
+                await openModuleDetail(moduleId);
+            } catch (err) {
+                console.error('Failed to toggle quiz publish:', err);
+                showToast('Error updating quiz status: ' + err.message, 'error');
+            }
+        }
+
+        function attrValue(value) {
+            return String(value ?? '').replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        }
+
+        function openQuickAddQuizModal(moduleId, moduleTitle) {
+            document.getElementById('quickQuizModuleId').value = moduleId;
+            document.getElementById('quickQuizTitle').value = moduleTitle ? `${moduleTitle} - Quiz 1` : 'Module Quiz 1';
+            document.getElementById('quickQuizDescription').value = '';
+            document.getElementById('quickQuizPassingScore').value = 5;
+            document.getElementById('quickQuizTimeLimit').value = 20;
+            document.getElementById('quickAddQuizModal').classList.remove('hidden');
+        }
+
+        function closeQuickAddQuizModal() {
+            document.getElementById('quickAddQuizModal').classList.add('hidden');
+        }
+
+        async function handleQuickAddQuizSubmit(e) {
+            e.preventDefault();
+            const btn = document.getElementById('btnQuickAddQuizSubmit');
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i>Creating Quiz...';
+
+            const moduleId = document.getElementById('quickQuizModuleId').value;
+            const title = document.getElementById('quickQuizTitle').value.trim();
+            const description = document.getElementById('quickQuizDescription').value.trim();
+            const passingScore = parseInt(document.getElementById('quickQuizPassingScore').value, 10) || 0;
+            const timeLimit = parseInt(document.getElementById('quickQuizTimeLimit').value, 10) || 0;
+
+            try {
+                const module = modules.find(m => m.id === moduleId);
+                const resolvedScope = module ? validateAndResolveScope(resolveGradeLevelId(module), module.section_id) : { gradeLevelId: null, sectionId: null };
+                const quarter = module ? getModuleQuarter(module) : null;
+                const now = new Date().toISOString();
+
+                const quizPayload = {
+                    title: title,
+                    description: description || null,
+                    module_id: moduleId,
+                    quarter: quarter ? Number(quarter) : null,
+                    grade_level: getGradeLevelNameById(resolvedScope.gradeLevelId),
+                    grade_level_id: resolvedScope.gradeLevelId,
+                    section_id: resolvedScope.sectionId,
+                    total_items: 0,
+                    passing_score: passingScore,
+                    time_limit_minutes: timeLimit,
+                    is_published: false,
+                    teacher_id: currentUser.id,
+                    created_at: now,
+                    updated_at: now
+                };
+
+                const { data, error } = await getSupabase()
+                    .from('quizzes')
+                    .insert(quizPayload)
+                    .select()
+                    .single();
+
+                if (error) throw error;
+
+                closeQuickAddQuizModal();
+                showToast('Quiz created! Redirecting to Question Manager...', 'success');
+                if (data?.id) {
+                    setTimeout(() => {
+                        window.location.href = `manage-questions.html?quiz_id=${data.id}`;
+                    }, 400);
+                }
+            } catch (err) {
+                console.error('Error creating quick quiz:', err);
+                showToast('Failed to create quiz: ' + err.message, 'error');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-pencil-alt"></i> Create &amp; Build Questionnaire &rarr;';
             }
         }
 

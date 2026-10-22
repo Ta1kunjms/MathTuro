@@ -120,9 +120,13 @@
                     </div>
                     <p class="text-sm text-gray-500 hidden sm:block" id="pageSubtitle">Loading…</p>
                 </div>
-                <div class="flex items-center space-x-3">
+                <div class="flex items-center space-x-2 sm:space-x-3">
+                    <button id="btnTogglePublish" onclick="togglePublishStatus()" class="hidden inline-flex items-center space-x-1.5 px-3 sm:px-4 py-2 rounded-xl font-bold border-2 border-ink-900 shadow-[2px_2px_0_0_#1c1b1a] transition-all">
+                        <i class="fas fa-globe"></i>
+                        <span>Publish</span>
+                    </button>
                     <button id="btnAddQuestion"
-                        class="inline-flex items-center space-x-2 bg-plum-800 text-white px-4 py-2 rounded-xl font-medium hover:bg-plum-900 transition-colors">
+                        class="inline-flex items-center space-x-2 bg-plum-800 text-white px-4 py-2 rounded-xl font-bold hover:bg-plum-900 transition-colors border-2 border-ink-900 shadow-[2px_2px_0_0_#1c1b1a]">
                         <i class="fas fa-plus"></i>
                         <span class="hidden sm:inline">Add Question</span>
                     </button>
@@ -181,7 +185,7 @@
                 <h3 class="text-xl font-semibold text-gray-900 mb-2">No questions yet</h3>
                 <p class="text-gray-500 mb-6">Build your question bank for this quiz or assessment.</p>
                 <button id="btnAddFirst"
-                    class="inline-flex items-center space-x-2 bg-plum-800 text-white px-6 py-3 rounded-xl font-medium hover:bg-plum-900 transition-colors">
+                    class="inline-flex items-center space-x-2 bg-plum-800 text-white px-6 py-3 rounded-xl font-bold hover:bg-plum-900 transition-colors border-2 border-ink-900 shadow-[2px_2px_0_0_#1c1b1a]">
                     <i class="fas fa-plus mr-2"></i>Add First Question
                 </button>
             </div>
@@ -190,7 +194,7 @@
 
     <!-- ===== ADD / EDIT QUESTION MODAL ===== -->
     <div id="questionModal" class="hidden fixed inset-0 flex items-center justify-center z-50 p-4">
-        <div class="bg-white rounded-2xl w-full max-w-2xl max-h-[92vh] overflow-y-auto" style="border:2px solid #1c1b1a; box-shadow:6px 6px 0 0 #1c1b1a;">
+        <div class="bg-white rounded-2xl w-[94vw] md:w-[75vw] max-w-6xl max-h-[92vh] overflow-y-auto" style="border:2px solid #1c1b1a; box-shadow:6px 6px 0 0 #1c1b1a;">
             <div class="flex items-center justify-between p-6" style="border-bottom:2px solid #1c1b1a;">
                 <h2 id="qModalTitle" class="text-xl font-bold text-gray-900">Add Question</h2>
                 <button id="btnCloseQModal" class="p-2 text-gray-500 hover:text-gray-700 rounded-lg hover:bg-gray-100">
@@ -421,6 +425,7 @@
     let deleteTargetId = null;
     let mcOptions      = [];   // [{id, text}]
     let mcCorrect      = 'A';
+    let currentContextMeta = null;
 
     // ─── Boot ──────────────────────────────────────────────────────────
     document.addEventListener('DOMContentLoaded', async () => {
@@ -452,6 +457,7 @@
                 .select('title, is_published')
                 .eq('id', QUIZ_ID).maybeSingle();
             if (data) {
+                currentContextMeta = { ...data, type: 'quiz' };
                 document.getElementById('pageTitle').textContent    = data.title;
                 document.getElementById('pageSubtitle').textContent = 'Regular Quiz  \u2022  ' + (data.is_published ? 'Published' : 'Draft');
                 document.getElementById('ctxIcon').className        = 'w-12 h-12 rounded-xl flex items-center justify-center text-xl bg-blue-100';
@@ -459,22 +465,78 @@
                 document.getElementById('ctxTitle').textContent     = data.title;
                 document.getElementById('ctxMeta').textContent      = 'Regular Quiz  \u2022  ' + (data.is_published ? 'Published' : 'Draft');
                 document.getElementById('contextBanner').classList.remove('hidden');
+                renderPublishButton();
             }
         } else {
             const { data } = await sb.from('module_assessments')
-                .select('assessment_type, is_published, passing_threshold')
+                .select('assessment_type, is_published, passing_threshold, title')
                 .eq('id', ASMT_ID).maybeSingle();
             if (data) {
-                const label = data.assessment_type === 'pre_test' ? 'Pre-Test' : 'Post-Test';
+                const label = data.assessment_type === 'pre_test' ? 'Diagnostic Pre-Test' : 'Summative Post-Test';
+                const shortLabel = data.assessment_type === 'pre_test' ? 'Pre-Test' : 'Post-Test';
                 const color = data.assessment_type === 'pre_test' ? 'yellow' : 'green';
-                document.getElementById('pageTitle').textContent    = label + ' Questions';
-                document.getElementById('pageSubtitle').textContent = label + '  \u2022  ' + (data.is_published ? 'Published' : 'Draft') + '  \u2022  Passing: ' + data.passing_threshold + '%';
+                currentContextMeta = { ...data, type: 'assessment', label: shortLabel };
+                document.getElementById('pageTitle').textContent    = shortLabel + ' Questions';
+                document.getElementById('pageSubtitle').textContent = shortLabel + '  \u2022  ' + (data.is_published ? 'Published' : 'Draft') + '  \u2022  Passing: ' + data.passing_threshold + '%';
                 document.getElementById('ctxIcon').className        = 'w-12 h-12 rounded-xl flex items-center justify-center text-xl bg-' + color + '-100';
                 document.getElementById('ctxIcon').innerHTML        = '<i class="fas fa-' + (data.assessment_type === 'pre_test' ? 'play-circle' : 'flag-checkered') + ' text-' + color + '-600"></i>';
                 document.getElementById('ctxTitle').textContent     = label;
                 document.getElementById('ctxMeta').textContent      = (data.is_published ? 'Published' : 'Draft') + '  \u2022  Passing: ' + data.passing_threshold + '%';
                 document.getElementById('contextBanner').classList.remove('hidden');
+                renderPublishButton();
             }
+        }
+    }
+
+    function renderPublishButton() {
+        const btn = document.getElementById('btnTogglePublish');
+        if (!btn || !currentContextMeta) return;
+        btn.classList.remove('hidden');
+        const isPub = !!currentContextMeta.is_published;
+        const testName = currentContextMeta.label || 'Quiz';
+        if (isPub) {
+            btn.className = 'inline-flex items-center space-x-1.5 px-3 sm:px-4 py-2 rounded-xl text-xs sm:text-sm font-bold bg-gray-100 text-gray-700 hover:bg-gray-200 border-2 border-ink-900 shadow-[2px_2px_0_0_#1c1b1a] transition-all';
+            btn.innerHTML = `<i class="fas fa-eye-slash text-gray-500"></i><span class="hidden sm:inline">Unpublish (Draft)</span><span class="sm:hidden">Unpublish</span>`;
+            btn.title = 'Unpublish test so students cannot see it yet';
+        } else {
+            btn.className = 'inline-flex items-center space-x-1.5 px-3 sm:px-4 py-2 rounded-xl text-xs sm:text-sm font-bold bg-emerald-600 text-white hover:bg-emerald-700 border-2 border-ink-900 shadow-[2px_2px_0_0_#1c1b1a] transition-all';
+            btn.innerHTML = `<i class="fas fa-globe"></i><span class="hidden sm:inline">Publish ${testName}</span><span class="sm:hidden">Publish</span>`;
+            btn.title = 'Publish test so students can take it';
+        }
+    }
+
+    async function togglePublishStatus() {
+        if (!currentContextMeta) return;
+        const newStatus = !currentContextMeta.is_published;
+        const targetTable = QUIZ_ID ? 'quizzes' : 'module_assessments';
+        const targetId = QUIZ_ID || ASMT_ID;
+        const btn = document.getElementById('btnTogglePublish');
+        if (btn) btn.disabled = true;
+
+        try {
+            const now = new Date().toISOString();
+            const payload = {
+                is_published: newStatus,
+                updated_at: now
+            };
+            if (!QUIZ_ID) {
+                payload.total_items = Math.max(1, questions.length);
+            } else {
+                payload.total_items = questions.length;
+            }
+
+            const { error } = await getSupabase().from(targetTable).update(payload).eq('id', targetId);
+            if (error) throw error;
+
+            currentContextMeta.is_published = newStatus;
+            renderPublishButton();
+            await loadContextMeta();
+            showToast(newStatus ? 'Published! Students can now access this test.' : 'Unpublished (Saved as Draft).', 'success');
+        } catch (err) {
+            console.error('Error toggling publish status:', err);
+            showToast('Failed to update publish status: ' + (err.message || 'Error'), 'error');
+        } finally {
+            if (btn) btn.disabled = false;
         }
     }
 

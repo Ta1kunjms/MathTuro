@@ -225,7 +225,7 @@
 
     <!-- Type Picker Modal (Quiz / Pre-Test / Post-Test) -->
     <div id="typePickerModal" class="hidden fixed inset-0 flex items-center justify-center z-50 p-4">
-        <div class="bg-white rounded-2xl w-full max-w-xl max-h-[90vh] overflow-y-auto" style="border:2px solid #1c1b1a; box-shadow:6px 6px 0 0 #1c1b1a;">
+        <div class="bg-white rounded-2xl w-[94vw] md:w-[60vw] max-w-3xl max-h-[90vh] overflow-y-auto" style="border:2px solid #1c1b1a; box-shadow:6px 6px 0 0 #1c1b1a;">
             <div class="flex items-center justify-between p-6" style="border-bottom:2px solid #1c1b1a;">
                 <div>
                     <h2 class="text-xl font-bold text-gray-900">Create New Assessment</h2>
@@ -289,7 +289,7 @@
 
     <!-- Module Selection Modal for Pre/Post Tests -->
     <div id="asmtModulePickerModal" class="hidden fixed inset-0 flex items-center justify-center z-50 p-4">
-        <div class="bg-white rounded-2xl w-full max-w-lg" style="border:2px solid #1c1b1a; box-shadow:6px 6px 0 0 #1c1b1a;">
+        <div class="bg-white rounded-2xl w-[94vw] md:w-[60vw] max-w-3xl" style="border:2px solid #1c1b1a; box-shadow:6px 6px 0 0 #1c1b1a;">
             <div class="flex items-center justify-between p-6" style="border-bottom:2px solid #1c1b1a;">
                 <div>
                     <h2 id="asmtPickerTitle" class="text-xl font-bold text-gray-900">Select Module for Pre-Test</h2>
@@ -321,7 +321,7 @@
 
     <!-- Add/Edit Quiz Modal -->
     <div id="quizModal" class="hidden fixed inset-0 flex items-center justify-center z-50 p-4">
-        <div class="bg-white rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto" style="border:2px solid #1c1b1a; box-shadow:6px 6px 0 0 #1c1b1a;">
+        <div class="bg-white rounded-2xl w-[94vw] md:w-[75vw] max-w-6xl max-h-[90vh] overflow-y-auto" style="border:2px solid #1c1b1a; box-shadow:6px 6px 0 0 #1c1b1a;">
             <div class="flex items-center justify-between p-6" style="border-bottom:2px solid #1c1b1a;">
                 <h2 id="modalTitle" class="text-xl font-bold text-gray-900">Add Quiz</h2>
                 <button onclick="closeQuizModal()" class="p-2 text-gray-500 hover:text-gray-700 rounded-lg hover:bg-gray-100">
@@ -448,7 +448,7 @@
                     </button>
                     <button type="submit" id="submitBtn"
                         class="flex-1 px-6 py-3 bg-plum-800 text-white rounded-xl font-bold hover:bg-plum-900">
-                        Save Quiz
+                        <i class="fas fa-pencil-alt mr-1"></i> Save &amp; Build Questionnaire &rarr;
                     </button>
                 </div>
             </form>
@@ -457,7 +457,7 @@
 
     <!-- View Submissions Modal -->
     <div id="submissionsModal" class="hidden fixed inset-0 flex items-center justify-center z-50 p-4">
-        <div class="bg-white rounded-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto" style="border:2px solid #1c1b1a; box-shadow:6px 6px 0 0 #1c1b1a;">
+        <div class="bg-white rounded-2xl w-[94vw] md:w-[75vw] max-w-6xl max-h-[90vh] overflow-y-auto" style="border:2px solid #1c1b1a; box-shadow:6px 6px 0 0 #1c1b1a;">
             <div class="flex items-center justify-between p-6" style="border-bottom:2px solid #1c1b1a;">
                 <h2 id="submissionsTitle" class="text-xl font-bold text-gray-900">Quiz Submissions</h2>
                 <button onclick="closeSubmissionsModal()" class="p-2 text-gray-500 hover:text-gray-700 rounded-lg hover:bg-gray-100">
@@ -982,9 +982,9 @@
 
             document.getElementById('totalQuizzes').textContent = quizzes.length + moduleAssessments.length;
             document.getElementById('publishedQuizzes').textContent =
-                quizzes.filter(q => q.is_published).length + moduleAssessments.filter(a => a.module?.is_published).length;
+                quizzes.filter(q => q.is_published).length + moduleAssessments.filter(a => a.is_published).length;
             document.getElementById('draftQuizzes').textContent =
-                quizzes.filter(q => !q.is_published).length + moduleAssessments.filter(a => !a.module?.is_published).length;
+                quizzes.filter(q => !q.is_published).length + moduleAssessments.filter(a => !a.is_published).length;
             
             const quizSubTotal = quizzes.reduce((sum, q) => sum + (q.submission_count || 0), 0);
             const asmtSubTotal = moduleAssessments.reduce((sum, a) => sum + (a.submission_count || 0), 0);
@@ -1175,9 +1175,16 @@
                                 <div class="w-12 h-12 bg-plum-800 rounded-xl flex items-center justify-center">
                                     <i class="fas fa-clipboard-list text-white text-xl"></i>
                                 </div>
-                                <span class="status-badge ${quiz.is_published ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}">
-                                    ${quiz.is_published ? 'Published' : 'Draft'}
-                                </span>
+                                <div class="flex items-center gap-2">
+                                    <span class="status-badge ${quiz.is_published ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}">
+                                        ${quiz.is_published ? 'Published' : 'Draft'}
+                                    </span>
+                                    <button type="button" onclick="toggleQuizPublish('${quiz.id}', ${!quiz.is_published})" 
+                                        class="px-2 py-0.5 text-xs font-bold rounded-lg border transition-colors ${quiz.is_published ? 'bg-yellow-50 text-yellow-800 border-yellow-300 hover:bg-yellow-100' : 'bg-green-50 text-green-800 border-green-300 hover:bg-green-100'}"
+                                        title="${quiz.is_published ? 'Unpublish quiz' : 'Publish quiz'}">
+                                        <i class="fas ${quiz.is_published ? 'fa-eye-slash' : 'fa-check'} mr-1"></i>${quiz.is_published ? 'Unpublish' : 'Publish'}
+                                    </button>
+                                </div>
                             </div>
                             <h3 class="font-semibold text-gray-900 mb-1 line-clamp-2">${quiz.title}</h3>
                             <p class="text-sm text-gray-500 mb-3 line-clamp-2">${quiz.description || 'No description'}</p>
@@ -1247,8 +1254,8 @@
                 const asmtTitle = (a.title || '').toLowerCase();
                 if (search && !modTitle.includes(search) && !asmtTitle.includes(search)) return false;
                 if (activeQuarterFilter !== 'all' && normalizeQuarterValue(a.module?.quarter) !== activeQuarterFilter) return false;
-                if (status === 'published' && !a.module?.is_published) return false;
-                if (status === 'draft' && a.module?.is_published) return false;
+                if (status === 'published' && !a.is_published) return false;
+                if (status === 'draft' && a.is_published) return false;
                 return true;
             });
 
@@ -1275,9 +1282,19 @@
                             <div class="w-12 h-12 ${isPre ? 'bg-amber-100 text-amber-700' : 'bg-green-100 text-green-700'} rounded-xl flex items-center justify-center text-xl">
                                 <i class="fas ${isPre ? 'fa-play-circle' : 'fa-flag-checkered'}"></i>
                             </div>
-                            <span class="status-badge ${isPre ? 'bg-amber-100 text-amber-800' : 'bg-green-100 text-green-800'}">
-                                ${isPre ? 'Diagnostic Pre-Test' : 'Summative Post-Test'}
-                            </span>
+                            <div class="flex items-center gap-1.5 flex-wrap justify-end">
+                                <span class="status-badge ${isPre ? 'bg-amber-100 text-amber-800' : 'bg-green-100 text-green-800'}">
+                                    ${isPre ? 'Diagnostic Pre-Test' : 'Summative Post-Test'}
+                                </span>
+                                <span class="status-badge ${asmt.is_published ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}">
+                                    ${asmt.is_published ? 'Published' : 'Draft'}
+                                </span>
+                                <button type="button" onclick="toggleAssessmentPublish('${asmt.id}', ${!asmt.is_published})" 
+                                    class="px-2 py-0.5 text-xs font-bold rounded-lg border transition-colors ${asmt.is_published ? 'bg-yellow-50 text-yellow-800 border-yellow-300 hover:bg-yellow-100' : 'bg-green-50 text-green-800 border-green-300 hover:bg-green-100'}"
+                                    title="${asmt.is_published ? 'Unpublish assessment' : 'Publish assessment'}">
+                                    <i class="fas ${asmt.is_published ? 'fa-eye-slash' : 'fa-check'} mr-1"></i>${asmt.is_published ? 'Unpublish' : 'Publish'}
+                                </button>
+                            </div>
                         </div>
                         <h3 class="font-semibold text-gray-900 mb-1 line-clamp-2">${asmt.title || (isPre ? 'Diagnostic Pre-Test' : 'Summative Post-Test')}</h3>
                         <p class="text-sm text-gray-500 mb-3 line-clamp-2"><i class="fas fa-book-open mr-1 text-gray-400"></i>${modTitle}</p>
@@ -1365,6 +1382,7 @@
             populateQuizGradeLevelOptions('');
             populateQuizSectionOptions('', '');
             updateQuizScopePreview('', '');
+            document.getElementById('submitBtn').innerHTML = '<i class="fas fa-pencil-alt mr-1"></i> Save & Build Questionnaire &rarr;';
             document.getElementById('quizModal').classList.remove('hidden');
         }
 
@@ -1402,6 +1420,7 @@
             
             document.getElementById('quizCreateNotice').classList.add('hidden');
             document.getElementById('quizPublishedGroup').classList.remove('hidden');
+            document.getElementById('submitBtn').innerHTML = '<i class="fas fa-save mr-1"></i> Save Quiz';
 
             document.getElementById('quizModal').classList.remove('hidden');
         }
@@ -1478,7 +1497,7 @@
                 showToast('Failed to save quiz: ' + error.message, 'error');
             } finally {
                 btn.disabled = false;
-                btn.textContent = 'Save Quiz';
+                btn.innerHTML = editingQuizId ? '<i class="fas fa-save mr-1"></i> Save Quiz' : '<i class="fas fa-pencil-alt mr-1"></i> Save & Build Questionnaire &rarr;';
             }
         }
 
@@ -1685,6 +1704,57 @@
                 await loadData();
             } catch (error) {
                 showToast('Failed to delete assessment: ' + error.message, 'error');
+            }
+        }
+
+        async function toggleAssessmentPublish(asmtId, targetState) {
+            try {
+                // Ensure total_items >= 1 for constraint check
+                const { count } = await getSupabase()
+                    .from('assessment_questions')
+                    .select('*', { count: 'exact', head: true })
+                    .eq('assessment_id', asmtId);
+
+                const totalItems = Math.max(1, count || 0);
+
+                let updateQuery = getSupabase()
+                    .from('module_assessments')
+                    .update({ 
+                        is_published: targetState,
+                        total_items: totalItems,
+                        updated_at: new Date().toISOString()
+                    })
+                    .eq('id', asmtId);
+
+                if (currentUser.role === 'teacher') {
+                    updateQuery = updateQuery.eq('teacher_id', currentUser.id);
+                }
+
+                const { error } = await updateQuery;
+                if (error) throw error;
+
+                showToast(`Assessment ${targetState ? 'published' : 'unpublished'} successfully`, 'success');
+                await loadData();
+            } catch (err) {
+                console.error('Error toggling assessment publish:', err);
+                showToast('Failed to update assessment status: ' + (err.message || 'Error'), 'error');
+            }
+        }
+
+        async function toggleQuizPublish(quizId, targetState) {
+            try {
+                const { error } = await saveQuizWithFallback({
+                    is_published: targetState,
+                    updated_at: new Date().toISOString()
+                }, quizId);
+
+                if (error) throw error;
+
+                showToast(`Quiz ${targetState ? 'published' : 'unpublished'} successfully`, 'success');
+                await loadData();
+            } catch (err) {
+                console.error('Error toggling quiz publish:', err);
+                showToast('Failed to update quiz status: ' + (err.message || 'Error'), 'error');
             }
         }
 

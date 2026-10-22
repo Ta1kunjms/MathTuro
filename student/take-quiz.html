@@ -223,7 +223,7 @@
 
             <!-- Questions -->
             <div id="questionsSection" class="hidden space-y-6">
-                <div id="questionsList"></div>
+                <div id="questionsList" class="space-y-4"></div>
 
                 <!-- Submit -->
                 <div class="bg-white rounded-2xl border-2 border-ink-900 shadow-[3px_3px_0_0_#1c1b1a] p-6 text-center">
@@ -425,7 +425,24 @@
     // ─── Render Questions ────────────────────────────────────────────────
     function renderQuestions() {
         const list = document.getElementById('questionsList');
-        list.innerHTML = questions.map((q, idx) => {
+        let currentPart = null;
+        let html = '';
+
+        questions.forEach((q, idx) => {
+            const qPart = (q.part_label || '').trim();
+            if (qPart && qPart !== currentPart) {
+                currentPart = qPart;
+                html += '<div class="bg-forest-50 border-2 border-ink-900 rounded-2xl p-4 shadow-[2px_2px_0_0_#1c1b1a] flex items-center gap-3">' +
+                    '<div class="w-8 h-8 rounded-xl bg-forest-800 text-white flex items-center justify-center text-xs font-black shadow-[1px_1px_0_0_#1c1b1a] flex-shrink-0">' +
+                    '<i class="fas fa-bookmark"></i></div>' +
+                    '<div>' +
+                    '<span class="text-[10px] font-black uppercase tracking-wider text-forest-700 block">Section</span>' +
+                    '<h3 class="font-black text-ink-900 text-sm sm:text-base leading-tight">' + esc(currentPart) + '</h3>' +
+                    '</div></div>';
+            } else if (!qPart) {
+                currentPart = null;
+            }
+
             let inputHtml = '';
             if (q.question_type === 'multiple_choice') {
                 inputHtml = '<div class="space-y-2 mt-4">' +
@@ -441,27 +458,41 @@
                     '<button type="button" class="opt-btn flex-1 justify-center" data-qid="' + q.id + '" data-val="False" onclick="selectMC(this)">' +
                     '<span class="opt-letter">F</span><span>False</span></button>' +
                     '</div>';
+            } else if (q.question_type === 'fill_in_blank') {
+                inputHtml = '<div class="mt-4">' +
+                    '<input type="text" class="id-input" data-qid="' + q.id + '" ' +
+                    'placeholder="Type the missing word or phrase…" oninput="updateIdAnswer(this)" ' +
+                    'autocomplete="off">' +
+                    '<p class="text-xs text-ink-500 mt-1.5"><i class="fas fa-info-circle mr-1"></i>Fill in the blank. Case-insensitive.</p></div>';
+            } else if (q.question_type === 'numeric') {
+                inputHtml = '<div class="mt-4">' +
+                    '<input type="number" step="any" class="id-input" data-qid="' + q.id + '" ' +
+                    'placeholder="Enter numeric value…" oninput="updateIdAnswer(this)" ' +
+                    'autocomplete="off">' +
+                    '<p class="text-xs text-ink-500 mt-1.5"><i class="fas fa-calculator mr-1"></i>Enter a numeric value (integers or decimals accepted).</p></div>';
             } else {
                 // Identification
                 inputHtml = '<div class="mt-4">' +
                     '<input type="text" class="id-input" data-qid="' + q.id + '" ' +
                     'placeholder="Type your answer here…" oninput="updateIdAnswer(this)" ' +
                     'autocomplete="off">' +
-                    '<p class="text-xs text-gray-400 mt-1">Case-insensitive matching.</p></div>';
+                    '<p class="text-xs text-ink-500 mt-1.5"><i class="fas fa-info-circle mr-1"></i>Case-insensitive matching.</p></div>';
             }
 
-            return '<div class="question-card p-5 lg:p-6" data-qid="' + q.id + '" id="qcard-' + q.id + '">' +
+            html += '<div class="question-card p-5 lg:p-6" data-qid="' + q.id + '" id="qcard-' + q.id + '">' +
                 '<div class="flex items-start gap-3">' +
                 '<div class="w-8 h-8 bg-forest-800/10 rounded-lg flex items-center justify-center text-sm font-bold text-forest-800 flex-shrink-0 mt-0.5">' + (idx + 1) + '</div>' +
                 '<div class="flex-1 min-w-0">' +
                 '<p class="font-medium text-gray-900 leading-relaxed text-base">' + esc(q.question_text) + '</p>' +
-                '<div class="flex items-center gap-2 mt-1">' +
-                '<span class="text-xs text-gray-400"><i class="fas fa-star text-yellow-400 mr-0.5"></i>' + q.points + ' pt' + (q.points !== 1 ? 's' : '') + '</span>' +
+                '<div class="flex flex-wrap items-center gap-2 mt-1.5">' +
+                '<span class="text-xs text-ink-600 bg-paper-100 border border-ink-200 px-2 py-0.5 rounded-full font-bold"><i class="fas fa-star text-amber-500 mr-0.5"></i>' + q.points + ' pt' + (q.points !== 1 ? 's' : '') + '</span>' +
+                (qPart ? '<span class="text-xs font-bold text-forest-800 bg-forest-50 px-2 py-0.5 rounded border border-forest-200"><i class="fas fa-bookmark text-forest-700 mr-1 text-[10px]"></i>' + esc(qPart) + '</span>' : '') +
                 '</div>' +
                 inputHtml +
                 '</div></div></div>';
-        }).join('');
+        });
 
+        list.innerHTML = html;
         updateProgress();
     }
 

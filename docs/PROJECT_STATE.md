@@ -35,22 +35,26 @@
 
 * **⚠️ REGRESSION (2026-10-20 ~16:00):** `migration_phase5_exp_gamification_and_leaderboard.sql` was re-run on staging. Its `CREATE OR REPLACE` statements overwrote the gated wrappers `submit_and_grade_assessment`, `submit_and_grade_regular_quiz` and `submit_regular_quiz_score` with the ungated bodies. Probe: Student B's submit to the locked M2 pre-test reached the answer-count check (no "locked" error), and the legacy score RPC returned "Invalid score bounds". The `get_assessment_questions_for_student` fix survived. **⚠️ Happened again ~16:30** (Phase 5 re-run after the push; probes show both wrappers ungated). Re-run guards were added to the Phase 3 and Phase 5 migrations so this can't recur (see 16:35 entry); staging still needs both remediation files re-run. Earlier: **resolved 16:15**, when the user re-ran both remediation files. Probes show "Assessment locked by module progression" and "This quiz is graded automatically…", and the Phase 4–5 suite is back to 17/17. Any re-run of the Phase 3 or 5 migrations must be followed by both remediation files.
 
-0. **Quiz CMS v2 Batch 1A & 1B: IMPLEMENTED ON MAIN (2026-10-22).** Implemented approved plan (Defaults 1–6):
-   - **Batch 1A (Frontend):**
-     - `teacher/manage-questions.html`: Fixed misleading "spaces stripped" copy to "spaces trimmed"; added integer parsing (`parseInt(..., 10)`) for `order_index` computation.
-     - `student/take-quiz.html`: Parses `module_id` query param; dynamic back link `#backLink`, `#errorBackLink`, `#resultBackBtn` to `module-view.html?id=...`; dynamic real titles for quizzes and assessments in header and result cards.
-     - `student/module-view.html`: Fixed XSS on unescaped URLs (`safeQuizUrl` validation); native quizzes display a direct button linking to `take-quiz.html?quiz_id=...&module_id=...` and hide paper modal; formal assessments link directly to `take-quiz.html?assessment_id=...&module_id=...`; pre-test banner and modal point directly to native runner.
-     - `teacher/manage-quizzes.html`: Replaced header "Add Quiz" with type picker modal (`#typePickerModal`) supporting Regular Quiz, Diagnostic Pre-Test, and Summative Post-Test; pre/post tests open module picker (`#asmtModulePickerModal`) with duplicate check redirecting to Question Manager; regular quiz modal now marks new quizzes as drafts, hides publish toggle at create, marks total items read-only (computed from questions), adds module dropdown (`module_id`), and collapses legacy URL in `<details id="legacyUrlDetails">`; added type tabs (`#typeTabs`: Regular Quizzes, Pre-Tests, Post-Tests) with dynamic counts and dedicated card rendering for assessments.
-   - **Batch 1B (SQL Migration):**
-     - Created `database/migration_quiz_cms_v2_batch1b_preparations.sql`:
-       1. `ALTER TABLE public.quizzes ALTER COLUMN quiz_url DROP NOT NULL;`
-       2. Gated security wrapper on `submit_assessment_score` checking progression access (`can_student_access_pre_test` / `can_student_access_post_test`) and rejecting native questions (`EXISTS (SELECT 1 FROM quiz_questions WHERE assessment_id = ...)`).
-       3. Updated `submit_regular_quiz_score` wrapper to reject native quizzes (`quiz_url IS NULL`).
-   - **Immediate Next Step for User:**
-     1. Run `database/migration_quiz_cms_v2_batch1b_preparations.sql` in production Supabase SQL Editor (`ynkzcybctsstpqxdoweq`).
-     2. Review git diff and commit changes to `main` (author: Tycoon James Flores).
-     3. Verify in browser that type picker, question links, and runner work seamlessly.
-     4. Proceed to Batch 2 (Parts, Fill-in-blanks, Numeric) planning/approval.
+0. **Quiz CMS v2 Batch 1A & 1B: DEPLOYED ON MAIN (`95e5ea3`).** Gating wrappers verified DEFINER on production Supabase.
+   - **Quiz CMS v2 Batch 2 (Question Types, Parts & Flexible Scoring): IMPLEMENTED ON MAIN (2026-10-22).**
+     - **Database Migration (`database/migration_quiz_cms_v2_batch2_question_types_and_parts.sql`):**
+       - Schema: Added `part_label VARCHAR(100)` and `numeric_tolerance NUMERIC(8,4) DEFAULT 0` to `public.quiz_questions`. Updated check constraints for 5 types (`multiple_choice`, `true_false`, `identification`, `fill_in_blank`, `numeric`) and options nullability.
+       - Sanitized Student RPCs: Dropped and recreated `get_quiz_questions_for_student` and `get_assessment_questions_for_student` to return `part_label`. Zero answer key or tolerance leakage.
+       - Core Grading Engines: Updated `submit_and_grade_assessment_core` and `submit_and_grade_regular_quiz_core` with case-insensitive synonym matching (`|` pipe-delimited) for `fill_in_blank`, regex numeric typecast protection (`^[+-]?([0-9]+([.][0-9]*)?|[.][0-9]+)$`), and tolerance scoring (`ABS(student - correct) <= tolerance`). Preserved Phase 5 EXP awards.
+     - **Teacher CMS (`teacher/manage-questions.html`):**
+       - 5-type neo-brutalist selector grid with distinct badges (`q-type-fib` emerald, `q-type-num` cyan).
+       - Section/part grouping with datalist suggestions (`#partSuggestions`) and live visual section divider bars.
+       - Configurable points per question (1 to 100 pts) with dynamic totals recalculation.
+       - Dedicated input panels for synonym-based fill-in-the-blank and numeric tolerance.
+     - **Student Runner (`student/take-quiz.html`):**
+       - Dynamic section dividers (`#questionsList`) displaying tactile rounded bookmark badges when questions transition parts.
+       - Native input fields for `fill_in_blank` (text input with helper) and `numeric` (number input `step="any"`).
+       - Full aggregate-only submission contract preserved.
+   - **Immediate Next Steps for User:**
+     1. Run `database/migration_quiz_cms_v2_batch2_question_types_and_parts.sql` in production Supabase SQL Editor (`ynkzcybctsstpqxdoweq`).
+     2. Review `git diff` and commit Batch 2 changes to `main` (Author: Tycoon James Flores).
+     3. Verify in browser: create multi-part quiz with fill-in-blank and numeric questions in Teacher portal, then take it as student.
+     4. Proceed to Batch 3 (CSV/JSON Bulk Import & Export) planning/approval.
 1. ✅ Legacy quiz-score fix applied on staging by the user (2026-10-20 15:45); `verify_phase4_5_authenticated_api.ps1` now **17/17 PASS**. Caveat: the probe was rejected by the "graded automatically" branch; the `p_total = total_items` and locked-quiz branches were not individually exercised (no question-free quiz fixture on staging).
 2. ✅ Done (APPROVE PLAN, 2026-10-20 14:45): migration file saved; font preference restored on all student pages; `public/test-supabase.html` removed.
 3. Upload a small PDF to M1 via `teacher/manage-presentations.html` to cover the signed-URL check.
@@ -1032,3 +1036,38 @@ And update the top section (`## 1. Quick Orientation: "Where We Left Off"`) with
   - `database/migration_quiz_cms_v2_batch1b_preparations.sql` (created)
   - `docs/PROJECT_STATE.md` (updated)
 * **Next Immediate Action:** User runs `database/migration_quiz_cms_v2_batch1b_preparations.sql` in production Supabase SQL editor (`ynkzcybctsstpqxdoweq`), reviews git diff, commits changes to `main`, and tests in browser.
+
+### [2026-10-22 19:09] — Git Commit 95e5ea3
+* **Author:** Tycoon James Flores
+* **Commit Message:** feat(quiz-cms): Batch 1A and 1B type picker, assessment runner links, and gating wrappers
+* **Commit Hash:** `95e5ea3`
+
+### [2026-10-22 19:35] — Antigravity Session: Quiz CMS v2 Batch 2 (Question Types, Parts & Flexible Scoring)
+* **Status:** Implemented on `main` (Production target `ynkzcybctsstpqxdoweq`). Awaiting user SQL migration execution.
+* **Scope Completed:**
+  - **Database Migration (`database/migration_quiz_cms_v2_batch2_question_types_and_parts.sql`):**
+    - Schema: Added `part_label VARCHAR(100)` and `numeric_tolerance NUMERIC(8,4) DEFAULT 0` to `public.quiz_questions`.
+    - Check Constraints: Updated `quiz_questions_question_type_check` to permit 5 types (`multiple_choice`, `true_false`, `identification`, `fill_in_blank`, `numeric`). Updated `chk_options_format` for nullability on non-MC/TF types.
+    - Sanitized RPCs: Dropped and recreated `get_quiz_questions_for_student` and `get_assessment_questions_for_student` to safely expose `part_label` without leaking answer keys or tolerances.
+    - Grading Engines: Updated `submit_and_grade_assessment_core` and `submit_and_grade_regular_quiz_core` with pipe-separated synonym parsing for `fill_in_blank`, regex numeric parsing to prevent casting exceptions, and absolute difference tolerance comparison for `numeric`. EXP gamification logic preserved.
+  - **Teacher CMS (`teacher/manage-questions.html`):**
+    - Added badges `.q-type-fib` and `.q-type-num`.
+    - 5-column type selector grid in Add/Edit question modal.
+    - Section header divider cards with part label and count preview.
+    - Input fields for `part_label` with `<datalist id="partSuggestions">` populated dynamically from existing questions.
+    - Fill-in-the-blank synonym input (`#fibAnswer`) and Numeric answer (`#numericAnswer`) + tolerance (`#numericTolerance`) fields.
+    - Points per question validation and dynamic sum calculation.
+  - **Student Runner (`student/take-quiz.html`):**
+    - Section dividers dynamically rendered above questions when `part_label` transitions.
+    - Clean inputs for `fill_in_blank` (text) and `numeric` (number `step="any"`).
+    - Progress bar, question card answered states, and submission handling updated.
+* **Files Modified / Created:**
+  - `teacher/manage-questions.html` (modified)
+  - `student/take-quiz.html` (modified)
+  - `database/migration_quiz_cms_v2_batch2_question_types_and_parts.sql` (created)
+  - `docs/PROJECT_STATE.md` (updated)
+* **Next Immediate Action:**
+  1. Execute `database/migration_quiz_cms_v2_batch2_question_types_and_parts.sql` in production Supabase SQL Editor (`ynkzcybctsstpqxdoweq`).
+  2. Commit and push Batch 2 changes to `main`.
+  3. Verify in browser and proceed to Batch 3 planning.
+

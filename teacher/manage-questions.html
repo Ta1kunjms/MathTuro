@@ -59,6 +59,8 @@
         .q-type-mc  { background: #dbeafe; color: #1d4ed8; }
         .q-type-tf  { background: #fef3c7; color: #b45309; }
         .q-type-id  { background: #f3e8ff; color: #7c3aed; }
+        .q-type-fib { background: #d1fae5; color: #065f46; }
+        .q-type-num { background: #cffafe; color: #155e75; }
 
         .option-row { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
         .option-letter {
@@ -157,6 +159,8 @@
                 <span class="q-type-badge q-type-mc"><i class="fas fa-list-ul mr-1"></i>Multiple Choice</span>
                 <span class="q-type-badge q-type-tf"><i class="fas fa-toggle-on mr-1"></i>True / False</span>
                 <span class="q-type-badge q-type-id"><i class="fas fa-pencil-alt mr-1"></i>Identification</span>
+                <span class="q-type-badge q-type-fib"><i class="fas fa-pen-nib mr-1"></i>Fill in Blank</span>
+                <span class="q-type-badge q-type-num"><i class="fas fa-calculator mr-1"></i>Numeric</span>
                 <span class="text-xs text-gray-400 self-center ml-auto hidden sm:block">
                     <i class="fas fa-lock mr-1"></i>Answer keys are teacher-only and never exposed to students
                 </span>
@@ -199,26 +203,51 @@
                 <!-- Type Selector -->
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-2">Question Type *</label>
-                    <div class="grid grid-cols-3 gap-3">
+                    <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2.5">
                         <label class="cursor-pointer">
                             <input type="radio" name="questionType" value="multiple_choice" class="sr-only" checked>
-                            <div class="type-option selected-type border-2 border-blue-300 bg-blue-50 text-blue-700 rounded-xl p-3 text-center text-sm font-medium">
-                                <i class="fas fa-list-ul block text-xl mb-1"></i>Multiple Choice
+                            <div class="type-option selected-type border-2 border-blue-300 bg-blue-50 text-blue-700 rounded-xl p-2.5 text-center text-xs font-semibold">
+                                <i class="fas fa-list-ul block text-lg mb-1"></i>Multiple Choice
                             </div>
                         </label>
                         <label class="cursor-pointer">
                             <input type="radio" name="questionType" value="true_false" class="sr-only">
-                            <div class="type-option border-2 border-yellow-200 bg-yellow-50 text-yellow-700 rounded-xl p-3 text-center text-sm font-medium">
-                                <i class="fas fa-toggle-on block text-xl mb-1"></i>True / False
+                            <div class="type-option border-2 border-yellow-200 bg-yellow-50 text-yellow-700 rounded-xl p-2.5 text-center text-xs font-semibold">
+                                <i class="fas fa-toggle-on block text-lg mb-1"></i>True / False
                             </div>
                         </label>
                         <label class="cursor-pointer">
                             <input type="radio" name="questionType" value="identification" class="sr-only">
-                            <div class="type-option border-2 border-purple-200 bg-purple-50 text-purple-700 rounded-xl p-3 text-center text-sm font-medium">
-                                <i class="fas fa-pencil-alt block text-xl mb-1"></i>Identification
+                            <div class="type-option border-2 border-purple-200 bg-purple-50 text-purple-700 rounded-xl p-2.5 text-center text-xs font-semibold">
+                                <i class="fas fa-pencil-alt block text-lg mb-1"></i>Identification
+                            </div>
+                        </label>
+                        <label class="cursor-pointer">
+                            <input type="radio" name="questionType" value="fill_in_blank" class="sr-only">
+                            <div class="type-option border-2 border-emerald-300 bg-emerald-50 text-emerald-800 rounded-xl p-2.5 text-center text-xs font-semibold">
+                                <i class="fas fa-pen-nib block text-lg mb-1"></i>Fill in Blank
+                            </div>
+                        </label>
+                        <label class="cursor-pointer">
+                            <input type="radio" name="questionType" value="numeric" class="sr-only">
+                            <div class="type-option border-2 border-cyan-300 bg-cyan-50 text-cyan-800 rounded-xl p-2.5 text-center text-xs font-semibold">
+                                <i class="fas fa-calculator block text-lg mb-1"></i>Numeric
                             </div>
                         </label>
                     </div>
+                </div>
+
+                <!-- Part / Section Label (Optional) -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">
+                        Exam Part / Section (Optional)
+                        <span class="text-xs font-normal text-gray-400 ml-1">e.g. Part I: Multiple Choice</span>
+                    </label>
+                    <input type="text" id="qPartLabel" list="partSuggestions"
+                        class="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-plum-800 focus:border-transparent text-sm"
+                        placeholder="e.g. Part I: Knowledge & Skills">
+                    <datalist id="partSuggestions"></datalist>
+                    <p class="text-[11px] text-gray-400 mt-1">Questions with the same part label will be visually grouped under section headers in tests.</p>
                 </div>
 
                 <!-- Question Text -->
@@ -226,7 +255,7 @@
                     <label class="block text-sm font-medium text-gray-700 mb-1">Question Text *</label>
                     <textarea id="qText" rows="3" required
                         class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-plum-800 focus:border-transparent resize-none"
-                        placeholder="Type your question here…"></textarea>
+                        placeholder="Type your question here… (Use [blank] for fill-in-the-blank questions)"></textarea>
                 </div>
 
                 <!-- Multiple Choice Options -->
@@ -268,6 +297,38 @@
                         class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-plum-800 focus:border-transparent"
                         placeholder="Exact expected answer (case-insensitive)">
                     <p class="text-xs text-gray-500 mt-1">Student answers are compared case-insensitively with leading and trailing spaces trimmed.</p>
+                </div>
+
+                <!-- Fill in Blank -->
+                <div id="fibSection" class="hidden space-y-2">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Correct Answer(s) *</label>
+                    <input type="text" id="fibAnswer"
+                        class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-plum-800 focus:border-transparent"
+                        placeholder="e.g. numerator|the numerator">
+                    <p class="text-xs text-gray-500 mt-1">
+                        Tip: In the question text above, write <code>[blank]</code> where the missing phrase belongs. Use <code>|</code> (pipe) to support multiple acceptable synonyms (e.g. <code>numerator|the numerator</code>).
+                    </p>
+                </div>
+
+                <!-- Numeric -->
+                <div id="numericSection" class="hidden">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Correct Number *</label>
+                            <input type="number" step="any" id="numericAnswer"
+                                class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-plum-800 focus:border-transparent"
+                                placeholder="e.g. 25.5">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">
+                                Error Margin / Tolerance (&plusmn;)
+                            </label>
+                            <input type="number" step="any" min="0" id="numericTolerance" value="0"
+                                class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-plum-800 focus:border-transparent"
+                                placeholder="0">
+                            <p class="text-[11px] text-gray-400 mt-1">e.g. 0.05 accepts answer &plusmn; 0.05. Set 0 for exact match.</p>
+                        </div>
+                    </div>
                 </div>
 
                 <!-- Points & Order -->
@@ -426,7 +487,7 @@
         const col = QUIZ_ID ? 'quiz_id' : 'assessment_id';
         const { data, error } = await getSupabase()
             .from('quiz_questions')
-            .select('id, order_index, question_text, question_type, options, correct_answer, points, explanation')
+            .select('id, order_index, part_label, question_text, question_type, options, correct_answer, points, explanation, numeric_tolerance')
             .eq(col, OWNER_ID)
             .order('order_index', { ascending: true });
 
@@ -436,7 +497,15 @@
             return;
         }
         questions = data || [];
+        updatePartSuggestions();
         renderQuestions();
+    }
+
+    function updatePartSuggestions() {
+        const datalist = document.getElementById('partSuggestions');
+        if (!datalist) return;
+        const uniqueParts = Array.from(new Set(questions.map(q => q.part_label).filter(Boolean)));
+        datalist.innerHTML = uniqueParts.map(p => '<option value="' + escA(p) + '"></option>').join('');
     }
 
     // ─── Render ────────────────────────────────────────────────────────
@@ -452,11 +521,35 @@
         }
         document.getElementById('emptyState').classList.add('hidden');
 
-        container.innerHTML = questions.map(q => {
+        let html = '';
+        let currentPart = null;
+
+        questions.forEach(q => {
+            // Render section header if part_label changes
+            if (q.part_label && q.part_label !== currentPart) {
+                currentPart = q.part_label;
+                const partQuestions = questions.filter(x => x.part_label === currentPart);
+                const partPoints = partQuestions.reduce((s,x) => s + (x.points||1), 0);
+                html += '<div class="part-header bg-gradient-to-r from-gray-100 to-gray-50 border-2 border-ink-900 rounded-xl p-3 shadow-[2px_2px_0_0_#1c1b1a] flex items-center justify-between mt-6 first:mt-0">' +
+                    '<div class="flex items-center gap-2 font-black text-sm uppercase tracking-wide text-ink-900">' +
+                    '<i class="fas fa-bookmark text-plum-800"></i>' +
+                    '<span>' + esc(currentPart) + '</span>' +
+                    '</div>' +
+                    '<span class="text-xs font-bold text-gray-600 bg-white px-2.5 py-1 rounded-lg border border-gray-200">' +
+                    partQuestions.length + ' item' + (partQuestions.length !== 1 ? 's' : '') + ' &bull; ' + partPoints + ' pt' + (partPoints !== 1 ? 's' : '') +
+                    '</span></div>';
+            } else if (!q.part_label && currentPart !== null) {
+                currentPart = null;
+            }
+
             const typeClass = q.question_type === 'multiple_choice' ? 'q-type-mc'
-                            : q.question_type === 'true_false' ? 'q-type-tf' : 'q-type-id';
+                            : q.question_type === 'true_false' ? 'q-type-tf'
+                            : q.question_type === 'fill_in_blank' ? 'q-type-fib'
+                            : q.question_type === 'numeric' ? 'q-type-num' : 'q-type-id';
             const typeLabel = q.question_type === 'multiple_choice' ? 'Multiple Choice'
-                            : q.question_type === 'true_false' ? 'True / False' : 'Identification';
+                            : q.question_type === 'true_false' ? 'True / False'
+                            : q.question_type === 'fill_in_blank' ? 'Fill in Blank'
+                            : q.question_type === 'numeric' ? 'Numeric' : 'Identification';
 
             let answerPreview = '';
             if (q.question_type === 'multiple_choice' && Array.isArray(q.options)) {
@@ -475,18 +568,27 @@
                     (isTrue ? '<i class="fas fa-check"></i> ' : '') + 'True</span>' +
                     '<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full ' + (!isTrue ? 'bg-red-100 text-red-700 font-semibold'   : 'bg-gray-100 text-gray-400') + '">' +
                     (!isTrue ? '<i class="fas fa-check"></i> ' : '') + 'False</span></div>';
+            } else if (q.question_type === 'fill_in_blank') {
+                answerPreview = '<div class="mt-2 text-xs text-emerald-800 bg-emerald-50 px-3 py-1.5 rounded-lg inline-block border border-emerald-200">' +
+                    '<i class="fas fa-pen-nib mr-1"></i>Acceptable: <strong>' + esc(q.correct_answer) + '</strong></div>';
+            } else if (q.question_type === 'numeric') {
+                answerPreview = '<div class="mt-2 text-xs text-cyan-800 bg-cyan-50 px-3 py-1.5 rounded-lg inline-block border border-cyan-200">' +
+                    '<i class="fas fa-calculator mr-1"></i>Answer: <strong>' + esc(q.correct_answer) + '</strong>' +
+                    (q.numeric_tolerance && Number(q.numeric_tolerance) > 0 ? ' <span class="text-gray-500 font-normal">(&plusmn;' + q.numeric_tolerance + ')</span>' : '') +
+                    '</div>';
             } else {
                 answerPreview = '<div class="mt-2 text-xs text-purple-700 bg-purple-50 px-3 py-1 rounded-lg inline-block">' +
                     '<i class="fas fa-lock mr-1"></i>Answer: <em>' + esc(q.correct_answer) + '</em></div>';
             }
 
-            return '<div class="question-card bg-white rounded-2xl border border-gray-100 shadow-sm p-5" data-id="' + q.id + '">' +
+            html += '<div class="question-card bg-white rounded-2xl border border-gray-100 shadow-sm p-5" data-id="' + q.id + '">' +
                 '<div class="flex items-start gap-4">' +
                 '<div class="w-9 h-9 bg-plum-800/10 rounded-lg flex items-center justify-center text-sm font-bold text-plum-800 flex-shrink-0 mt-0.5">' + q.order_index + '</div>' +
                 '<div class="flex-1 min-w-0">' +
                 '<div class="flex flex-wrap items-center gap-2 mb-2">' +
                 '<span class="q-type-badge ' + typeClass + '">' + typeLabel + '</span>' +
                 '<span class="text-xs text-gray-500 bg-gray-100 px-2 py-0.5 rounded-full"><i class="fas fa-star text-yellow-400 mr-0.5"></i>' + q.points + ' pt' + (q.points !== 1 ? 's' : '') + '</span>' +
+                (q.part_label ? '<span class="text-[11px] text-gray-400 bg-gray-50 px-2 py-0.5 rounded-full border border-gray-100"><i class="fas fa-bookmark text-plum-800 mr-1"></i>' + esc(q.part_label) + '</span>' : '') +
                 '</div>' +
                 '<p class="text-gray-900 font-medium leading-relaxed">' + esc(q.question_text) + '</p>' +
                 answerPreview +
@@ -496,7 +598,9 @@
                 '<button onclick="openEditQuestion(\'' + q.id + '\')" class="p-2 text-ink-500 hover:text-plum-800 hover:bg-plum-800/5 rounded-lg transition-colors" title="Edit" aria-label="Edit"><i class="fas fa-edit" aria-hidden="true"></i></button>' +
                 '<button onclick="openDeleteConfirm(\'' + q.id + '\')" class="p-2 text-ink-500 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors" title="Delete" aria-label="Delete"><i class="fas fa-trash" aria-hidden="true"></i></button>' +
                 '</div></div></div>';
-        }).join('');
+        });
+
+        container.innerHTML = html;
     }
 
     // ─── Modal & Events ────────────────────────────────────────────────
@@ -530,7 +634,11 @@
         document.getElementById('optionsSection').classList.toggle('hidden', type !== 'multiple_choice');
         document.getElementById('tfSection').classList.toggle('hidden', type !== 'true_false');
         document.getElementById('idSection').classList.toggle('hidden', type !== 'identification');
+        document.getElementById('fibSection').classList.toggle('hidden', type !== 'fill_in_blank');
+        document.getElementById('numericSection').classList.toggle('hidden', type !== 'numeric');
         document.getElementById('idAnswer').required = (type === 'identification');
+        document.getElementById('fibAnswer').required = (type === 'fill_in_blank');
+        document.getElementById('numericAnswer').required = (type === 'numeric');
     }
 
     function setupTFSelector() {
@@ -590,6 +698,10 @@
         document.getElementById('qModalTitle').textContent = 'Add Question';
         document.getElementById('questionForm').reset();
         document.getElementById('qId').value = '';
+        document.getElementById('qPartLabel').value = '';
+        document.getElementById('fibAnswer').value = '';
+        document.getElementById('numericAnswer').value = '';
+        document.getElementById('numericTolerance').value = '0';
         document.querySelectorAll('input[name="questionType"]')[0].checked = true;
         document.querySelectorAll('.type-option').forEach((d,i) => { d.classList.toggle('selected-type', i===0); d.style.opacity = i===0 ? '1':'0.7'; });
         applyTypeUI('multiple_choice');
@@ -606,6 +718,7 @@
         editingQId = id;
         document.getElementById('qModalTitle').textContent   = 'Edit Question';
         document.getElementById('qId').value                 = q.id;
+        document.getElementById('qPartLabel').value          = q.part_label || '';
         document.getElementById('qText').value               = q.question_text;
         document.getElementById('qPoints').value             = q.points;
         document.getElementById('qOrder').value              = q.order_index;
@@ -627,6 +740,11 @@
         } else if (q.question_type === 'true_false') {
             const tr = document.querySelector('input[name="tfAnswer"][value="' + q.correct_answer + '"]');
             if (tr) { tr.checked = true; tr.dispatchEvent(new Event('change')); }
+        } else if (q.question_type === 'fill_in_blank') {
+            document.getElementById('fibAnswer').value = q.correct_answer || '';
+        } else if (q.question_type === 'numeric') {
+            document.getElementById('numericAnswer').value = q.correct_answer || '';
+            document.getElementById('numericTolerance').value = q.numeric_tolerance || 0;
         } else {
             document.getElementById('idAnswer').value = q.correct_answer || '';
         }
@@ -645,17 +763,18 @@
         btn.disabled = true;
         btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Saving…';
         try {
-            const qType   = document.querySelector('input[name="questionType"]:checked').value;
-            const qText   = document.getElementById('qText').value.trim();
-            const qPoints = parseInt(document.getElementById('qPoints').value);
-            const qOrder  = parseInt(document.getElementById('qOrder').value);
-            const qExpl   = document.getElementById('qExplanation').value.trim() || null;
+            const qType      = document.querySelector('input[name="questionType"]:checked').value;
+            const qText      = document.getElementById('qText').value.trim();
+            const qPoints    = parseInt(document.getElementById('qPoints').value, 10);
+            const qOrder     = parseInt(document.getElementById('qOrder').value, 10);
+            const qPartLabel = document.getElementById('qPartLabel').value.trim() || null;
+            const qExpl      = document.getElementById('qExplanation').value.trim() || null;
 
             if (!qText)           throw new Error('Question text is required');
             if (!qOrder||qOrder<1) throw new Error('Order index must be >= 1');
             if (!qPoints||qPoints<1) throw new Error('Points must be >= 1');
 
-            let correctAnswer = '', options = null;
+            let correctAnswer = '', options = null, numericTolerance = null;
 
             if (qType === 'multiple_choice') {
                 if (mcOptions.length < 2) throw new Error('Minimum 2 options required');
@@ -668,6 +787,16 @@
                 if (!tfR) throw new Error('Please select True or False');
                 correctAnswer = tfR.value;
                 options       = [{id:'True',text:'True'},{id:'False',text:'False'}];
+            } else if (qType === 'fill_in_blank') {
+                correctAnswer = document.getElementById('fibAnswer').value.trim();
+                if (!correctAnswer) throw new Error('Please enter at least one correct answer');
+                options = null;
+            } else if (qType === 'numeric') {
+                correctAnswer = document.getElementById('numericAnswer').value.trim();
+                if (!correctAnswer || isNaN(Number(correctAnswer))) throw new Error('Please enter a valid numeric answer');
+                numericTolerance = parseFloat(document.getElementById('numericTolerance').value) || 0;
+                if (numericTolerance < 0) throw new Error('Tolerance must be 0 or positive');
+                options = null;
             } else {
                 correctAnswer = document.getElementById('idAnswer').value.trim();
                 if (!correctAnswer) throw new Error('Please enter the correct answer');
@@ -675,14 +804,16 @@
             }
 
             const payload = {
-                question_text:  qText,
-                question_type:  qType,
-                options:        options,
-                correct_answer: correctAnswer,
-                points:         qPoints,
-                order_index:    qOrder,
-                explanation:    qExpl,
-                updated_at:     new Date().toISOString(),
+                question_text:     qText,
+                question_type:     qType,
+                part_label:        qPartLabel,
+                options:           options,
+                correct_answer:    correctAnswer,
+                numeric_tolerance: numericTolerance,
+                points:            qPoints,
+                order_index:       qOrder,
+                explanation:       qExpl,
+                updated_at:        new Date().toISOString(),
             };
 
             const sb = getSupabase();

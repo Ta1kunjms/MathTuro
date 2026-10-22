@@ -136,3 +136,6 @@ Files/
 # Local AI tool configs
 opencode.json
 skills-lock.json
+
+# graphify knowledge graph output (generated locally by `graphify update .`)
+graphify-out/

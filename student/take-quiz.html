@@ -216,7 +216,7 @@
                 </div>
                 <h3 id="errorTitle" class="text-2xl font-black text-ink-900 mb-2">Access Locked</h3>
                 <p id="errorMsg" class="text-ink-700 font-semibold mb-6"></p>
-                <a href="module-view.html" class="inline-flex items-center gap-2 bg-forest-600 text-white px-6 py-3 rounded-xl font-bold border-2 border-ink-900 shadow-[3px_3px_0_0_#1c1b1a] hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-[4px_4px_0_0_#1c1b1a] transition-all">
+                <a id="errorBackLink" href="module-view.html" class="inline-flex items-center gap-2 bg-forest-600 text-white px-6 py-3 rounded-xl font-bold border-2 border-ink-900 shadow-[3px_3px_0_0_#1c1b1a] hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-[4px_4px_0_0_#1c1b1a] transition-all">
                     <i class="fas fa-arrow-left"></i>Back to Module
                 </a>
             </div>
@@ -317,10 +317,11 @@
                       status, remaining_attempts. No item-level correctness per v1 policy.
     */
 
-    const params     = new URLSearchParams(location.search);
-    const QUIZ_ID    = params.get('quiz_id')      || null;
-    const ASMT_ID    = params.get('assessment_id') || null;
-    const OWNER_TYPE = QUIZ_ID ? 'quiz' : (ASMT_ID ? 'assessment' : null);
+    const params      = new URLSearchParams(location.search);
+    const QUIZ_ID     = params.get('quiz_id')       || null;
+    const ASMT_ID     = params.get('assessment_id') || null;
+    let   MODULE_ID   = params.get('module_id')     || null;
+    const OWNER_TYPE  = QUIZ_ID ? 'quiz' : (ASMT_ID ? 'assessment' : null);
 
     let currentUser  = null;
     let questions    = [];       // [{id, order_index, question_text, question_type, options, points}]
@@ -328,11 +329,32 @@
     let timerInterval= null;
     let secondsLeft  = 0;
 
+    function updateModuleLinks(modId) {
+        if (!modId) return;
+        MODULE_ID = modId;
+        const targetUrl = 'module-view.html?id=' + encodeURIComponent(modId);
+        const backLink = document.getElementById('backLink');
+        if (backLink) {
+            backLink.href = targetUrl;
+            backLink.innerHTML = '<i class="fas fa-arrow-left mr-1"></i>Back to Module';
+        }
+        const errLink = document.getElementById('errorBackLink');
+        if (errLink) errLink.href = targetUrl;
+        const resBtn = document.getElementById('resultBackBtn');
+        if (resBtn) {
+            resBtn.href = targetUrl;
+            resBtn.innerHTML = '<i class="fas fa-arrow-left mr-1"></i>Back to Module';
+        }
+    }
+
     // ─── Boot ────────────────────────────────────────────────────────────
     document.addEventListener('DOMContentLoaded', async () => {
         if (!OWNER_TYPE) {
             showError('Invalid URL', 'Missing quiz_id or assessment_id in URL.');
             return;
+        }
+        if (MODULE_ID) {
+            updateModuleLinks(MODULE_ID);
         }
         try {
             currentUser = JSON.parse(localStorage.getItem('user'));
@@ -354,22 +376,24 @@
             if (QUIZ_ID) {
                 rpcName   = 'get_quiz_questions_for_student';
                 rpcParams = { p_quiz_id: QUIZ_ID };
-                // Load quiz title
+                // Load quiz title and module_id
                 const { data: qMeta } = await sb.from('quizzes')
-                    .select('title, time_limit_minutes').eq('id', QUIZ_ID).maybeSingle();
+                    .select('title, time_limit_minutes, module_id').eq('id', QUIZ_ID).maybeSingle();
                 if (qMeta) {
-                    document.getElementById('quizTitle').textContent = qMeta.title;
+                    document.getElementById('quizTitle').textContent = qMeta.title || 'Quiz';
+                    if (qMeta.module_id) updateModuleLinks(qMeta.module_id);
                     if (qMeta.time_limit_minutes > 0) startTimer(qMeta.time_limit_minutes * 60);
                 }
             } else {
                 rpcName   = 'get_assessment_questions_for_student';
                 rpcParams = { p_assessment_id: ASMT_ID };
-                // Load assessment type for title
+                // Load assessment type, title, and module_id
                 const { data: aMeta } = await sb.from('module_assessments')
-                    .select('assessment_type').eq('id', ASMT_ID).maybeSingle();
+                    .select('assessment_type, title, module_id').eq('id', ASMT_ID).maybeSingle();
                 if (aMeta) {
-                    document.getElementById('quizTitle').textContent =
-                        aMeta.assessment_type === 'pre_test' ? 'Pre-Test' : 'Post-Test';
+                    const defaultTitle = aMeta.assessment_type === 'pre_test' ? 'Diagnostic Pre-Test' : 'Summative Post-Test';
+                    document.getElementById('quizTitle').textContent = aMeta.title || defaultTitle;
+                    if (aMeta.module_id) updateModuleLinks(aMeta.module_id);
                 }
             }
 

@@ -748,9 +748,9 @@
                             </svg>
                         </div>
                         <h3 class="text-xl font-bold text-gray-900 mb-2">Pre-Test Required</h3>
-                        <p class="text-gray-600 mb-6 max-w-md mx-auto">Please submit your pre-test score to unlock this module's learning materials and videos. Any attempt unlocks the content.</p>
+                        <p class="text-gray-600 mb-6 max-w-md mx-auto">Please complete your pre-test to unlock this module's learning materials and videos. Any attempt unlocks the content.</p>
                         <button type="button" onclick="openPreTestModal()" class="learn-module-card-cta" style="width: auto; display: inline-block; padding: 0.75rem 1.5rem;">
-                            Take Pre-Test / Enter Score
+                            Take Pre-Test
                         </button>
                     </div>
                 `;
@@ -944,6 +944,8 @@
                 const safeTitle = typeof escapeHtml === 'function' ? escapeHtml(quiz.title || '') : (quiz.title || '');
                 const safeDesc = typeof escapeHtml === 'function' ? escapeHtml(quiz.description || '') : (quiz.description || '');
                 const safeComment = submission?.teacher_comment ? (typeof escapeHtml === 'function' ? escapeHtml(submission.teacher_comment) : submission.teacher_comment) : '';
+                const safeQuizUrl = (quiz.quiz_url && /^https?:\/\//i.test(quiz.quiz_url.trim())) ? attrValue(quiz.quiz_url.trim()) : null;
+                const isNativeQuiz = !safeQuizUrl;
 
                 return `
                     <div class="quiz-card p-4 transition-all">
@@ -978,18 +980,26 @@
                         ` : ''}
 
                         <div class="flex space-x-2">
-                            <a href="${quiz.quiz_url}" target="_blank" class="flex-1 text-center px-4 py-2 bg-yellow-50 text-yellow-700 rounded-lg text-sm font-medium hover:bg-yellow-100 transition-colors flex items-center justify-center space-x-1">
-                                <span>Take Quiz ↗</span>
-                            </a>
-                            <button onclick="openSubmitQuizModal('${quiz.id}', ${attrValue(JSON.stringify(quiz.title || ''))}, ${quiz.total_items})" 
-                                ${submission && submission.status === 'approved' ? 'disabled' : ''}
-                                class="flex-1 px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
-                                    submission 
-                                        ? (submission.status === 'approved' ? 'bg-gray-100 text-gray-400 cursor-not-allowed' : 'bg-blue-100 text-blue-700 hover:bg-blue-200')
-                                        : 'bg-forest-800 text-white hover:bg-forest-900'
-                                } flex items-center justify-center space-x-1">
-                                <span>${submission ? 'Update' : 'Submit'}</span>
-                            </button>
+                            ${isNativeQuiz ? `
+                                <a href="take-quiz.html?quiz_id=${encodeURIComponent(quiz.id)}&module_id=${encodeURIComponent(moduleId)}" 
+                                    class="flex-1 text-center px-4 py-2 bg-forest-800 text-white rounded-lg text-sm font-bold hover:bg-forest-900 transition-colors flex items-center justify-center space-x-1 shadow-[2px_2px_0_0_#1c1b1a] border-2 border-ink-900">
+                                    <i class="fas fa-pen-alt text-xs mr-1"></i>
+                                    <span>${submission ? 'Retake Quiz' : 'Take Quiz'}</span>
+                                </a>
+                            ` : `
+                                <a href="${safeQuizUrl}" target="_blank" rel="noopener noreferrer" class="flex-1 text-center px-4 py-2 bg-yellow-50 text-yellow-700 rounded-lg text-sm font-medium hover:bg-yellow-100 transition-colors flex items-center justify-center space-x-1">
+                                    <span>Take Quiz ↗</span>
+                                </a>
+                                <button onclick="openSubmitQuizModal('${quiz.id}', ${attrValue(JSON.stringify(quiz.title || ''))}, ${quiz.total_items})" 
+                                    ${submission && submission.status === 'approved' ? 'disabled' : ''}
+                                    class="flex-1 px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
+                                        submission 
+                                            ? (submission.status === 'approved' ? 'bg-gray-100 text-gray-400 cursor-not-allowed' : 'bg-blue-100 text-blue-700 hover:bg-blue-200')
+                                            : 'bg-forest-800 text-white hover:bg-forest-900'
+                                    } flex items-center justify-center space-x-1">
+                                    <span>${submission ? 'Update' : 'Submit'}</span>
+                                </button>
+                            `}
                         </div>
                     </div>
                 `;
@@ -1235,18 +1245,18 @@
                         ` : ''}
 
                         <div class="flex space-x-2">
-                            ${asmt.quiz_url ? `
-                                <a href="${asmt.quiz_url}" target="_blank" class="flex-1 text-center py-2 px-3 border border-gray-200 rounded-lg text-xs font-medium text-gray-700 hover:bg-gray-50 transition-colors">
-                                    View Test Form ↗
+                            <a href="take-quiz.html?assessment_id=${encodeURIComponent(asmt.id)}&module_id=${encodeURIComponent(moduleId)}"
+                                class="flex-1 py-2 px-3 text-xs font-bold text-center rounded-lg transition-colors border-2 border-ink-900 shadow-[2px_2px_0_0_#1c1b1a] flex items-center justify-center space-x-1 ${
+                                    canSubmit ? 'bg-forest-800 text-white hover:bg-forest-900' : 'bg-gray-100 text-gray-400 cursor-not-allowed pointer-events-none'
+                                }">
+                                <i class="fas fa-play text-xs mr-1"></i>
+                                <span>${latestAttempt ? (hasPassed ? 'Passed' : (isExhausted ? 'Attempts Exhausted' : 'Retake Assessment')) : (isPreTest ? 'Start Pre-Test' : 'Start Post-Test')}</span>
+                            </a>
+                            ${(asmt.quiz_url && /^https?:\/\//i.test(asmt.quiz_url.trim())) ? `
+                                <a href="${attrValue(asmt.quiz_url.trim())}" target="_blank" rel="noopener noreferrer" class="py-2 px-3 border border-gray-200 rounded-lg text-xs font-medium text-gray-700 hover:bg-gray-50 transition-colors flex items-center justify-center">
+                                    <span>Form ↗</span>
                                 </a>
                             ` : ''}
-                            <button onclick="openAssessmentModal('${asmt.id}', ${attrValue(JSON.stringify(asmt.title || ''))}, ${asmt.total_items})"
-                                ${canSubmit ? '' : 'disabled'}
-                                class="flex-1 py-2 px-3 text-xs font-medium rounded-lg transition-colors ${
-                                    canSubmit ? 'bg-forest-800 text-white hover:bg-forest-900' : 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                                }">
-                                ${latestAttempt && latestAttempt.verification_status === 'pending' ? 'Pending Teacher Check' : (hasPassed ? 'Completed' : (isExhausted ? 'Attempts Exhausted' : 'Submit Paper Score'))}
-                            </button>
                         </div>
                     </div>
                 `;
@@ -1267,7 +1277,7 @@
         function openPreTestModal() {
             const preTest = moduleAssessments.find(a => a.assessment_type === 'pre_test');
             if (preTest) {
-                openAssessmentModal(preTest.id, preTest.title, preTest.total_items);
+                window.location.href = `take-quiz.html?assessment_id=${encodeURIComponent(preTest.id)}&module_id=${encodeURIComponent(moduleId)}`;
             } else {
                 showToast('Pre-test definition not found', 'error');
             }

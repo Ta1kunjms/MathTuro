@@ -267,7 +267,7 @@
                     <input type="text" id="idAnswer"
                         class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-plum-800 focus:border-transparent"
                         placeholder="Exact expected answer (case-insensitive)">
-                    <p class="text-xs text-gray-500 mt-1">Student answers are compared case-insensitively with spaces stripped.</p>
+                    <p class="text-xs text-gray-500 mt-1">Student answers are compared case-insensitively with leading and trailing spaces trimmed.</p>
                 </div>
 
                 <!-- Points & Order -->
@@ -594,7 +594,7 @@
         document.querySelectorAll('.type-option').forEach((d,i) => { d.classList.toggle('selected-type', i===0); d.style.opacity = i===0 ? '1':'0.7'; });
         applyTypeUI('multiple_choice');
         resetMcOptions();
-        const maxOrder = questions.reduce((m,q) => Math.max(m, q.order_index), 0);
+        const maxOrder = questions.reduce((m,q) => Math.max(m, parseInt(q.order_index, 10) || 0), 0);
         document.getElementById('qOrder').value  = maxOrder + 1;
         document.getElementById('qPoints').value = 1;
         document.getElementById('questionModal').classList.remove('hidden');

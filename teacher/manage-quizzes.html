@@ -107,9 +107,9 @@
                 
                 <!-- Right Actions -->
                 <div class="flex items-center space-x-4">
-                    <button onclick="openAddQuizModal()" class="inline-flex items-center space-x-2 bg-plum-800 text-white px-4 py-2 rounded-xl font-medium hover:bg-plum-900 transition-colors">
+                    <button onclick="openTypePickerModal()" class="inline-flex items-center space-x-2 bg-plum-800 text-white px-4 py-2 rounded-xl font-medium hover:bg-plum-900 transition-colors">
                         <i class="fas fa-plus"></i>
-                        <span class="hidden sm:inline">Add Quiz</span>
+                        <span class="hidden sm:inline">Add Quiz / Assessment</span>
                     </button>
                 </div>
             </div>
@@ -183,6 +183,19 @@
                 </div>
             </div>
 
+            <!-- Type Tabs (Quizzes / Pre-Tests / Post-Tests) -->
+            <div class="flex flex-wrap gap-2 mb-4 border-b border-gray-200 pb-3" id="typeTabs">
+                <button type="button" class="type-tab px-4 py-2 rounded-xl text-sm font-bold bg-plum-800 text-white shadow-[2px_2px_0_0_#1c1b1a] transition-all" data-type="quizzes" onclick="setTypeTab('quizzes')">
+                    <i class="fas fa-clipboard-list mr-1.5"></i>Regular Quizzes (<span id="typeCountQuizzes">0</span>)
+                </button>
+                <button type="button" class="type-tab px-4 py-2 rounded-xl text-sm font-bold bg-white text-gray-700 border-2 border-ink-900 shadow-[2px_2px_0_0_#1c1b1a] hover:bg-gray-50 transition-all" data-type="pre_test" onclick="setTypeTab('pre_test')">
+                    <i class="fas fa-play-circle mr-1.5 text-amber-600"></i>Pre-Tests (<span id="typeCountPreTests">0</span>)
+                </button>
+                <button type="button" class="type-tab px-4 py-2 rounded-xl text-sm font-bold bg-white text-gray-700 border-2 border-ink-900 shadow-[2px_2px_0_0_#1c1b1a] hover:bg-gray-50 transition-all" data-type="post_test" onclick="setTypeTab('post_test')">
+                    <i class="fas fa-flag-checkered mr-1.5 text-green-600"></i>Post-Tests (<span id="typeCountPostTests">0</span>)
+                </button>
+            </div>
+
             <div class="flex flex-wrap gap-2 mb-6" id="quarterTabs">
                 <button type="button" class="quarter-tab px-4 py-2 rounded-xl text-sm font-medium bg-plum-800 text-white" data-quarter="all">All Terms</button>
                 <button type="button" class="quarter-tab px-4 py-2 rounded-xl text-sm font-medium bg-white text-gray-700 border border-gray-200 hover:border-plum-800/40" data-quarter="1">Term 1</button>
@@ -198,17 +211,113 @@
             <!-- Empty State -->
             <div id="emptyState" class="hidden text-center py-16">
                 <div class="w-20 h-20 bg-plum-800/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <i class="fas fa-clipboard-list text-plum-800 text-3xl"></i>
+                    <i class="fas fa-clipboard-list text-plum-800 text-3xl" id="emptyIcon"></i>
                 </div>
-                <h3 class="text-xl font-semibold text-gray-900 mb-2">No quizzes yet</h3>
-                <p class="text-gray-500 mb-6">Start by creating your first quiz</p>
-                <button onclick="openAddQuizModal()" class="inline-flex items-center space-x-2 bg-plum-800 text-white px-6 py-3 rounded-xl font-medium hover:bg-plum-900 transition-colors">
+                <h3 class="text-xl font-semibold text-gray-900 mb-2" id="emptyTitle">No quizzes yet</h3>
+                <p class="text-gray-500 mb-6" id="emptyDesc">Start by creating your first quiz or assessment</p>
+                <button onclick="openTypePickerModal()" class="inline-flex items-center space-x-2 bg-plum-800 text-white px-6 py-3 rounded-xl font-medium hover:bg-plum-900 transition-colors">
                     <i class="fas fa-plus"></i>
-                    <span>Add Quiz</span>
+                    <span>Add Assessment</span>
                 </button>
             </div>
         </div>
     </main>
+
+    <!-- Type Picker Modal (Quiz / Pre-Test / Post-Test) -->
+    <div id="typePickerModal" class="hidden fixed inset-0 flex items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-2xl w-full max-w-xl max-h-[90vh] overflow-y-auto" style="border:2px solid #1c1b1a; box-shadow:6px 6px 0 0 #1c1b1a;">
+            <div class="flex items-center justify-between p-6" style="border-bottom:2px solid #1c1b1a;">
+                <div>
+                    <h2 class="text-xl font-bold text-gray-900">Create New Assessment</h2>
+                    <p class="text-xs text-gray-500">Choose the type of assessment or quiz to build</p>
+                </div>
+                <button onclick="closeTypePickerModal()" class="p-2 text-gray-500 hover:text-gray-700 rounded-lg hover:bg-gray-100">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="p-6 space-y-4">
+                <!-- Option 1: Regular Quiz -->
+                <div onclick="selectPickerType('regular')" class="p-4 rounded-xl border-2 border-ink-900 hover:bg-plum-50 cursor-pointer transition-all shadow-[2px_2px_0_0_#1c1b1a]">
+                    <div class="flex items-start gap-4">
+                        <div class="w-12 h-12 bg-plum-100 border-2 border-ink-900 rounded-xl flex items-center justify-center text-plum-800 text-xl flex-shrink-0">
+                            <i class="fas fa-clipboard-list"></i>
+                        </div>
+                        <div class="flex-1">
+                            <h3 class="font-bold text-gray-900 text-base">Regular Quiz</h3>
+                            <p class="text-xs text-gray-600 mt-0.5">Formative lesson quiz or general practice test with question bank.</p>
+                        </div>
+                        <i class="fas fa-arrow-right text-gray-400 self-center"></i>
+                    </div>
+                </div>
+
+                <!-- Option 2: Diagnostic Pre-Test -->
+                <div onclick="selectPickerType('pre_test')" class="p-4 rounded-xl border-2 border-ink-900 hover:bg-amber-50 cursor-pointer transition-all shadow-[2px_2px_0_0_#1c1b1a]">
+                    <div class="flex items-start gap-4">
+                        <div class="w-12 h-12 bg-amber-100 border-2 border-ink-900 rounded-xl flex items-center justify-center text-amber-700 text-xl flex-shrink-0">
+                            <i class="fas fa-play-circle"></i>
+                        </div>
+                        <div class="flex-1">
+                            <div class="flex items-center gap-2">
+                                <h3 class="font-bold text-gray-900 text-base">Diagnostic Pre-Test</h3>
+                                <span class="text-[10px] uppercase font-black bg-amber-200 text-amber-900 px-2 py-0.5 rounded-full border border-ink-900">Option B Gating</span>
+                            </div>
+                            <p class="text-xs text-gray-600 mt-0.5">Assigned to a module. Taking this test unlocks the module's lessons and videos.</p>
+                        </div>
+                        <i class="fas fa-arrow-right text-gray-400 self-center"></i>
+                    </div>
+                </div>
+
+                <!-- Option 3: Summative Post-Test -->
+                <div onclick="selectPickerType('post_test')" class="p-4 rounded-xl border-2 border-ink-900 hover:bg-green-50 cursor-pointer transition-all shadow-[2px_2px_0_0_#1c1b1a]">
+                    <div class="flex items-start gap-4">
+                        <div class="w-12 h-12 bg-green-100 border-2 border-ink-900 rounded-xl flex items-center justify-center text-green-700 text-xl flex-shrink-0">
+                            <i class="fas fa-flag-checkered"></i>
+                        </div>
+                        <div class="flex-1">
+                            <div class="flex items-center gap-2">
+                                <h3 class="font-bold text-gray-900 text-base">Summative Post-Test</h3>
+                                <span class="text-[10px] uppercase font-black bg-green-200 text-green-900 px-2 py-0.5 rounded-full border border-ink-900">75% Passing Gate</span>
+                            </div>
+                            <p class="text-xs text-gray-600 mt-0.5">End-of-module assessment. Achieving ≥75% unlocks the next sequential module.</p>
+                        </div>
+                        <i class="fas fa-arrow-right text-gray-400 self-center"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Module Selection Modal for Pre/Post Tests -->
+    <div id="asmtModulePickerModal" class="hidden fixed inset-0 flex items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-2xl w-full max-w-lg" style="border:2px solid #1c1b1a; box-shadow:6px 6px 0 0 #1c1b1a;">
+            <div class="flex items-center justify-between p-6" style="border-bottom:2px solid #1c1b1a;">
+                <div>
+                    <h2 id="asmtPickerTitle" class="text-xl font-bold text-gray-900">Select Module for Pre-Test</h2>
+                    <p class="text-xs text-gray-500">Each module has one pre-test and one post-test</p>
+                </div>
+                <button onclick="closeAsmtModulePickerModal()" class="p-2 text-gray-500 hover:text-gray-700 rounded-lg hover:bg-gray-100">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="p-6 space-y-4">
+                <div>
+                    <label class="block text-sm font-bold text-gray-700 mb-1">Target Module *</label>
+                    <select id="asmtTargetModule" onchange="checkExistingAsmtForModule()" class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-plum-800 font-medium">
+                        <option value="">Select a module...</option>
+                    </select>
+                </div>
+                <div id="asmtExistingNotice" class="hidden p-3 bg-amber-50 border border-amber-200 rounded-xl text-xs font-semibold text-amber-800">
+                    <i class="fas fa-info-circle mr-1"></i>This module already has this assessment configured. Continuing will open its existing question manager.
+                </div>
+                <div class="flex gap-3 pt-2">
+                    <button type="button" onclick="closeAsmtModulePickerModal()" class="flex-1 py-3 rounded-xl font-bold border-2 border-ink-900 shadow-[2px_2px_0_0_#1c1b1a] bg-white">Cancel</button>
+                    <button type="button" id="btnConfirmAsmtModule" onclick="confirmAsmtModule()" class="flex-1 py-3 rounded-xl font-bold text-white bg-plum-800 hover:bg-plum-900 shadow-[2px_2px_0_0_#1c1b1a] border-2 border-ink-900">
+                        Continue ➔
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <!-- Add/Edit Quiz Modal -->
     <div id="quizModal" class="hidden fixed inset-0 flex items-center justify-center z-50 p-4">
@@ -230,19 +339,34 @@
                 </div>
 
                 <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Attached Module (Optional)</label>
+                    <select id="quizModuleId" class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-plum-800">
+                        <option value="">No linked module (Standalone Quiz)</option>
+                    </select>
+                    <p class="text-xs text-gray-500 mt-1">Attach to a specific module for structured lesson progression</p>
+                </div>
+
+                <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1">Description</label>
                     <textarea id="quizDescription" rows="3" 
                         class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-plum-800 focus:border-transparent"
                         placeholder="What topics does this quiz cover?"></textarea>
                 </div>
 
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Quiz URL *</label>
-                    <input type="url" id="quizUrl" required 
-                        class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-plum-800 focus:border-transparent"
-                        placeholder="https://forms.google.com/...">
-                    <p class="text-xs text-gray-500 mt-1">Google Forms, Quizizz, Kahoot, or any quiz URL</p>
-                </div>
+                <!-- Collapsed Legacy External Quiz URL -->
+                <details class="bg-gray-50 border border-gray-200 rounded-xl p-3" id="legacyUrlDetails">
+                    <summary class="text-xs font-bold text-gray-700 cursor-pointer flex items-center justify-between">
+                        <span><i class="fas fa-link mr-1.5 text-plum-800"></i>External / Legacy Quiz Link (Optional)</span>
+                        <span class="text-gray-400 font-normal">Click to expand</span>
+                    </summary>
+                    <div class="mt-3 pt-3 border-t border-gray-200">
+                        <label class="block text-xs font-medium text-gray-700 mb-1">External Quiz URL</label>
+                        <input type="url" id="quizUrl" 
+                            class="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-plum-800 focus:border-transparent text-sm"
+                            placeholder="https://forms.google.com/...">
+                        <p class="text-xs text-gray-500 mt-1">Leave empty if you are building native questions in MathTuro Question Manager.</p>
+                    </div>
+                </details>
 
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1">Link to Video (Optional)</label>
@@ -288,10 +412,11 @@
 
                 <div class="grid grid-cols-3 gap-4">
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Total Items *</label>
-                        <input type="number" id="quizTotalItems" required min="1" 
-                            class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-plum-800 focus:border-transparent"
-                            placeholder="10">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Total Items</label>
+                        <input type="number" id="quizTotalItems" min="0" value="0" readonly 
+                            class="w-full px-4 py-3 border border-gray-200 bg-gray-100 rounded-xl text-gray-700 cursor-not-allowed font-bold"
+                            placeholder="0">
+                        <p class="text-[10px] text-gray-500 mt-0.5">Computed from items</p>
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">Passing Score</label>
@@ -307,9 +432,13 @@
                     </div>
                 </div>
 
-                <div class="flex items-center space-x-3">
+                <div id="quizPublishedGroup" class="hidden flex items-center space-x-3">
                     <input type="checkbox" id="quizPublished" class="w-5 h-5 text-plum-800 rounded focus:ring-plum-800">
-                    <label for="quizPublished" class="text-sm font-medium text-gray-700">Publish immediately (visible to students)</label>
+                    <label for="quizPublished" class="text-sm font-medium text-gray-700">Published (visible to students)</label>
+                </div>
+                <div id="quizCreateNotice" class="p-3 bg-amber-50 border border-amber-200 rounded-xl text-xs font-semibold text-amber-900 flex items-start gap-2">
+                    <i class="fas fa-info-circle text-amber-600 mt-0.5 flex-shrink-0"></i>
+                    <span>New quizzes are saved as <strong>Draft</strong>. You can publish your quiz after configuring questions in Question Manager.</span>
                 </div>
 
                 <div class="flex space-x-3 pt-4">
@@ -355,6 +484,10 @@
         let currentUser = null;
         let quizzes = [];
         let videos = [];
+        let modules = [];
+        let moduleAssessments = [];
+        let activeTypeTab = 'quizzes';
+        let selectedPickerType = null;
         let editingQuizId = null;
         let activeQuarterFilter = 'all';
         let gradeLevels = [];
@@ -521,7 +654,8 @@
                     let updateQuery = getSupabase()
                         .from('quizzes')
                         .update(workingPayload)
-                        .eq('id', quizId);
+                        .eq('id', quizId)
+                        .select();
 
                     if (currentUser.role === 'teacher') {
                         updateQuery = updateQuery.eq('teacher_id', currentUser.id);
@@ -531,7 +665,8 @@
                 } else {
                     result = await getSupabase()
                         .from('quizzes')
-                        .insert(workingPayload);
+                        .insert(workingPayload)
+                        .select();
                 }
 
                 if (!result.error) return result;
@@ -684,7 +819,7 @@
 
         async function loadData() {
             try {
-                // Load quizzes
+                // 1. Load quizzes
                 let quizzesQuery = getSupabase()
                     .from('quizzes')
                     .select('*')
@@ -695,11 +830,37 @@
                 }
 
                 const { data: quizData, error: quizError } = await quizzesQuery;
-
                 if (quizError) throw quizError;
                 quizzes = quizData || [];
 
-                // Load videos for linking
+                // 2. Load modules
+                let modulesQuery = getSupabase()
+                    .from('modules')
+                    .select('id, title, quarter, grade_level, is_published')
+                    .order('title', { ascending: true });
+
+                const { data: moduleData, error: moduleError } = await modulesQuery;
+                if (!moduleError && moduleData) {
+                    modules = moduleData;
+                    populateModuleDropdowns();
+                }
+
+                // 3. Load module assessments
+                let asmtQuery = getSupabase()
+                    .from('module_assessments')
+                    .select('*, module:modules(id, title, quarter, grade_level, is_published)')
+                    .order('created_at', { ascending: false });
+
+                if (currentUser.role === 'teacher') {
+                    asmtQuery = asmtQuery.eq('teacher_id', currentUser.id);
+                }
+
+                const { data: asmtData, error: asmtError } = await asmtQuery;
+                if (!asmtError && asmtData) {
+                    moduleAssessments = asmtData;
+                }
+
+                // 4. Load videos for linking
                 let videosQuery = getSupabase()
                     .from('videos')
                     .select('id, title')
@@ -710,13 +871,13 @@
                 }
 
                 const { data: videoData } = await videosQuery;
-                
                 videos = videoData || [];
                 populateVideoDropdown();
 
-                // Load submission counts
+                // 5. Load question and submission counts
+                await loadQuestionCounts();
                 await loadSubmissionCounts();
-                
+
                 updateStats();
                 renderQuizzes();
             } catch (error) {
@@ -725,23 +886,88 @@
             }
         }
 
+        function populateModuleDropdowns() {
+            const quizModuleSelect = document.getElementById('quizModuleId');
+            if (quizModuleSelect) {
+                quizModuleSelect.innerHTML = '<option value="">No linked module (Standalone Quiz)</option>' +
+                    modules.map(m => `<option value="${m.id}">${m.title}</option>`).join('');
+            }
+
+            const asmtModuleSelect = document.getElementById('asmtTargetModule');
+            if (asmtModuleSelect) {
+                asmtModuleSelect.innerHTML = '<option value="">Select a module...</option>' +
+                    modules.map(m => `<option value="${m.id}">${m.title}</option>`).join('');
+            }
+        }
+
+        async function loadQuestionCounts() {
+            const quizIds = quizzes.map(q => q.id);
+            if (quizIds.length > 0) {
+                const { data: qData } = await getSupabase()
+                    .from('quiz_questions')
+                    .select('quiz_id')
+                    .in('quiz_id', quizIds);
+                const qCounts = {};
+                (qData || []).forEach(row => {
+                    qCounts[row.quiz_id] = (qCounts[row.quiz_id] || 0) + 1;
+                });
+                quizzes.forEach(q => {
+                    q.computed_questions = qCounts[q.id] || 0;
+                });
+            }
+
+            const asmtIds = moduleAssessments.map(a => a.id);
+            if (asmtIds.length > 0) {
+                const { data: aData } = await getSupabase()
+                    .from('quiz_questions')
+                    .select('assessment_id')
+                    .in('assessment_id', asmtIds);
+                const aCounts = {};
+                (aData || []).forEach(row => {
+                    aCounts[row.assessment_id] = (aCounts[row.assessment_id] || 0) + 1;
+                });
+                moduleAssessments.forEach(a => {
+                    a.question_count = aCounts[a.id] || 0;
+                });
+            }
+        }
+
         async function loadSubmissionCounts() {
             const quizIds = quizzes.map(q => q.id);
-            if (quizIds.length === 0) return;
+            if (quizIds.length > 0) {
+                const { data } = await getSupabase()
+                    .from('quiz_submissions')
+                    .select('quiz_id')
+                    .in('quiz_id', quizIds);
 
-            const { data } = await getSupabase()
-                .from('quiz_submissions')
-                .select('quiz_id')
-                .in('quiz_id', quizIds);
+                const counts = {};
+                (data || []).forEach(s => {
+                    counts[s.quiz_id] = (counts[s.quiz_id] || 0) + 1;
+                });
 
-            const counts = {};
-            (data || []).forEach(s => {
-                counts[s.quiz_id] = (counts[s.quiz_id] || 0) + 1;
-            });
+                quizzes.forEach(q => {
+                    q.submission_count = counts[q.id] || 0;
+                });
+            }
 
-            quizzes.forEach(q => {
-                q.submission_count = counts[q.id] || 0;
-            });
+            const asmtIds = moduleAssessments.map(a => a.id);
+            if (asmtIds.length > 0) {
+                try {
+                    const { data } = await getSupabase()
+                        .from('module_assessment_attempts')
+                        .select('assessment_id')
+                        .in('assessment_id', asmtIds);
+                    const counts = {};
+                    (data || []).forEach(s => {
+                        counts[s.assessment_id] = (counts[s.assessment_id] || 0) + 1;
+                    });
+                    moduleAssessments.forEach(a => {
+                        a.submission_count = counts[a.id] || 0;
+                    });
+                } catch (e) {
+                    console.warn('Could not load assessment attempts:', e);
+                }
+            }
         }
 
         function populateVideoDropdown() {
@@ -751,106 +977,348 @@
         }
 
         function updateStats() {
-            document.getElementById('totalQuizzes').textContent = quizzes.length;
-            document.getElementById('publishedQuizzes').textContent = quizzes.filter(q => q.is_published).length;
-            document.getElementById('draftQuizzes').textContent = quizzes.filter(q => !q.is_published).length;
-            document.getElementById('totalSubmissions').textContent = quizzes.reduce((sum, q) => sum + (q.submission_count || 0), 0);
+            const preTests = moduleAssessments.filter(a => a.assessment_type === 'pre_test');
+            const postTests = moduleAssessments.filter(a => a.assessment_type === 'post_test');
+
+            document.getElementById('totalQuizzes').textContent = quizzes.length + moduleAssessments.length;
+            document.getElementById('publishedQuizzes').textContent =
+                quizzes.filter(q => q.is_published).length + moduleAssessments.filter(a => a.module?.is_published).length;
+            document.getElementById('draftQuizzes').textContent =
+                quizzes.filter(q => !q.is_published).length + moduleAssessments.filter(a => !a.module?.is_published).length;
+            
+            const quizSubTotal = quizzes.reduce((sum, q) => sum + (q.submission_count || 0), 0);
+            const asmtSubTotal = moduleAssessments.reduce((sum, a) => sum + (a.submission_count || 0), 0);
+            document.getElementById('totalSubmissions').textContent = quizSubTotal + asmtSubTotal;
+
+            const badgeQuizzes = document.getElementById('typeCountQuizzes');
+            if (badgeQuizzes) badgeQuizzes.textContent = quizzes.length;
+            const badgePre = document.getElementById('typeCountPreTests');
+            if (badgePre) badgePre.textContent = preTests.length;
+            const badgePost = document.getElementById('typeCountPostTests');
+            if (badgePost) badgePost.textContent = postTests.length;
+        }
+
+        function setTypeTab(tab) {
+            activeTypeTab = tab || 'quizzes';
+            document.querySelectorAll('.type-tab').forEach(btn => {
+                const isActive = (btn.dataset.type === activeTypeTab);
+                btn.classList.toggle('bg-plum-800', isActive);
+                btn.classList.toggle('text-white', isActive);
+                btn.classList.toggle('bg-white', !isActive);
+                btn.classList.toggle('text-gray-700', !isActive);
+                btn.classList.toggle('border-2', !isActive);
+                btn.classList.toggle('border-ink-900', !isActive);
+            });
+            renderQuizzes();
+        }
+
+        function openTypePickerModal() {
+            document.getElementById('typePickerModal').classList.remove('hidden');
+        }
+
+        function closeTypePickerModal() {
+            document.getElementById('typePickerModal').classList.add('hidden');
+        }
+
+        function selectPickerType(type) {
+            closeTypePickerModal();
+            selectedPickerType = type;
+            if (type === 'regular' || type === 'quiz') {
+                openAddQuizModal();
+            } else if (type === 'pre_test' || type === 'post_test') {
+                openAsmtModulePickerModal(type);
+            }
+        }
+
+        function openAsmtModulePickerModal(type) {
+            selectedPickerType = type;
+            const titleEl = document.getElementById('asmtPickerTitle');
+            if (titleEl) {
+                titleEl.textContent = type === 'pre_test' ? 'Select Module for Pre-Test' : 'Select Module for Post-Test';
+            }
+            const sel = document.getElementById('asmtTargetModule');
+            if (sel) sel.value = '';
+            checkExistingAsmtForModule();
+            document.getElementById('asmtModulePickerModal').classList.remove('hidden');
+        }
+
+        function closeAsmtModulePickerModal() {
+            document.getElementById('asmtModulePickerModal').classList.add('hidden');
+            selectedPickerType = null;
+        }
+
+        function checkExistingAsmtForModule() {
+            const moduleId = document.getElementById('asmtTargetModule')?.value;
+            const noticeEl = document.getElementById('asmtExistingNotice');
+            const confirmBtn = document.getElementById('btnConfirmAsmtModule');
+            if (!moduleId || !selectedPickerType) {
+                if (noticeEl) noticeEl.classList.add('hidden');
+                if (confirmBtn) confirmBtn.innerHTML = 'Continue &rarr;';
+                return;
+            }
+            const existing = moduleAssessments.find(a => a.module_id === moduleId && a.assessment_type === selectedPickerType);
+            if (existing) {
+                if (noticeEl) {
+                    noticeEl.classList.remove('hidden');
+                    noticeEl.innerHTML = `<i class="fas fa-info-circle mr-1"></i>This module already has a ${selectedPickerType === 'pre_test' ? 'Pre-Test' : 'Post-Test'}. Continuing will open its Question Manager.`;
+                }
+                if (confirmBtn) confirmBtn.innerHTML = '<i class="fas fa-list-ol mr-1"></i>Open Questions &rarr;';
+            } else {
+                if (noticeEl) noticeEl.classList.add('hidden');
+                if (confirmBtn) confirmBtn.innerHTML = '<i class="fas fa-plus mr-1"></i>Create & Add Questions &rarr;';
+            }
+        }
+
+        async function confirmAsmtModule() {
+            const moduleId = document.getElementById('asmtTargetModule')?.value;
+            if (!moduleId) {
+                showToast('Please select a module first', 'error');
+                return;
+            }
+            const existing = moduleAssessments.find(a => a.module_id === moduleId && a.assessment_type === selectedPickerType);
+            if (existing) {
+                closeAsmtModulePickerModal();
+                window.location.href = `manage-questions.html?assessment_id=${existing.id}`;
+                return;
+            }
+
+            const confirmBtn = document.getElementById('btnConfirmAsmtModule');
+            confirmBtn.disabled = true;
+            confirmBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i>Creating...';
+
+            try {
+                const now = new Date().toISOString();
+                const asmtPayload = {
+                    module_id: moduleId,
+                    assessment_type: selectedPickerType,
+                    title: selectedPickerType === 'pre_test' ? 'Diagnostic Pre-Test' : 'Summative Post-Test',
+                    teacher_id: currentUser.id,
+                    passing_score: selectedPickerType === 'post_test' ? 75 : 0,
+                    created_at: now,
+                    updated_at: now
+                };
+
+                const { data, error } = await getSupabase()
+                    .from('module_assessments')
+                    .insert(asmtPayload)
+                    .select()
+                    .single();
+
+                if (error) {
+                    if (error.code === '23505' || String(error.message).includes('unique')) {
+                        const { data: dupData } = await getSupabase()
+                            .from('module_assessments')
+                            .select('id')
+                            .eq('module_id', moduleId)
+                            .eq('assessment_type', selectedPickerType)
+                            .single();
+                        if (dupData?.id) {
+                            closeAsmtModulePickerModal();
+                            window.location.href = `manage-questions.html?assessment_id=${dupData.id}`;
+                            return;
+                        }
+                    }
+                    throw error;
+                }
+
+                closeAsmtModulePickerModal();
+                showToast('Assessment created! Redirecting to add questions...', 'success');
+                setTimeout(() => {
+                    window.location.href = `manage-questions.html?assessment_id=${data.id}`;
+                }, 300);
+            } catch (err) {
+                console.error('Error creating assessment:', err);
+                showToast('Failed to create assessment: ' + (err.message || 'Error'), 'error');
+            } finally {
+                confirmBtn.disabled = false;
+                confirmBtn.innerHTML = 'Continue &rarr;';
+            }
         }
 
         function renderQuizzes() {
             const grid = document.getElementById('quizzesGrid');
             const emptyState = document.getElementById('emptyState');
-            
-            // Apply filters
             const search = document.getElementById('searchInput').value.toLowerCase();
             const status = document.getElementById('statusFilter').value;
-            
-            let filtered = quizzes.filter(q => {
-                if (search && !q.title.toLowerCase().includes(search) && !q.description?.toLowerCase().includes(search)) return false;
-                if (activeQuarterFilter !== 'all' && getQuizQuarter(q) !== activeQuarterFilter) return false;
-                if (status === 'published' && !q.is_published) return false;
-                if (status === 'draft' && q.is_published) return false;
+
+            if (activeTypeTab === 'quizzes') {
+                let filtered = quizzes.filter(q => {
+                    if (search && !q.title.toLowerCase().includes(search) && !q.description?.toLowerCase().includes(search)) return false;
+                    if (activeQuarterFilter !== 'all' && getQuizQuarter(q) !== activeQuarterFilter) return false;
+                    if (status === 'published' && !q.is_published) return false;
+                    if (status === 'draft' && q.is_published) return false;
+                    return true;
+                });
+
+                if (filtered.length === 0) {
+                    grid.innerHTML = '';
+                    document.getElementById('emptyTitle').textContent = 'No quizzes found';
+                    document.getElementById('emptyDesc').textContent = 'Start by creating your first regular quiz';
+                    document.getElementById('emptyIcon').className = 'fas fa-clipboard-list text-plum-800 text-3xl';
+                    emptyState.classList.remove('hidden');
+                    return;
+                }
+
+                emptyState.classList.add('hidden');
+                grid.innerHTML = filtered.map(quiz => {
+                    const scope = getQuizScopeLabels(quiz);
+                    const itemCount = quiz.computed_questions ?? quiz.total_items ?? 0;
+                    const linkedMod = quiz.module_id ? modules.find(m => m.id === quiz.module_id) : null;
+                    return `
+                    <div class="quiz-card bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden transition-all duration-200">
+                        <div class="p-5">
+                            <div class="flex items-start justify-between mb-3">
+                                <div class="w-12 h-12 bg-plum-800 rounded-xl flex items-center justify-center">
+                                    <i class="fas fa-clipboard-list text-white text-xl"></i>
+                                </div>
+                                <span class="status-badge ${quiz.is_published ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}">
+                                    ${quiz.is_published ? 'Published' : 'Draft'}
+                                </span>
+                            </div>
+                            <h3 class="font-semibold text-gray-900 mb-1 line-clamp-2">${quiz.title}</h3>
+                            <p class="text-sm text-gray-500 mb-3 line-clamp-2">${quiz.description || 'No description'}</p>
+                            <div class="flex flex-wrap gap-2 mb-4">
+                                <span class="px-2 py-1 text-xs rounded-full bg-blue-50 text-blue-700 border border-blue-100">
+                                    <i class="fas fa-layer-group mr-1"></i>${scope.gradeLabel}
+                                </span>
+                                <span class="px-2 py-1 text-xs rounded-full bg-purple-50 text-purple-700 border border-purple-100">
+                                    <i class="fas fa-users mr-1"></i>${scope.sectionLabel}
+                                </span>
+                                ${linkedMod ? `
+                                <span class="px-2 py-1 text-xs rounded-full bg-emerald-50 text-emerald-700 border border-emerald-100">
+                                    <i class="fas fa-book mr-1"></i>${linkedMod.title}
+                                </span>` : ''}
+                            </div>
+                            
+                            <div class="grid grid-cols-3 gap-2 text-xs text-gray-500 mb-4">
+                                <div class="bg-gray-50 rounded-lg p-2 text-center">
+                                    <div class="font-semibold text-gray-900">${itemCount}</div>
+                                    <div>Items</div>
+                                </div>
+                                <div class="bg-gray-50 rounded-lg p-2 text-center">
+                                    <div class="font-semibold text-gray-900">${quiz.passing_score || 0}</div>
+                                    <div>Passing</div>
+                                </div>
+                                <div class="bg-gray-50 rounded-lg p-2 text-center">
+                                    <div class="font-semibold text-gray-900">${quiz.submission_count || 0}</div>
+                                    <div>Submissions</div>
+                                </div>
+                            </div>
+
+                            <div class="flex items-center text-xs text-gray-400 mb-4">
+                                <span><i class="fas fa-calendar-alt mr-1"></i>${getQuarterLabel(quiz)}</span>
+                                ${quiz.time_limit_minutes ? `<span class="ml-3"><i class="fas fa-clock mr-1"></i>${quiz.time_limit_minutes} min</span>` : ''}
+                                ${quiz.quiz_url ? `<span class="ml-auto text-amber-600 font-semibold"><i class="fas fa-external-link-alt mr-1"></i>External</span>` : `<span class="ml-auto text-emerald-600 font-semibold"><i class="fas fa-cubes mr-1"></i>Native</span>`}
+                            </div>
+                            
+                            <div class="flex space-x-2">
+                                <button onclick="viewSubmissions('${quiz.id}')" 
+                                    class="flex-1 px-3 py-2 text-sm bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-colors font-medium">
+                                    <i class="fas fa-users mr-1"></i>Submissions
+                                </button>
+                                <a href="manage-questions.html?quiz_id=${quiz.id}" class="px-3 py-2 text-sm bg-purple-100 text-purple-700 rounded-lg hover:bg-purple-200 transition-colors inline-flex items-center gap-1 font-medium">
+                                    <i class="fas fa-list-ol"></i><span class="hidden sm:inline ml-1">Questions (${itemCount})</span>
+                                </a>
+                                <button onclick="editQuiz('${quiz.id}')" 
+                                    class="px-3 py-2 text-sm bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button onclick="deleteQuiz('${quiz.id}')" 
+                                    class="px-3 py-2 text-sm bg-red-100 text-red-700 rounded-lg hover:bg-red-200 transition-colors">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>`;
+                }).join('');
+                return;
+            }
+
+            // Diagnostic Pre-Test or Summative Post-Test
+            const targetType = activeTypeTab; // 'pre_test' or 'post_test'
+            const isPre = (targetType === 'pre_test');
+            let filtered = moduleAssessments.filter(a => {
+                if (a.assessment_type !== targetType) return false;
+                const modTitle = (a.module?.title || '').toLowerCase();
+                const asmtTitle = (a.title || '').toLowerCase();
+                if (search && !modTitle.includes(search) && !asmtTitle.includes(search)) return false;
+                if (activeQuarterFilter !== 'all' && normalizeQuarterValue(a.module?.quarter) !== activeQuarterFilter) return false;
+                if (status === 'published' && !a.module?.is_published) return false;
+                if (status === 'draft' && a.module?.is_published) return false;
                 return true;
             });
 
             if (filtered.length === 0) {
                 grid.innerHTML = '';
+                document.getElementById('emptyTitle').textContent = isPre ? 'No Diagnostic Pre-Tests found' : 'No Summative Post-Tests found';
+                document.getElementById('emptyDesc').textContent = 'Create assessments attached to modules for structured student testing';
+                document.getElementById('emptyIcon').className = isPre ? 'fas fa-play-circle text-amber-600 text-3xl' : 'fas fa-flag-checkered text-green-600 text-3xl';
                 emptyState.classList.remove('hidden');
                 return;
             }
 
             emptyState.classList.add('hidden');
-            grid.innerHTML = filtered.map(quiz => `
-                ${(() => {
-                    const scope = getQuizScopeLabels(quiz);
-                    return `
+            grid.innerHTML = filtered.map(asmt => {
+                const qCount = asmt.question_count || 0;
+                const subCount = asmt.submission_count || 0;
+                const modTitle = asmt.module?.title || 'Unknown Module';
+                const quarterLabel = asmt.module?.quarter ? `Term ${asmt.module.quarter}` : 'All Terms';
+
+                return `
                 <div class="quiz-card bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden transition-all duration-200">
                     <div class="p-5">
                         <div class="flex items-start justify-between mb-3">
-                            <div class="w-12 h-12 bg-plum-800 rounded-xl flex items-center justify-center">
-                                <i class="fas fa-clipboard-list text-white text-xl"></i>
+                            <div class="w-12 h-12 ${isPre ? 'bg-amber-100 text-amber-700' : 'bg-green-100 text-green-700'} rounded-xl flex items-center justify-center text-xl">
+                                <i class="fas ${isPre ? 'fa-play-circle' : 'fa-flag-checkered'}"></i>
                             </div>
-                            <span class="status-badge ${quiz.is_published ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}">
-                                ${quiz.is_published ? 'Published' : 'Draft'}
+                            <span class="status-badge ${isPre ? 'bg-amber-100 text-amber-800' : 'bg-green-100 text-green-800'}">
+                                ${isPre ? 'Diagnostic Pre-Test' : 'Summative Post-Test'}
                             </span>
                         </div>
-                        <h3 class="font-semibold text-gray-900 mb-1 line-clamp-2">${quiz.title}</h3>
-                        <p class="text-sm text-gray-500 mb-3 line-clamp-2">${quiz.description || 'No description'}</p>
-                        <div class="flex flex-wrap gap-2 mb-4">
-                            <span class="px-2 py-1 text-xs rounded-full bg-blue-50 text-blue-700 border border-blue-100">
-                                <i class="fas fa-layer-group mr-1"></i>${scope.gradeLabel}
-                            </span>
-                            <span class="px-2 py-1 text-xs rounded-full bg-purple-50 text-purple-700 border border-purple-100">
-                                <i class="fas fa-users mr-1"></i>${scope.sectionLabel}
-                            </span>
-                        </div>
+                        <h3 class="font-semibold text-gray-900 mb-1 line-clamp-2">${asmt.title || (isPre ? 'Diagnostic Pre-Test' : 'Summative Post-Test')}</h3>
+                        <p class="text-sm text-gray-500 mb-3 line-clamp-2"><i class="fas fa-book-open mr-1 text-gray-400"></i>${modTitle}</p>
                         
                         <div class="grid grid-cols-3 gap-2 text-xs text-gray-500 mb-4">
                             <div class="bg-gray-50 rounded-lg p-2 text-center">
-                                <div class="font-semibold text-gray-900">${quiz.total_items}</div>
-                                <div>Items</div>
+                                <div class="font-semibold text-gray-900">${qCount}</div>
+                                <div>Questions</div>
                             </div>
                             <div class="bg-gray-50 rounded-lg p-2 text-center">
-                                <div class="font-semibold text-gray-900">${quiz.passing_score || 0}</div>
-                                <div>Passing</div>
+                                <div class="font-semibold text-gray-900">${isPre ? 'None' : '75%'}</div>
+                                <div>Passing Gate</div>
                             </div>
                             <div class="bg-gray-50 rounded-lg p-2 text-center">
-                                <div class="font-semibold text-gray-900">${quiz.submission_count || 0}</div>
-                                <div>Submissions</div>
+                                <div class="font-semibold text-gray-900">${subCount}</div>
+                                <div>Attempts</div>
                             </div>
                         </div>
 
                         <div class="flex items-center text-xs text-gray-400 mb-4">
-                            <span><i class="fas fa-calendar-alt mr-1"></i>${getQuarterLabel(quiz)}</span>
-                            ${quiz.time_limit_minutes ? `<span class="ml-3"><i class="fas fa-clock mr-1"></i>${quiz.time_limit_minutes} min</span>` : ''}
+                            <span><i class="fas fa-calendar-alt mr-1"></i>${quarterLabel}</span>
+                            <span class="ml-auto text-emerald-600 font-semibold"><i class="fas fa-cubes mr-1"></i>MathTuro Native</span>
                         </div>
                         
                         <div class="flex space-x-2">
-                            <button onclick="viewSubmissions('${quiz.id}')" 
-                                class="flex-1 px-3 py-2 text-sm bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-colors">
-                                <i class="fas fa-users mr-1"></i>Submissions
+                            <a href="manage-questions.html?assessment_id=${asmt.id}" 
+                                class="flex-1 px-3 py-2 text-sm text-center font-bold bg-plum-800 text-white rounded-lg hover:bg-plum-900 transition-colors inline-flex items-center justify-center gap-1.5">
+                                <i class="fas fa-list-ol"></i><span>Manage Questions (${qCount})</span>
+                            </a>
+                            <button onclick="viewAssessmentSubmissions('${asmt.id}')" 
+                                class="px-3 py-2 text-sm bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-colors font-medium">
+                                <i class="fas fa-users mr-1"></i>Attempts
                             </button>
-                            <a href="manage-questions.html?quiz_id=${quiz.id}" class="px-3 py-2 text-sm bg-purple-100 text-purple-700 rounded-lg hover:bg-purple-200 transition-colors inline-flex items-center gap-1"><i class="fas fa-list-ol"></i><span class="hidden sm:inline ml-1">Questions</span></a>
-                             <button onclick="editQuiz('${quiz.id}')" 
-                                class="px-3 py-2 text-sm bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors">
-                                <i class="fas fa-edit"></i>
-                            </button>
-                            <button onclick="deleteQuiz('${quiz.id}')" 
+                            <button onclick="deleteAssessment('${asmt.id}')" 
                                 class="px-3 py-2 text-sm bg-red-100 text-red-700 rounded-lg hover:bg-red-200 transition-colors">
                                 <i class="fas fa-trash"></i>
                             </button>
                         </div>
                     </div>
-                </div>
-            `;
-                })()}
-            `).join('');
+                </div>`;
+            }).join('');
         }
 
         function setupEventListeners() {
-            // Logout button
             document.getElementById('logoutButton').addEventListener('click', logout);
-            
             document.getElementById('quizForm').addEventListener('submit', handleSubmit);
             document.getElementById('searchInput').addEventListener('input', renderQuizzes);
             document.getElementById('statusFilter').addEventListener('change', renderQuizzes);
@@ -881,9 +1349,15 @@
 
         function openAddQuizModal() {
             editingQuizId = null;
-            document.getElementById('modalTitle').textContent = 'Add Quiz';
+            document.getElementById('modalTitle').textContent = 'Add Regular Quiz';
             document.getElementById('quizForm').reset();
             document.getElementById('quizQuarter').value = '';
+            document.getElementById('quizModuleId').value = '';
+            document.getElementById('quizUrl').value = '';
+            document.getElementById('quizTotalItems').value = '0';
+            document.getElementById('legacyUrlDetails').removeAttribute('open');
+            document.getElementById('quizPublishedGroup').classList.add('hidden');
+            document.getElementById('quizCreateNotice').classList.remove('hidden');
             populateQuizGradeLevelOptions('');
             populateQuizSectionOptions('', '');
             updateQuizScopePreview('', '');
@@ -904,18 +1378,27 @@
             document.getElementById('quizId').value = id;
             document.getElementById('quizTitle').value = quiz.title;
             document.getElementById('quizDescription').value = quiz.description || '';
-            document.getElementById('quizUrl').value = quiz.quiz_url;
+            document.getElementById('quizModuleId').value = quiz.module_id || '';
+            document.getElementById('quizUrl').value = quiz.quiz_url || '';
+            if (quiz.quiz_url) {
+                document.getElementById('legacyUrlDetails').setAttribute('open', '');
+            } else {
+                document.getElementById('legacyUrlDetails').removeAttribute('open');
+            }
             document.getElementById('quizVideoId').value = quiz.video_id || '';
             document.getElementById('quizQuarter').value = getQuizQuarter(quiz);
             const selectedGradeLevelId = resolveGradeLevelId(quiz);
             populateQuizGradeLevelOptions(selectedGradeLevelId);
             populateQuizSectionOptions(selectedGradeLevelId, quiz.section_id || '');
             updateQuizScopePreview(selectedGradeLevelId, quiz.section_id || '');
-            document.getElementById('quizTotalItems').value = quiz.total_items;
+            document.getElementById('quizTotalItems').value = quiz.computed_questions ?? quiz.total_items ?? 0;
             document.getElementById('quizPassingScore').value = quiz.passing_score || '';
             document.getElementById('quizTimeLimit').value = quiz.time_limit_minutes || '';
-            document.getElementById('quizPublished').checked = quiz.is_published;
+            document.getElementById('quizPublished').checked = !!quiz.is_published;
             
+            document.getElementById('quizCreateNotice').classList.add('hidden');
+            document.getElementById('quizPublishedGroup').classList.remove('hidden');
+
             document.getElementById('quizModal').classList.remove('hidden');
         }
 
@@ -940,19 +1423,26 @@
                     throw new Error('Please select a term');
                 }
 
+                const rawUrl = document.getElementById('quizUrl').value.trim();
+                const quizUrl = rawUrl || null;
+                const moduleId = document.getElementById('quizModuleId').value || null;
+
                 const quizData = {
-                    title: document.getElementById('quizTitle').value,
-                    description: document.getElementById('quizDescription').value,
-                    quiz_url: document.getElementById('quizUrl').value,
+                    title: document.getElementById('quizTitle').value.trim(),
+                    description: document.getElementById('quizDescription').value.trim(),
+                    quiz_url: quizUrl,
+                    module_id: moduleId,
                     video_id: document.getElementById('quizVideoId').value || null,
                     quarter: Number(selectedQuarter),
                     grade_level: getGradeLevelNameById(resolvedScope.gradeLevelId),
                     grade_level_id: resolvedScope.gradeLevelId,
                     section_id: resolvedScope.sectionId,
-                    total_items: parseInt(document.getElementById('quizTotalItems').value),
-                    passing_score: parseInt(document.getElementById('quizPassingScore').value) || 0,
-                    time_limit_minutes: parseInt(document.getElementById('quizTimeLimit').value) || 0,
-                    is_published: document.getElementById('quizPublished').checked,
+                    total_items: editingQuizId 
+                        ? (parseInt(document.getElementById('quizTotalItems').value, 10) || 0)
+                        : 0,
+                    passing_score: parseInt(document.getElementById('quizPassingScore').value, 10) || 0,
+                    time_limit_minutes: parseInt(document.getElementById('quizTimeLimit').value, 10) || 0,
+                    is_published: editingQuizId ? document.getElementById('quizPublished').checked : false,
                     teacher_id: currentUser.id,
                     updated_at: now
                 };
@@ -960,16 +1450,25 @@
                 let result;
                 if (editingQuizId) {
                     result = await saveQuizWithFallback(quizData, editingQuizId);
+                    if (result.error) throw result.error;
+                    showToast('Quiz updated!', 'success');
+                    closeQuizModal();
+                    await loadData();
                 } else {
                     quizData.created_at = now;
                     result = await saveQuizWithFallback(quizData);
+                    if (result.error) throw result.error;
+                    showToast('Quiz created! Redirecting to add questions...', 'success');
+                    closeQuizModal();
+                    const newQuizId = result.data?.[0]?.id || result.data?.id;
+                    if (newQuizId) {
+                        setTimeout(() => {
+                            window.location.href = `manage-questions.html?quiz_id=${newQuizId}`;
+                        }, 400);
+                    } else {
+                        await loadData();
+                    }
                 }
-
-                if (result.error) throw result.error;
-
-                showToast(editingQuizId ? 'Quiz updated!' : 'Quiz added!', 'success');
-                closeQuizModal();
-                await loadData();
             } catch (error) {
                 console.error('Error saving quiz:', error);
                 showToast('Failed to save quiz: ' + error.message, 'error');
@@ -1055,8 +1554,83 @@
             } catch (error) {
                 console.error('Error loading submissions:', error);
                 showToast('Failed to load submissions: ' + (error.message || 'Unknown error'), 'error');
-                // Also log detailed error to help debug
-                console.error('Full error object:', error);
+            }
+        }
+
+        async function viewAssessmentSubmissions(asmtId) {
+            const asmt = moduleAssessments.find(a => a.id === asmtId);
+            if (!asmt) return;
+            const typeLabel = asmt.assessment_type === 'pre_test' ? 'Diagnostic Pre-Test' : 'Summative Post-Test';
+            document.getElementById('submissionsTitle').textContent = `Attempts: ${asmt.title || typeLabel} (${asmt.module?.title || ''})`;
+            
+            try {
+                const { data, error } = await getSupabase()
+                    .from('module_assessment_attempts')
+                    .select(`
+                        *,
+                        student:student_id(full_name, email)
+                    `)
+                    .eq('assessment_id', asmtId)
+                    .order('created_at', { ascending: false });
+
+                if (error) throw error;
+
+                const list = document.getElementById('submissionsList');
+                if (!data || data.length === 0) {
+                    list.innerHTML = `
+                        <div class="text-center py-8 text-gray-500">
+                            <i class="fas fa-inbox text-4xl mb-3"></i>
+                            <p>No assessment attempts yet</p>
+                        </div>
+                    `;
+                } else {
+                    list.innerHTML = `
+                        <div class="overflow-x-auto">
+                            <table class="w-full">
+                                <thead>
+                                    <tr class="text-left text-sm text-gray-500 border-b">
+                                        <th class="pb-3">Student</th>
+                                        <th class="pb-3">Score</th>
+                                        <th class="pb-3">Percentage</th>
+                                        <th class="pb-3">Submitted</th>
+                                        <th class="pb-3">Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${data.map(s => `
+                                        <tr class="border-b border-gray-100">
+                                            <td class="py-3">
+                                                <div class="font-medium text-gray-900">${s.student?.full_name || 'Unknown'}</div>
+                                                <div class="text-sm text-gray-500">${s.student?.email || ''}</div>
+                                            </td>
+                                            <td class="py-3">
+                                                <span class="font-semibold text-gray-900">
+                                                    ${s.score ?? 0}/${s.total_items ?? 0}
+                                                </span>
+                                            </td>
+                                            <td class="py-3 text-sm font-bold text-gray-700">
+                                                ${Math.round(s.percentage ?? 0)}%
+                                            </td>
+                                            <td class="py-3 text-sm text-gray-500">
+                                                ${new Date(s.created_at).toLocaleDateString()}
+                                            </td>
+                                            <td class="py-3">
+                                                <span class="px-2 py-1 rounded-full text-xs ${s.assessment_result === 'passed' ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'}">
+                                                    ${s.assessment_result === 'passed' ? 'Passed' : (s.assessment_result || 'Completed')}
+                                                </span>
+                                            </td>
+                                        </tr>
+                                    `).join('')}
+                                </tbody>
+                            </table>
+                        </div>
+                    `;
+                }
+
+                document.getElementById('submissionsModal').classList.remove('hidden');
+            } catch (error) {
+                console.error('Error loading assessment submissions:', error);
+                showToast('Failed to load assessment submissions: ' + (error.message || 'Unknown error'), 'error');
             }
         }
 
@@ -1084,6 +1658,29 @@
                 await loadData();
             } catch (error) {
                 showToast('Failed to delete quiz', 'error');
+            }
+        }
+
+        async function deleteAssessment(id) {
+            if (!confirm('Are you sure you want to delete this assessment? All associated questions and attempts will be removed.')) return;
+            
+            try {
+                let deleteQuery = getSupabase()
+                    .from('module_assessments')
+                    .delete()
+                    .eq('id', id);
+
+                if (currentUser.role === 'teacher') {
+                    deleteQuery = deleteQuery.eq('teacher_id', currentUser.id);
+                }
+
+                const { error } = await deleteQuery;
+
+                if (error) throw error;
+                showToast('Assessment deleted', 'success');
+                await loadData();
+            } catch (error) {
+                showToast('Failed to delete assessment: ' + error.message, 'error');
             }
         }
 

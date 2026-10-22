@@ -35,8 +35,22 @@
 
 * **⚠️ REGRESSION (2026-10-20 ~16:00):** `migration_phase5_exp_gamification_and_leaderboard.sql` was re-run on staging. Its `CREATE OR REPLACE` statements overwrote the gated wrappers `submit_and_grade_assessment`, `submit_and_grade_regular_quiz` and `submit_regular_quiz_score` with the ungated bodies. Probe: Student B's submit to the locked M2 pre-test reached the answer-count check (no "locked" error), and the legacy score RPC returned "Invalid score bounds". The `get_assessment_questions_for_student` fix survived. **⚠️ Happened again ~16:30** (Phase 5 re-run after the push; probes show both wrappers ungated). Re-run guards were added to the Phase 3 and Phase 5 migrations so this can't recur (see 16:35 entry); staging still needs both remediation files re-run. Earlier: **resolved 16:15**, when the user re-ran both remediation files. Probes show "Assessment locked by module progression" and "This quiz is graded automatically…", and the Phase 4–5 suite is back to 17/17. Any re-run of the Phase 3 or 5 migrations must be followed by both remediation files.
 
-### 🎯 The Immediate Next Action (Do This First)
-0. **Client additions WS1–WS5: DEPLOYED (2026-10-22).** User ran `database/migration_client_additions_objectives_terms_admin_leaderboard.sql` on production (`ynkzcybctsstpqxdoweq`) and pushed `main` (`origin/main` = `9ab2b85`, Vercel production). **Still unverified in a browser.** Next: production smoke QA on `https://mathturo.vercel.app` (teacher Reports, module create/edit with objectives/week/attachments, student module page and presentations, admin EXP leaderboard, "Aa" font switch, Term labels), then the open items below (PDF signed-URL check, unlock order vs Term/Week). User confirmed `database/migration_profile_update_and_last_login.sql` ran on production (2026-10-22). Small UI fixes done 2026-10-22 (commit after `9c7a751`): public `modules.html`/`guest-modules.html` map legacy Quarter 4 to Term 3 and say "Term"; blurred modal/overlay backdrops removed (dim scrim only). **Decision (user, 2026-10-22): Unlock order A.** Keep server unlock by `order_index`; teachers keep the Order field consistent with Term/Week. No gating change. Remaining work is testing only: production smoke test, PDF signed-URL check, Phase 3 / 4–5 security suites on production. **Gap audit vs client list (2026-10-22):** not done = icon logo (waiting on client asset), .ppt/.pptx embedding (PDF only today), EXP sized to the *final* quiz score (currently the first attempt's raw points), Section/Module tab bar (out of scope). **Next priority (user): Quiz CMS v2.** Council completed 2026-10-22 (requirements, UX, DB, frontend, security, a11y, red-team; QA section drafted by lead after a usage-limit stop; synthesis by lead). Plan = 5 batches; **Batch 1A (frontend: Quiz/Pre-Test/Post-Test picker, module link, runner entry points, quiz_url XSS fix) + 1B (small SQL: quiz_url nullable, gate legacy `submit_assessment_score`, block self-reported scores on native quizzes)** first. Verified blockers: `student/take-quiz.html` has no entry point; `module-view.html:981/:1239` unescaped `quiz_url` href; `submit_assessment_score` (phase2) is ungated and still called from `student/assets/js/student.js:1137`; any teacher can read/edit all answer keys (quiz_questions RLS). AWAITING USER APPROVAL; no code yet. 2026-10-22: user is moving work to Antigravity; Claude Code produced a full handover prompt (plan, rules, blockers, defaults) in chat.
+0. **Quiz CMS v2 Batch 1A & 1B: IMPLEMENTED ON MAIN (2026-10-22).** Implemented approved plan (Defaults 1–6):
+   - **Batch 1A (Frontend):**
+     - `teacher/manage-questions.html`: Fixed misleading "spaces stripped" copy to "spaces trimmed"; added integer parsing (`parseInt(..., 10)`) for `order_index` computation.
+     - `student/take-quiz.html`: Parses `module_id` query param; dynamic back link `#backLink`, `#errorBackLink`, `#resultBackBtn` to `module-view.html?id=...`; dynamic real titles for quizzes and assessments in header and result cards.
+     - `student/module-view.html`: Fixed XSS on unescaped URLs (`safeQuizUrl` validation); native quizzes display a direct button linking to `take-quiz.html?quiz_id=...&module_id=...` and hide paper modal; formal assessments link directly to `take-quiz.html?assessment_id=...&module_id=...`; pre-test banner and modal point directly to native runner.
+     - `teacher/manage-quizzes.html`: Replaced header "Add Quiz" with type picker modal (`#typePickerModal`) supporting Regular Quiz, Diagnostic Pre-Test, and Summative Post-Test; pre/post tests open module picker (`#asmtModulePickerModal`) with duplicate check redirecting to Question Manager; regular quiz modal now marks new quizzes as drafts, hides publish toggle at create, marks total items read-only (computed from questions), adds module dropdown (`module_id`), and collapses legacy URL in `<details id="legacyUrlDetails">`; added type tabs (`#typeTabs`: Regular Quizzes, Pre-Tests, Post-Tests) with dynamic counts and dedicated card rendering for assessments.
+   - **Batch 1B (SQL Migration):**
+     - Created `database/migration_quiz_cms_v2_batch1b_preparations.sql`:
+       1. `ALTER TABLE public.quizzes ALTER COLUMN quiz_url DROP NOT NULL;`
+       2. Gated security wrapper on `submit_assessment_score` checking progression access (`can_student_access_pre_test` / `can_student_access_post_test`) and rejecting native questions (`EXISTS (SELECT 1 FROM quiz_questions WHERE assessment_id = ...)`).
+       3. Updated `submit_regular_quiz_score` wrapper to reject native quizzes (`quiz_url IS NULL`).
+   - **Immediate Next Step for User:**
+     1. Run `database/migration_quiz_cms_v2_batch1b_preparations.sql` in production Supabase SQL Editor (`ynkzcybctsstpqxdoweq`).
+     2. Review git diff and commit changes to `main` (author: Tycoon James Flores).
+     3. Verify in browser that type picker, question links, and runner work seamlessly.
+     4. Proceed to Batch 2 (Parts, Fill-in-blanks, Numeric) planning/approval.
 1. ✅ Legacy quiz-score fix applied on staging by the user (2026-10-20 15:45); `verify_phase4_5_authenticated_api.ps1` now **17/17 PASS**. Caveat: the probe was rejected by the "graded automatically" branch; the `p_total = total_items` and locked-quiz branches were not individually exercised (no question-free quiz fixture on staging).
 2. ✅ Done (APPROVE PLAN, 2026-10-20 14:45): migration file saved; font preference restored on all student pages; `public/test-supabase.html` removed.
 3. Upload a small PDF to M1 via `teacher/manage-presentations.html` to cover the signed-URL check.
@@ -991,3 +1005,30 @@ And update the top section (`## 1. Quick Orientation: "Where We Left Off"`) with
 * **Author:** Tycoon James Flores
 * **Commit Message:** docs: record Quiz CMS v2 council plan and verified blockers
 * **Commit Hash:** `b514020`
+
+### [2026-10-22 17:55] — Git Commit 5987a8a
+* **Author:** Tycoon James Flores
+* **Commit Message:** docs: note handover to Antigravity
+* **Commit Hash:** `5987a8a`
+
+### [2026-10-22 18:42] — Antigravity Session: Quiz CMS v2 Batch 1A + 1B
+* **Status:** Implemented on `main` (Production target `ynkzcybctsstpqxdoweq`). Awaiting user SQL migration execution.
+* **Scope Completed:**
+  - **Batch 1A (Frontend Changes):**
+    - `teacher/manage-questions.html`: Fixed misleading "spaces stripped" copy to "spaces trimmed"; added integer parsing (`parseInt(..., 10)`) for `order_index` computation.
+    - `student/take-quiz.html`: Added support for `module_id` query parameter; dynamic back links (`#backLink`, `#errorBackLink`, `#resultBackBtn`) routing to `module-view.html?id=...`; dynamic real assessment/quiz title display in runner header and result card.
+    - `student/module-view.html`: Fixed unescaped URL XSS via `safeQuizUrl` validation; native quizzes render direct button linking to `take-quiz.html?quiz_id=...&module_id=...` and hide paper modal; formal assessments link directly to `take-quiz.html?assessment_id=...&module_id=...`; pre-test banner and modal directly route to runner.
+    - `teacher/manage-quizzes.html`: Replaced header "Add Quiz" button with type picker modal (`#typePickerModal`) for Regular Quiz, Diagnostic Pre-Test, and Summative Post-Test; assessment module picker (`#asmtModulePickerModal`) with duplicate check; regular quiz modal now enforces draft for new quizzes, hides publish toggle on create, marks items count read-only (computed from questions), adds module dropdown (`module_id`), and collapses legacy URL in `<details id="legacyUrlDetails">`; added type tabs (`#typeTabs`: Regular Quizzes, Pre-Tests, Post-Tests) with dynamic counts and dedicated card rendering for assessments.
+  - **Batch 1B (SQL Migration Created):**
+    - `database/migration_quiz_cms_v2_batch1b_preparations.sql`:
+      1. `ALTER TABLE public.quizzes ALTER COLUMN quiz_url DROP NOT NULL;`
+      2. Gated security wrapper on `submit_assessment_score` checking progression access (`can_student_access_pre_test` / `can_student_access_post_test`) and rejecting native questions (`EXISTS (SELECT 1 FROM quiz_questions WHERE assessment_id = ...)`).
+      3. Updated `submit_regular_quiz_score` wrapper to reject native quizzes (`quiz_url IS NULL`).
+* **Files Modified / Created:**
+  - `teacher/manage-questions.html` (modified)
+  - `student/take-quiz.html` (modified)
+  - `student/module-view.html` (modified)
+  - `teacher/manage-quizzes.html` (modified)
+  - `database/migration_quiz_cms_v2_batch1b_preparations.sql` (created)
+  - `docs/PROJECT_STATE.md` (updated)
+* **Next Immediate Action:** User runs `database/migration_quiz_cms_v2_batch1b_preparations.sql` in production Supabase SQL editor (`ynkzcybctsstpqxdoweq`), reviews git diff, commits changes to `main`, and tests in browser.

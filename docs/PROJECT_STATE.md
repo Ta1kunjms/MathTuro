@@ -51,7 +51,7 @@
        - Native input fields for `fill_in_blank` (text input with helper) and `numeric` (number input `step="any"`).
        - Full aggregate-only submission contract preserved.
    - **Immediate Next Steps for User:**
-     1. Run `database/migration_quiz_cms_v2_batch2_question_types_and_parts.sql` in production Supabase SQL Editor (`ynkzcybctsstpqxdoweq`).
+     1. Run `database/migration_school_year_format_and_registration_fix.sql` in production Supabase SQL Editor (`ynkzcybctsstpqxdoweq`).
      2. Review `git diff` and commit Batch 2 changes to `main` (Author: Tycoon James Flores).
      3. Verify in browser: create multi-part quiz with fill-in-blank and numeric questions in Teacher portal, then take it as student.
      4. Proceed to Batch 3 (CSV/JSON Bulk Import & Export) planning/approval.
@@ -1070,4 +1070,32 @@ And update the top section (`## 1. Quick Orientation: "Where We Left Off"`) with
   1. Execute `database/migration_quiz_cms_v2_batch2_question_types_and_parts.sql` in production Supabase SQL Editor (`ynkzcybctsstpqxdoweq`).
   2. Commit and push Batch 2 changes to `main`.
   3. Verify in browser and proceed to Batch 3 planning.
+
+
+### [2026-10-22 19:55] — Git Commit 964ad15
+* **Author:** Tycoon James Flores
+* **Commit Message:** feat(quiz-cms): Batch 2 question types, parts grouping, and flexible scoring
+* **Commit Hash:** `964ad15`
+
+### [2026-10-22 20:28] — Antigravity Session: School Year Format (20XX-20XX) & Registration Hardening
+* **Status:** Implemented on `main` (Production target `ynkzcybctsstpqxdoweq`).
+* **Scope Completed:**
+  - **Student Registration (`public/register.html`):**
+    - Updated school year input `pattern` to `20[0-9]{2}-20[0-9]{2}`, `maxlength` to `9`, and placeholder to `"2026-2027"`.
+    - Updated JS submission validation regex to `/^20\d{2}-20\d{2}$/` with clear error message.
+  - **Admin User Management (`admin/users.html`):**
+    - Updated school year input `pattern` to `20[0-9]{2}-20[0-9]{2}`, `maxlength` to `9`, and placeholder to `"2026-2027"`.
+  - **Database Migration (`database/migration_school_year_format_and_registration_fix.sql`):**
+    - Added compatibility column `is_published` to `public.modules` so module queries don't fail in `teacher/manage-quizzes.html`.
+    - Updated check constraint `users_school_year_check` to accept `^(S\.Y\. )?20[0-9]{2}-20[0-9]{2}$`.
+    - Hardened `handle_new_user()` trigger on `auth.users` with safe foreign key lookups and fallback insert to eliminate 500 signup errors.
+    - Added storage bucket policies for `learning-materials`.
+* **Files Modified / Created:**
+  - `public/register.html` (modified)
+  - `admin/users.html` (modified)
+  - `database/migration_school_year_format_and_registration_fix.sql` (created)
+  - `docs/PROJECT_STATE.md` (updated)
+* **Next Immediate Action:**
+  1. Run `database/migration_school_year_format_and_registration_fix.sql` in Supabase SQL Editor.
+  2. Test student signup on `public/register.html` with format `2026-2027`.
 

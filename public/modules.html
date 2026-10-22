@@ -74,7 +74,7 @@
                     DepEd Grade 7 Mathematics
                 </div>
                 <h1 class="text-3xl sm:text-4xl font-black text-ink-900 tracking-tight">Learning Modules</h1>
-                <p class="text-sm sm:text-base text-ink-700 font-semibold mt-1">Explore curriculum competencies structured by school quarter</p>
+                <p class="text-sm sm:text-base text-ink-700 font-semibold mt-1">Explore curriculum competencies structured by school term</p>
             </div>
 
             <!-- Term Tabs -->
@@ -96,7 +96,7 @@
     </main>
 
     <!-- Sign-in Required Modal -->
-    <div id="signinModal" class="hidden fixed inset-0 bg-ink-900/60 backdrop-blur-xs flex items-center justify-center z-50 p-4" role="dialog" aria-modal="true" aria-labelledby="signinTitle">
+    <div id="signinModal" class="hidden fixed inset-0 bg-ink-900/60 flex items-center justify-center z-50 p-4" role="dialog" aria-modal="true" aria-labelledby="signinTitle">
         <div class="bg-white border-2 border-ink-900 rounded-2xl max-w-md w-full p-6 sm:p-8 shadow-[6px_6px_0_0_#1c1b1a] animate-in fade-in zoom-in-95 duration-150">
             <div class="w-12 h-12 rounded-xl bg-forest-100 border-2 border-ink-900 flex items-center justify-center text-2xl mb-4">
                 🔒
@@ -143,7 +143,7 @@
         function normalizeQuarterValue(value) {
             if (value === null || value === undefined || value === '') return '';
             const quarter = String(value).trim().replace(/[^0-9]/g, '');
-            return ['1', '2', '3', '4'].includes(quarter) ? quarter : '';
+            return ['1', '2', '3'].includes(quarter) ? quarter : (quarter === '4' ? '3' : ''); // legacy Quarter 4 content counts as Term 3
         }
 
         function setupQuarterTabs() {
@@ -219,7 +219,7 @@
             if (filtered.length === 0) {
                 container.innerHTML = `
                     <div class="col-span-full py-16 px-4 text-center bg-white border-2 border-ink-900 rounded-2xl shadow-[4px_4px_0_0_#1c1b1a]">
-                        <p class="text-lg font-black text-ink-900 mb-1">No Modules Found for Quarter ${activeQuarterFilter}</p>
+                        <p class="text-lg font-black text-ink-900 mb-1">No Modules Found for Term ${activeQuarterFilter}</p>
                         <p class="text-sm text-ink-500 font-semibold">Learning modules for this period are currently being curated by our educators.</p>
                     </div>
                 `;

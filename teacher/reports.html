@@ -117,7 +117,20 @@
 
         <!-- Content Area -->
         <div class="p-4 lg:p-8">
-            <div class="bg-white rounded-2xl border border-gray-100 shadow-sm">
+            <!-- Report Type Tabs -->
+            <div class="flex flex-wrap gap-2 mb-6" id="reportTabs">
+                <button type="button" id="tabPerformance" onclick="switchReportTab('performance')" 
+                    class="report-nav-tab px-5 py-2.5 rounded-xl text-sm font-bold bg-plum-800 text-white shadow-[2px_2px_0_0_#1c1b1a] border-2 border-ink-900 transition-all">
+                    <i class="fas fa-users mr-1.5"></i>Student Performance Matrix
+                </button>
+                <button type="button" id="tabItemAnalysis" onclick="switchReportTab('item_analysis')" 
+                    class="report-nav-tab px-5 py-2.5 rounded-xl text-sm font-bold bg-white text-gray-700 shadow-[2px_2px_0_0_#1c1b1a] border-2 border-ink-900 hover:bg-gray-50 transition-all">
+                    <i class="fas fa-chart-pie mr-1.5 text-amber-600"></i>Item Analysis & Psychometrics
+                </button>
+            </div>
+
+            <!-- Performance Section -->
+            <div id="performanceSection" class="bg-white rounded-2xl border border-gray-100 shadow-sm">
                 <!-- Header with Export Buttons -->
                 <div class="p-6 border-b border-gray-100 flex flex-col sm:flex-row justify-between items-start sm:items-center space-y-4 sm:space-y-0">
                     <div>
@@ -175,6 +188,41 @@
                     </table>
                 </div>
             </div>
+
+            <!-- Item Analysis Section -->
+            <div id="itemAnalysisSection" class="hidden space-y-6">
+                <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
+                    <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
+                        <div>
+                            <h2 class="text-lg font-bold text-gray-800 flex items-center gap-2">
+                                <i class="fas fa-microscope text-plum-800"></i>Psychometric Item Analysis
+                            </h2>
+                            <p class="text-sm text-gray-500">Examine item difficulty (p), discrimination (D), and distractor distributions for any questionnaire</p>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <button type="button" onclick="exportReportsItemAnalysisCSV()" id="btnReportsExportCsv" class="hidden items-center gap-1.5 px-4 py-2 bg-green-600 text-white rounded-xl font-bold shadow-[2px_2px_0_0_#1c1b1a] hover:bg-green-700 text-sm">
+                                <i class="fas fa-file-csv"></i>Export Analysis CSV
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Assessment Picker -->
+                    <div class="p-4 bg-gray-50 border border-gray-200 rounded-xl mb-6">
+                        <label class="block text-xs font-bold uppercase tracking-wide text-gray-600 mb-2">Select Questionnaire to Analyze</label>
+                        <select id="itemAnalysisTestSelect" onchange="handleItemAnalysisSelect(this.value)" class="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-plum-800 bg-white font-medium text-sm">
+                            <option value="">-- Choose a Quiz, Pre-Test, or Post-Test --</option>
+                        </select>
+                    </div>
+
+                    <!-- Analysis Output Container -->
+                    <div id="reportsItemAnalysisContent" class="space-y-6">
+                        <div class="text-center py-12 text-gray-400">
+                            <i class="fas fa-chart-pie text-4xl mb-3 text-gray-300"></i>
+                            <p class="font-medium text-gray-600">Select a questionnaire above to compute item analysis</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </main>
 
@@ -186,6 +234,7 @@
     <script src="../shared/js/supabase.js"></script>
     <script src="../shared/js/auth.js"></script>
     <script src="assets/js/sidebar.js"></script>
+    <script src="assets/js/item-analysis.js"></script>
     <script>
         let currentUser = null;
         let reportData = {
@@ -822,6 +871,177 @@
             });
 
             doc.save(`student_reports_${new Date().toISOString().split('T')[0]}.pdf`);
+        }
+
+        // ─── Item Analysis Handlers (Batch 4) ──────────────────────────────
+        let activeReportTab = 'performance';
+        let reportsAnalysisData = null;
+        let selectedAnalysisTestMeta = null;
+
+        function switchReportTab(tab) {
+            activeReportTab = tab;
+            const isPerf = (tab === 'performance');
+            
+            document.getElementById('performanceSection').classList.toggle('hidden', !isPerf);
+            document.getElementById('itemAnalysisSection').classList.toggle('hidden', isPerf);
+
+            const tabPerf = document.getElementById('tabPerformance');
+            const tabItem = document.getElementById('tabItemAnalysis');
+
+            if (tabPerf && tabItem) {
+                tabPerf.className = isPerf
+                    ? 'report-nav-tab px-5 py-2.5 rounded-xl text-sm font-bold bg-plum-800 text-white shadow-[2px_2px_0_0_#1c1b1a] border-2 border-ink-900 transition-all'
+                    : 'report-nav-tab px-5 py-2.5 rounded-xl text-sm font-bold bg-white text-gray-700 shadow-[2px_2px_0_0_#1c1b1a] border-2 border-ink-900 hover:bg-gray-50 transition-all';
+                tabItem.className = !isPerf
+                    ? 'report-nav-tab px-5 py-2.5 rounded-xl text-sm font-bold bg-plum-800 text-white shadow-[2px_2px_0_0_#1c1b1a] border-2 border-ink-900 transition-all'
+                    : 'report-nav-tab px-5 py-2.5 rounded-xl text-sm font-bold bg-white text-gray-700 shadow-[2px_2px_0_0_#1c1b1a] border-2 border-ink-900 hover:bg-gray-50 transition-all';
+            }
+
+            if (!isPerf) {
+                populateItemAnalysisDropdown();
+            }
+        }
+
+        function populateItemAnalysisDropdown() {
+            const select = document.getElementById('itemAnalysisTestSelect');
+            if (!select) return;
+            const currentVal = select.value;
+
+            let optionsHtml = '<option value="">-- Choose a Quiz, Pre-Test, or Post-Test --</option>';
+
+            // Group 1: Regular Quizzes
+            if (reportData.quizzes && reportData.quizzes.length > 0) {
+                optionsHtml += '<optgroup label="Regular Quizzes">';
+                reportData.quizzes.forEach(q => {
+                    optionsHtml += `<option value="quiz:${q.id}">${escapeHtml(q.title)}</option>`;
+                });
+                optionsHtml += '</optgroup>';
+            }
+
+            // Group 2: Diagnostic Pre-Tests
+            const preTests = (reportData.assessments || []).filter(a => a.assessment_type === 'pre_test');
+            if (preTests.length > 0) {
+                optionsHtml += '<optgroup label="Diagnostic Pre-Tests">';
+                preTests.forEach(a => {
+                    const modTitle = a.module?.title || 'Module';
+                    optionsHtml += `<option value="asmt:${a.id}">Pre-Test: ${escapeHtml(modTitle)}</option>`;
+                });
+                optionsHtml += '</optgroup>';
+            }
+
+            // Group 3: Summative Post-Tests
+            const postTests = (reportData.assessments || []).filter(a => a.assessment_type === 'post_test');
+            if (postTests.length > 0) {
+                optionsHtml += '<optgroup label="Summative Post-Tests">';
+                postTests.forEach(a => {
+                    const modTitle = a.module?.title || 'Module';
+                    optionsHtml += `<option value="asmt:${a.id}">Post-Test: ${escapeHtml(modTitle)}</option>`;
+                });
+                optionsHtml += '</optgroup>';
+            }
+
+            select.innerHTML = optionsHtml;
+            if (currentVal) select.value = currentVal;
+        }
+
+        async function handleItemAnalysisSelect(val) {
+            const container = document.getElementById('reportsItemAnalysisContent');
+            const exportBtn = document.getElementById('btnReportsExportCsv');
+            if (!val) {
+                container.innerHTML = `
+                    <div class="text-center py-12 text-gray-400">
+                        <i class="fas fa-chart-pie text-4xl mb-3 text-gray-300"></i>
+                        <p class="font-medium text-gray-600">Select a questionnaire above to compute item analysis</p>
+                    </div>
+                `;
+                exportBtn?.classList.add('hidden');
+                reportsAnalysisData = null;
+                return;
+            }
+
+            const [typePrefix, testId] = val.split(':');
+            const isAsmt = (typePrefix === 'asmt');
+            selectedAnalysisTestMeta = { typePrefix, testId };
+
+            container.innerHTML = `
+                <div class="text-center py-12">
+                    <i class="fas fa-spinner fa-spin text-plum-800 text-3xl mb-3"></i>
+                    <p class="text-gray-500 font-medium">Computing psychometric item analysis...</p>
+                </div>
+            `;
+
+            try {
+                const sb = getSupabase();
+                const col = isAsmt ? 'assessment_id' : 'quiz_id';
+
+                // Fetch questions
+                const { data: qData, error: qErr } = await sb
+                    .from('quiz_questions')
+                    .select('id, question_text, question_type, options, correct_answer, points, order_index, part_label, explanation')
+                    .eq(col, testId)
+                    .order('order_index', { ascending: true });
+                if (qErr) throw qErr;
+
+                // Fetch attempts
+                let attempts = [];
+                if (isAsmt) {
+                    const { data: aData, error: aErr } = await sb
+                        .from('module_assessment_attempts')
+                        .select('id, student_id, score, total_items, percentage, assessment_result, created_at')
+                        .eq('assessment_id', testId)
+                        .order('score', { ascending: false });
+                    if (aErr) throw aErr;
+                    attempts = aData || [];
+                } else {
+                    const { data: sData, error: sErr } = await sb
+                        .from('quiz_submissions')
+                        .select('id, student_id, student_score, total_items, created_at')
+                        .eq('quiz_id', testId)
+                        .order('student_score', { ascending: false });
+                    if (sErr) throw sErr;
+                    attempts = sData || [];
+                }
+
+                // Fetch answers
+                let answers = [];
+                if (attempts.length > 0) {
+                    const attemptIds = attempts.map(a => a.id);
+                    const foreignKey = isAsmt ? 'assessment_attempt_id' : 'quiz_submission_id';
+                    const { data: ansData, error: ansErr } = await sb
+                        .from('quiz_attempt_answers')
+                        .select('id, assessment_attempt_id, quiz_submission_id, question_id, student_answer, is_correct, points_awarded')
+                        .in(foreignKey, attemptIds);
+                    if (ansErr) throw ansErr;
+                    answers = ansData || [];
+                }
+
+                reportsAnalysisData = window.ItemAnalysisEngine.compute(qData || [], attempts, answers, isAsmt);
+                container.innerHTML = window.ItemAnalysisEngine.renderHTML(reportsAnalysisData);
+                if (exportBtn) {
+                    exportBtn.classList.toggle('hidden', reportsAnalysisData.isEmpty);
+                    exportBtn.classList.toggle('inline-flex', !reportsAnalysisData.isEmpty);
+                }
+            } catch (err) {
+                console.error('Error computing item analysis report:', err);
+                container.innerHTML = `
+                    <div class="text-center py-8 text-red-600">
+                        <i class="fas fa-exclamation-circle text-3xl mb-2"></i>
+                        <p class="font-bold">Failed to compute item analysis</p>
+                        <p class="text-xs text-gray-500 mt-1">${escapeHtml(err.message || 'Unknown error')}</p>
+                    </div>
+                `;
+            }
+        }
+
+        function exportReportsItemAnalysisCSV() {
+            if (!reportsAnalysisData || reportsAnalysisData.isEmpty) {
+                alert('No item analysis data to export.');
+                return;
+            }
+            const sel = document.getElementById('itemAnalysisTestSelect');
+            const testLabel = sel ? sel.options[sel.selectedIndex]?.text || 'item_analysis' : 'item_analysis';
+            const filename = `${testLabel.toLowerCase().replace(/[^a-z0-9]+/g, '_')}_item_analysis.csv`;
+            window.ItemAnalysisEngine.exportCSV(reportsAnalysisData, filename);
         }
 
         async function handleLogout() {

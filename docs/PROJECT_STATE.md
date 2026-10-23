@@ -1193,3 +1193,34 @@ And update the top section (`## 1. Quick Orientation: "Where We Left Off"`) with
   1. Review `git diff` and commit changes to `main` (Author: Tycoon James Flores).
   2. Run `git push origin main`.
   3. Verify in browser: open Question Manager for any quiz/test, download CSV/JSON template, test import and export flows.
+
+### [2026-10-23 03:05] — Git Commit 7657930
+* **Author:** Tycoon James Flores
+* **Commit Message:** feat(quizzes): implement Batch 3 CSV and JSON bulk import and export with live validation
+* **Commit Hash:** `7657930`
+
+### [2026-10-23 03:15] -- Antigravity Session: Quiz CMS v2 Batch 4 (Quiz Item Analysis & Psychometrics)
+* **Status:** Implemented on `main` (Production target `ynkzcybctsstpqxdoweq`).
+* **Scope Completed:**
+  - **Item Analysis Engine (`teacher/assets/js/item-analysis.js`):**
+    - Calculates DepEd/psychometric standard **Item Difficulty Index ($)**: Easy ( \ge 0.75$), Moderate (.26 \le p \le 0.74$), Difficult ( \le 0.25$).
+    - Calculates **Discrimination Index ( = p_{upper} - p_{lower}$)** using top 27% and bottom 27% cohorts for tests with 4+ student attempts: Very Good ( \ge 0.40$), Good (.30 \le D \le 0.39$), Fair (.20 \le D \le 0.29$), Poor/Defective ( < 0.20$).
+    - Computes **Distractor Breakdown** for Multiple Choice items: option selection percentages and visual distribution bars highlighting whether distractors were effective.
+    - Automatic **Most Missed Questions Ranking** for items with accuracy $\le 50\%$, showing exact question text, correct key, and teacher explanation to guide classroom reteaching.
+    - Generates UTF-8 CSV with BOM for spreadsheet export.
+  - **Teacher Quiz Manager Integration (`teacher/manage-quizzes.html`):**
+    - Added dedicated **"Analytics"** button on every Regular Quiz, Diagnostic Pre-Test, and Summative Post-Test card.
+    - Added `#itemAnalysisModal` (75% viewport width, neo-brutalist styled) with real-time query of `quiz_attempt_answers` and instant KPI summary cards.
+  - **Teacher Reports Portal Integration (`teacher/reports.html`):**
+    - Added tab switcher: **Student Performance Matrix** vs **Item Analysis & Psychometrics**.
+    - Interactive dropdown selector allowing teachers to choose any Quiz, Pre-Test, or Post-Test.
+    - "Export Analysis CSV" button for faculty evaluation and DepEd LMS records.
+* **Files Modified / Created:**
+  - `teacher/assets/js/item-analysis.js` (created)
+  - `teacher/manage-quizzes.html` (modified)
+  - `teacher/reports.html` (modified)
+  - `docs/PROJECT_STATE.md` (updated)
+* **Next Immediate Action:**
+  1. Review `git diff` and commit changes to `main` (Author: Tycoon James Flores).
+  2. Run `git push origin main`.
+  3. Verify in browser: click "Analytics" button on any quiz in Teacher portal, or view the Item Analysis tab in Reports.

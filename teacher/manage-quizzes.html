@@ -470,6 +470,37 @@
         </div>
     </div>
 
+    <!-- Item Analysis Modal -->
+    <div id="itemAnalysisModal" class="hidden fixed inset-0 flex items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-2xl w-[94vw] md:w-[75vw] max-w-6xl max-h-[92vh] overflow-y-auto" style="border:2px solid #1c1b1a; box-shadow:6px 6px 0 0 #1c1b1a;">
+            <div class="flex items-center justify-between p-6" style="border-bottom:2px solid #1c1b1a;">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-xl bg-purple-100 border-2 border-ink-900 flex items-center justify-center text-plum-800 shadow-[2px_2px_0_0_#1c1b1a]">
+                        <i class="fas fa-chart-pie text-lg"></i>
+                    </div>
+                    <div>
+                        <div class="flex items-center gap-2">
+                            <h2 id="itemAnalysisTitle" class="text-xl font-bold text-gray-900">Quiz Item Analysis</h2>
+                            <span id="itemAnalysisBadge" class="status-badge bg-plum-100 text-plum-800">Regular Quiz</span>
+                        </div>
+                        <p class="text-xs text-gray-500" id="itemAnalysisSubtitle">Item Difficulty Index (p), Discrimination Index (D), and Distractor Breakdown</p>
+                    </div>
+                </div>
+                <div class="flex items-center gap-2">
+                    <button type="button" onclick="exportCurrentItemAnalysis()" id="btnExportItemAnalysis" class="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold bg-white text-gray-800 border-2 border-ink-900 rounded-lg shadow-[2px_2px_0_0_#1c1b1a] hover:bg-gray-50">
+                        <i class="fas fa-file-csv text-green-600"></i>Export CSV
+                    </button>
+                    <button onclick="closeItemAnalysisModal()" class="p-2 text-gray-500 hover:text-gray-700 rounded-lg hover:bg-gray-100">
+                        <i class="fas fa-times text-lg"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="p-6 space-y-6" id="itemAnalysisContent">
+                <!-- Loaded dynamically -->
+            </div>
+        </div>
+    </div>
+
     <!-- Toast -->
     <div id="toast" class="hidden fixed bottom-4 right-4 px-6 py-3 rounded-xl shadow-lg z-50 flex items-center space-x-2"></div>
 
@@ -480,6 +511,7 @@
     <script src="../shared/js/config.js"></script>
     <script src="../shared/js/supabase.js"></script>
     <script src="assets/js/sidebar.js"></script>
+    <script src="assets/js/item-analysis.js"></script>
     <script>
         let currentUser = null;
         let quizzes = [];
@@ -1222,20 +1254,24 @@
                                 ${quiz.quiz_url ? `<span class="ml-auto text-amber-600 font-semibold"><i class="fas fa-external-link-alt mr-1"></i>External</span>` : `<span class="ml-auto text-emerald-600 font-semibold"><i class="fas fa-cubes mr-1"></i>Native</span>`}
                             </div>
                             
-                            <div class="flex space-x-2">
+                            <div class="flex space-x-2 flex-wrap gap-y-2">
                                 <button onclick="viewSubmissions('${quiz.id}')" 
-                                    class="flex-1 px-3 py-2 text-sm bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-colors font-medium">
-                                    <i class="fas fa-users mr-1"></i>Submissions
+                                    class="px-2.5 py-2 text-sm bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-colors font-medium" title="View Submissions">
+                                    <i class="fas fa-users"></i><span class="hidden md:inline ml-1">Submissions</span>
                                 </button>
-                                <a href="manage-questions.html?quiz_id=${quiz.id}" class="px-3 py-2 text-sm bg-purple-100 text-purple-700 rounded-lg hover:bg-purple-200 transition-colors inline-flex items-center gap-1 font-medium">
+                                <button onclick="openItemAnalysis('${quiz.id}', 'quiz')" 
+                                    class="px-2.5 py-2 text-sm bg-amber-100 text-amber-800 rounded-lg hover:bg-amber-200 transition-colors font-medium" title="Item Analysis & Analytics">
+                                    <i class="fas fa-chart-pie"></i><span class="hidden md:inline ml-1">Analytics</span>
+                                </button>
+                                <a href="manage-questions.html?quiz_id=${quiz.id}" class="px-2.5 py-2 text-sm bg-purple-100 text-purple-700 rounded-lg hover:bg-purple-200 transition-colors inline-flex items-center gap-1 font-medium">
                                     <i class="fas fa-list-ol"></i><span class="hidden sm:inline ml-1">Questions (${itemCount})</span>
                                 </a>
                                 <button onclick="editQuiz('${quiz.id}')" 
-                                    class="px-3 py-2 text-sm bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors">
+                                    class="px-2.5 py-2 text-sm bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors" title="Edit Quiz">
                                     <i class="fas fa-edit"></i>
                                 </button>
                                 <button onclick="deleteQuiz('${quiz.id}')" 
-                                    class="px-3 py-2 text-sm bg-red-100 text-red-700 rounded-lg hover:bg-red-200 transition-colors">
+                                    class="px-2.5 py-2 text-sm bg-red-100 text-red-700 rounded-lg hover:bg-red-200 transition-colors" title="Delete Quiz">
                                     <i class="fas fa-trash"></i>
                                 </button>
                             </div>
@@ -1319,17 +1355,21 @@
                             <span class="ml-auto text-emerald-600 font-semibold"><i class="fas fa-cubes mr-1"></i>MathTuro Native</span>
                         </div>
                         
-                        <div class="flex space-x-2">
+                        <div class="flex space-x-2 flex-wrap gap-y-2">
                             <a href="manage-questions.html?assessment_id=${asmt.id}" 
-                                class="flex-1 px-3 py-2 text-sm text-center font-bold bg-plum-800 text-white rounded-lg hover:bg-plum-900 transition-colors inline-flex items-center justify-center gap-1.5">
-                                <i class="fas fa-list-ol"></i><span>Manage Questions (${qCount})</span>
+                                class="flex-1 px-3 py-2 text-sm text-center font-bold bg-plum-800 text-white rounded-lg hover:bg-plum-900 transition-colors inline-flex items-center justify-center gap-1.5 min-w-[120px]">
+                                <i class="fas fa-list-ol"></i><span>Questions (${qCount})</span>
                             </a>
                             <button onclick="viewAssessmentSubmissions('${asmt.id}')" 
-                                class="px-3 py-2 text-sm bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-colors font-medium">
+                                class="px-2.5 py-2 text-sm bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-colors font-medium" title="View Attempts">
                                 <i class="fas fa-users mr-1"></i>Attempts
                             </button>
+                            <button onclick="openItemAnalysis('${asmt.id}', 'assessment')" 
+                                class="px-2.5 py-2 text-sm bg-amber-100 text-amber-800 rounded-lg hover:bg-amber-200 transition-colors font-medium" title="Item Analysis & Analytics">
+                                <i class="fas fa-chart-pie mr-1"></i>Analytics
+                            </button>
                             <button onclick="deleteAssessment('${asmt.id}')" 
-                                class="px-3 py-2 text-sm bg-red-100 text-red-700 rounded-lg hover:bg-red-200 transition-colors">
+                                class="px-2.5 py-2 text-sm bg-red-100 text-red-700 rounded-lg hover:bg-red-200 transition-colors" title="Delete Assessment">
                                 <i class="fas fa-trash"></i>
                             </button>
                         </div>
@@ -1659,6 +1699,116 @@
 
         function closeSubmissionsModal() {
             document.getElementById('submissionsModal').classList.add('hidden');
+        }
+
+        // ─── Item Analysis (Batch 4) ───────────────────────────────────────
+        let currentItemAnalysisData = null;
+        let currentItemAnalysisTitle = '';
+
+        async function openItemAnalysis(targetId, targetType) {
+            const isAsmt = (targetType === 'assessment');
+            let testTitle = '';
+            let typeLabel = '';
+
+            if (isAsmt) {
+                const asmt = moduleAssessments.find(a => a.id === targetId);
+                typeLabel = asmt?.assessment_type === 'pre_test' ? 'Diagnostic Pre-Test' : 'Summative Post-Test';
+                testTitle = asmt?.title || `${typeLabel} (${asmt?.module?.title || 'Module'})`;
+            } else {
+                const quiz = quizzes.find(q => q.id === targetId);
+                typeLabel = 'Regular Quiz';
+                testTitle = quiz?.title || 'Quiz';
+            }
+
+            currentItemAnalysisTitle = testTitle;
+            document.getElementById('itemAnalysisTitle').textContent = testTitle;
+            document.getElementById('itemAnalysisBadge').textContent = typeLabel;
+            document.getElementById('itemAnalysisBadge').className = `status-badge ${isAsmt ? 'bg-amber-100 text-amber-800' : 'bg-plum-100 text-plum-800'}`;
+            
+            const container = document.getElementById('itemAnalysisContent');
+            container.innerHTML = `
+                <div class="text-center py-12">
+                    <i class="fas fa-spinner fa-spin text-plum-800 text-3xl mb-3"></i>
+                    <p class="text-gray-500 font-medium">Computing psychometric item analysis...</p>
+                </div>
+            `;
+            document.getElementById('itemAnalysisModal').classList.remove('hidden');
+
+            try {
+                const sb = getSupabase();
+                const col = isAsmt ? 'assessment_id' : 'quiz_id';
+
+                // 1. Fetch questions
+                const { data: qData, error: qErr } = await sb
+                    .from('quiz_questions')
+                    .select('id, question_text, question_type, options, correct_answer, points, order_index, part_label, explanation')
+                    .eq(col, targetId)
+                    .order('order_index', { ascending: true });
+
+                if (qErr) throw qErr;
+
+                // 2. Fetch submissions / attempts
+                let attempts = [];
+                if (isAsmt) {
+                    const { data: asmtAttempts, error: asmtErr } = await sb
+                        .from('module_assessment_attempts')
+                        .select('id, student_id, score, total_items, percentage, assessment_result, created_at')
+                        .eq('assessment_id', targetId)
+                        .order('score', { ascending: false });
+                    if (asmtErr) throw asmtErr;
+                    attempts = asmtAttempts || [];
+                } else {
+                    const { data: quizSubs, error: subErr } = await sb
+                        .from('quiz_submissions')
+                        .select('id, student_id, student_score, total_items, created_at')
+                        .eq('quiz_id', targetId)
+                        .order('student_score', { ascending: false });
+                    if (subErr) throw subErr;
+                    attempts = quizSubs || [];
+                }
+
+                // 3. Fetch itemized answers
+                let answers = [];
+                if (attempts.length > 0) {
+                    const attemptIds = attempts.map(a => a.id);
+                    const foreignKey = isAsmt ? 'assessment_attempt_id' : 'quiz_submission_id';
+                    const { data: ansData, error: ansErr } = await sb
+                        .from('quiz_attempt_answers')
+                        .select('id, assessment_attempt_id, quiz_submission_id, question_id, student_answer, is_correct, points_awarded')
+                        .in(foreignKey, attemptIds);
+                    if (ansErr) throw ansErr;
+                    answers = ansData || [];
+                }
+
+                // 4. Compute analytics
+                currentItemAnalysisData = window.ItemAnalysisEngine.compute(qData || [], attempts, answers, isAsmt);
+                container.innerHTML = window.ItemAnalysisEngine.renderHTML(currentItemAnalysisData);
+                document.getElementById('btnExportItemAnalysis').classList.toggle('hidden', currentItemAnalysisData.isEmpty);
+            } catch (err) {
+                console.error('Error loading item analysis:', err);
+                container.innerHTML = `
+                    <div class="text-center py-8 text-red-600">
+                        <i class="fas fa-exclamation-circle text-3xl mb-2"></i>
+                        <p class="font-bold">Failed to compute item analysis</p>
+                        <p class="text-xs text-gray-500 mt-1">${err.message || 'Unknown error'}</p>
+                    </div>
+                `;
+            }
+        }
+
+        function closeItemAnalysisModal() {
+            document.getElementById('itemAnalysisModal').classList.add('hidden');
+            currentItemAnalysisData = null;
+        }
+
+        function exportCurrentItemAnalysis() {
+            if (!currentItemAnalysisData || currentItemAnalysisData.isEmpty) {
+                showToast('No item analysis data available to export', 'info');
+                return;
+            }
+            const filename = `${(currentItemAnalysisTitle || 'item_analysis').toLowerCase().replace(/[^a-z0-9]+/g, '_')}_analytics.csv`;
+            window.ItemAnalysisEngine.exportCSV(currentItemAnalysisData, filename);
+            showToast('Item analysis exported to CSV', 'success');
         }
 
         async function deleteQuiz(id) {

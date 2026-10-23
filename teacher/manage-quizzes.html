@@ -432,6 +432,14 @@
                     </div>
                 </div>
 
+                <div class="flex items-center space-x-3 p-3 bg-purple-50/50 rounded-xl border border-purple-200">
+                    <input type="checkbox" id="quizAllowReview" checked class="w-5 h-5 text-plum-800 rounded focus:ring-plum-800">
+                    <div>
+                        <label for="quizAllowReview" class="text-xs font-bold text-gray-800 block cursor-pointer">Allow Post-Submission Review &amp; Explanations</label>
+                        <p class="text-[11px] text-gray-500">Students can review their answers, see correct solutions, and read your explanations after submitting.</p>
+                    </div>
+                </div>
+
                 <div id="quizPublishedGroup" class="hidden flex items-center space-x-3">
                     <input type="checkbox" id="quizPublished" class="w-5 h-5 text-plum-800 rounded focus:ring-plum-800">
                     <label for="quizPublished" class="text-sm font-medium text-gray-700">Published (visible to students)</label>
@@ -1417,6 +1425,7 @@
             document.getElementById('quizUrl').value = '';
             document.getElementById('quizTotalItems').value = '0';
             document.getElementById('legacyUrlDetails').removeAttribute('open');
+            document.getElementById('quizAllowReview').checked = true;
             document.getElementById('quizPublishedGroup').classList.add('hidden');
             document.getElementById('quizCreateNotice').classList.remove('hidden');
             populateQuizGradeLevelOptions('');
@@ -1457,6 +1466,7 @@
             document.getElementById('quizPassingScore').value = quiz.passing_score || '';
             document.getElementById('quizTimeLimit').value = quiz.time_limit_minutes || '';
             document.getElementById('quizPublished').checked = !!quiz.is_published;
+            document.getElementById('quizAllowReview').checked = (quiz.allow_review !== false);
             
             document.getElementById('quizCreateNotice').classList.add('hidden');
             document.getElementById('quizPublishedGroup').classList.remove('hidden');
@@ -1506,6 +1516,7 @@
                     passing_score: parseInt(document.getElementById('quizPassingScore').value, 10) || 0,
                     time_limit_minutes: parseInt(document.getElementById('quizTimeLimit').value, 10) || 0,
                     is_published: editingQuizId ? document.getElementById('quizPublished').checked : false,
+                    allow_review: document.getElementById('quizAllowReview').checked,
                     teacher_id: currentUser.id,
                     updated_at: now
                 };

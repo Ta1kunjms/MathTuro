@@ -10,10 +10,13 @@
 
 ## 1. Quick Orientation: "Where We Left Off" (The 5-Day Memory)
 
-* **Current Date / Last Updated:** 2026-10-22
+* **Current Date / Last Updated:** 2026-10-24
 * **MANDATORY CORE DIRECTIVE (Permanent):** ALL code, commits, and implementations MUST be directly on the **`main`** branch, targeting **Production** (`ynkzcybctsstpqxdoweq`). Do NOT work on `develop`. Do NOT target staging.
 * **Target Environment:** Production (`ynkzcybctsstpqxdoweq.supabase.co`) on **`main`** branch ONLY.
-* **Highest Completed & Evidenced Phase:** **Phase 3 assessment security & gating**: authenticated staging suite **40/40 PASS** (2026-10-20 04:23). Phase 2 was verified earlier (`c245b0a`).
+* **Highest Completed & Evidenced Phase:** **Phase 3 & Phase 4â€“5 Automated Master Suite**: **57/57 PASS (100%)** on Production (ynkzcybctsstpqxdoweq) via scripts/qa/run_full_qa_suite.ps1 (2026-10-24 07:40).
+  - **Phase 4â€“5 Suite:** 17/17 PASS (Archiving security, is_archived protected, EXP ledger, leaderboard integrity, legacy score gated).
+  - **Phase 3 Suite:** 40/40 PASS (Zero answer-key leakage, progressive gating matrix, Option B pre-test entry, Option A 75% module 2 unlock, 3-attempt limit enforcement, submission anti-cheat bypass prevention).
+  - **Teardown Pipeline:** 100% zero-residue cleanup via dmin_qa_cleanup_test_users RPC (purged 3 auth/public accounts and all fixture modules/assessments/questions).
 * **Highest Code-Staged Phase:** **Phases 4, 5, 6**: SQL migrations executed on production and frontend committed; authenticated QA for these is still pending.
 * **Verified on staging (Claude Code, `scripts/qa/verify_phase3_authenticated_api.ps1`, rejection reasons confirmed by direct probes):**
   - Zero answer-key leakage: pre-test, post-test and regular-quiz payloads carry only `id, order_index, question_text, question_type, options, points`. Students and anon can't read `quiz_questions` directly.
@@ -1224,3 +1227,132 @@ And update the top section (`## 1. Quick Orientation: "Where We Left Off"`) with
   1. Review `git diff` and commit changes to `main` (Author: Tycoon James Flores).
   2. Run `git push origin main`.
   3. Verify in browser: click "Analytics" button on any quiz in Teacher portal, or view the Item Analysis tab in Reports.
+
+### [2026-10-23 16:59] — Git Commit 0856f62
+* **Author:** Tycoon James Flores
+* **Commit Message:** feat(analytics): implement Batch 4 quiz item analysis and psychometrics with difficulty index, discrimination, and distractor breakdowns
+* **Commit Hash:** `0856f62`
+
+
+### [2026-10-23 17:35] -- Antigravity Session: Quiz CMS v2 Batch 5 (Student Post-Submission Review Mode & Explanations)
+* **Status:** Implemented on `main` (Production target `ynkzcybctsstpqxdoweq`).
+* **Scope Completed:**
+  - **Database Migration (`database/migration_quiz_cms_v2_batch5_student_review_mode.sql`):**
+    - Added `allow_review boolean NOT NULL DEFAULT true` to `public.quizzes` and `allow_review boolean NOT NULL DEFAULT false` to `public.module_assessments`.
+    - Created `public.get_quiz_submission_review(p_submission_id uuid)` and `public.get_assessment_attempt_review(p_attempt_id uuid)` with `SECURITY DEFINER` and strict ownership checks (`auth.uid() = student_id OR is_current_user_teacher_or_admin()`).
+    - Returns question details, point values, student's submitted response, correctness boolean, correct solution, and teacher explanation only after submission and when `allow_review` is enabled.
+    - Updated `submit_and_grade_assessment_core` and `submit_and_grade_regular_quiz_core` to return `attempt_id` / `submission_id` and `allow_review` upon grading.
+    - Revoked public access, granted EXECUTE to `authenticated`.
+  - **Student Quiz Runner (`student/take-quiz.html`):**
+    - Integrated post-submission review CTA button (`#btnReviewAnswers`) on completion score card when `allow_review` is active.
+    - Added review container (`#reviewSection`) featuring interactive filter pills ("All", "Correct", "Incorrect").
+    - Rendered question cards with rounded neo-brutalist styling (`border-2 border-ink-900`, `shadow-[3px_3px_0_0_#1c1b1a]`), colored status badges, student submitted response vs correct answer, and highlighted teacher explanation box.
+  - **Teacher Quiz CMS (`teacher/manage-quizzes.html`):**
+    - Added `#quizAllowReview` checkbox to `#quizModal` with helper text.
+    - Defaults to `true` on new quiz creation; preserves setting on edit.
+    - Wired `allow_review` into `handleSubmit` and fallback handling.
+* **Files Modified / Created:**
+  - `database/migration_quiz_cms_v2_batch5_student_review_mode.sql` (created)
+  - `student/take-quiz.html` (modified)
+  - `teacher/manage-quizzes.html` (modified)
+  - `docs/PROJECT_STATE.md` (updated)
+* **Next Immediate Action:**
+  1. Run `database/migration_quiz_cms_v2_batch5_student_review_mode.sql` in production Supabase SQL Editor (`ynkzcybctsstpqxdoweq`).
+  2. Review `git diff` and commit changes to `main` (Author: Tycoon James Flores).
+  3. Run `git push origin main`.
+  4. Verify in browser: take a regular quiz as student, submit, and click "Review Answers & Solutions" to view itemized breakdowns and explanations.
+
+
+### [2026-10-23 18:35] -- Antigravity Session: Fully Automated QA Master Runner & Security Remediation (Options A & C)
+* **Status:** Implemented on `main` (Production target `ynkzcybctsstpqxdoweq`).
+* **Scope Completed:**
+  - **Database Migration (`database/migration_security_fix_is_archived_and_service_role.sql`):**
+    - Enforced `is_archived` immutability in `prevent_protected_user_changes()` trigger: regular users cannot alter their own or others' archived status directly via PostgREST.
+    - Added `service_role` execution bypass `(current_user = 'service_role' OR current_setting('request.jwt.claim.role', true) = 'service_role')` so automated bootstrap scripts and backend jobs can provision and manage accounts without trigger violations.
+    - Implemented `public.admin_qa_cleanup_test_users()` RPC (`SECURITY DEFINER`) to purge ephemeral QA accounts (`%@mathturo-qa.test`, `%qa-%@%`) directly from `auth.users`, cascading properly to related records and bypassing client-side auth admin endpoint restrictions.
+  - **Automated QA Master Runner (`scripts/qa/run_full_qa_suite.ps1`):**
+    - Enhanced bootstrap pipeline to provision teacher and student test accounts with automatic approval.
+    - Built-in fixture seeder: dynamically creates Grade 7/8 modules, pre-tests, post-tests, regular quizzes, and native questions via Supabase REST API using `service_role`.
+    - Automatically executes both Phase 3 (assessment security, gating, 3-attempt limit, anti-cheat, 75% progression) and Phase 4/5 (archiving security, EXP gamification, leaderboard integrity) suites.
+    - Executes `admin_qa_cleanup_test_users` RPC at the end of the test run for zero-residue teardown.
+* **Files Modified / Created:**
+  - `database/migration_security_fix_is_archived_and_service_role.sql` (created)
+  - `scripts/qa/run_full_qa_suite.ps1` (updated)
+  - `docs/PROJECT_STATE.md` (updated)
+* **Next Immediate Action:**
+  1. Execute `database/migration_security_fix_is_archived_and_service_role.sql` in production Supabase SQL Editor (`ynkzcybctsstpqxdoweq`).
+  2. Run the automated suite: `powershell -ExecutionPolicy Bypass -File scripts/qa/run_full_qa_suite.ps1`.
+  3. Review test results and verify full pass across all Phase 3, 4, and 5 assertions.
+
+### [2026-10-23 19:35] -- Antigravity Session: Core Assessment Schema Alignment & Test Key Matching
+* **Status:** Implemented on `main` (Production target `ynkzcybctsstpqxdoweq`).
+* **Scope Completed:**
+  - **Database Migration (`database/migration_security_fix_is_archived_and_service_role.sql`):**
+    - Corrected `submit_and_grade_assessment_core` column mappings: replaced non-existent `score` with `student_score`, removed invalid `percentage` (which is generated `score_pct`), removed non-existent `is_latest_attempt`.
+    - Corrected `submit_and_grade_regular_quiz_core` column mappings: replaced `student_id` with `user_id`.
+    - Restored standard 3-attempt limit contract across all assessments (enabling Option B positive-path progression and attempt limit testing).
+    - Re-attached `protect_user_profile_fields` trigger to `public.users` so student `is_archived` modifications are strictly blocked.
+  - **QA Automation Runner (`scripts/qa/run_full_qa_suite.ps1`):**
+    - Updated fixture generation to provision 4 questions per assessment with `total_items = 4`, matching the test suite's `$correctKey` (`1="A"`, `2="true"`, `3="42"`, `4="A"`) and `$wrongKey` (`1="B"`, `2="false"`, `3="0"`, `4="B"`).
+    - Preserved raw JSON payloads for all questions to bypass PowerShell array serialization issues.
+  - **Phase 3 Verification Script (`scripts/qa/verify_phase3_authenticated_api.ps1`):**
+    - Enhanced failure reporting to print exact API error messages (`$r.Msg`) on rejected submissions and attempt validations.
+* **Files Modified / Created:**
+  - `database/migration_security_fix_is_archived_and_service_role.sql` (updated)
+  - `scripts/qa/run_full_qa_suite.ps1` (updated)
+  - `scripts/qa/verify_phase3_authenticated_api.ps1` (updated)
+  - `docs/PROJECT_STATE.md` (updated)
+* **Next Immediate Action:**
+  1. Execute the consolidated [database/migration_security_fix_is_archived_and_service_role.sql](file:///d:/Personal_Projects/MathTuro/database/migration_security_fix_is_archived_and_service_role.sql) in production Supabase SQL Editor (`ynkzcybctsstpqxdoweq`).
+  2. Run `powershell -ExecutionPolicy Bypass -File scripts/qa/run_full_qa_suite.ps1` in terminal.
+  3. All Phase 3 and Phase 4/5 assertions should now pass completely green.
+
+### [2026-10-24 07:30] -- Antigravity Session: Phase 3 40/40 PASS & Trigger SECURITY DEFINER session_user Fix
+* **Status:** Phase 3 Automated Suite achieves **40/40 PASS (100%)** on Production (`ynkzcybctsstpqxdoweq`).
+* **Root Cause & Scope Completed:**
+  - **Phase 3 Verification Milestone:**
+    - Option B pre-test entry, answer key zero-leakage, 3-attempt limit, anti-cheat gating, 75% boundary passing, and module unlocking fully verified with 40/40 passing assertions.
+  - **Trigger `prevent_protected_user_changes` Privilege Fix:**
+    - Root cause: because `prevent_protected_user_changes()` is a `SECURITY DEFINER` function owned by `postgres`, PostgreSQL evaluates `current_user` as `'postgres'`. The bypass condition `IF current_user IN ('postgres', 'service_role')` was inadvertently evaluating to `true` for all callers, allowing Student B to bypass the trigger.
+    - Solution: switched `current_user` to `session_user IN ('postgres', 'service_role')` in both `prevent_protected_user_changes()` and `admin_qa_cleanup_test_users()`. Client PostgREST sessions run with `session_user = 'authenticator'`, ensuring regular users are strictly evaluated against protected field rules while superusers in SQL Editor and backend service_role scripts maintain appropriate administrative bypass.
+* **Files Modified:**
+  - `database/migration_security_fix_is_archived_and_service_role.sql` (updated)
+  - `docs/PROJECT_STATE.md` (updated)
+* **Next Immediate Action:**
+  1. Execute lines 1 to 90 of [database/migration_security_fix_is_archived_and_service_role.sql](file:///d:/Personal_Projects/MathTuro/database/migration_security_fix_is_archived_and_service_role.sql) (or the whole file) in Supabase SQL Editor to apply the `session_user` trigger update.
+  2. Run `powershell -ExecutionPolicy Bypass -File scripts/qa/run_full_qa_suite.ps1`.
+  3. Verify 100% PASS across both Phase 4-5 (17/17) and Phase 3 (40/40).
+
+
+### [2026-10-24 07:45] -- Antigravity Session: 100% Automated QA Master Suite Pass (57/57) on Production
+* **Status:** VERIFIED & PASSING on Production (ynkzcybctsstpqxdoweq). All 57 automated tests green (17/17 Phase 4-5, 40/40 Phase 3). Zero-residue teardown verified.
+* **Master QA Execution Summary (scripts/qa/run_full_qa_suite.ps1):**
+  - **Phase 1: Ephemeral Account Provisioning:** Successfully provisioned teacher and student QA accounts with automatic teacher approval and student profile protection.
+  - **Phase 2: Fixture Seeding:** Automatically generated 2 test modules, pre-tests, post-tests, regular quizzes, and 16 native assessment items via REST with raw JSON payloads.
+  - **Phase 3: Phase 4 & 5 Verification Suite (17/17 PASS):**
+    - Teacher and student prevented from archiving/unarchiving users.
+    - `admin_delete_user` RPC blocked with HTTP 403 42501.
+    - Student reads only own user record; student cannot change own `is_archived` (blocked via `prevent_protected_user_changes` trigger).
+    - EXP ledger strictly isolated: 1 award per source, students cannot insert rows directly, `award_exp_if_first_completion` and `student_exp_summary` blocked.
+    - Leaderboard RPC functions for authenticated students and is blocked for anon.
+    - Legacy self-reported quiz score RPC (`submit_regular_quiz_score`) closed against ungated submissions.
+  - **Phase 4: Phase 3 Verification Suite (40/40 PASS):**
+    - Direct table reads on quiz_questions, quiz_attempt_answers, and presentations completely blocked for students and anon.
+    - Question payloads verified for zero answer-key or grading metadata leakage across pre-tests, post-tests, and regular quizzes.
+    - Option B progressive gating verified: pre-tests deliver questions before module content unlock; 0% pre-test attempt unlocks regular quiz and post-test.
+    - Option A progressive gating verified: Module 2 pre-test stays locked after failing post-test attempts (0% and 50%), and unlocks at exactly 75%.
+    - Resubmitting post-test after passing is rejected.
+    - 3-attempt limit enforced: 4th attempt rejected by server-side gate.
+    - Submission bypass protection: direct submissions to locked pre-tests or post-tests rejected.
+    - Presentation storage bucket verified private against anon.
+    - Teacher CMS operations verified: teachers can read question bank (including answer keys) and review student attempts.
+  - **Phase 5: Zero-Residue Cleanup:** Successfully executed `admin_qa_cleanup_test_users()` RPC and cascade deleted all test modules and auth users (deleted_public=3, deleted_auth=3).
+* **Files Modified / Created:**
+  - database/migration_security_fix_is_archived_and_service_role.sql (created & verified)
+  - scripts/qa/run_full_qa_suite.ps1 (created & verified)
+  - scripts/qa/verify_phase3_authenticated_api.ps1 (enhanced error logging)
+  - docs/PROJECT_STATE.md (updated)
+* **Next Immediate Action:**
+  1. Review git diff and commit all working tree changes to main (Author: Tycoon James Flores).
+  2. The user pushes commit to remote: git push origin main.
+  3. Proceed to Quiz CMS v2 Batch 3 planning/approval (CSV/JSON Bulk Question Import & Export).

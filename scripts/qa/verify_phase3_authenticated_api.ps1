@@ -426,7 +426,7 @@ try {
             if ($r.Ok) {
                 Add-TestResult "Gating" "Student A Pre-Test Submit (0%)" "PASS" "Graded server-side" "Score: $($r.Data.score)/$($r.Data.total_items), status: $($r.Data.status)"
             } else {
-                Add-TestResult "Gating" "Student A Pre-Test Submit (0%)" "FAIL" "Pre-test submission rejected" $r.Msg
+                Add-TestResult "Gating" "Student A Pre-Test Submit (0%)" "FAIL" "Pre-test submission rejected: $($r.Msg)" $r.Msg
             }
 
             $r = Invoke-Rpc "get_quiz_questions_for_student" @{ p_quiz_id = $regQuiz.id } $StudentAHeaders
@@ -511,7 +511,7 @@ try {
         for ($n = 1; $n -le 4; $n++) {
             $r = Invoke-Rpc "submit_and_grade_assessment" @{ p_assessment_id = $preTest.id; p_answers = (Build-Answers $preQsB 0) } $StudentBHeaders
             if ($n -le 3) {
-                Add-TestResult "Gating" "Pre-Test Attempt $n Accepted" $(if ($r.Ok) { "PASS" } else { "FAIL" }) "Attempt within limit" $r.Msg
+                Add-TestResult "Gating" "Pre-Test Attempt $n Accepted" $(if ($r.Ok) { "PASS" } else { "FAIL" }) "Attempt within limit $(if (-not $r.Ok) { ': ' + $r.Msg })" $r.Msg
             } else {
                 Add-TestResult "Gating" "Pre-Test Attempt 4 Rejected" $(if ($r.Ok) { "FAIL" } else { "PASS" }) "Attempt beyond 3-attempt limit" $r.Msg
             }

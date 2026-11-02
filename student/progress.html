@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="en" data-portal="student">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script>
+        // Apply the saved font preference before first paint to avoid a flash
+        // of the default font for returning users who enabled the dyslexia-
+        // friendly toggle. Per-viewer UI preference only — localStorage, not
+        // account data.
+        (function () {
+            try {
+                if (localStorage.getItem('mathturo_font_pref') === 'dyslexic') {
+                    document.documentElement.setAttribute('data-font', 'dyslexic');
+                }
+            } catch (e) { /* localStorage unavailable — fall back to default font */ }
+        })();
+    </script>
+    <link rel="stylesheet" href="../dist/styles.css">
+    <script src="../shared/js/device.js"></script>
+    <link rel="icon" type="image/png" href="../Logo/MATHURO-LOGO-v2.png">
+    <title>My Progress - MathTuro LMS</title>
+    <script src="../shared/js/supabase-lib.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Nunito:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --font-family-display: 'Fredoka', system-ui, sans-serif;
+            --font-family-base: 'Nunito', system-ui, sans-serif;
+        }
+        body {
+            font-family: var(--font-family-base);
+            color: #1c1b1a;
+            background-color: #faf8f5;
+        }
+        h1, h2, h3, h4, .font-display {
+            font-family: var(--font-family-display);
+        }
+
+        /* Sidebar chrome (injected by sidebar.js) — out of scope for this
+           content-page redesign, left exactly as every other student page
+           defines it. */
+        .gradient-text {
+            color: #1b4332;
+        }
+
+
+        .sidebar-link {
+            transition: all 0.2s ease;
+        }
+
+        .sidebar-link:hover, .sidebar-link.active {
+            background: #1b4332;
+            color: white;
+        }
+
+        .sidebar-link.active {
+            box-shadow: 0 4px 15px rgba(27, 67, 50, 0.3);
+        }
+
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; }
+        ::-webkit-scrollbar-thumb { background: #1b4332; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: #122d22; }
+    </style>
+    <link rel="stylesheet" href="../shared/css/base.css">
+    <link rel="stylesheet" href="assets/css/student.css">
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <!-- Mobile bottom navigation -->
+    <div data-include="nav-mobile-student" data-depth="../"></div>
+
+    <!-- Mobile Menu Overlay -->
+    <div id="mobileOverlay" class="fixed inset-0 bg-black bg-opacity-50 z-40 hidden lg:hidden"></div>
+
+    <!-- Sidebar -->
+    <aside id="sidebar" class="fixed left-0 top-0 h-full w-72 bg-white border-r border-gray-200 z-50 transform -translate-x-full lg:translate-x-0 transition-transform duration-300 overflow-y-auto"></aside>
+
+    <!-- Main Content -->
+    <main class="lg:ml-72 min-h-screen">
+        <!-- Top Header -->
+        <header class="bg-white border-b border-gray-200 sticky top-0 z-30">
+            <div class="flex items-center justify-between px-4 lg:px-8 py-4">
+                <!-- Mobile Menu Button -->
+                <button id="mobileMenuBtn" class="lg:hidden p-2 text-gray-600 hover:text-forest-800 rounded-lg" aria-label="Open menu">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
+                    </svg>
+                </button>
+
+                <!-- Page Title -->
+                <div class="flex-1 lg:flex-none">
+                    <h1 class="text-xl lg:text-2xl font-bold text-gray-800">Progress</h1>
+                </div>
+
+                <!-- Right Actions -->
+                <div class="flex items-center space-x-3">
+                    <a href="dashboard.html" class="p-2 text-gray-600 hover:text-forest-800 rounded-lg hover:bg-gray-100" aria-label="Back to dashboard">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
+                        </svg>
+                    </a>
+                </div>
+            </div>
+        </header>
+
+        <!-- Progress Content -->
+        <div class="p-4 lg:p-8 space-y-6">
+            <div class="learn-page-header">
+                <div class="learn-page-header-icon" aria-hidden="true">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                    </svg>
+                </div>
+                <div>
+                    <h2 class="learn-page-header-title">Rankings &amp; Experience</h2>
+                    <p class="learn-page-header-subtitle">Your EXP, your rank in your section, and how you earned it</p>
+                </div>
+            </div>
+
+            <!-- Loading State -->
+            <div id="loadingState" class="learn-state-block">
+                <div class="inline-block animate-spin rounded-full h-12 w-12 border-4 border-forest-600 border-t-transparent" aria-hidden="true"></div>
+                <p class="learn-state-text mt-4">Loading your progress...</p>
+            </div>
+
+            <!-- Error State -->
+            <div id="errorState" class="hidden learn-state-block">
+                <h3 class="learn-state-title">Couldn't load your progress</h3>
+                <p class="learn-state-text">Something went wrong. Please try again.</p>
+                <button type="button" onclick="loadData()" class="learn-state-action">Try Again</button>
+            </div>
+
+            <div id="progressContent" class="hidden space-y-6">
+                <!-- Summary -->
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <div class="bg-white rounded-2xl border-2 border-ink-900 shadow-[4px_4px_0_0_#1c1b1a] p-5">
+                        <p class="text-xs font-bold uppercase tracking-wide text-gray-500">Total EXP</p>
+                        <p id="statTotalExp" class="text-3xl font-bold text-forest-800 mt-1">0</p>
+                    </div>
+                    <div class="bg-white rounded-2xl border-2 border-ink-900 shadow-[4px_4px_0_0_#1c1b1a] p-5">
+                        <p class="text-xs font-bold uppercase tracking-wide text-gray-500">Section Rank</p>
+                        <p id="statRank" class="text-3xl font-bold text-ink-900 mt-1">—</p>
+                    </div>
+                    <div class="bg-white rounded-2xl border-2 border-ink-900 shadow-[4px_4px_0_0_#1c1b1a] p-5">
+                        <p class="text-xs font-bold uppercase tracking-wide text-gray-500">EXP Awards</p>
+                        <p id="statCompleted" class="text-3xl font-bold text-ink-900 mt-1">0</p>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <!-- Leaderboard -->
+                    <section class="bg-white rounded-2xl border-2 border-ink-900 shadow-[4px_4px_0_0_#1c1b1a] p-5">
+                        <h3 class="text-lg font-bold text-ink-900 mb-4">🏆 Section Leaderboard</h3>
+                        <div id="leaderboardList" class="space-y-2"></div>
+                    </section>
+
+                    <!-- EXP History -->
+                    <section class="bg-white rounded-2xl border-2 border-ink-900 shadow-[4px_4px_0_0_#1c1b1a] p-5">
+                        <h3 class="text-lg font-bold text-ink-900 mb-4">⭐ EXP History</h3>
+                        <div id="expHistoryList" class="space-y-2"></div>
+                    </section>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Toast -->
+    <div id="toast" class="hidden fixed bottom-4 right-4 px-6 py-3 rounded-xl shadow-lg z-50 flex items-center space-x-2"></div>
+
+    <!-- Scripts -->
+    <script src="../shared/js/includes.js"></script>
+    <script src="../shared/js/runtime-config.js"></script>
+    <script src="../shared/js/config.js"></script>
+    <script src="../shared/js/utils.js"></script>
+    <script src="../shared/js/supabase.js"></script>
+    <script src="../shared/js/auth.js"></script>
+    <script src="assets/js/sidebar.js"></script>
+    <script>
+        let currentUser = null;
+
+        const SOURCE_LABELS = { quiz: 'Quiz', pre_test: 'Pre-Test', post_test: 'Post-Test' };
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            const isAuthenticated = await checkAuth();
+            if (!isAuthenticated) return;
+            await loadData();
+        });
+
+        async function checkAuth() {
+            try {
+                currentUser = await checkAuthSession();
+                if (!currentUser || currentUser.role !== 'student') {
+                    redirectToLogin();
+                    return false;
+                }
+                return true;
+            } catch (error) {
+                console.error('Auth error:', error);
+                redirectToLogin();
+                return false;
+            }
+        }
+
+        async function loadData() {
+            document.getElementById('errorState').classList.add('hidden');
+            document.getElementById('progressContent').classList.add('hidden');
+            document.getElementById('loadingState').classList.remove('hidden');
+
+            try {
+                const sb = getSupabase();
+                // Own EXP rows only (exp_transactions_student_read_own); the
+                // section leaderboard derives the caller's section server-side.
+                const [expRes, boardRes] = await Promise.all([
+                    sb.from('exp_transactions')
+                        .select('source_type, source_id, exp_awarded, awarded_at')
+                        .eq('student_id', currentUser.id)
+                        .order('awarded_at', { ascending: false }),
+                    sb.rpc('get_my_section_leaderboard')
+                ]);
+                if (expRes.error) throw expRes.error;
+                if (boardRes.error) throw boardRes.error;
+
+                const expRows = expRes.data || [];
+                const board = boardRes.data || [];
+                const titles = await loadSourceTitles(expRows);
+
+                renderSummary(expRows, board);
+                renderLeaderboard(board);
+                renderExpHistory(expRows, titles);
+
+                document.getElementById('loadingState').classList.add('hidden');
+                document.getElementById('progressContent').classList.remove('hidden');
+            } catch (error) {
+                console.error('Error loading progress:', error);
+                document.getElementById('loadingState').classList.add('hidden');
+                document.getElementById('errorState').classList.remove('hidden');
+            }
+        }
+
+        // Best-effort titles for the history list; RLS may hide some rows, in
+        // which case the generic source label is shown instead.
+        async function loadSourceTitles(expRows) {
+            const titles = {};
+            const sb = getSupabase();
+            const quizIds = expRows.filter(r => r.source_type === 'quiz').map(r => r.source_id);
+            const asmtIds = expRows.filter(r => r.source_type !== 'quiz').map(r => r.source_id);
+            try {
+                if (quizIds.length) {
+                    const { data } = await sb.from('quizzes').select('id, title').in('id', quizIds);
+                    (data || []).forEach(q => { titles[q.id] = q.title; });
+                }
+                if (asmtIds.length) {
+                    const { data } = await sb.from('module_assessments').select('id, title, assessment_type').in('id', asmtIds);
+                    (data || []).forEach(a => { titles[a.id] = a.title || ''; });
+                }
+            } catch (err) {
+                console.warn('Could not load EXP source titles:', err);
+            }
+            return titles;
+        }
+
+        function isMe(entry) {
+            const myName = (currentUser.fullName || '').trim().toLowerCase();
+            return Boolean(myName) && (entry.full_name || '').trim().toLowerCase() === myName;
+        }
+
+        function renderSummary(expRows, board) {
+            const totalExp = expRows.reduce((sum, r) => sum + (Number(r.exp_awarded) || 0), 0);
+            document.getElementById('statTotalExp').textContent = `${totalExp} EXP`;
+            document.getElementById('statCompleted').textContent = expRows.length;
+
+            const me = board.find(isMe);
+            document.getElementById('statRank').textContent = me ? `#${me.rank} of ${board.length}` : '—';
+        }
+
+        function renderLeaderboard(board) {
+            const list = document.getElementById('leaderboardList');
+            if (board.length === 0) {
+                list.innerHTML = `<p class="text-sm text-gray-500">No rankings yet. Either you're not assigned to a section yet, or no one in your section has earned EXP. Complete a quiz to get started!</p>`;
+                return;
+            }
+            const medalFor = (rank) => rank === 1 ? '🥇' : rank === 2 ? '🥈' : rank === 3 ? '🥉' : null;
+            list.innerHTML = board.map(entry => {
+                const mine = isMe(entry);
+                return `
+                    <div class="flex items-center justify-between px-4 py-3 rounded-xl ${mine ? 'bg-green-50 border-2 border-forest-800' : 'bg-gray-50'}">
+                        <div class="flex items-center gap-3 min-w-0">
+                            <span class="w-8 text-center font-bold text-gray-600">${medalFor(entry.rank) || entry.rank}</span>
+                            <span class="font-semibold text-gray-800 truncate">${escapeHtml(entry.full_name || 'Student')}${mine ? ' (You)' : ''}</span>
+                        </div>
+                        <span class="font-bold text-forest-800 flex-shrink-0">${Number(entry.total_exp) || 0} EXP</span>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function renderExpHistory(expRows, titles) {
+            const list = document.getElementById('expHistoryList');
+            if (expRows.length === 0) {
+                list.innerHTML = `<p class="text-sm text-gray-500">You haven't earned EXP yet. Pass a quiz, pre-test, or post-test to earn your first points.</p>`;
+                return;
+            }
+            list.innerHTML = expRows.map(row => {
+                const label = SOURCE_LABELS[row.source_type] || 'Activity';
+                const title = titles[row.source_id] || label;
+                const date = row.awarded_at ? new Date(row.awarded_at).toLocaleDateString() : '';
+                return `
+                    <div class="flex items-center justify-between px-4 py-3 rounded-xl bg-gray-50">
+                        <div class="min-w-0">
+                            <p class="font-semibold text-gray-800 truncate">${escapeHtml(title)}</p>
+                            <p class="text-xs text-gray-500">${escapeHtml(label)}${date ? ' · ' + escapeHtml(date) : ''}</p>
+                        </div>
+                        <span class="font-bold text-forest-800 flex-shrink-0">+${Number(row.exp_awarded) || 0} EXP</span>
+                    </div>
+                `;
+            }).join('');
+        }
+    </script>
+    <script src="../shared/js/font-toggle.js"></script>
+</body>
+</html>

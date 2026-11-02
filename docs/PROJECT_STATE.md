@@ -10,7 +10,8 @@
 
 ## 1. Quick Orientation: "Where We Left Off" (The 5-Day Memory)
 
-* **Current Date / Last Updated:** 2026-10-24
+* **Current Date / Last Updated:** 2026-11-02
+* **ACTIVE (2026-11-02):** 21-item bug list (`Mathturo-bugs.pdf`) — Batches A, B implemented locally (uncommitted). **User must run** `database/migration_passing_rule_floor_and_screenshot.sql` on production (approved) before deploying, because the external-quiz submit now calls the 4-arg `submit_regular_quiz_score`. `database/migration_unlinked_quiz_access.sql` is written but **NOT approved** (lets students open published quizzes with no module). Browser QA not done (no student/teacher login available to the agent). Next: run SQL → commit → deploy → browser pass → `run_full_qa_suite.ps1`.
 * **MANDATORY CORE DIRECTIVE (Permanent):** ALL code, commits, and implementations MUST be directly on the **`main`** branch, targeting **Production** (`ynkzcybctsstpqxdoweq`). Do NOT work on `develop`. Do NOT target staging.
 * **Target Environment:** Production (`ynkzcybctsstpqxdoweq.supabase.co`) on **`main`** branch ONLY.
 * **Highest Completed & Evidenced Phase:** **Phase 3 & Phase 4â€“5 Automated Master Suite**: **57/57 PASS (100%)** on Production (ynkzcybctsstpqxdoweq) via scripts/qa/run_full_qa_suite.ps1 (2026-10-24 07:40).
@@ -1429,3 +1430,54 @@ And update the top section (`## 1. Quick Orientation: "Where We Left Off"`) with
 * **Author:** Tycoon James Flores
 * **Commit Message:** docs: clean final state ledger
 * **Commit Hash:** `ad72744`
+
+### [2026-10-24 08:46] — Git Commit 7ce4c4f
+* **Author:** Tycoon James Flores
+* **Commit Message:** docs: add project state and session handover ledger documentation
+* **Commit Hash:** `7ce4c4f`
+
+### 2026-11-02 — Bug-list triage (plan only)
+Changed files:
+- docs/PROJECT_STATE.md
+
+Actions:
+- Investigated all 21 reported issues; root causes found for achievements empty box (CSS `.hidden` overridden), view-presentation layout (sidebar mount is a bare div), item analysis (`quiz_submissions.user_id` / `module_assessment_attempts.student_score` column mismatch), non-MC question save (hidden `required` MC inputs block submit), pre-test always Passed (`passing_threshold` 0).
+
+Validation:
+- Static code reading only.
+
+Blockers:
+- Awaiting approval of plan and decisions D1–D4; SQL items need production approval.
+
+Next action:
+- Implement approved batches.
+
+### 2026-11-02 — Bug list fixes (Batches A, B, C-files, D)
+Changed files:
+- shared/js/passing.js (new), student/assets/js/quiz-proof.js (new), student/progress.html (new)
+- database/migration_passing_rule_floor_and_screenshot.sql (new, approved, user runs), database/migration_unlinked_quiz_access.sql (new, NOT approved)
+- shared/css/base.css, shared/partials/nav-mobile-student.html, student/assets/css/student.css, student/assets/js/sidebar.js
+- student/dashboard.html, modules.html, module-view.html, quizzes.html, take-quiz.html, view-presentation.html
+- teacher/manage-modules.html, manage-presentations.html, manage-questions.html, manage-quizzes.html, reports.html, student-progress.html
+
+Actions:
+- Passing rule everywhere = max(1, floor(total x 75%)) (10 -> 7); teacher passing fields are read-only/auto; Total Items editable until questions exist, then synced from the question list.
+- Root-cause fixes: achievement notice `.hidden` override; modal panel dimmed by `div[id*="modal"]` backdrop selector in base.css; view-presentation sidebar mount; hidden `required` MC inputs blocking non-MC question saves; item-analysis column names (`user_id`, `student_score`, `score_pct`, `submitted_at`); reports dropdown refilled after data load.
+- New student Progress page (section leaderboard + EXP history); dashboard#progress now redirects there.
+- External quizzes: Open Quiz + required screenshot upload (private `quiz-screenshots`, own folder) via 4-arg RPC.
+- Modules: status filters count regular quizzes as Graded; card badge shows Completed/Incomplete + Graded/Non-Graded; CTA "Open"; PDF preview non-scrollable.
+- Multiple videos per module (teacher detail list + Create Module video rows).
+- Student registrations queue only in the Students view, scoped to the selected section; breadcrumb tabs hidden on desktop with a Back button.
+- SQL also fixes the native quiz EXP source_type ('regular_quiz' violates exp_transactions CHECK -> 'quiz').
+
+Validation:
+- `npm run build:css` OK; node --check on all inline scripts of 17 edited files: 0 failures; passing rule JS == SQL formula for 0..20 items.
+- QA suite fixtures use 4 items, where floor rule gives the same results as 75%.
+- NOT run: browser QA, `run_full_qa_suite.ps1` (needs the SQL applied first).
+
+Blockers:
+- Production SQL run by user; decision on migration_unlinked_quiz_access.sql.
+
+Next action:
+- Run migration -> commit/push -> browser pass -> QA suite.
+

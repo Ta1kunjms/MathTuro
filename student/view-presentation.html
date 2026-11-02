@@ -62,13 +62,13 @@
     <link rel="stylesheet" href="../shared/css/base.css">
     <link rel="stylesheet" href="assets/css/student.css">
 </head>
-<body class="bg-gray-900 min-h-screen">
+<body class="bg-gray-50 min-h-screen">
 
     <!-- Mobile bottom navigation -->
     <div data-include="nav-mobile-student" data-depth="../"></div>
 
     <div id="mobileOverlay" class="fixed inset-0 bg-black bg-opacity-50 z-40 hidden lg:hidden"></div>
-    <div id="sidebar"></div>
+    <aside id="sidebar" class="fixed left-0 top-0 h-full w-72 bg-white border-r border-gray-200 z-50 transform -translate-x-full lg:translate-x-0 transition-transform duration-300 overflow-y-auto"></aside>
 
     <main class="lg:ml-72 min-h-screen flex flex-col">
         <!-- Header -->
@@ -107,20 +107,20 @@
 
             <!-- Loading -->
             <div id="loadingState" class="flex-1 flex flex-col items-center justify-center py-20 text-center">
-                <div class="w-16 h-16 bg-white/10 rounded-full flex items-center justify-center mb-4">
+                <div class="w-16 h-16 bg-red-50 rounded-full flex items-center justify-center mb-4">
                     <i class="fas fa-file-pdf text-red-400 text-2xl spin" aria-hidden="true"></i>
                 </div>
-                <p class="text-gray-400">Loading presentation…</p>
-                <p class="text-gray-600 text-sm mt-1">Generating secure access link…</p>
+                <p class="text-gray-600">Loading presentation…</p>
+                <p class="text-gray-500 text-sm mt-1">Generating secure access link…</p>
             </div>
 
             <!-- Error -->
             <div id="errorState" class="hidden flex-1 flex flex-col items-center justify-center py-20 text-center">
-                <div class="w-16 h-16 bg-red-900/30 rounded-full flex items-center justify-center mb-4">
+                <div class="w-16 h-16 bg-red-50 rounded-full flex items-center justify-center mb-4">
                     <i class="fas fa-lock text-red-400 text-2xl" aria-hidden="true"></i>
                 </div>
-                <h3 id="errorTitle" class="text-lg font-semibold text-white mb-2">Access Denied</h3>
-                <p id="errorMsg" class="text-gray-400 mb-6 max-w-sm"></p>
+                <h3 id="errorTitle" class="text-lg font-semibold text-gray-900 mb-2">Access Denied</h3>
+                <p id="errorMsg" class="text-gray-600 mb-6 max-w-sm"></p>
                 <a href="module-view.html" class="learn-toolbar-link">
                     <i class="fas fa-arrow-left" aria-hidden="true"></i>&nbsp;Back to Module
                 </a>
@@ -130,15 +130,15 @@
             <div id="pdfContainer" class="hidden flex-1 flex flex-col">
                 <!-- Expiry notice -->
                 <div class="learn-expiry-notice">
-                    <span class="text-xs text-amber-200">
+                    <span class="text-xs text-amber-800">
                         <i class="fas fa-clock mr-1" aria-hidden="true"></i>Secure link expires in <span id="expiryCountdown" class="font-bold">15:00</span>
                     </span>
-                    <button type="button" onclick="refreshSignedUrl()" class="inline-flex items-center text-xs text-amber-200 hover:text-amber-50 font-medium px-2" style="min-height: 44px;">
+                    <button type="button" onclick="refreshSignedUrl()" class="inline-flex items-center text-xs text-amber-800 hover:text-amber-900 font-medium px-2" style="min-height: 44px;">
                         <i class="fas fa-sync-alt mr-1" aria-hidden="true"></i>Refresh
                     </button>
                 </div>
                 <!-- iframe PDF viewer -->
-                <div class="flex-1 rounded-2xl overflow-hidden shadow-2xl" style="min-height:75vh">
+                <div class="flex-1 rounded-2xl overflow-hidden border-2 border-ink-900 bg-white" style="min-height:75vh">
                     <iframe id="pdfFrame" src="" title="PDF Presentation" style="height:calc(100vh - 220px);" allowfullscreen></iframe>
                 </div>
                 <!-- Fallback notice -->

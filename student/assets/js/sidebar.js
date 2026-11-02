@@ -80,7 +80,7 @@ function initSidebar() {
                     </svg>
                     <span>Presentations</span>
                 </a>
-                <a href="${studentPrefix}dashboard.html#progress" data-nav-key="progress" class="sidebar-link flex items-center space-x-3 px-4 py-3 rounded-xl text-gray-700">
+                <a href="${studentPrefix}progress.html" data-nav-key="progress" class="sidebar-link flex items-center space-x-3 px-4 py-3 rounded-xl text-gray-700">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 012-2h2a2 2 0 012 2v6m-9 0h10a2 2 0 002-2V9.5a1 1 0 00-.4-.8l-5-3.75a1 1 0 00-1.2 0l-5 3.75a1 1 0 00-.4.8V17a2 2 0 002 2z"/>
                     </svg>
@@ -113,9 +113,8 @@ function initSidebar() {
   // link declares rather than by parsing hrefs. Each real destination file
   // maps to exactly one nav key; drill-down pages (module-view/lesson-view,
   // take-quiz, view-presentation) map to their parent section's key so that
-  // section stays highlighted while browsing within it. Progress shares
-  // dashboard.html's URL but is distinguished by the #progress hash, so it's
-  // checked separately and wins over the plain dashboard match when present.
+  // section stays highlighted while browsing within it. The legacy
+  // dashboard.html#progress link still maps to Progress for old bookmarks.
   const currentPage = window.location.pathname.split('/').pop().toLowerCase();
   const currentHash = window.location.hash.toLowerCase();
   const pageNavKeyMap = {
@@ -128,7 +127,8 @@ function initSidebar() {
     'take-quiz.html': 'quizzes',
     'tutorial-videos.html': 'videos',
     'presentations.html': 'presentations',
-    'view-presentation.html': 'presentations'
+    'view-presentation.html': 'presentations',
+    'progress.html': 'progress'
   };
   const activeNavKey = currentHash === '#progress' ? 'progress' : (pageNavKeyMap[currentPage] || null);
   const sidebarLinks = document.querySelectorAll('.sidebar-link');

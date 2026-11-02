@@ -802,6 +802,9 @@
                 populateGradeFilterOptions(reportState.selectedGradeLevelId);
                 populateSectionFilterOptions(reportState.selectedGradeLevelId, reportState.selectedSectionId);
                 applyReportFilters();
+                // The Item Analysis tab may have been opened before this load
+                // finished; refill its questionnaire list now that data exists.
+                populateItemAnalysisDropdown();
 
             } catch (err) {
                 console.error('Error loading report data:', err);
@@ -940,7 +943,12 @@
                 optionsHtml += '</optgroup>';
             }
 
+            const hasChoices = optionsHtml.includes('<optgroup');
+            if (!hasChoices) {
+                optionsHtml = '<option value="">No published quizzes, pre-tests, or post-tests yet</option>';
+            }
             select.innerHTML = optionsHtml;
+            select.disabled = !hasChoices;
             if (currentVal) select.value = currentVal;
         }
 
@@ -987,15 +995,15 @@
                 if (isAsmt) {
                     const { data: aData, error: aErr } = await sb
                         .from('module_assessment_attempts')
-                        .select('id, student_id, score, total_items, percentage, assessment_result, created_at')
+                        .select('id, student_id, score:student_score, total_items, percentage:score_pct, assessment_result, created_at:submitted_at')
                         .eq('assessment_id', testId)
-                        .order('score', { ascending: false });
+                        .order('student_score', { ascending: false });
                     if (aErr) throw aErr;
                     attempts = aData || [];
                 } else {
                     const { data: sData, error: sErr } = await sb
                         .from('quiz_submissions')
-                        .select('id, student_id, student_score, total_items, created_at')
+                        .select('id, student_id:user_id, student_score, total_items, created_at:submitted_at')
                         .eq('quiz_id', testId)
                         .order('student_score', { ascending: false });
                     if (sErr) throw sErr;

@@ -221,12 +221,33 @@
                 </a>
             </div>
 
+            <!-- External Quiz (hosted on another site) -->
+            <div id="externalState" class="hidden text-center py-16 bg-white border-2 border-ink-900 rounded-2xl shadow-[4px_4px_0_0_#1c1b1a] p-8">
+                <div class="w-16 h-16 bg-amber-100 border-2 border-ink-900 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-[2px_2px_0_0_#1c1b1a]">
+                    <i class="fas fa-external-link-alt text-amber-700 text-2xl"></i>
+                </div>
+                <h3 class="text-2xl font-black text-ink-900 mb-2">This quiz is on another website</h3>
+                <p class="text-ink-700 font-semibold mb-1">Open it, finish it, then come back to submit your score with a screenshot of the result.</p>
+                <p id="externalPassing" class="text-sm text-ink-500 font-semibold mb-6"></p>
+                <div class="flex flex-col sm:flex-row gap-3 justify-center">
+                    <a id="externalOpenLink" href="#" target="_blank" rel="noopener noreferrer"
+                        class="inline-flex items-center justify-center gap-2 bg-forest-600 text-white px-6 py-3 rounded-xl font-bold border-2 border-ink-900 shadow-[3px_3px_0_0_#1c1b1a]">
+                        Open Quiz <i class="fas fa-external-link-alt text-xs"></i>
+                    </a>
+                    <a id="externalSubmitLink" href="quizzes.html"
+                        class="inline-flex items-center justify-center gap-2 bg-paper-50 text-ink-900 px-6 py-3 rounded-xl font-bold border-2 border-ink-900 shadow-[2px_2px_0_0_#1c1b1a]">
+                        Submit Score &amp; Screenshot
+                    </a>
+                </div>
+            </div>
+
             <!-- Questions -->
             <div id="questionsSection" class="hidden space-y-6">
                 <div id="questionsList" class="space-y-4"></div>
 
                 <!-- Submit -->
                 <div class="bg-white rounded-2xl border-2 border-ink-900 shadow-[3px_3px_0_0_#1c1b1a] p-6 text-center">
+                    <p id="passingHint" class="text-sm font-black text-forest-800 mb-1"></p>
                     <p id="submitHint" class="text-sm font-bold text-ink-500 mb-4">Answer all questions before submitting.</p>
                     <button id="btnSubmitQuiz"
                         class="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-forest-600 text-white px-8 py-3.5 rounded-xl border-2 border-ink-900 shadow-[3px_3px_0_0_#1c1b1a] font-black text-sm uppercase tracking-wide hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-[4px_4px_0_0_#1c1b1a] transition-all disabled:opacity-40 disabled:cursor-not-allowed"
@@ -246,6 +267,7 @@
                         </div>
                     </div>
                     <h2 id="resultTitle" class="text-2xl font-black text-ink-900 mb-2">Assessment Submitted</h2>
+                    <p id="resultPassing" class="text-sm font-black text-ink-700 mb-1"></p>
                     <p id="resultSubtitle" class="text-sm font-semibold text-ink-700 mb-6"></p>
                     <div class="grid grid-cols-2 gap-4 max-w-xs mx-auto mb-8">
                         <div class="bg-paper-50 border-2 border-ink-900 rounded-xl p-4 text-center shadow-[2px_2px_0_0_#1c1b1a]">
@@ -260,7 +282,7 @@
                     <!-- Student Feedback Contract: ONLY aggregate data, no item-level details -->
                     <div class="bg-paper-100 border-2 border-ink-900 rounded-xl p-3 text-xs font-bold text-ink-700 mb-6 max-w-sm mx-auto text-center">
                         <i class="fas fa-info-circle mr-1 text-forest-800"></i>
-                        Diagnostic assessment recorded under DepEd evaluation standards.
+                        <span id="resultNote">Result recorded under DepEd evaluation standards (75% passing).</span>
                     </div>
                     <div class="flex flex-col sm:flex-row gap-3 justify-center">
                         <a id="resultBackBtn" href="quizzes.html"
@@ -340,6 +362,7 @@
     <script src="../shared/js/auth.js"></script>
     <script src="../shared/js/pathManager.js"></script>
     <script src="assets/js/sidebar.js"></script>
+    <script src="../shared/js/passing.js"></script>
     <script>
     /*
       take-quiz.html — Phase 3 Student Native Quiz Taking
@@ -354,6 +377,8 @@
     const QUIZ_ID     = params.get('quiz_id')       || null;
     const ASMT_ID     = params.get('assessment_id') || null;
     let   MODULE_ID   = params.get('module_id')     || null;
+    let   quizMeta       = null;  // quizzes row (title, quiz_url, total_items) for quiz_id runs
+    let   assessmentType = null;  // 'pre_test' | 'post_test' for assessment_id runs
     const OWNER_TYPE  = QUIZ_ID ? 'quiz' : (ASMT_ID ? 'assessment' : null);
 
     let currentUser  = null;
@@ -411,7 +436,8 @@
                 rpcParams = { p_quiz_id: QUIZ_ID };
                 // Load quiz title and module_id
                 const { data: qMeta } = await sb.from('quizzes')
-                    .select('title, time_limit_minutes, module_id').eq('id', QUIZ_ID).maybeSingle();
+                    .select('title, time_limit_minutes, module_id, quiz_url, total_items').eq('id', QUIZ_ID).maybeSingle();
+                quizMeta = qMeta || null;
                 if (qMeta) {
                     document.getElementById('quizTitle').textContent = qMeta.title || 'Quiz';
                     if (qMeta.module_id) updateModuleLinks(qMeta.module_id);
@@ -423,6 +449,7 @@
                 // Load assessment type, title, and module_id
                 const { data: aMeta } = await sb.from('module_assessments')
                     .select('assessment_type, title, module_id').eq('id', ASMT_ID).maybeSingle();
+                assessmentType = aMeta?.assessment_type || null;
                 if (aMeta) {
                     const defaultTitle = aMeta.assessment_type === 'pre_test' ? 'Diagnostic Pre-Test' : 'Summative Post-Test';
                     document.getElementById('quizTitle').textContent = aMeta.title || defaultTitle;
@@ -443,9 +470,18 @@
             questions = data || [];
 
             if (questions.length === 0) {
+                const externalUrl = String(quizMeta?.quiz_url || '').trim();
+                if (QUIZ_ID && /^https?:\/\//i.test(externalUrl)) {
+                    showExternalQuiz(externalUrl, quizMeta.total_items);
+                    return;
+                }
                 showError('No Questions', 'This quiz has no questions configured yet. Please check back later.');
                 return;
             }
+
+            const totalPoints = questions.reduce((sum, q) => sum + (Number(q.points) || 1), 0);
+            document.getElementById('passingHint').textContent =
+                `Passing score: ${MathTuroPassing.passingScore(totalPoints)} / ${totalPoints}`;
 
             renderQuestions();
             document.getElementById('loadingState').classList.add('hidden');
@@ -665,12 +701,26 @@
         ring.classList.add(isPassing ? 'pass' : 'fail');
 
         document.getElementById('resultPct').textContent       = pct + '%';
-        document.getElementById('resultTitle').textContent     = status === 'Passed' ? '🎉 Passed!' : status === 'Failed' ? 'Max Attempts Reached' : 'Submitted';
-        document.getElementById('resultSubtitle').textContent  = isPassing
-            ? 'Great job! You passed this quiz.'
-            : (remaining > 0 ? 'You have ' + remaining + ' attempt' + (remaining !== 1 ? 's' : '') + ' remaining.' : 'You have used all attempts for this quiz.');
+        const passingScore = MathTuroPassing.passingScore(total);
+        const isPreTest    = assessmentType === 'pre_test';
+        const unlimited    = remaining >= 999;
+        document.getElementById('resultTitle').textContent     = isPassing ? '🎉 Passed!' : (status === 'Failed' ? 'Failed' : 'Incomplete');
+        document.getElementById('resultPassing').textContent   = `Passing score: ${passingScore} / ${total}`;
+        let subtitle;
+        if (isPassing) {
+            subtitle = 'Great job! You reached the passing score.';
+        } else if (isPreTest) {
+            subtitle = 'You did not reach the passing score. Your diagnostic result is recorded and the module lessons are now unlocked.';
+        } else if (unlimited) {
+            subtitle = 'You did not reach the passing score. You can retake this quiz.';
+        } else if (remaining > 0) {
+            subtitle = 'You did not reach the passing score. You have ' + remaining + ' attempt' + (remaining !== 1 ? 's' : '') + ' remaining.';
+        } else {
+            subtitle = 'You did not reach the passing score and have used all attempts.';
+        }
+        document.getElementById('resultSubtitle').textContent  = subtitle;
         document.getElementById('resultScore').textContent     = score + ' / ' + total;
-        document.getElementById('resultRemaining').textContent = remaining;
+        document.getElementById('resultRemaining').textContent = unlimited ? '∞' : remaining;
 
         // Show retry button only if attempts remain and not passed
         if (!isPassing && remaining > 0) {
@@ -853,6 +903,20 @@
     }
 
     // ─── Error State ─────────────────────────────────────────────────────
+    function showExternalQuiz(url, totalItems) {
+        if (timerInterval) clearInterval(timerInterval);
+        document.getElementById('loadingState').classList.add('hidden');
+        document.getElementById('externalState').classList.remove('hidden');
+        document.getElementById('externalOpenLink').href = url;
+        document.getElementById('externalSubmitLink').href = MODULE_ID
+            ? `module-view.html?id=${encodeURIComponent(MODULE_ID)}`
+            : 'quizzes.html';
+        if (Number(totalItems) > 0) {
+            document.getElementById('externalPassing').textContent =
+                `Passing score: ${MathTuroPassing.passingScore(totalItems)} / ${totalItems}`;
+        }
+    }
+
     function showError(title, msg) {
         document.getElementById('loadingState').classList.add('hidden');
         document.getElementById('errorState').classList.remove('hidden');

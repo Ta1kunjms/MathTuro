@@ -179,6 +179,10 @@
                             <p class="text-xl font-bold text-plum-800" id="ctxPoints">0</p>
                             <p class="text-xs text-gray-500">Total Points</p>
                         </div>
+                        <div class="text-center px-4 py-2 bg-green-50 rounded-xl">
+                            <p class="text-xl font-bold text-green-700" id="ctxPassing">0 / 0</p>
+                            <p class="text-xs text-gray-500">Passing (75%)</p>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -547,6 +551,7 @@
     <script src="../shared/js/auth.js"></script>
     <script src="../shared/js/pathManager.js"></script>
     <script src="assets/js/sidebar.js"></script>
+    <script src="../shared/js/passing.js"></script>
     <script>
     /*
       manage-questions.html — Phase 3 Teacher Question CMS
@@ -612,7 +617,7 @@
             }
         } else {
             const { data } = await sb.from('module_assessments')
-                .select('assessment_type, is_published, passing_threshold, title')
+                .select('assessment_type, is_published, passing_threshold, title, total_items')
                 .eq('id', ASMT_ID).maybeSingle();
             if (data) {
                 const label = data.assessment_type === 'pre_test' ? 'Diagnostic Pre-Test' : 'Summative Post-Test';
@@ -620,11 +625,11 @@
                 const color = data.assessment_type === 'pre_test' ? 'yellow' : 'green';
                 currentContextMeta = { ...data, type: 'assessment', label: shortLabel };
                 document.getElementById('pageTitle').textContent    = shortLabel + ' Questions';
-                document.getElementById('pageSubtitle').textContent = shortLabel + '  \u2022  ' + (data.is_published ? 'Published' : 'Draft') + '  \u2022  Passing: ' + data.passing_threshold + '%';
+                document.getElementById('pageSubtitle').textContent = shortLabel + '  \u2022  ' + (data.is_published ? 'Published' : 'Draft') + '  \u2022  Passing: 75% (rounded down)';
                 document.getElementById('ctxIcon').className        = 'w-12 h-12 rounded-xl flex items-center justify-center text-xl bg-' + color + '-100';
                 document.getElementById('ctxIcon').innerHTML        = '<i class="fas fa-' + (data.assessment_type === 'pre_test' ? 'play-circle' : 'flag-checkered') + ' text-' + color + '-600"></i>';
                 document.getElementById('ctxTitle').textContent     = label;
-                document.getElementById('ctxMeta').textContent      = (data.is_published ? 'Published' : 'Draft') + '  \u2022  Passing: ' + data.passing_threshold + '%';
+                document.getElementById('ctxMeta').textContent      = (data.is_published ? 'Published' : 'Draft') + '  \u2022  Passing: 75% (rounded down)';
                 document.getElementById('contextBanner').classList.remove('hidden');
                 renderPublishButton();
             }
@@ -704,6 +709,19 @@
         questions = data || [];
         updatePartSuggestions();
         renderQuestions();
+        await syncParentTotals();
+    }
+
+    // Keep the parent quiz/test's Total Items and Passing Score in step with
+    // the question list so cards and the student runner show the right numbers.
+    async function syncParentTotals() {
+        const count = questions.length;
+        if (count < 1) return;
+        const table = QUIZ_ID ? 'quizzes' : 'module_assessments';
+        const payload = { total_items: count, updated_at: new Date().toISOString() };
+        if (QUIZ_ID) payload.passing_score = MathTuroPassing.passingScore(count);
+        const { error } = await getSupabase().from(table).update(payload).eq('id', OWNER_ID);
+        if (error) console.warn('Could not sync total items / passing score:', error);
     }
 
     function updatePartSuggestions() {
@@ -717,7 +735,10 @@
     function renderQuestions() {
         const container = document.getElementById('questionsContainer');
         document.getElementById('ctxTotal').textContent  = questions.length;
-        document.getElementById('ctxPoints').textContent = questions.reduce((s,q) => s + (q.points||1), 0);
+        const totalPoints = questions.reduce((s,q) => s + (q.points||1), 0);
+        document.getElementById('ctxPoints').textContent = totalPoints;
+        const passingEl = document.getElementById('ctxPassing');
+        if (passingEl) passingEl.textContent = MathTuroPassing.passingScore(totalPoints) + ' / ' + totalPoints;
 
         if (questions.length === 0) {
             container.innerHTML = '';
@@ -883,7 +904,11 @@
             return '<div class="option-row">' +
                 '<button type="button" class="option-letter ' + (ok ? 'correct' : '') + '" onclick="setCorrectOption(\'' + opt.id + '\')" title="Set as correct answer" aria-label="Set option ' + opt.id + ' as correct answer">' + opt.id + '</button>' +
                 '<input type="text" value="' + escA(opt.text) + '" placeholder="Option ' + opt.id + '…" oninput="updateOptionText(\'' + opt.id + '\', this.value)" ' +
-                'class="flex-1 px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-plum-800 focus:border-transparent" required>' +
+                // No `required` here: these inputs stay in the form while hidden for
+                // True/False, Identification, Fill-in-Blank and Numeric, and a hidden
+                // empty required field silently blocks the submit. handleSaveQuestion
+                // validates option text when Multiple Choice is selected.
+                'class="flex-1 px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-plum-800 focus:border-transparent">' +
                 (mcOptions.length > 2 ? '<button type="button" onclick="removeOption(\'' + opt.id + '\')" class="p-1.5 text-gray-400 hover:text-red-500 rounded transition-colors"><i class="fas fa-times text-xs"></i></button>' : '') +
                 '</div>';
         }).join('');

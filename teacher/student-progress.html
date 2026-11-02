@@ -149,25 +149,18 @@
         <!-- Content Area -->
         <div class="p-4 lg:p-8">
             <!-- Navigation Steps -->
-            <div id="navigationSteps" class="flex flex-wrap items-center mb-6 gap-2">
+            <div id="navigationSteps" class="flex flex-wrap items-center mb-6 gap-2 lg:hidden">
                 <div class="nav-step active" data-step="grade">Grade Levels</div>
                 <div class="nav-step" data-step="section">Sections</div>
                 <div class="nav-step" data-step="student">Students</div>
                 <div class="nav-step" data-step="quizzes">Quizzes</div>
             </div>
 
-            <!-- Pending Registrations Queue for Teachers -->
-            <div id="pendingRegistrationsBanner" class="hidden mb-6 bg-yellow-50 border-2 border-ink-900 rounded-2xl p-5 shadow-[4px_4px_0_0_#1c1b1a]">
-                <div class="flex items-center justify-between mb-3">
-                    <div class="flex items-center gap-2">
-                        <span class="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-yellow-200 border-2 border-ink-900 text-yellow-900 font-bold">⚠️</span>
-                        <h3 class="font-bold text-ink-900 text-base sm:text-lg">Student Registrations Awaiting Approval (<span id="pendingCount">0</span>)</h3>
-                    </div>
-                    <span class="text-xs font-bold text-ink-600 uppercase tracking-wider">Teacher Approval Queue</span>
-                </div>
-                <div id="pendingRegistrationsList" class="space-y-2">
-                    <!-- Loaded dynamically -->
-                </div>
+            <!-- Desktop drill-down back link (breadcrumb tabs are hidden on lg+) -->
+            <div id="stepBackBar" class="hidden mb-6">
+                <button type="button" id="stepBackBtn" class="inline-flex items-center gap-2 px-4 py-2 text-sm font-bold bg-white text-ink-900 border-2 border-ink-900 rounded-xl shadow-[2px_2px_0_0_#1c1b1a] hover:bg-gray-50">
+                    <i class="fas fa-arrow-left" aria-hidden="true"></i><span id="stepBackLabel">Back</span>
+                </button>
             </div>
 
             <!-- Grade Levels View -->
@@ -198,6 +191,20 @@
 
             <!-- Students View -->
             <div id="studentView" class="space-y-4 hidden">
+                <!-- Pending Registrations Queue for Teachers -->
+                <div id="pendingRegistrationsBanner" class="hidden mb-6 bg-yellow-50 border-2 border-ink-900 rounded-2xl p-5 shadow-[4px_4px_0_0_#1c1b1a]">
+                    <div class="flex items-center justify-between mb-3">
+                        <div class="flex items-center gap-2">
+                            <span class="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-yellow-200 border-2 border-ink-900 text-yellow-900 font-bold">⚠️</span>
+                            <h3 class="font-bold text-ink-900 text-base sm:text-lg">Registrations Awaiting Approval in This Section (<span id="pendingCount">0</span>)</h3>
+                        </div>
+                        <span class="text-xs font-bold text-ink-600 uppercase tracking-wider">Teacher Approval Queue</span>
+                    </div>
+                    <div id="pendingRegistrationsList" class="space-y-2">
+                        <!-- Loaded dynamically -->
+                    </div>
+                </div>
+
                 <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
                     <div class="flex items-center justify-between mb-6">
                         <h2 class="text-lg font-semibold text-gray-800">Students</h2>
@@ -391,7 +398,6 @@
             // Load user info and initial data
             loadUserInfo();
             loadGradeLevels();
-            loadPendingRegistrations();
         });
 
         async function loadUserInfo() {
@@ -688,7 +694,16 @@
                 const listEl = document.getElementById('pendingRegistrationsList');
                 if (!banner || !listEl) return;
 
-                const pendingStudents = data || [];
+                // Shown inside the Students view, so only the selected section's queue.
+                // Same section match as loadStudents (id, or legacy section text).
+                const sectionId = currentState.section?.id || null;
+                const sectionName = normalizeText(currentState.section?.name);
+                const pendingStudents = sectionId
+                    ? (data || []).filter(student =>
+                        String(student.section_id || '') === String(sectionId) ||
+                        (sectionName && (normalizeText(student.section_text) === sectionName ||
+                                         normalizeText(student.section) === sectionName)))
+                    : [];
                 if (countEl) countEl.textContent = pendingStudents.length;
 
                 if (pendingStudents.length === 0) {
@@ -854,6 +869,7 @@
             
             navigateToStep('student');
             loadStudents(currentState.gradeLevel.id, sectionId, sectionName, currentState.gradeLevel.name);
+            loadPendingRegistrations();
         }
 
         function selectStudent(studentId, studentName) {
@@ -1094,6 +1110,8 @@
             document.getElementById('quizzesView').classList.add('hidden');
             document.getElementById('studentSummary').classList.add('hidden');
 
+            updateStepBackBar(stepName);
+
             // Show selected view
             switch (stepName) {
                 case 'grade':
@@ -1110,6 +1128,23 @@
                     document.getElementById('studentSummary').classList.remove('hidden');
                     break;
             }
+        }
+
+        const STEP_PARENT = {
+            section: { step: 'grade', label: 'Back to Grade Levels' },
+            student: { step: 'section', label: 'Back to Sections' },
+            quizzes: { step: 'student', label: 'Back to Students' }
+        };
+
+        function updateStepBackBar(stepName) {
+            const parent = STEP_PARENT[stepName];
+            const bar = document.getElementById('stepBackBar');
+            const btn = document.getElementById('stepBackBtn');
+            // Desktop only (`hidden lg:block`); mobile keeps the breadcrumb tabs.
+            bar.classList.toggle('lg:block', Boolean(parent));
+            if (!parent) return;
+            document.getElementById('stepBackLabel').textContent = parent.label;
+            btn.onclick = () => navigateToStep(parent.step);
         }
 
         async function handleLogout() {

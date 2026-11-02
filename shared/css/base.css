@@ -605,13 +605,15 @@ html[data-portal="student"] .mobile-tab:focus-visible {
 #videoModal,
 #quizModal,
 #submissionsModal,
-div[id*="Modal"],
-div[id*="modal"],
+div[id*="Modal"][class*="fixed"],
+div[id*="modal"][class*="fixed"],
 div[id*="Container"][class*="fixed"],
 div[id$="Overlay"]:not(#mobileOverlay),
 div[role="dialog"][class*="fixed"],
 .modal-overlay {
-  background-color: rgba(28, 27, 26, 0.6) !important;
+  /* Only the fixed full-screen backdrop is dimmed. A bare div[id*="modal"]
+     also matched panels such as #modalContent and turned them translucent. */
+  background-color: rgba(28, 27, 26, 0.5) !important;
   /* Dim only, no blur (redesign: no glass/blurred layers) */
   backdrop-filter: none !important;
   -webkit-backdrop-filter: none !important;
@@ -630,6 +632,7 @@ div[id*="modal"] > div > div.bg-white,
 div[role="dialog"] .bg-white,
 div[role="dialog"] form.bg-white,
 .modal-container {
+  background-color: #ffffff;
   border: 2px solid #1c1b1a !important;
   box-shadow: 6px 6px 0 0 #1c1b1a !important;
   border-radius: 1.5rem !important;

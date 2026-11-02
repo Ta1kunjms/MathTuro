@@ -671,17 +671,12 @@
                 // Reflect the saved font preference in the dropdown toggle label
                 syncFontToggleLabel();
 
-                // The simplified nav's "Progress" destination links here as
-                // /student/dashboard.html#progress so it works from any page,
-                // not just this one. Open the progress modal once dashboardData
-                // has finished loading above.
+                // Progress now has its own page (rankings + EXP). Old
+                // dashboard.html#progress bookmarks are forwarded there instead
+                // of auto-opening a popup over the dashboard.
                 if (window.location.hash === '#progress') {
-                    showMyProgress();
+                    window.location.replace('progress.html');
                 }
-                // Tapping Progress while already on the dashboard only changes the hash
-                window.addEventListener('hashchange', () => {
-                    if (window.location.hash === '#progress') showMyProgress();
-                });
 
             } catch (error) {
                 console.error('Dashboard initialization error:', error);

@@ -1361,3 +1361,13 @@ button.learn-quarter-tab[aria-pressed="true"] {
   transform: translate(1px, 1px) !important;
 }
 
+
+/* The acknowledgment is a flex row; keep the `hidden` utility authoritative so it
+   only renders when a newly earned achievement is being announced. */
+.dash-achievement-alert.hidden {
+  display: none;
+}
+
+.learn-module-card-badge.is-incomplete {
+  background: #b45309;
+}

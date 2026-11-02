@@ -65,11 +65,22 @@
             object-fit: cover;
         }
 
+        .module-preview-container {
+            position: relative;
+        }
+
+        /* First-page thumbnail only: the frame is oversized so the PDF viewer's
+           scrollbar is clipped by the container, and it ignores pointer input so
+           the card never scrolls internally. */
         .module-preview-frame {
-            width: 100%;
-            height: 100%;
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: calc(100% + 24px);
+            height: calc(100% + 24px);
             border: 0;
             background: #fff;
+            pointer-events: none;
         }
 
         .module-description {
@@ -151,7 +162,7 @@
                 <span class="text-xs font-bold text-ink-500 uppercase tracking-wider mr-1">Status:</span>
                 <button type="button" class="learn-status-chip active px-3 py-1.5 rounded-full text-xs font-bold border-2 border-ink-900 bg-forest-600 text-white shadow-[2px_2px_0_0_#1c1b1a] transition-all" data-status="all">All</button>
                 <button type="button" class="learn-status-chip px-3 py-1.5 rounded-full text-xs font-bold border-2 border-ink-900 bg-white text-ink-900 hover:bg-paper-100 shadow-[2px_2px_0_0_#1c1b1a] transition-all" data-status="completed">Completed</button>
-                <button type="button" class="learn-status-chip px-3 py-1.5 rounded-full text-xs font-bold border-2 border-ink-900 bg-white text-ink-900 hover:bg-paper-100 shadow-[2px_2px_0_0_#1c1b1a] transition-all" data-status="incompleted">Incompleted</button>
+                <button type="button" class="learn-status-chip px-3 py-1.5 rounded-full text-xs font-bold border-2 border-ink-900 bg-white text-ink-900 hover:bg-paper-100 shadow-[2px_2px_0_0_#1c1b1a] transition-all" data-status="incompleted">Incomplete</button>
                 <button type="button" class="learn-status-chip px-3 py-1.5 rounded-full text-xs font-bold border-2 border-ink-900 bg-white text-ink-900 hover:bg-paper-100 shadow-[2px_2px_0_0_#1c1b1a] transition-all" data-status="graded">Graded</button>
                 <button type="button" class="learn-status-chip px-3 py-1.5 rounded-full text-xs font-bold border-2 border-ink-900 bg-white text-ink-900 hover:bg-paper-100 shadow-[2px_2px_0_0_#1c1b1a] transition-all" data-status="non-graded">Non-Graded</button>
             </div>
@@ -433,16 +444,21 @@
                 // Check sequential access, assessment association, and completion for each module
                 let passedAssessmentIds = new Set();
                 let moduleAssessmentsMap = new Map();
+                const moduleIdsWithQuizzes = new Set();
 
                 try {
-                    const [attemptsRes, assessmentsRes] = await Promise.all([
+                    const [attemptsRes, assessmentsRes, quizzesRes] = await Promise.all([
                         getSupabase()
                             .from('module_assessment_attempts')
                             .select('module_assessment_id, passed')
                             .eq('student_id', currentUser.id),
                         getSupabase()
                             .from('module_assessments')
-                            .select('id, module_id, assessment_type')
+                            .select('id, module_id, assessment_type'),
+                        getSupabase()
+                            .from('quizzes')
+                            .select('id, module_id')
+                            .not('module_id', 'is', null)
                     ]);
 
                     (attemptsRes.data || []).forEach(a => {
@@ -453,6 +469,8 @@
                         if (!moduleAssessmentsMap.has(asmt.module_id)) moduleAssessmentsMap.set(asmt.module_id, []);
                         moduleAssessmentsMap.get(asmt.module_id).push(asmt);
                     });
+
+                    (quizzesRes.data || []).forEach(q => moduleIdsWithQuizzes.add(q.module_id));
                 } catch (metaErr) {
                     console.warn('Metadata load error:', metaErr);
                 }
@@ -470,7 +488,8 @@
                     }
 
                     const asmts = moduleAssessmentsMap.get(m.id) || [];
-                    m.has_quiz = asmts.length > 0;
+                    // Graded = the module carries a pre-test, post-test, or regular quiz.
+                    m.has_quiz = asmts.length > 0 || moduleIdsWithQuizzes.has(m.id);
                     const postTest = asmts.find(a => a.assessment_type === 'post_test');
                     m.is_completed = postTest ? passedAssessmentIds.has(postTest.id) : false;
                 }
@@ -553,10 +572,13 @@
                     previewMedia = `<img src="${thumbnail}" class="module-preview-image" alt="${module.title}" onerror="this.onerror=null; this.src='../Logo/MATHURO-LOGO-v2.png';">`;
                 }
                 const isLocked = Boolean(module.is_locked);
-                const statusLabel = isLocked ? 'Locked' : 'Available';
+                const statusLabel = isLocked
+                    ? 'Locked'
+                    : `${module.is_completed ? 'Completed' : 'Incomplete'} · ${module.has_quiz ? 'Graded' : 'Non-Graded'}`;
+                const ctaLabel = isLocked ? 'Locked' : 'Open';
                 return `
                 <div class="learn-module-card ${isLocked ? 'is-locked' : ''} mx-auto min-w-[260px] max-w-[300px] flex flex-col relative">
-                    <span class="learn-module-card-badge ${isLocked ? 'is-locked' : ''}">
+                    <span class="learn-module-card-badge ${isLocked ? 'is-locked' : (module.is_completed ? 'is-completed' : 'is-incomplete')}">
                         ${isLocked ? `
                             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
@@ -577,7 +599,7 @@
                             ${quarterLabel || weekNumber ? `<p class="text-xs font-semibold text-forest-800 mb-2">${[quarterLabel, weekNumber ? `Week ${weekNumber}` : ''].filter(Boolean).join(' · ')}</p>` : ''}
                             <p class="module-description text-xs text-gray-500 leading-snug mb-4 flex-1">${escapeHtml(description)}</p>
                             <div class="learn-module-card-cta ${isLocked ? 'is-locked' : ''}">
-                                ${statusLabel}
+                                ${ctaLabel}
                             </div>
                         </div>
                     </a>

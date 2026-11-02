@@ -244,6 +244,20 @@
                     </div>
                 </div>
 
+                <!-- Video links (any number) -->
+                <div class="border border-gray-200 rounded-xl p-4">
+                    <div class="flex items-center justify-between gap-3">
+                        <div>
+                            <h4 class="text-sm font-semibold text-gray-800">Video Links (optional)</h4>
+                            <p class="text-xs text-gray-600 mt-1">YouTube or Vimeo links shown to students in this module.</p>
+                        </div>
+                        <button type="button" onclick="addModuleVideoRow()" class="flex-shrink-0 px-3 py-1.5 text-xs font-bold bg-white text-plum-800 border-2 border-plum-800 rounded-lg hover:bg-plum-50">
+                            <i class="fas fa-plus mr-1"></i>Add Video
+                        </button>
+                    </div>
+                    <div id="moduleVideoRows" class="space-y-3 mt-4"></div>
+                </div>
+
                 <!-- Content Type -->
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-3">Content Type *</label>
@@ -424,11 +438,17 @@
                         class="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-plum-800 focus:border-transparent text-sm"
                         placeholder="What concepts does this quiz evaluate?"></textarea>
                 </div>
-                <div class="grid grid-cols-2 gap-4">
+                <div class="grid grid-cols-3 gap-4">
+                    <div>
+                        <label class="block text-sm font-bold text-gray-700 mb-1">Total Items</label>
+                        <input type="number" id="quickQuizTotalItems" min="0" max="500" value="10" oninput="syncQuickQuizPassing()"
+                            class="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-plum-800 text-sm font-bold">
+                    </div>
                     <div>
                         <label class="block text-sm font-bold text-gray-700 mb-1">Passing Score</label>
-                        <input type="number" id="quickQuizPassingScore" min="0" value="5"
-                            class="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-plum-800 text-sm font-bold">
+                        <input type="number" id="quickQuizPassingScore" value="7" readonly tabindex="-1"
+                            class="w-full px-4 py-2.5 border border-gray-200 bg-gray-100 rounded-xl text-sm font-bold cursor-not-allowed">
+                        <p class="text-[10px] text-gray-500 mt-0.5">Auto: 75%, rounded down</p>
                     </div>
                     <div>
                         <label class="block text-sm font-bold text-gray-700 mb-1">Time Limit (min)</label>
@@ -456,6 +476,7 @@
     <script src="../shared/js/config.js"></script>
     <script src="../shared/js/supabase.js"></script>
     <script src="assets/js/sidebar.js"></script>
+    <script src="../shared/js/passing.js"></script>
     
     <script>
         // Global variables
@@ -1087,6 +1108,8 @@
 
                 if (!selectedQuarter) throw new Error('Please select a term');
                 if (!moduleTitle) throw new Error('Please enter a module title');
+                // Validate video rows before any upload happens
+                const moduleVideos = readModuleVideoRows();
 
                 // Upload files
                 if (contentType === 'pdf') {
@@ -1122,6 +1145,18 @@
 
                 if (data?.id && (attachQuizIds.length || attachPresentationIds.length)) {
                     await attachContentToModule(data.id, attachQuizIds, attachPresentationIds);
+                }
+
+                if (data?.id && moduleVideos.length) {
+                    try {
+                        await insertModuleVideos(data.id, moduleVideos, resolvedScope, selectedQuarter, moduleStatus === 'published');
+                    } catch (videoError) {
+                        console.error('Module created but videos failed:', videoError);
+                        showToast('Module created, but the videos could not be saved. Add them from the module details.', 'error');
+                        closeCreateModuleModal();
+                        await loadModules();
+                        return;
+                    }
                 }
 
                 showToast('Module created successfully!', 'success');
@@ -1184,16 +1219,18 @@
                 attachedQuizIds: attachable.quizzes.filter(q => q.module_id === moduleId).map(q => q.id)
             };
 
-            let linkedVideo = null;
+            // A module can carry any number of videos (videos.module_id).
+            let linkedVideos = [];
             try {
-                const { data: videoData } = await getSupabase()
+                const { data: videoData, error: videoError } = await getSupabase()
                     .from('videos')
                     .select('*')
                     .eq('module_id', moduleId)
-                    .maybeSingle();
-                linkedVideo = videoData || null;
+                    .order('order_index', { ascending: true });
+                if (videoError) throw videoError;
+                linkedVideos = videoData || [];
             } catch (e) {
-                console.warn('Could not fetch video for module:', e);
+                console.warn('Could not fetch videos for module:', e);
             }
 
             let teacherVideos = [];
@@ -1476,42 +1513,55 @@
 
                     <!-- Associated Video & Presentations Section -->
                     <div class="border-t pt-6 space-y-6">
-                        <h4 class="font-semibold text-gray-800 text-lg">Attached Video &amp; Content</h4>
-                        
-                        <!-- Attached Video Form -->
+                        <h4 class="font-semibold text-gray-800 text-lg">Attached Videos &amp; Content</h4>
+
+                        <!-- Attached Videos -->
                         <div class="border border-gray-200 rounded-xl p-5 bg-blue-50/30">
                             <div class="flex items-center justify-between mb-4">
                                 <div class="flex items-center space-x-2">
                                     <div class="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center text-blue-600">
                                         <i class="fas fa-video"></i>
                                     </div>
-                                    <h5 class="font-medium text-gray-800">Module Video</h5>
+                                    <h5 class="font-medium text-gray-800">Module Videos</h5>
                                 </div>
-                                ${linkedVideo ? '<span class="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-green-100 text-green-700">Attached</span>' : '<span class="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-gray-100 text-gray-500">None</span>'}
+                                <span class="px-2.5 py-0.5 rounded-full text-xs font-semibold ${linkedVideos.length ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'}">${linkedVideos.length} attached</span>
                             </div>
-                            
+
+                            ${linkedVideos.length ? `
+                                <ul class="space-y-2 mb-5">
+                                    ${linkedVideos.map(v => `
+                                        <li class="flex items-center justify-between gap-3 bg-white border border-gray-200 rounded-xl px-4 py-2.5">
+                                            <div class="min-w-0">
+                                                <p class="text-sm font-semibold text-gray-800 truncate">${attrValue(v.title || 'Untitled video')}</p>
+                                                <p class="text-xs text-gray-500 truncate">${attrValue(v.video_url || 'No URL')}</p>
+                                            </div>
+                                            <button type="button" onclick="unlinkModuleVideo('${v.id}', '${module.id}')" class="flex-shrink-0 px-3 py-1.5 text-xs border border-red-200 text-red-600 hover:bg-red-50 rounded-lg font-medium transition-colors">Unlink</button>
+                                        </li>
+                                    `).join('')}
+                                </ul>
+                            ` : '<p class="text-xs text-gray-500 mb-5">No videos attached yet.</p>'}
+
                             <div class="space-y-4">
                                 <div>
-                                    <label class="block text-xs font-semibold text-gray-600 mb-1 uppercase tracking-wider">Select Existing Video or Input New</label>
+                                    <label class="block text-xs font-semibold text-gray-600 mb-1 uppercase tracking-wider">Add a Video: Pick Existing or Enter New</label>
                                     <select id="detailSelectVideo" onchange="handleDetailVideoSelect(this)" class="w-full px-4 py-2.5 border border-gray-300 rounded-xl bg-white focus:ring-2 focus:ring-plum-800 text-sm">
                                         <option value="">-- Enter New Video Details --</option>
-                                        ${teacherVideos.map(v => `<option value="${v.id}" data-url="${v.video_url || ''}" data-title="${v.title || ''}" ${linkedVideo && linkedVideo.id === v.id ? 'selected' : ''}>${v.title} (${v.video_url || 'No URL'})</option>`).join('')}
+                                        ${teacherVideos.filter(v => !linkedVideos.some(l => l.id === v.id)).map(v => `<option value="${v.id}" data-url="${attrValue(v.video_url || '')}" data-title="${attrValue(v.title || '')}">${attrValue(v.title || 'Untitled')} (${attrValue(v.video_url || 'No URL')})</option>`).join('')}
                                     </select>
                                 </div>
                                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     <div>
                                         <label class="block text-xs font-medium text-gray-700 mb-1">Video Title</label>
-                                        <input type="text" id="detailVideoTitle" value="${linkedVideo?.title || ''}" placeholder="e.g., Lesson 1 Tutorial Video" class="w-full px-4 py-2.5 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-plum-800">
+                                        <input type="text" id="detailVideoTitle" placeholder="e.g., Lesson 1 Tutorial Video" class="w-full px-4 py-2.5 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-plum-800">
                                     </div>
                                     <div>
                                         <label class="block text-xs font-medium text-gray-700 mb-1">Video URL (YouTube/Vimeo)</label>
-                                        <input type="url" id="detailVideoUrl" value="${linkedVideo?.video_url || ''}" placeholder="https://youtube.com/watch?v=..." class="w-full px-4 py-2.5 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-plum-800">
+                                        <input type="url" id="detailVideoUrl" placeholder="https://youtube.com/watch?v=..." class="w-full px-4 py-2.5 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-plum-800">
                                     </div>
                                 </div>
-                                <div class="flex items-center justify-end space-x-2 pt-2">
-                                    ${linkedVideo ? `<button type="button" onclick="unlinkModuleVideo('${linkedVideo.id}', '${module.id}')" class="px-4 py-2 text-sm border border-red-200 text-red-600 hover:bg-red-50 rounded-xl font-medium transition-colors">Unlink Video</button>` : ''}
-                                    <button type="button" onclick="saveModuleVideo('${module.id}', '${linkedVideo?.id || ''}')" class="px-4 py-2 text-sm bg-plum-800 text-white hover:bg-plum-900 rounded-xl font-medium transition-colors">
-                                        ${linkedVideo ? 'Update Video' : 'Save / Attach Video'}
+                                <div class="flex items-center justify-end pt-2">
+                                    <button type="button" onclick="saveModuleVideo('${module.id}', '')" class="px-4 py-2 text-sm bg-plum-800 text-white hover:bg-plum-900 rounded-xl font-medium transition-colors">
+                                        <i class="fas fa-plus mr-1"></i>Add Video
                                     </button>
                                 </div>
                             </div>
@@ -1674,7 +1724,8 @@
                         grade_level_id: resolvedScope.gradeLevelId,
                         section_id: resolvedScope.sectionId,
                         is_published: module.status === 'published',
-                        teacher_id: currentUser.id
+                        teacher_id: currentUser.id,
+                        order_index: await nextModuleVideoOrder(moduleId)
                     };
                     const { error } = await getSupabase().from('videos').insert(videoPayload);
                     if (error) throw error;
@@ -1686,6 +1737,16 @@
                 console.error('Error saving module video:', error);
                 showToast(error.message || 'Failed to save video attachment', 'error');
             }
+        }
+
+        async function nextModuleVideoOrder(moduleId) {
+            const { data } = await getSupabase()
+                .from('videos')
+                .select('order_index')
+                .eq('module_id', moduleId)
+                .order('order_index', { ascending: false })
+                .limit(1);
+            return (Number(data?.[0]?.order_index) || 0) + 1;
         }
 
         async function unlinkModuleVideo(videoId, moduleId) {
@@ -1807,10 +1868,56 @@
             selectedImages = [];
             removePdf();
             document.getElementById('imagesPreview').classList.add('hidden');
+            document.getElementById('moduleVideoRows').innerHTML = '';
             loadAttachableContent().then(({ quizzes, presentations }) => {
                 renderAttachList('moduleAttachQuizzes', quizzes, null);
                 renderAttachList('moduleAttachPresentations', presentations, null);
             });
+        }
+
+        function addModuleVideoRow() {
+            const row = document.createElement('div');
+            row.className = 'module-video-row grid grid-cols-1 md:grid-cols-[1fr_1fr_auto] gap-2 items-start';
+            row.innerHTML = `
+                <input type="text" class="module-video-title w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-plum-800" placeholder="Video title" aria-label="Video title">
+                <input type="url" class="module-video-url w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-plum-800" placeholder="https://youtube.com/watch?v=..." aria-label="Video URL">
+                <button type="button" class="px-3 py-2 text-xs border border-red-200 text-red-600 hover:bg-red-50 rounded-lg font-medium" aria-label="Remove video">Remove</button>
+            `;
+            row.querySelector('button').addEventListener('click', () => row.remove());
+            document.getElementById('moduleVideoRows').appendChild(row);
+            row.querySelector('.module-video-title').focus();
+        }
+
+        // Rows with neither title nor URL are ignored; partial rows are errors.
+        function readModuleVideoRows() {
+            const rows = Array.from(document.querySelectorAll('#moduleVideoRows .module-video-row'));
+            const videos = [];
+            rows.forEach((row, idx) => {
+                const title = row.querySelector('.module-video-title').value.trim();
+                const url = row.querySelector('.module-video-url').value.trim();
+                if (!title && !url) return;
+                if (!url || !isValidHttpUrl(url)) throw new Error(`Video ${idx + 1}: enter a valid video URL (http/https)`);
+                videos.push({ title: title || `Video ${videos.length + 1}`, url });
+            });
+            return videos;
+        }
+
+        async function insertModuleVideos(moduleId, videos, scope, quarter, isPublished) {
+            if (!videos.length) return;
+            const payload = videos.map((v, i) => ({
+                title: v.title,
+                video_url: v.url,
+                module_id: moduleId,
+                quarter: quarter ? Number(quarter) : null,
+                grade_level: getGradeLevelNameById(scope.gradeLevelId),
+                grade_level_id: scope.gradeLevelId,
+                section_id: scope.sectionId,
+                is_published: isPublished,
+                teacher_id: currentUser.id,
+                order_index: i + 1
+            }));
+            const { error } = await getSupabase().from('videos').insert(payload);
+            if (error) throw error;
         }
 
         function closeCreateModuleModal() {
@@ -1837,8 +1944,10 @@
                     created_by: currentUser.id,
                     teacher_id: currentUser.id,
                     total_items: 1,
-                    passing_threshold: isPostTest ? 75 : 0,
-                    passing_score: isPostTest ? 75 : 0,
+                    // Both tests use the 75% rule; the pre-test still unlocks
+                    // module content after any attempt (is_module_content_unlocked).
+                    passing_threshold: 75,
+                    passing_score: 75,
                     created_at: now,
                     updated_at: now
                 };
@@ -1905,13 +2014,19 @@
             document.getElementById('quickQuizModuleId').value = moduleId;
             document.getElementById('quickQuizTitle').value = moduleTitle ? `${moduleTitle} - Quiz 1` : 'Module Quiz 1';
             document.getElementById('quickQuizDescription').value = '';
-            document.getElementById('quickQuizPassingScore').value = 5;
+            document.getElementById('quickQuizTotalItems').value = 10;
+            syncQuickQuizPassing();
             document.getElementById('quickQuizTimeLimit').value = 20;
             document.getElementById('quickAddQuizModal').classList.remove('hidden');
         }
 
         function closeQuickAddQuizModal() {
             document.getElementById('quickAddQuizModal').classList.add('hidden');
+        }
+
+        function syncQuickQuizPassing() {
+            const total = parseInt(document.getElementById('quickQuizTotalItems').value, 10) || 0;
+            document.getElementById('quickQuizPassingScore').value = MathTuroPassing.passingScore(total);
         }
 
         async function handleQuickAddQuizSubmit(e) {
@@ -1923,7 +2038,8 @@
             const moduleId = document.getElementById('quickQuizModuleId').value;
             const title = document.getElementById('quickQuizTitle').value.trim();
             const description = document.getElementById('quickQuizDescription').value.trim();
-            const passingScore = parseInt(document.getElementById('quickQuizPassingScore').value, 10) || 0;
+            const totalItems = Math.max(0, parseInt(document.getElementById('quickQuizTotalItems').value, 10) || 0);
+            const passingScore = MathTuroPassing.passingScore(totalItems);
             const timeLimit = parseInt(document.getElementById('quickQuizTimeLimit').value, 10) || 0;
 
             try {
@@ -1940,7 +2056,7 @@
                     grade_level: getGradeLevelNameById(resolvedScope.gradeLevelId),
                     grade_level_id: resolvedScope.gradeLevelId,
                     section_id: resolvedScope.sectionId,
-                    total_items: 0,
+                    total_items: totalItems,
                     passing_score: passingScore,
                     time_limit_minutes: timeLimit,
                     is_published: false,

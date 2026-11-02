@@ -232,7 +232,7 @@
                 
                 <div class="text-center mb-4">
                     <h3 id="submitQuizTitle" class="font-semibold text-lg text-gray-900"></h3>
-                    <p class="text-sm text-gray-500">Enter your score after completing the quiz</p>
+                    <p class="text-sm text-gray-500">Enter your score and attach a screenshot after completing the quiz</p>
                 </div>
 
                 <div>
@@ -244,6 +244,14 @@
                         <span class="text-2xl text-gray-400">/</span>
                         <span id="displayTotalItems" class="text-2xl font-bold text-gray-900">10</span>
                     </div>
+                    <p id="displayPassing" class="text-xs text-gray-500 mt-1"></p>
+                </div>
+
+                <div>
+                    <label for="scoreScreenshot" class="block text-sm font-medium text-gray-700 mb-1">Screenshot of your result *</label>
+                    <input type="file" id="scoreScreenshot" required accept="image/jpeg,image/png,image/gif,image/webp"
+                        class="block w-full text-sm text-gray-700 file:mr-3 file:px-4 file:py-2 file:rounded-lg file:border-2 file:border-ink-900 file:bg-white file:font-bold">
+                    <p class="text-xs text-gray-500 mt-1">JPG, PNG, GIF, or WebP up to 5 MB. Your teacher checks it before approving your score.</p>
                 </div>
 
                 <div class="flex space-x-3 pt-4">
@@ -272,7 +280,9 @@
     <script src="../shared/js/supabase.js"></script>
     <script src="../shared/js/auth.js"></script>
     <script src="assets/js/sidebar.js"></script>
-    
+    <script src="../shared/js/passing.js"></script>
+    <script src="assets/js/quiz-proof.js"></script>
+        
     <script>
         let currentUser = null;
         // Quarter filter logic
@@ -444,7 +454,11 @@
             emptyState.classList.add('hidden');
             grid.innerHTML = filtered.map(quiz => {
                 const submission = submissions[quiz.id];
-                const isPassed = submission && submission.student_score >= quiz.passing_score;
+                const passingScore = MathTuroPassing.passingScore(quiz.total_items);
+                const isPassed = submission && (submission.assessment_result
+                    ? submission.assessment_result === 'passed'
+                    : submission.student_score >= passingScore);
+                const isExternal = Boolean(quiz.quiz_url && /^https?:\/\//i.test(String(quiz.quiz_url).trim()));
                 
                 return `
                     <div class="quiz-card bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
@@ -497,7 +511,7 @@
                                     <div>Items</div>
                                 </div>
                                 <div class="bg-gray-50 rounded-lg p-2 text-center">
-                                    <div class="font-semibold text-gray-900">${quiz.passing_score}</div>
+                                    <div class="font-semibold text-gray-900">${passingScore}/${quiz.total_items}</div>
                                     <div>Passing</div>
                                 </div>
                                 <div class="bg-gray-50 rounded-lg p-2 text-center">
@@ -533,32 +547,33 @@
                             
                             <div class="flex flex-col gap-2">
                                 <div class="flex space-x-2">
-                                    <a href="take-quiz.html?quiz_id=${encodeURIComponent(quiz.id)}" 
-                                        class="flex-1 px-4 py-2 text-center text-sm font-bold bg-forest-800 text-white rounded-lg hover:bg-forest-900 transition-colors flex items-center justify-center space-x-1.5 shadow-sm">
-                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
-                                        </svg>
-                                        <span>Take Quiz</span>
-                                    </a>
-                                    ${quiz.quiz_url ? `
-                                        <a href="${attrValue(quiz.quiz_url)}" target="_blank" rel="noopener noreferrer" 
-                                            class="px-3 py-2 text-center text-xs font-semibold bg-amber-50 text-amber-900 border border-amber-300 rounded-lg hover:bg-amber-100 transition-colors flex items-center justify-center gap-1"
-                                            title="Open external form link">
-                                            <span>External Form</span>
-                                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    ${isExternal ? `
+                                        <a href="${attrValue(String(quiz.quiz_url).trim())}" target="_blank" rel="noopener noreferrer"
+                                            class="flex-1 px-4 py-2 text-center text-sm font-bold bg-forest-800 text-white rounded-lg hover:bg-forest-900 transition-colors flex items-center justify-center gap-1.5 shadow-sm"
+                                            title="Opens the quiz in a new tab">
+                                            <span>Open Quiz</span>
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
                                             </svg>
                                         </a>
-                                    ` : ''}
+                                    ` : `
+                                        <a href="take-quiz.html?quiz_id=${encodeURIComponent(quiz.id)}"
+                                            class="flex-1 px-4 py-2 text-center text-sm font-bold bg-forest-800 text-white rounded-lg hover:bg-forest-900 transition-colors flex items-center justify-center space-x-1.5 shadow-sm">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+                                            </svg>
+                                            <span>Take Quiz</span>
+                                        </a>
+                                    `}
                                 </div>
-                                ${quiz.quiz_url ? `
+                                ${isExternal ? `
                                     <button onclick="openSubmitModal('${quiz.id}')" 
                                         ${submission && submission.status === 'approved' ? 'disabled' : ''}
                                         class="w-full px-3 py-1.5 text-xs ${submission ? (submission.status === 'rejected' ? 'bg-blue-100 text-blue-700 hover:bg-blue-200' : submission.status === 'approved' ? 'bg-gray-100 text-gray-400 cursor-not-allowed' : 'bg-green-100 text-green-700 hover:bg-green-200') : 'bg-gray-100 text-gray-600 hover:bg-gray-200'} rounded-lg transition-colors flex items-center justify-center space-x-1">
                                         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="${submission ? 'M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z' : 'M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12'}"/>
                                         </svg>
-                                        <span>${submission ? 'Update Form Screenshot' : 'Upload Form Screenshot'}</span>
+                                        <span>${submission ? 'Resubmit Score & Screenshot' : 'Submit Score & Screenshot'}</span>
                                     </button>
                                 ` : ''}
                             </div>
@@ -675,7 +690,10 @@
             document.getElementById('submitQuizTitle').textContent = quiz.title;
             document.getElementById('displayTotalItems').textContent = quiz.total_items;
             document.getElementById('studentScore').max = quiz.total_items;
-            
+            document.getElementById('displayPassing').textContent =
+                `Passing score: ${MathTuroPassing.passingScore(quiz.total_items)} / ${quiz.total_items}`;
+            document.getElementById('scoreScreenshot').value = '';
+                        
             // Pre-fill if already submitted
             const submission = submissions[quizId];
             if (submission) {
@@ -711,14 +729,15 @@
                     throw new Error('Score cannot be greater than total items');
                 }
 
-                // Phase 2: Route student writes through SECURITY DEFINER RPC
-                const { data, error } = await getSupabase().rpc('submit_regular_quiz_score', {
-                    p_quiz_id: quizId,
-                    p_score: studentScore,
-                    p_total: totalItems
+                // Screenshot proof is required; the RPC verifies the upload
+                // sits in this student's own storage folder.
+                const data = await MathTuroQuizProof.submitExternalQuizScore({
+                    userId: currentUser.id,
+                    quizId,
+                    score: studentScore,
+                    total: totalItems,
+                    file: document.getElementById('scoreScreenshot').files[0]
                 });
-
-                if (error) throw error;
 
                 showToast('Score submitted successfully! Attempt ' + (data?.attempt_number || 1) + '/3', 'success');
                 closeSubmitModal();

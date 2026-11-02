@@ -555,7 +555,8 @@
 
                 for (const student of students) {
                     const studentSubmissions = groupedSubmissions.get(student.id) || [];
-                    const scoredSubmissions = studentSubmissions.filter(sub => sub.total_items && sub.total_items > 0);
+                    // Same rule as the student dashboard and teacher progress: approved only.
+                    const scoredSubmissions = studentSubmissions.filter(sub => sub.status === 'approved' && sub.total_items && sub.total_items > 0);
 
                     const averageScore = scoredSubmissions.length > 0
                         ? Math.round(

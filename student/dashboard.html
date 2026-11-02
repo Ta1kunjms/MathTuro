@@ -1108,7 +1108,19 @@
                     return timestamp && new Date(timestamp).toISOString().slice(0, 10) === todayKey;
                 }).length;
 
-                const xp = (completedLessons * 10) + (completedModules * 50) + (approvedSubmissions.length * 20);
+                // Same EXP source as the Progress page and leaderboards
+                // (exp_transactions, own rows only via RLS).
+                let xp = 0;
+                try {
+                    const { data: expRows, error: expError } = await getSupabase()
+                        .from('exp_transactions')
+                        .select('exp_awarded')
+                        .eq('student_id', currentUser.id);
+                    if (expError) throw expError;
+                    xp = (expRows || []).reduce((sum, row) => sum + (Number(row.exp_awarded) || 0), 0);
+                } catch (expErr) {
+                    console.warn('Could not load EXP total:', expErr);
+                }
 
                 dashboardData.streak = dbStreak;
                 dashboardData.longestStreak = dbLongestStreak;

@@ -283,6 +283,23 @@
                         <i class="fas fa-arrow-right text-gray-400 self-center"></i>
                     </div>
                 </div>
+
+                <!-- Option 4: External Quiz (link only) -->
+                <div onclick="selectPickerType('external')" class="p-4 rounded-xl border-2 border-ink-900 hover:bg-blue-50 cursor-pointer transition-all shadow-[2px_2px_0_0_#1c1b1a]">
+                    <div class="flex items-start gap-4">
+                        <div class="w-12 h-12 bg-blue-100 border-2 border-ink-900 rounded-xl flex items-center justify-center text-blue-700 text-xl flex-shrink-0">
+                            <i class="fas fa-external-link-alt"></i>
+                        </div>
+                        <div class="flex-1">
+                            <div class="flex items-center gap-2">
+                                <h3 class="font-bold text-gray-900 text-base">External Quiz (Link)</h3>
+                                <span class="text-[10px] uppercase font-black bg-blue-200 text-blue-900 px-2 py-0.5 rounded-full border border-ink-900">Score + Screenshot</span>
+                            </div>
+                            <p class="text-xs text-gray-600 mt-0.5">Quiz hosted elsewhere (Google Forms, Wayground…). Students open the link, then submit their score with a screenshot.</p>
+                        </div>
+                        <i class="fas fa-arrow-right text-gray-400 self-center"></i>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -353,20 +370,14 @@
                         placeholder="What topics does this quiz cover?"></textarea>
                 </div>
 
-                <!-- Collapsed Legacy External Quiz URL -->
-                <details class="bg-gray-50 border border-gray-200 rounded-xl p-3" id="legacyUrlDetails">
-                    <summary class="text-xs font-bold text-gray-700 cursor-pointer flex items-center justify-between">
-                        <span><i class="fas fa-link mr-1.5 text-plum-800"></i>External / Legacy Quiz Link (Optional)</span>
-                        <span class="text-gray-400 font-normal">Click to expand</span>
-                    </summary>
-                    <div class="mt-3 pt-3 border-t border-gray-200">
-                        <label class="block text-xs font-medium text-gray-700 mb-1">External Quiz URL</label>
-                        <input type="url" id="quizUrl" 
-                            class="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-plum-800 focus:border-transparent text-sm"
-                            placeholder="https://forms.google.com/...">
-                        <p class="text-xs text-gray-500 mt-1">Leave empty if you are building native questions in MathTuro Question Manager.</p>
-                    </div>
-                </details>
+                <!-- External quiz link (External Quiz mode only) -->
+                <div id="externalUrlGroup" class="hidden">
+                    <label for="quizUrl" class="block text-sm font-medium text-gray-700 mb-1">External Quiz Link *</label>
+                    <input type="url" id="quizUrl"
+                        class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-plum-800 focus:border-transparent"
+                        placeholder="https://forms.google.com/...">
+                    <p class="text-xs text-gray-500 mt-1">Students open this link, then submit their score with a screenshot of the result.</p>
+                </div>
 
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1">Link to Video (Optional)</label>
@@ -1065,7 +1076,9 @@
         function selectPickerType(type) {
             closeTypePickerModal();
             selectedPickerType = type;
-            if (type === 'regular' || type === 'quiz') {
+            if (type === 'external') {
+                openAddQuizModal('external');
+            } else if (type === 'regular' || type === 'quiz') {
                 openAddQuizModal();
             } else if (type === 'pre_test' || type === 'post_test') {
                 openAsmtModulePickerModal(type);
@@ -1210,7 +1223,8 @@
                 emptyState.classList.add('hidden');
                 grid.innerHTML = filtered.map(quiz => {
                     const scope = getQuizScopeLabels(quiz);
-                    const itemCount = quiz.computed_questions ?? quiz.total_items ?? 0;
+                    // External quizzes have no question rows; their size is total_items.
+                    const itemCount = quiz.quiz_url ? (quiz.total_items ?? 0) : (quiz.computed_questions ?? quiz.total_items ?? 0);
                     const linkedMod = quiz.module_id ? modules.find(m => m.id === quiz.module_id) : null;
                     return `
                     <div class="quiz-card bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden transition-all duration-200">
@@ -1275,9 +1289,13 @@
                                     class="px-2.5 py-2 text-sm bg-amber-100 text-amber-800 rounded-lg hover:bg-amber-200 transition-colors font-medium" title="Item Analysis & Analytics">
                                     <i class="fas fa-chart-pie"></i><span class="hidden md:inline ml-1">Analytics</span>
                                 </button>
+                                ${quiz.quiz_url ? `
+                                <a href="${attrEsc(quiz.quiz_url)}" target="_blank" rel="noopener noreferrer" class="px-2.5 py-2 text-sm bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-colors inline-flex items-center gap-1 font-medium" title="Open external quiz">
+                                    <i class="fas fa-external-link-alt"></i><span class="hidden sm:inline ml-1">External Link</span>
+                                </a>` : `
                                 <a href="manage-questions.html?quiz_id=${quiz.id}" class="px-2.5 py-2 text-sm bg-purple-100 text-purple-700 rounded-lg hover:bg-purple-200 transition-colors inline-flex items-center gap-1 font-medium">
                                     <i class="fas fa-list-ol"></i><span class="hidden sm:inline ml-1">Questions (${itemCount})</span>
-                                </a>
+                                </a>`}
                                 <button onclick="editQuiz('${quiz.id}')" 
                                     class="px-2.5 py-2 text-sm bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors" title="Edit Quiz">
                                     <i class="fas fa-edit"></i>
@@ -1420,9 +1438,31 @@
             updateQuarterTabs();
         }
 
-        function openAddQuizModal() {
+        // 'native' = questions built in Question Manager; 'external' = link-only
+        // quiz scored by the student's submitted score + screenshot.
+        let quizFormMode = 'native';
+
+        function applyQuizFormMode(mode, isEditing) {
+            quizFormMode = mode;
+            const isExternal = mode === 'external';
+            document.getElementById('externalUrlGroup').classList.toggle('hidden', !isExternal);
+            document.getElementById('quizUrl').required = isExternal;
+            document.getElementById('quizTotalItems').required = isExternal;
+            document.getElementById('quizTotalItems').min = isExternal ? '1' : '0';
+            // Review mode only applies to natively graded questions
+            document.getElementById('quizAllowReview').closest('div.flex').classList.toggle('hidden', isExternal);
+            document.getElementById('quizCreateNotice').classList.toggle('hidden', isEditing || isExternal);
+            document.getElementById('quizPublishedGroup').classList.toggle('hidden', !isEditing && !isExternal);
+            document.getElementById('submitBtn').innerHTML = isEditing
+                ? '<i class="fas fa-save mr-1"></i> Save Quiz'
+                : (isExternal
+                    ? '<i class="fas fa-save mr-1"></i> Save External Quiz'
+                    : '<i class="fas fa-pencil-alt mr-1"></i> Save & Build Questionnaire &rarr;');
+        }
+
+        function openAddQuizModal(mode = 'native') {
             editingQuizId = null;
-            document.getElementById('modalTitle').textContent = 'Add Regular Quiz';
+            document.getElementById('modalTitle').textContent = mode === 'external' ? 'Add External Quiz' : 'Add Regular Quiz';
             document.getElementById('quizForm').reset();
             document.getElementById('quizQuarter').value = '';
             document.getElementById('quizModuleId').value = '';
@@ -1430,15 +1470,17 @@
             document.getElementById('quizTotalItems').value = '0';
             setQuizTotalItemsLocked(false);
             syncQuizPassingScore();
-            document.getElementById('legacyUrlDetails').removeAttribute('open');
             document.getElementById('quizAllowReview').checked = true;
-            document.getElementById('quizPublishedGroup').classList.add('hidden');
-            document.getElementById('quizCreateNotice').classList.remove('hidden');
+            document.getElementById('quizPublished').checked = false;
             populateQuizGradeLevelOptions('');
             populateQuizSectionOptions('', '');
             updateQuizScopePreview('', '');
-            document.getElementById('submitBtn').innerHTML = '<i class="fas fa-pencil-alt mr-1"></i> Save & Build Questionnaire &rarr;';
+            applyQuizFormMode(mode, false);
             document.getElementById('quizModal').classList.remove('hidden');
+        }
+
+        function attrEsc(value) {
+            return String(value ?? '').replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
         }
 
         function setQuizTotalItemsLocked(locked) {
@@ -1468,17 +1510,12 @@
             if (!quiz) return;
             
             editingQuizId = id;
-            document.getElementById('modalTitle').textContent = 'Edit Quiz';
+            document.getElementById('modalTitle').textContent = quiz.quiz_url ? 'Edit External Quiz' : 'Edit Quiz';
             document.getElementById('quizId').value = id;
             document.getElementById('quizTitle').value = quiz.title;
             document.getElementById('quizDescription').value = quiz.description || '';
             document.getElementById('quizModuleId').value = quiz.module_id || '';
             document.getElementById('quizUrl').value = quiz.quiz_url || '';
-            if (quiz.quiz_url) {
-                document.getElementById('legacyUrlDetails').setAttribute('open', '');
-            } else {
-                document.getElementById('legacyUrlDetails').removeAttribute('open');
-            }
             document.getElementById('quizVideoId').value = quiz.video_id || '';
             document.getElementById('quizQuarter').value = getQuizQuarter(quiz);
             const selectedGradeLevelId = resolveGradeLevelId(quiz);
@@ -1494,9 +1531,7 @@
             document.getElementById('quizPublished').checked = !!quiz.is_published;
             document.getElementById('quizAllowReview').checked = (quiz.allow_review !== false);
             
-            document.getElementById('quizCreateNotice').classList.add('hidden');
-            document.getElementById('quizPublishedGroup').classList.remove('hidden');
-            document.getElementById('submitBtn').innerHTML = '<i class="fas fa-save mr-1"></i> Save Quiz';
+            applyQuizFormMode(quiz.quiz_url ? 'external' : 'native', true);
 
             document.getElementById('quizModal').classList.remove('hidden');
         }
@@ -1522,10 +1557,18 @@
                     throw new Error('Please select a term');
                 }
 
+                const isExternal = quizFormMode === 'external';
                 const rawUrl = document.getElementById('quizUrl').value.trim();
-                const quizUrl = rawUrl || null;
+                if (isExternal && !/^https?:\/\//i.test(rawUrl)) {
+                    throw new Error('Please enter the external quiz link (http/https)');
+                }
+                // Native quizzes never carry a link; external quizzes always do.
+                const quizUrl = isExternal ? rawUrl : null;
                 const moduleId = document.getElementById('quizModuleId').value || null;
                 const quizTotalItems = Math.max(0, parseInt(document.getElementById('quizTotalItems').value, 10) || 0);
+                if (isExternal && quizTotalItems < 1) {
+                    throw new Error('Please enter how many items the external quiz has');
+                }
 
                 const quizData = {
                     title: document.getElementById('quizTitle').value.trim(),
@@ -1540,7 +1583,7 @@
                     total_items: quizTotalItems,
                     passing_score: MathTuroPassing.passingScore(quizTotalItems),
                     time_limit_minutes: parseInt(document.getElementById('quizTimeLimit').value, 10) || 0,
-                    is_published: editingQuizId ? document.getElementById('quizPublished').checked : false,
+                    is_published: (editingQuizId || isExternal) ? document.getElementById('quizPublished').checked : false,
                     allow_review: document.getElementById('quizAllowReview').checked,
                     teacher_id: currentUser.id,
                     updated_at: now
@@ -1557,6 +1600,12 @@
                     quizData.created_at = now;
                     result = await saveQuizWithFallback(quizData);
                     if (result.error) throw result.error;
+                    if (isExternal) {
+                        showToast('External quiz saved!', 'success');
+                        closeQuizModal();
+                        await loadData();
+                        return;
+                    }
                     showToast('Quiz created! Redirecting to add questions...', 'success');
                     closeQuizModal();
                     const newQuizId = result.data?.[0]?.id || result.data?.id;
@@ -1573,7 +1622,7 @@
                 showToast('Failed to save quiz: ' + error.message, 'error');
             } finally {
                 btn.disabled = false;
-                btn.innerHTML = editingQuizId ? '<i class="fas fa-save mr-1"></i> Save Quiz' : '<i class="fas fa-pencil-alt mr-1"></i> Save & Build Questionnaire &rarr;';
+                applyQuizFormMode(quizFormMode, Boolean(editingQuizId));
             }
         }
 

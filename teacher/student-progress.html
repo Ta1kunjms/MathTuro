@@ -868,9 +868,12 @@
             const approved = submissions.filter(sub => sub.status === 'approved').length;
             const pending = submissions.filter(sub => sub.status === 'pending').length;
             const completed = approved + pending;
-            const totalScore = submissions.reduce((sum, sub) => sum + (sub.student_score || 0), 0);
-            const totalPossible = submissions.reduce((sum, sub) => sum + (sub.total_items || 0), 0);
-            const averageScore = totalPossible > 0 ? Math.round((totalScore / totalPossible) * 100) : 0;
+            // Same rule as the student dashboard: mean of each approved quiz's
+            // percentage (not points-weighted, so one 100-item quiz can't dominate).
+            const scored = submissions.filter(sub => sub.status === 'approved' && Number(sub.total_items) > 0);
+            const averageScore = scored.length > 0
+                ? Math.round(scored.reduce((sum, sub) => sum + (Number(sub.student_score || 0) / Number(sub.total_items)) * 100, 0) / scored.length)
+                : 0;
             const completion = totalQuizzes > 0 ? Math.round((completed / totalQuizzes) * 100) : 0;
 
             document.getElementById('summaryTotalQuizzes').textContent = totalQuizzes;
@@ -908,15 +911,54 @@
             loadStudentFormalAssessments(studentId);
         }
 
+        // Mirrors v_module_assessment_student_summary: one row per assessment,
+        // taken from the highest attempt_number, with the same status labels.
+        function summarizeLatestAttempts(attempts) {
+            const byAssessment = new Map();
+            attempts.forEach(att => {
+                const list = byAssessment.get(att.assessment_id) || [];
+                list.push(att);
+                byAssessment.set(att.assessment_id, list);
+            });
+            return Array.from(byAssessment.values()).map(list => {
+                const latest = list.reduce((a, b) => (Number(b.attempt_number) > Number(a.attempt_number) ? b : a));
+                let effectiveStatus = 'Not Started';
+                if (latest.is_teacher_override) effectiveStatus = 'Passed via Override';
+                else if (latest.verification_status === 'pending') effectiveStatus = 'Pending Verification';
+                else if (latest.assessment_result === 'passed') effectiveStatus = 'Passed';
+                else if (latest.assessment_result === 'failed' || latest.assessment_result === 'incomplete') effectiveStatus = 'Failed';
+                return {
+                    latest_attempt_id: latest.id,
+                    assessment_id: latest.assessment_id,
+                    student_id: latest.student_id,
+                    total_attempts: list.length,
+                    final_attempt_number: latest.attempt_number,
+                    final_numerical_score: latest.student_score,
+                    final_total_items: latest.total_items,
+                    final_score_pct: latest.score_pct,
+                    verification_status: latest.verification_status,
+                    raw_result: latest.assessment_result,
+                    is_teacher_override: latest.is_teacher_override,
+                    override_reason: latest.override_reason,
+                    effective_status: effectiveStatus,
+                    module_assessments: latest.module_assessments
+                };
+            });
+        }
+
         async function loadStudentFormalAssessments(studentId) {
             try {
                 const supabase = getSupabase();
-                const { data, error } = await supabase
-                    .from('v_module_assessment_student_summary')
+                // Built from module_assessment_attempts (teacher-readable under RLS)
+                // instead of v_module_assessment_student_summary, which has no
+                // SELECT grant. Same shape as that view: latest attempt per test.
+                const { data: attempts, error } = await supabase
+                    .from('module_assessment_attempts')
                     .select('*, module_assessments(title, assessment_type, total_items, passing_threshold, modules(title))')
                     .eq('student_id', studentId);
 
                 if (error) throw error;
+                const data = summarizeLatestAttempts(attempts || []);
 
                 const countEl = document.getElementById('formalAsmtCount');
                 if (countEl) countEl.textContent = `${data?.length || 0} assessment${data?.length !== 1 ? 's' : ''}`;

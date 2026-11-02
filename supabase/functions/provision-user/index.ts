@@ -70,9 +70,16 @@ Deno.serve(async (request) => {
   if (!email || !password || password.length < 6 || !['student', 'teacher'].includes(role)) {
     return response({ error: 'Valid email, password, and student/teacher role are required' }, 400);
   }
-  if (!firstName || !lastName || !/^\d{12}$/.test(lrn) || !/^S\.Y\. 20\d{2}-20\d{2}$/.test(schoolYear) || !['Male', 'Female'].includes(gender)) {
-    return response({ error: 'First name, last name, 12-digit LRN, school year, and gender are required' }, 400);
+  if (!firstName || !lastName || !['Male', 'Female'].includes(gender)) {
+    return response({ error: 'First name, last name, and gender are required' }, 400);
   }
+  // LRN and school year identify learners; teachers don't have them.
+  const isStudent = role === 'student';
+  if (isStudent && (!/^\d{12}$/.test(lrn) || !/^S\.Y\. 20\d{2}-20\d{2}$/.test(schoolYear))) {
+    return response({ error: 'Students need a 12-digit LRN and a school year (S.Y. 2026-2027)' }, 400);
+  }
+  const profileLrn = isStudent ? lrn : null;
+  const profileSchoolYear = isStudent ? schoolYear : null;
 
   const { data: createdAuth, error: authError } = await adminClient.auth.admin.createUser({
     email,
@@ -82,8 +89,8 @@ Deno.serve(async (request) => {
       first_name: firstName,
       last_name: lastName,
       full_name: `${firstName} ${lastName}`,
-      lrn,
-      school_year: schoolYear,
+      lrn: profileLrn,
+      school_year: profileSchoolYear,
       gender,
       grade_level_id: gradeLevelId,
       section_id: sectionId
@@ -103,8 +110,8 @@ Deno.serve(async (request) => {
       last_name: lastName,
       full_name: `${firstName} ${lastName}`,
       role,
-      lrn,
-      school_year: schoolYear,
+      lrn: profileLrn,
+      school_year: profileSchoolYear,
       gender,
       grade_level_id: gradeLevelId,
       section_id: sectionId,

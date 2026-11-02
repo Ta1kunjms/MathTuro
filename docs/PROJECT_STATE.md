@@ -12,6 +12,7 @@
 
 * **Current Date / Last Updated:** 2026-11-02
 * **ACTIVE (2026-11-02):** 21-item bug list (`Mathturo-bugs.pdf`) — Batches A, B implemented locally (uncommitted). **User must run** `database/migration_passing_rule_floor_and_screenshot.sql` on production (approved) before deploying, because the external-quiz submit now calls the 4-arg `submit_regular_quiz_score`. `database/migration_unlinked_quiz_access.sql` is written but **NOT approved** (lets students open published quizzes with no module). Browser QA not done (no student/teacher login available to the agent). Next: run SQL → commit → deploy → browser pass → `run_full_qa_suite.ps1`.
+* **ACTIVE (2026-11-02, later):** Second bug list (`FINAL-ERROS 1.pdf`, 16 items) implemented locally (uncommitted). User must commit/push and deploy the edge function: `supabase functions deploy provision-user --project-ref ynkzcybctsstpqxdoweq` (approved). No SQL needed. Browser QA not done (extension not connected).
 * **MANDATORY CORE DIRECTIVE (Permanent):** ALL code, commits, and implementations MUST be directly on the **`main`** branch, targeting **Production** (`ynkzcybctsstpqxdoweq`). Do NOT work on `develop`. Do NOT target staging.
 * **Target Environment:** Production (`ynkzcybctsstpqxdoweq.supabase.co`) on **`main`** branch ONLY.
 * **Highest Completed & Evidenced Phase:** **Phase 3 & Phase 4â€“5 Automated Master Suite**: **57/57 PASS (100%)** on Production (ynkzcybctsstpqxdoweq) via scripts/qa/run_full_qa_suite.ps1 (2026-10-24 07:40).
@@ -1526,4 +1527,51 @@ Blockers:
 
 Next action:
 - Push, then click the dashboard banner and confirm it lands on the Students view with the Approve/Reject row.
+
+
+### [2026-11-02 11:42] — Git Commit 9a46299
+* **Author:** Tycoon James Flores
+* **Commit Message:** feat(teacher): pending-registration banner opens the student's section directly
+* **Commit Hash:** `9a46299`
+
+### 2026-11-02 — Second bug list triage (plan only)
+Changed files:
+- docs/PROJECT_STATE.md
+
+Actions:
+- Root causes: take-quiz.html bare `<div id="sidebar">` (same as old view-presentation bug); modules card iframe inline `style="width:100%;height:100%"` overrides the oversize/clip CSS (scrollbar still shows); modules "Completed" uses post-test pass while dashboard uses content_viewed; dashboard XP is a client formula (lessons*10+modules*50+approved*20), not exp_transactions; teacher average is points-weighted vs mean-of-percent on student/admin; teacher reads v_module_assessment_student_summary which has no SELECT grant; admin users tab toggles bg-gray-900 while Students starts with bg-ink-900; provision-user edge function requires LRN/school year for every role; approve/reject RPCs only act on pending; system-status "Info" is a static label.
+
+Validation:
+- Static reading + curl of deployed files.
+
+Blockers:
+- Awaiting plan approval and decisions.
+
+Next action:
+- Implement approved batches.
+
+### 2026-11-02 — Second bug list fixes (Batches A, B, C, D)
+Changed files:
+- student/modules.html, dashboard.html, progress.html, quizzes.html, tutorial-videos.html, module-view.html, take-quiz.html, view-presentation.html, student/assets/css/student.css
+- teacher/manage-quizzes.html, teacher/student-progress.html
+- admin/users.html, admin/analytics.html, admin/system-status.html
+- supabase/functions/provision-user/index.ts
+
+Actions:
+- Modules: Completed filter was dead because the attempts query used non-existent columns (`module_assessment_id, passed`); now `assessment_id, assessment_result, is_teacher_override`, plus content_viewed from student_module_progress. Fixed 240x380 cards in an auto-fill grid (5/row on laptops). Removed iframe inline size that defeated the scrollbar clip.
+- take-quiz sidebar mount fixed; Quarter -> Term (3 terms) on quizzes and videos; "Failed" replaces "Incomplete" on student results.
+- Presentation viewer: removed 15-min countdown/auto-reload (it reset the PDF to page 1); Open PDF links mint a fresh signed URL on click; light frame background.
+- Dashboard Total XP now sums exp_transactions (was lessons*10+modules*50+approved*20). Progress page lists earned achievements (no EXP, per D1=a).
+- Teacher: External Quiz (Link) type in the picker (link + items + time, auto passing, no question bank, can publish on create); regular quiz form no longer has the link. Formal pre/post results read from module_assessment_attempts (view had no grant). Teacher average = mean of approved quiz percentages (same as student; admin analytics aligned to approved only).
+- Admin users: First/Last name; LRN + School Year only for students; school year sent as "S.Y. YYYY-YYYY" (provision-user regex); Account Status (approved/pending/rejected + reason) for students in Edit, admin direct update with 0-row detection; tab classes fixed. System Status "Info" toggles who/what/details.
+- provision-user: LRN/school year required only for students; stored null for teachers.
+
+Validation:
+- build:css OK; node --check on inline scripts of 13 pages: 0 failures; edge function brace/paren balance OK (no deno/tsc locally).
+
+Blockers:
+- Edge function deploy by user. If admin direct UPDATE on users is not granted in production, Account Status save shows "not permitted" (would need an admin RPC).
+
+Next action:
+- Commit/push, deploy provision-user, browser pass.
 

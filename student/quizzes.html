@@ -170,13 +170,12 @@
                 </div>
             </div>
 
-            <!-- Quarter Tabs -->
+            <!-- Term Tabs -->
             <div class="flex flex-wrap gap-2 mb-6" id="quarterTabs">
-                <button type="button" class="quarter-tab px-4 py-2 rounded-xl text-sm font-medium bg-forest-800 text-white" data-quarter="all" onclick="setQuarterFilter('all')">All Quarters</button>
-                <button type="button" class="quarter-tab px-4 py-2 rounded-xl text-sm font-medium bg-white text-gray-700 border border-gray-200 hover:border-forest-800/40" data-quarter="1" onclick="setQuarterFilter('1')">Quarter 1</button>
-                <button type="button" class="quarter-tab px-4 py-2 rounded-xl text-sm font-medium bg-white text-gray-700 border border-gray-200 hover:border-forest-800/40" data-quarter="2" onclick="setQuarterFilter('2')">Quarter 2</button>
-                <button type="button" class="quarter-tab px-4 py-2 rounded-xl text-sm font-medium bg-white text-gray-700 border border-gray-200 hover:border-forest-800/40" data-quarter="3" onclick="setQuarterFilter('3')">Quarter 3</button>
-                <button type="button" class="quarter-tab px-4 py-2 rounded-xl text-sm font-medium bg-white text-gray-700 border border-gray-200 hover:border-forest-800/40" data-quarter="4" onclick="setQuarterFilter('4')">Quarter 4</button>
+                <button type="button" class="quarter-tab px-4 py-2 rounded-xl text-sm font-medium bg-forest-800 text-white" data-quarter="all" onclick="setQuarterFilter('all')">All Terms</button>
+                <button type="button" class="quarter-tab px-4 py-2 rounded-xl text-sm font-medium bg-white text-gray-700 border border-gray-200 hover:border-forest-800/40" data-quarter="1" onclick="setQuarterFilter('1')">Term 1</button>
+                <button type="button" class="quarter-tab px-4 py-2 rounded-xl text-sm font-medium bg-white text-gray-700 border border-gray-200 hover:border-forest-800/40" data-quarter="2" onclick="setQuarterFilter('2')">Term 2</button>
+                <button type="button" class="quarter-tab px-4 py-2 rounded-xl text-sm font-medium bg-white text-gray-700 border border-gray-200 hover:border-forest-800/40" data-quarter="3" onclick="setQuarterFilter('3')">Term 3</button>
             </div>
             <!-- Tab Navigation -->
             <div class="flex space-x-4 mb-6 border-b border-gray-200">
@@ -297,7 +296,7 @@
         }
         function getQuarterLabel(quiz) {
             const quarter = getQuizQuarter(quiz);
-            return quarter ? `Quarter ${quarter}` : 'No Quarter';
+            return quarter ? `Term ${quarter}` : 'No Term';
         }
         function setQuarterFilter(quarter) {
             activeQuarterFilter = quarter || 'all';

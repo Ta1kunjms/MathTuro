@@ -163,8 +163,7 @@
                         <h2 id="videoTitle" class="text-xl font-bold text-gray-800 mb-2">Video Title</h2>
                         <p id="videoDescription" class="text-gray-600 mb-4">Video description will appear here.</p>
                         <div class="flex items-center space-x-4 text-sm text-gray-500">
-                            <span id="videoQuarter" class="learn-video-badge-quarter px-3 py-1 rounded-full">All
-                                Quarters</span>
+                            <span id="videoQuarter" class="learn-video-badge-quarter px-3 py-1 rounded-full">All Terms</span>
                             <span id="videoDuration" class="flex items-center space-x-1">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -182,16 +181,13 @@
                     All Videos
                 </button>
                 <button onclick="filterByQuarter('1')" class="learn-quarter-tab" data-quarter="1">
-                    Quarter 1
+                    Term 1
                 </button>
                 <button onclick="filterByQuarter('2')" class="learn-quarter-tab" data-quarter="2">
-                    Quarter 2
+                    Term 2
                 </button>
                 <button onclick="filterByQuarter('3')" class="learn-quarter-tab" data-quarter="3">
-                    Quarter 3
-                </button>
-                <button onclick="filterByQuarter('4')" class="learn-quarter-tab" data-quarter="4">
-                    Quarter 4
+                    Term 3
                 </button>
             </div>
 
@@ -224,14 +220,14 @@
                             placeholder="Enter video title">
                     </div>
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Quarter</label>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Term</label>
                         <select id="newVideoQuarter"
                             class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-forest-800">
-                            <option value="">All Quarters</option>
-                            <option value="1">Quarter 1</option>
-                            <option value="2">Quarter 2</option>
-                            <option value="3">Quarter 3</option>
-                            <option value="4">Quarter 4</option>
+                            <option value="">All Terms</option>
+                            <option value="1">Term 1</option>
+                            <option value="2">Term 2</option>
+                            <option value="3">Term 3</option>
+                            <option value="4">Term 4</option>
                         </select>
                     </div>
                     <div class="md:col-span-2">
@@ -400,7 +396,7 @@
 
         function getQuarterLabel(value) {
             const quarter = normalizeQuarterValue(value);
-            return quarter ? `Quarter ${quarter}` : 'All Quarters';
+            return quarter ? `Term ${quarter}` : 'All Terms';
         }
 
         // Load videos from database

@@ -164,7 +164,7 @@
     <div data-include="nav-mobile-student" data-depth="../"></div>
 
     <div id="mobileOverlay" class="fixed inset-0 bg-black bg-opacity-50 z-40 hidden lg:hidden"></div>
-    <div id="sidebar"></div>
+    <aside id="sidebar" class="fixed left-0 top-0 h-full w-72 bg-white border-r border-gray-200 z-50 transform -translate-x-full lg:translate-x-0 transition-transform duration-300 overflow-y-auto"></aside>
 
     <main class="lg:ml-72 min-h-screen">
         <!-- Header -->
@@ -704,7 +704,7 @@
         const passingScore = MathTuroPassing.passingScore(total);
         const isPreTest    = assessmentType === 'pre_test';
         const unlimited    = remaining >= 999;
-        document.getElementById('resultTitle').textContent     = isPassing ? '🎉 Passed!' : (status === 'Failed' ? 'Failed' : 'Incomplete');
+        document.getElementById('resultTitle').textContent     = isPassing ? '🎉 Passed!' : 'Failed';
         document.getElementById('resultPassing').textContent   = `Passing score: ${passingScore} / ${total}`;
         let subtitle;
         if (isPassing) {

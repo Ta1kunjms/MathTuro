@@ -162,6 +162,12 @@
                         <div id="expHistoryList" class="space-y-2"></div>
                     </section>
                 </div>
+
+                <!-- Achievements earned -->
+                <section class="bg-white rounded-2xl border-2 border-ink-900 shadow-[4px_4px_0_0_#1c1b1a] p-5">
+                    <h3 class="text-lg font-bold text-ink-900 mb-4">🏅 Achievements Earned</h3>
+                    <div id="achievementsList" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3"></div>
+                </section>
             </div>
         </div>
     </main>
@@ -181,6 +187,22 @@
         let currentUser = null;
 
         const SOURCE_LABELS = { quiz: 'Quiz', pre_test: 'Pre-Test', post_test: 'Post-Test' };
+
+        // Display names for achievement ids stored by the dashboard
+        // (student/dashboard.html getAchievementCatalog). Keep in sync.
+        const ACHIEVEMENTS = {
+            first_lesson:  { emoji: '🏆', name: 'First Steps',   desc: 'Open your first module' },
+            five_lessons:  { emoji: '📖', name: 'Bookworm',      desc: 'Open 5 modules' },
+            ten_lessons:   { emoji: '📚', name: 'Scholar',       desc: 'Open 10 modules' },
+            quiz_master:   { emoji: '⭐', name: 'Quiz Star',     desc: 'Get 5 quizzes approved' },
+            perfect_score: { emoji: '🎯', name: 'Perfectionist', desc: 'Get a perfect quiz score' },
+            streak_3:      { emoji: '🔥', name: '3 Day Streak',  desc: 'Learn 3 days in a row' },
+            streak_7:      { emoji: '💪', name: 'Week Warrior',  desc: 'Learn 7 days in a row' },
+            xp_100:        { emoji: '💎', name: 'XP Hunter',     desc: 'Earn 100 XP' },
+            xp_500:        { emoji: '🌟', name: 'XP Master',     desc: 'Earn 500 XP' },
+            xp_1000:       { emoji: '👑', name: 'XP Legend',     desc: 'Earn 1000 XP' },
+            module_master: { emoji: '📘', name: 'Module Master', desc: 'Complete at least one full module' }
+        };
 
         document.addEventListener('DOMContentLoaded', async () => {
             const isAuthenticated = await checkAuth();
@@ -212,12 +234,16 @@
                 const sb = getSupabase();
                 // Own EXP rows only (exp_transactions_student_read_own); the
                 // section leaderboard derives the caller's section server-side.
-                const [expRes, boardRes] = await Promise.all([
+                const [expRes, boardRes, achRes] = await Promise.all([
                     sb.from('exp_transactions')
                         .select('source_type, source_id, exp_awarded, awarded_at')
                         .eq('student_id', currentUser.id)
                         .order('awarded_at', { ascending: false }),
-                    sb.rpc('get_my_section_leaderboard')
+                    sb.rpc('get_my_section_leaderboard'),
+                    sb.from('student_achievements')
+                        .select('achievement_id, earned_at')
+                        .eq('student_id', currentUser.id)
+                        .order('earned_at', { ascending: true })
                 ]);
                 if (expRes.error) throw expRes.error;
                 if (boardRes.error) throw boardRes.error;
@@ -229,6 +255,9 @@
                 renderSummary(expRows, board);
                 renderLeaderboard(board);
                 renderExpHistory(expRows, titles);
+                // Achievements are optional: a missing table must not hide EXP data.
+                if (achRes.error) console.warn('Could not load achievements:', achRes.error);
+                renderAchievements(achRes.data || []);
 
                 document.getElementById('loadingState').classList.add('hidden');
                 document.getElementById('progressContent').classList.remove('hidden');
@@ -291,6 +320,27 @@
                             <span class="font-semibold text-gray-800 truncate">${escapeHtml(entry.full_name || 'Student')}${mine ? ' (You)' : ''}</span>
                         </div>
                         <span class="font-bold text-forest-800 flex-shrink-0">${Number(entry.total_exp) || 0} EXP</span>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function renderAchievements(rows) {
+            const list = document.getElementById('achievementsList');
+            if (rows.length === 0) {
+                list.innerHTML = `<p class="text-sm text-gray-500 col-span-full">No achievements yet. Open modules, pass quizzes, and keep a streak to earn badges.</p>`;
+                return;
+            }
+            list.innerHTML = rows.map(row => {
+                const a = ACHIEVEMENTS[row.achievement_id] || { emoji: '🏅', name: row.achievement_id, desc: '' };
+                const date = row.earned_at ? new Date(row.earned_at).toLocaleDateString() : '';
+                return `
+                    <div class="flex items-center gap-3 px-4 py-3 rounded-xl bg-yellow-50 border border-yellow-200">
+                        <span class="text-2xl" aria-hidden="true">${a.emoji}</span>
+                        <div class="min-w-0">
+                            <p class="font-semibold text-gray-800 truncate">${escapeHtml(a.name)}</p>
+                            <p class="text-xs text-gray-500">${escapeHtml(a.desc)}${date ? ' · Earned ' + escapeHtml(date) : ''}</p>
+                        </div>
                     </div>
                 `;
             }).join('');

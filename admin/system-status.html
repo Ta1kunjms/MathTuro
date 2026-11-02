@@ -267,18 +267,55 @@
             }
         }
 
+        function eventDetailRows(event) {
+            const rows = [];
+            const who = event.user
+                ? `${event.user.full_name || event.user.email || 'Unknown'}${event.user.role ? ` (${event.user.role})` : ''}`
+                : (event.user_id || 'System');
+            rows.push(['Performed by', who]);
+            if (event.entity_type) rows.push(['Affected', `${event.entity_type}${event.entity_id ? ` · ${event.entity_id}` : ''}`]);
+            const details = event.details && typeof event.details === 'object' ? event.details : null;
+            if (details) {
+                Object.entries(details).forEach(([key, value]) => {
+                    rows.push([key.replace(/_/g, ' '), typeof value === 'object' ? JSON.stringify(value) : String(value)]);
+                });
+            }
+            if (rows.length === 1 && !details) rows.push(['Details', 'No extra details were recorded for this event.']);
+            return rows.map(([label, value]) => `
+                <dt class="font-semibold text-gray-600 capitalize">${escapeHtml(label)}</dt>
+                <dd class="text-gray-800 break-words">${escapeHtml(value)}</dd>
+            `).join('');
+        }
+
+        function toggleEventDetails(idx) {
+            const panel = document.getElementById(`eventDetails${idx}`);
+            const btn = document.getElementById(`eventInfoBtn${idx}`);
+            const open = panel.classList.toggle('hidden') === false;
+            btn.setAttribute('aria-expanded', String(open));
+            btn.textContent = open ? 'Hide' : 'Info';
+        }
+
         async function loadRecentEvents() {
             try {
                 let eventsResult = await getSupabase()
                     .from('activity_log')
-                    .select('action, created_at')
+                    .select('id, action, created_at, entity_type, entity_id, details, user:users!activity_log_user_id_fkey(full_name, email, role)')
                     .order('created_at', { ascending: false })
                     .limit(4);
+
+                // Fall back to plain columns if the user join isn't available
+                if (eventsResult.error) {
+                    eventsResult = await getSupabase()
+                        .from('activity_log')
+                        .select('*')
+                        .order('created_at', { ascending: false })
+                        .limit(4);
+                }
 
                 if (eventsResult.error) {
                     eventsResult = await getSupabase()
                         .from('activity_logs')
-                        .select('action, created_at')
+                        .select('*')
                         .order('created_at', { ascending: false })
                         .limit(4);
                 }
@@ -288,13 +325,21 @@
 
                 if (!error && events) {
                     const eventsContainer = document.querySelector('#recentEvents');
-                    eventsContainer.innerHTML = events.map(event => `
-                        <div class="flex items-center justify-between p-4 border border-gray-200 rounded-xl">
-                            <div>
-                                <p class="font-medium text-gray-800">${escapeHtml(event.action)}</p>
-                                <p class="text-sm text-gray-500">${new Date(event.created_at).toLocaleString()}</p>
+                    eventsContainer.innerHTML = events.map((event, idx) => `
+                        <div class="p-4 border border-gray-200 rounded-xl">
+                            <div class="flex items-center justify-between gap-3">
+                                <div>
+                                    <p class="font-medium text-gray-800">${escapeHtml(event.action)}</p>
+                                    <p class="text-sm text-gray-500">${new Date(event.created_at).toLocaleString()}</p>
+                                </div>
+                                <button type="button" onclick="toggleEventDetails(${idx})" aria-expanded="false" aria-controls="eventDetails${idx}" id="eventInfoBtn${idx}"
+                                    class="px-3 py-1 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-full text-xs font-medium border border-gray-300">
+                                    Info
+                                </button>
                             </div>
-                            <span class="px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-xs font-medium">Info</span>
+                            <dl id="eventDetails${idx}" class="hidden mt-3 pt-3 border-t border-gray-200 grid grid-cols-1 sm:grid-cols-[8rem_1fr] gap-x-3 gap-y-1 text-sm">
+                                ${eventDetailRows(event)}
+                            </dl>
                         </div>
                     `).join('');
                 }

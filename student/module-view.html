@@ -1243,8 +1243,7 @@
                 } else if (isExhausted) {
                     statusBadge = `<span class="px-2.5 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-700">Failed (3/3)</span>`;
                 } else if (latestAttempt && (latestAttempt.assessment_result === 'incomplete' || latestAttempt.assessment_result === 'failed')) {
-                    const resultLabel = latestAttempt.assessment_result === 'failed' ? 'Failed' : 'Incomplete';
-                    statusBadge = `<span class="px-2.5 py-1 text-xs font-semibold rounded-full bg-amber-100 text-amber-800">${resultLabel} (${attempts.length}/3)</span>`;
+                    statusBadge = `<span class="px-2.5 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-700">Failed (${attempts.length}/3)</span>`;
                 } else if (attempts.length > 0) {
                     statusBadge = `<span class="px-2.5 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-700">Attempted (${attempts.length}/3)</span>`;
                 } else {

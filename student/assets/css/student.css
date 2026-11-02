@@ -1371,3 +1371,17 @@ button.learn-quarter-tab[aria-pressed="true"] {
 .learn-module-card-badge.is-incomplete {
   background: #b45309;
 }
+
+/* Modules grid: every card is the same 240x380 on every screen; rows fill
+   automatically (5 per row on a typical laptop, 1 centered on phones). */
+.learn-module-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, 240px);
+  justify-content: center;
+  gap: 1.5rem;
+}
+
+.learn-module-grid > .learn-module-card {
+  width: 240px;
+  height: 380px;
+}

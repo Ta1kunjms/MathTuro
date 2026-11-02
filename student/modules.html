@@ -173,7 +173,7 @@
                 <p class="mt-4 text-gray-600">Loading modules...</p>
             </div>
 
-            <div id="modulesGrid" class="hidden grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 justify-start items-stretch">
+            <div id="modulesGrid" class="hidden learn-module-grid">
                 <!-- Modules will be loaded here -->
             </div>
 
@@ -445,12 +445,13 @@
                 let passedAssessmentIds = new Set();
                 let moduleAssessmentsMap = new Map();
                 const moduleIdsWithQuizzes = new Set();
+                const viewedModuleIds = new Set();
 
                 try {
-                    const [attemptsRes, assessmentsRes, quizzesRes] = await Promise.all([
+                    const [attemptsRes, assessmentsRes, quizzesRes, progressRes] = await Promise.all([
                         getSupabase()
                             .from('module_assessment_attempts')
-                            .select('module_assessment_id, passed')
+                            .select('assessment_id, assessment_result, is_teacher_override')
                             .eq('student_id', currentUser.id),
                         getSupabase()
                             .from('module_assessments')
@@ -458,11 +459,17 @@
                         getSupabase()
                             .from('quizzes')
                             .select('id, module_id')
-                            .not('module_id', 'is', null)
+                            .not('module_id', 'is', null),
+                        // Same "content viewed" record the dashboard counts as completed
+                        getSupabase()
+                            .from('student_module_progress')
+                            .select('module_id, content_viewed')
+                            .eq('student_id', currentUser.id)
                     ]);
 
+                    if (attemptsRes.error) console.warn('Assessment attempts load error:', attemptsRes.error);
                     (attemptsRes.data || []).forEach(a => {
-                        if (a.passed) passedAssessmentIds.add(a.module_assessment_id);
+                        if (a.assessment_result === 'passed' || a.is_teacher_override) passedAssessmentIds.add(a.assessment_id);
                     });
 
                     (assessmentsRes.data || []).forEach(asmt => {
@@ -471,6 +478,7 @@
                     });
 
                     (quizzesRes.data || []).forEach(q => moduleIdsWithQuizzes.add(q.module_id));
+                    (progressRes.data || []).forEach(p => { if (p.content_viewed) viewedModuleIds.add(p.module_id); });
                 } catch (metaErr) {
                     console.warn('Metadata load error:', metaErr);
                 }
@@ -491,7 +499,8 @@
                     // Graded = the module carries a pre-test, post-test, or regular quiz.
                     m.has_quiz = asmts.length > 0 || moduleIdsWithQuizzes.has(m.id);
                     const postTest = asmts.find(a => a.assessment_type === 'post_test');
-                    m.is_completed = postTest ? passedAssessmentIds.has(postTest.id) : false;
+                    // Completed = content viewed (as on the dashboard) or post-test passed.
+                    m.is_completed = viewedModuleIds.has(m.id) || (postTest ? passedAssessmentIds.has(postTest.id) : false);
                 }
                 
                 // Hide loading state
@@ -565,7 +574,7 @@
                 // Use first page of PDF as thumbnail if possible, else fallback to image or logo
                 let previewMedia = '';
                 if (isPdf && pdfPreviewUrl) {
-                    previewMedia = `<iframe src="${pdfPreviewUrl}#page=1&view=FitH&toolbar=0&navpanes=0&scrollbar=0" class="module-preview-frame" title="${module.title}" style="width:100%;height:100%;min-height:120px;"></iframe>`;
+                    previewMedia = `<iframe src="${pdfPreviewUrl}#page=1&view=FitH&toolbar=0&navpanes=0&scrollbar=0" class="module-preview-frame" title="${escapeHtml(module.title)}" tabindex="-1" aria-hidden="true" scrolling="no"></iframe>`;
                 } else {
                     const thumbnailSource = module.thumbnail_url || module.cover_image || module.image_url || '';
                     const thumbnail = resolveLearningMaterialUrl(thumbnailSource) || '../Logo/MATHURO-LOGO-v2.png';
@@ -577,7 +586,7 @@
                     : `${module.is_completed ? 'Completed' : 'Incomplete'} · ${module.has_quiz ? 'Graded' : 'Non-Graded'}`;
                 const ctaLabel = isLocked ? 'Locked' : 'Open';
                 return `
-                <div class="learn-module-card ${isLocked ? 'is-locked' : ''} mx-auto min-w-[260px] max-w-[300px] flex flex-col relative">
+                <div class="learn-module-card ${isLocked ? 'is-locked' : ''} flex flex-col relative">
                     <span class="learn-module-card-badge ${isLocked ? 'is-locked' : (module.is_completed ? 'is-completed' : 'is-incomplete')}">
                         ${isLocked ? `
                             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
@@ -589,7 +598,7 @@
                     <a href="${isLocked ? 'javascript:void(0)' : `module-view.html?id=${module.id}`}"
                        onclick="${isLocked ? `alert('This module is locked. Please pass the previous module post-test first.')` : ''}"
                        aria-label="${escapeHtml(module.title)} — ${statusLabel}"
-                       class="flex flex-col h-[360px] ${isLocked ? 'cursor-not-allowed' : ''}">
+                       class="flex flex-col h-full ${isLocked ? 'cursor-not-allowed' : ''}">
                         <div class="module-preview-container h-[46%] bg-gray-100 overflow-hidden flex items-center justify-center">
                             ${previewMedia}
                         </div>

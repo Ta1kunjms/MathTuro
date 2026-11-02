@@ -916,7 +916,7 @@
             if (reportData.quizzes && reportData.quizzes.length > 0) {
                 optionsHtml += '<optgroup label="Regular Quizzes">';
                 reportData.quizzes.forEach(q => {
-                    optionsHtml += `<option value="quiz:${q.id}">${escapeHtml(q.title)}</option>`;
+                    optionsHtml += `<option value="quiz:${q.id}">${escText(q.title)}</option>`;
                 });
                 optionsHtml += '</optgroup>';
             }
@@ -927,7 +927,7 @@
                 optionsHtml += '<optgroup label="Diagnostic Pre-Tests">';
                 preTests.forEach(a => {
                     const modTitle = a.module?.title || 'Module';
-                    optionsHtml += `<option value="asmt:${a.id}">Pre-Test: ${escapeHtml(modTitle)}</option>`;
+                    optionsHtml += `<option value="asmt:${a.id}">Pre-Test: ${escText(modTitle)}</option>`;
                 });
                 optionsHtml += '</optgroup>';
             }
@@ -938,7 +938,7 @@
                 optionsHtml += '<optgroup label="Summative Post-Tests">';
                 postTests.forEach(a => {
                     const modTitle = a.module?.title || 'Module';
-                    optionsHtml += `<option value="asmt:${a.id}">Post-Test: ${escapeHtml(modTitle)}</option>`;
+                    optionsHtml += `<option value="asmt:${a.id}">Post-Test: ${escText(modTitle)}</option>`;
                 });
                 optionsHtml += '</optgroup>';
             }
@@ -1035,7 +1035,7 @@
                     <div class="text-center py-8 text-red-600">
                         <i class="fas fa-exclamation-circle text-3xl mb-2"></i>
                         <p class="font-bold">Failed to compute item analysis</p>
-                        <p class="text-xs text-gray-500 mt-1">${escapeHtml(err.message || 'Unknown error')}</p>
+                        <p class="text-xs text-gray-500 mt-1">${escText(err.message || 'Unknown error')}</p>
                     </div>
                 `;
             }

@@ -6,6 +6,17 @@
 (function (window) {
     'use strict';
 
+    // Local escaper: the host pages (reports.html, manage-quizzes.html) don't
+    // define a global escapeHtml.
+    function escapeHtml(value) {
+        return String(value ?? '')
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;');
+    }
+
     function computeItemAnalysis(questions, attempts, answers, isAssessment) {
         if (!questions || questions.length === 0) {
             return { isEmpty: true, message: 'This questionnaire has no questions configured.' };

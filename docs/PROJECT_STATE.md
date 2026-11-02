@@ -1481,3 +1481,26 @@ Blockers:
 Next action:
 - Run migration -> commit/push -> browser pass -> QA suite.
 
+
+### [2026-11-02 11:15] — Git Commit bc429f3
+* **Author:** Tycoon James Flores
+* **Commit Message:** fix: student/teacher bug list (passing rule, progress page, multi-video, item analysis, screenshot proof)
+* **Commit Hash:** `bc429f3`
+
+### 2026-11-02 — Hotfix: Reports "escapeHtml is not defined"
+Changed files:
+- teacher/reports.html, teacher/assets/js/item-analysis.js
+
+Actions:
+- reports.html used an undefined global `escapeHtml` in the Item Analysis dropdown and error text; switched to the page's `escText`. The earlier change that refills the dropdown after data load exposed it on the Performance Matrix load. This was also the real cause of the empty Item Analysis dropdown (#20).
+- item-analysis.js now has its own scoped `escapeHtml` (neither reports.html nor manage-quizzes.html defines one), so the analysis render no longer crashes on both pages.
+
+Validation:
+- node --check on reports.html, manage-quizzes.html, item-analysis.js: 0 failures; ItemAnalysisEngine compute + renderHTML smoke test with sample data rendered OK.
+
+Blockers:
+- Browser re-check by user.
+
+Next action:
+- Reload teacher/reports.html; open Item Analysis tab and pick a quiz.
+

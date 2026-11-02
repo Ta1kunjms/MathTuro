@@ -1575,3 +1575,25 @@ Blockers:
 Next action:
 - Commit/push, deploy provision-user, browser pass.
 
+
+### [2026-11-02 20:44] — Git Commit 7a3d46c
+* **Author:** Tycoon James Flores
+* **Commit Message:** fix: second bug list (modules completion/cards, external quiz type, XP sync, teacher assessments, admin user form)
+* **Commit Hash:** `7a3d46c`
+
+### 2026-11-03 — provision-user deployed
+Changed files:
+- docs/PROJECT_STATE.md
+
+Actions:
+- User deployed `provision-user` to production (ynkzcybctsstpqxdoweq) via `npx supabase functions deploy` (CLI v2.117.0; Docker warning only affects local bundling, deploy succeeded).
+
+Validation:
+- CLI reported "Deployed Functions on project ynkzcybctsstpqxdoweq: provision-user".
+
+Blockers:
+- None for the function. Teacher creation without LRN still to be tried in the admin UI.
+
+Next action:
+- Admin: create a test teacher (no LRN); confirm passing-rule migration applied (2 overloads of submit_regular_quiz_score).
+

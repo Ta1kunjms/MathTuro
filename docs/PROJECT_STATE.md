@@ -1504,3 +1504,26 @@ Blockers:
 Next action:
 - Reload teacher/reports.html; open Item Analysis tab and pick a quiz.
 
+
+### [2026-11-02 11:36] — Git Commit af5fe56
+* **Author:** Tycoon James Flores
+* **Commit Message:** fix(reports): undefined escapeHtml broke report load and Item Analysis dropdown
+* **Commit Hash:** `af5fe56`
+
+### 2026-11-02 — Pending-registration banner deep-links to the section
+Changed files:
+- teacher/dashboard.html, teacher/student-progress.html
+
+Actions:
+- Dashboard "Review in Student Progress" now links to `student-progress.html?grade_level_id=..&section_id=..` for the oldest pending student (falls back to the plain page if the student has no grade/section ids).
+- student-progress.html reads those params, validates the section belongs to the grade, preloads the section list (for Back), and opens that section's Students view, where the section-scoped approval queue shows.
+
+Validation:
+- node --check on both pages: 0 failures. Browser not verified (extension not connected).
+
+Blockers:
+- Previous hotfix (reports.html escapeHtml) and this change are uncommitted; user commits/pushes.
+
+Next action:
+- Push, then click the dashboard banner and confirm it lands on the Students view with the Approve/Reject row.
+

@@ -182,7 +182,7 @@
                         <p class="text-xs text-ink-600 font-medium">New student accounts are waiting to be reviewed and approved for classroom access.</p>
                     </div>
                 </div>
-                <a href="student-progress.html" class="inline-flex items-center justify-center gap-2 px-4 py-2 bg-forest-600 hover:bg-forest-700 text-white font-bold text-xs sm:text-sm rounded-xl border-2 border-ink-900 shadow-[2px_2px_0_0_#1c1b1a] active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all shrink-0">
+                <a id="pendingStudentsLink" href="student-progress.html" class="inline-flex items-center justify-center gap-2 px-4 py-2 bg-forest-600 hover:bg-forest-700 text-white font-bold text-xs sm:text-sm rounded-xl border-2 border-ink-900 shadow-[2px_2px_0_0_#1c1b1a] active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all shrink-0">
                     <span>Review in Student Progress</span>
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/>
@@ -563,7 +563,7 @@
                 // Get student count & pending student registrations
                 const { data: students } = await getSupabase()
                     .from('users')
-                    .select('id, approval_status')
+                    .select('id, approval_status, grade_level_id, section_id, created_at')
                     .eq('role', 'student');
 
                 const studentCount = students ? students.filter(s => s.approval_status === 'approved').length : 0;
@@ -575,6 +575,17 @@
                     if (pendingStudentCount > 0) {
                         pendingStudentsCountEl.textContent = pendingStudentCount;
                         pendingBanner.classList.remove('hidden');
+                        // Deep-link to the oldest pending student's section, where
+                        // student-progress.html shows that section's approval queue.
+                        const oldestPending = students
+                            .filter(s => s.approval_status === 'pending' && s.grade_level_id && s.section_id)
+                            .sort((a, b) => String(a.created_at || '').localeCompare(String(b.created_at || '')))[0];
+                        const pendingLink = document.getElementById('pendingStudentsLink');
+                        if (pendingLink) {
+                            pendingLink.href = oldestPending
+                                ? `student-progress.html?grade_level_id=${encodeURIComponent(oldestPending.grade_level_id)}&section_id=${encodeURIComponent(oldestPending.section_id)}`
+                                : 'student-progress.html';
+                        }
                     } else {
                         pendingBanner.classList.add('hidden');
                     }

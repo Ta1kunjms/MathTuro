@@ -398,7 +398,34 @@
             // Load user info and initial data
             loadUserInfo();
             loadGradeLevels();
+            openSectionFromQuery();
         });
+
+        // student-progress.html?grade_level_id=..&section_id=.. (e.g. from the
+        // dashboard's pending-registrations banner) opens that section's
+        // Students view directly, where its approval queue is shown.
+        async function openSectionFromQuery() {
+            const params = new URLSearchParams(window.location.search);
+            const gradeLevelId = params.get('grade_level_id');
+            const sectionId = params.get('section_id');
+            if (!gradeLevelId || !sectionId) return;
+            try {
+                const supabase = getSupabase();
+                const [gradeRes, sectionRes] = await Promise.all([
+                    supabase.from('grade_levels').select('id, name').eq('id', gradeLevelId).maybeSingle(),
+                    supabase.from('sections').select('id, name, grade_level_id').eq('id', sectionId).maybeSingle()
+                ]);
+                const grade = gradeRes.data;
+                const section = sectionRes.data;
+                if (!grade || !section || String(section.grade_level_id) !== String(grade.id)) return;
+
+                currentState.gradeLevel = { id: grade.id, name: grade.name };
+                loadSections(grade.id, grade.name); // so "Back to Sections" lands on a filled list
+                selectSection(section.id, section.name);
+            } catch (err) {
+                console.error('Could not open section from link:', err);
+            }
+        }
 
         async function loadUserInfo() {
             try {

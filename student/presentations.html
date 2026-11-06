@@ -125,6 +125,12 @@
                 <!-- Groups loaded dynamically -->
             </div>
 
+            <!-- Locked presentations (titles only; opening needs the module unlocked) -->
+            <section id="lockedPresentations" class="hidden mt-8">
+                <h3 class="learn-module-group-title">Locked</h3>
+                <ul id="lockedPresentationsList" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></ul>
+            </section>
+
             <!-- Loading State -->
             <div id="loadingState" class="learn-state-block">
                 <div class="inline-block animate-spin rounded-full h-12 w-12 border-4 border-forest-600 border-t-transparent" aria-hidden="true"></div>
@@ -174,6 +180,7 @@
     <script>
         let currentUser = null;
         let presentations = [];
+        let lockedPresentations = [];
 
         // Initialize
         document.addEventListener('DOMContentLoaded', async () => {
@@ -226,6 +233,7 @@
                 if (error) throw error;
 
                 presentations = data || [];
+                lockedPresentations = await loadLockedPresentations();
                 document.getElementById('loadingState').classList.add('hidden');
                 renderPresentations();
             } catch (error) {
@@ -235,13 +243,41 @@
             }
         }
 
+        // Optional extra: a failure here must not hide unlocked presentations.
+        async function loadLockedPresentations() {
+            try {
+                const { data, error } = await getSupabase().rpc('get_my_locked_presentations');
+                if (error) throw error;
+                return data || [];
+            } catch (error) {
+                console.warn('Could not load locked presentations:', error);
+                return [];
+            }
+        }
+
+        function renderLockedPresentations() {
+            const section = document.getElementById('lockedPresentations');
+            section.classList.toggle('hidden', lockedPresentations.length === 0);
+            document.getElementById('lockedPresentationsList').innerHTML = lockedPresentations.map(item => `
+                <li class="learn-presentation-card opacity-80">
+                    <span class="learn-presentation-tag">🔒 Locked</span>
+                    <h4 class="font-semibold text-gray-900">${escapeHtml(item.presentation_title)}</h4>
+                    <p class="text-sm text-gray-500 mt-1">${escapeHtml(item.module_title)}</p>
+                    <p class="text-sm text-gray-600 mt-2">${item.locked_reason === 'pre_test'
+                        ? 'Take this module\'s pre-test to unlock it.'
+                        : 'Pass the previous module\'s post-test to unlock it.'}</p>
+                </li>
+            `).join('');
+        }
+
         function renderPresentations() {
             const container = document.getElementById('presentationGroups');
             const emptyState = document.getElementById('emptyState');
 
+            renderLockedPresentations();
             if (!presentations.length) {
                 container.innerHTML = '';
-                emptyState.classList.remove('hidden');
+                emptyState.classList.toggle('hidden', lockedPresentations.length > 0);
                 return;
             }
             emptyState.classList.add('hidden');

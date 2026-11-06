@@ -1256,7 +1256,7 @@
                 <a href="module-view.html?id=${module.id}" class="dash-primary-module">
                     <span class="dash-primary-module-badge ${isCompleted ? 'is-complete' : ''}">${statusLabel}</span>
                     <h4 class="dash-primary-module-title">${escapeHtml(module.title)}</h4>
-                    <p class="dash-primary-module-meta">${completedLessons} of ${totalLessons} lesson${totalLessons !== 1 ? 's' : ''} complete</p>
+                    ${totalLessons > 0 ? `<p class="dash-primary-module-meta">${completedLessons} of ${totalLessons} lesson${totalLessons !== 1 ? 's' : ''} complete</p>` : ''}
                     <div class="dash-primary-module-track">
                         <div class="dash-primary-module-fill" style="width: ${progressPercent}%"></div>
                     </div>
@@ -1288,7 +1288,7 @@
                     </div>
                     <div class="dash-overflow-item-body">
                         <p class="dash-overflow-item-title">${escapeHtml(module.title)}</p>
-                        <p class="dash-overflow-item-meta">${progressPercent}% &middot; ${totalLessons} lesson${totalLessons !== 1 ? 's' : ''}</p>
+                        <p class="dash-overflow-item-meta">${progressPercent}%${totalLessons > 0 ? ` &middot; ${totalLessons} lesson${totalLessons !== 1 ? 's' : ''}` : ''}</p>
                         <div class="dash-overflow-item-track">
                             <div class="dash-overflow-item-fill" style="width: ${progressPercent}%"></div>
                         </div>

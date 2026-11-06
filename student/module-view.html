@@ -378,6 +378,7 @@
         let studentAssignment = null;
         let moduleProgressRecord = null;
         let latestSubmissionByQuiz = {};
+        let attemptSummaryByQuiz = {};
         let isContentUnlocked = true;
         let moduleAssessments = [];
         let moduleAssessmentAttempts = [];
@@ -929,6 +930,9 @@
             list.innerHTML = module.quizzes.map(quiz => {
                 const submission = latestSubmissionByQuiz[quiz.id];
                 const passingScore = MathTuroPassing.passingScore(quiz.total_items);
+                // 3 attempts, and a pass ends attempts (same as pre/post-tests)
+                const attemptSummary = attemptSummaryByQuiz[quiz.id] || { count: 0, passed: false };
+                const attemptsDone = attemptSummary.passed || attemptSummary.count >= 3;
                 const isPassed = submission && (submission.assessment_result
                     ? submission.assessment_result === 'passed'
                     : submission.student_score >= passingScore);
@@ -995,11 +999,17 @@
                         <div class="flex flex-col gap-2">
                             <div class="flex space-x-2">
                                 ${isNativeQuiz ? `
-                                    <a href="take-quiz.html?quiz_id=${encodeURIComponent(quiz.id)}&module_id=${encodeURIComponent(moduleId)}"
-                                        class="flex-1 text-center px-4 py-2 bg-forest-800 text-white rounded-lg text-sm font-bold hover:bg-forest-900 transition-colors flex items-center justify-center space-x-1 shadow-[2px_2px_0_0_#1c1b1a] border-2 border-ink-900">
-                                        <i class="fas fa-pen-alt text-xs mr-1"></i>
-                                        <span>${submission ? 'Retake Quiz' : 'Take Quiz'}</span>
-                                    </a>
+                                    ${attemptsDone ? `
+                                        <span class="flex-1 text-center px-4 py-2 bg-gray-100 text-gray-500 rounded-lg text-sm font-bold">
+                                            ${attemptSummary.passed ? 'Passed' : 'No attempts left'}
+                                        </span>
+                                    ` : `
+                                        <a href="take-quiz.html?quiz_id=${encodeURIComponent(quiz.id)}&module_id=${encodeURIComponent(moduleId)}"
+                                            class="flex-1 text-center px-4 py-2 bg-forest-800 text-white rounded-lg text-sm font-bold hover:bg-forest-900 transition-colors flex items-center justify-center space-x-1 shadow-[2px_2px_0_0_#1c1b1a] border-2 border-ink-900">
+                                            <i class="fas fa-pen-alt text-xs mr-1"></i>
+                                            <span>${submission ? `Retake Quiz (${3 - attemptSummary.count} left)` : 'Take Quiz'}</span>
+                                        </a>
+                                    `}
                                 ` : `
                                     <a href="${safeQuizUrl}" target="_blank" rel="noopener noreferrer"
                                         class="flex-1 text-center px-4 py-2 bg-forest-800 text-white rounded-lg text-sm font-bold hover:bg-forest-900 transition-colors flex items-center justify-center gap-1 shadow-[2px_2px_0_0_#1c1b1a] border-2 border-ink-900"
@@ -1011,7 +1021,7 @@
                                     </a>
                                 `}
                             </div>
-                            ${safeQuizUrl ? `
+                            ${safeQuizUrl && !attemptsDone ? `
                                 <button onclick="openSubmitQuizModal('${quiz.id}', ${attrValue(JSON.stringify(quiz.title || ''))}, ${quiz.total_items})" 
                                     ${submission && submission.status === 'approved' ? 'disabled' : ''}
                                     class="w-full px-3 py-1.5 text-xs ${
@@ -1051,8 +1061,13 @@
                 );
 
                 latestSubmissionByQuiz = {};
+                attemptSummaryByQuiz = {};
                 (relevantSubmissions || []).forEach(submission => {
                     if (!submission?.quiz_id) return;
+                    const summary = attemptSummaryByQuiz[submission.quiz_id] || { count: 0, passed: false };
+                    summary.count += 1;
+                    summary.passed = summary.passed || submission.assessment_result === 'passed' || Boolean(submission.is_teacher_override);
+                    attemptSummaryByQuiz[submission.quiz_id] = summary;
                     if (!latestSubmissionByQuiz[submission.quiz_id]) {
                         latestSubmissionByQuiz[submission.quiz_id] = submission;
                     }

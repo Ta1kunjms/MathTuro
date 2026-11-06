@@ -479,6 +479,7 @@
     <script src="../shared/js/config.js"></script>
     <script src="../shared/js/utils.js"></script>
     <script src="../shared/js/supabase.js"></script>
+    <script src="../shared/js/quiz-screenshots.js"></script>
     <script src="../shared/js/auth.js"></script>
     <script src="assets/js/teacher.js"></script>
     <script src="../shared/js/modules.js"></script>
@@ -953,7 +954,7 @@
                         <div>
                             <p class="font-bold text-ink-900 text-sm mb-2">Screenshot Proof</p>
                             <div class="border-2 border-ink-900 rounded-xl overflow-hidden shadow-[2px_2px_0_0_#1c1b1a]">
-                                <img src="${safeImageUrl(submission.screenshot_url)}" alt="Quiz Screenshot" class="w-full h-auto max-h-96 object-contain bg-paper-100 cursor-pointer" onclick="window.open(this.src, '_blank', 'noopener')">
+                                <img data-screenshot="${MathTuroScreenshots.attr(submission.screenshot_url)}" alt="Quiz Screenshot" class="w-full h-auto max-h-96 object-contain bg-paper-100 cursor-pointer" onclick="window.open(this.src, '_blank', 'noopener')">
                             </div>
                         </div>
                     ` : '<p class="text-ink-500 italic text-sm">No screenshot provided</p>'}
@@ -979,6 +980,7 @@
                     </div>
                 </div>
             `;
+            MathTuroScreenshots.hydrate(content);
         }
 
         function closeReviewModal() {
@@ -1033,12 +1035,6 @@
         }
 
         // Only http(s) URLs, escaped for an attribute; anything else gets no source
-        function safeImageUrl(url) {
-            const value = String(url || '').trim();
-            if (!/^https?:\/\//i.test(value)) return '';
-            return value.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-        }
-
         // Setup event listeners
         function setupEventListeners() {
             const sidebarElement = document.getElementById('sidebar')?.querySelector('aside') || document.getElementById('sidebar');

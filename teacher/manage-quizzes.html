@@ -530,6 +530,7 @@
     <script src="../shared/js/runtime-config.js"></script>
     <script src="../shared/js/config.js"></script>
     <script src="../shared/js/supabase.js"></script>
+    <script src="../shared/js/quiz-screenshots.js"></script>
     <script src="assets/js/sidebar.js"></script>
     <script src="assets/js/item-analysis.js"></script>
     <script src="../shared/js/passing.js"></script>
@@ -1677,7 +1678,7 @@
                                             </td>
                                             <td class="py-3">
                                                 ${s.screenshot_url ? `
-                                                    <a href="${s.screenshot_url}" target="_blank" class="text-blue-600 hover:underline">
+                                                    <a href="#" data-screenshot="${MathTuroScreenshots.attr(s.screenshot_url)}" target="_blank" rel="noopener noreferrer" class="text-blue-600 hover:underline">
                                                         <i class="fas fa-image mr-1"></i>View
                                                     </a>
                                                 ` : '<span class="text-gray-400">None</span>'}
@@ -1699,6 +1700,7 @@
                 }
 
                 document.getElementById('submissionsModal').classList.remove('hidden');
+                MathTuroScreenshots.hydrate(document.getElementById('submissionsModal'));
             } catch (error) {
                 console.error('Error loading submissions:', error);
                 showToast('Failed to load submissions: ' + (error.message || 'Unknown error'), 'error');
@@ -1776,6 +1778,7 @@
                 }
 
                 document.getElementById('submissionsModal').classList.remove('hidden');
+                MathTuroScreenshots.hydrate(document.getElementById('submissionsModal'));
             } catch (error) {
                 console.error('Error loading assessment submissions:', error);
                 showToast('Failed to load assessment submissions: ' + (error.message || 'Unknown error'), 'error');

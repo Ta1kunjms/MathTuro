@@ -3,7 +3,7 @@
   Purpose: Submit a self-reported score for an external-link quiz together with
   a required screenshot of the result (student/quizzes.html, student/module-view.html).
 
-  Flow: upload the image to the private quiz-screenshots bucket under the
+  Flow: upload the image to the quiz-screenshots bucket under the
   student's own folder ({uid}/{quizId}/{timestamp}.{ext}), then call the
   4-arg submit_regular_quiz_score RPC, which verifies the object exists in the
   caller's folder before recording the attempt

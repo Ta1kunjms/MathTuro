@@ -1,4 +1,9 @@
 -- ============================================================================
+-- DO NOT RE-RUN. Already applied. Its grading cores are superseded by
+-- migration_restore_attempts_and_review.sql; running this again brings back
+-- 999/0 attempts left and removes the 3-attempt limit on regular quizzes.
+-- ============================================================================
+-- ============================================================================
 -- Migration: Passing Rule (75% rounded down) + Pre-Test/Quiz Backfill +
 --            Required Screenshot Proof for External Quizzes
 -- Project: MathTuro LMS (Production: ynkzcybctsstpqxdoweq)

@@ -686,6 +686,7 @@
 
     // ─── Show Result (aggregate-only per v1 contract) ─────────────────────
     function showResult(result) {
+        lastSubmissionResult = result;
         document.getElementById('questionsSection').classList.add('hidden');
         document.getElementById('progressBarWrapper').classList.add('hidden');
         document.getElementById('resultSection').classList.remove('hidden');
@@ -703,16 +704,14 @@
         document.getElementById('resultPct').textContent       = pct + '%';
         const passingScore = MathTuroPassing.passingScore(total);
         const isPreTest    = assessmentType === 'pre_test';
-        const unlimited    = remaining >= 999;
         document.getElementById('resultTitle').textContent     = isPassing ? '🎉 Passed!' : 'Failed';
         document.getElementById('resultPassing').textContent   = `Passing score: ${passingScore} / ${total}`;
         let subtitle;
         if (isPassing) {
             subtitle = 'Great job! You reached the passing score.';
         } else if (isPreTest) {
-            subtitle = 'You did not reach the passing score. Your diagnostic result is recorded and the module lessons are now unlocked.';
-        } else if (unlimited) {
-            subtitle = 'You did not reach the passing score. You can retake this quiz.';
+            subtitle = 'You did not reach the passing score. Your diagnostic result is recorded and the module lessons are now unlocked.'
+                + (remaining > 0 ? ' You have ' + remaining + ' attempt' + (remaining !== 1 ? 's' : '') + ' remaining.' : '');
         } else if (remaining > 0) {
             subtitle = 'You did not reach the passing score. You have ' + remaining + ' attempt' + (remaining !== 1 ? 's' : '') + ' remaining.';
         } else {
@@ -720,15 +719,15 @@
         }
         document.getElementById('resultSubtitle').textContent  = subtitle;
         document.getElementById('resultScore').textContent     = score + ' / ' + total;
-        document.getElementById('resultRemaining').textContent = unlimited ? '∞' : remaining;
+        document.getElementById('resultRemaining').textContent = remaining;
 
         // Show retry button only if attempts remain and not passed
         if (!isPassing && remaining > 0) {
             document.getElementById('btnRetryQuiz').classList.remove('hidden');
         }
 
-        // Show Review button if allow_review is true or for regular formative quizzes
-        const allowReview = (result.allow_review !== false);
+        // The server decides: pre/post-test answers stay hidden while a retake is possible.
+        const allowReview = (result.allow_review === true);
         if (allowReview) {
             document.getElementById('btnReviewAnswers').classList.remove('hidden');
         }

@@ -13,6 +13,7 @@
 * **Current Date / Last Updated:** 2026-11-02
 * **ACTIVE (2026-11-02):** 21-item bug list (`Mathturo-bugs.pdf`) — Batches A, B implemented locally (uncommitted). **User must run** `database/migration_passing_rule_floor_and_screenshot.sql` on production (approved) before deploying, because the external-quiz submit now calls the 4-arg `submit_regular_quiz_score`. `database/migration_unlinked_quiz_access.sql` is written but **NOT approved** (lets students open published quizzes with no module). Browser QA not done (no student/teacher login available to the agent). Next: run SQL → commit → deploy → browser pass → `run_full_qa_suite.ps1`.
 * **ACTIVE (2026-11-02, later):** Second bug list (`FINAL-ERROS 1.pdf`, 16 items) implemented locally (uncommitted). User must commit/push and deploy the edge function: `supabase functions deploy provision-user --project-ref ynkzcybctsstpqxdoweq` (approved). No SQL needed. Browser QA not done (extension not connected).
+* **ACTIVE (2026-11-06):** Third bug list implemented locally (uncommitted). **User must run** `database/migration_restore_attempts_and_review.sql` on production, then commit/push. `migration_passing_rule_floor_and_screenshot.sql` must NOT be re-run (header warns). #5 Approve and #6 hidden presentation causes still unconfirmed: diagnostic and console error outstanding. QA suite not run yet.
 * **MANDATORY CORE DIRECTIVE (Permanent):** ALL code, commits, and implementations MUST be directly on the **`main`** branch, targeting **Production** (`ynkzcybctsstpqxdoweq`). Do NOT work on `develop`. Do NOT target staging.
 * **Target Environment:** Production (`ynkzcybctsstpqxdoweq.supabase.co`) on **`main`** branch ONLY.
 * **Highest Completed & Evidenced Phase:** **Phase 3 & Phase 4â€“5 Automated Master Suite**: **57/57 PASS (100%)** on Production (ynkzcybctsstpqxdoweq) via scripts/qa/run_full_qa_suite.ps1 (2026-10-24 07:40).
@@ -1602,3 +1603,101 @@ Next action:
 * **Author:** Tycoon James Flores
 * **Commit Message:** docs: log provision-user deployment
 * **Commit Hash:** `116a33c`
+
+### [2026-11-03 07:02] — Git Commit 900e12c
+* **Author:** Tycoon James Flores
+* **Commit Message:** chore(contact): replace personal phone number with placeholder
+* **Commit Hash:** `900e12c`
+
+### 2026-11-06 — Third bug list triage (plan only)
+Changed files:
+- docs/PROJECT_STATE.md
+
+Actions:
+- Root causes: ∞/0 attempts come from my passing-rule migration (batch2 cores: remaining 999 and 0; also lost the 3-attempt limit and attempt_id/submission_id/allow_review); review blocked because module_assessments.allow_review defaults false and no UI sets it; teacher screenshot broken because screenshot_url now stores a storage path while safeImageUrl only accepts http(s); take-quiz never assigns lastSubmissionResult.
+- Correction: the earlier "regular_quiz EXP source bug" was a false alarm; the security-fix core already used 'quiz'.
+- Approve failure and hidden presentation not confirmed: repo code/RLS look valid, staging DB unreachable, toast hides the real error. Production diagnostic requested.
+
+Validation:
+- Static reading and function diff only.
+
+Blockers:
+- Plan approval; production diagnostic output.
+
+Next action:
+- Implement after approval.
+
+### 2026-11-06 — Decision D2 confirmed
+Changed files:
+- docs/PROJECT_STATE.md
+
+Actions:
+- User confirmed regular quizzes follow the pre/post-test rule: 3 attempts max, failed attempt shows remaining (1st fail -> 2 left), passing ends attempts.
+
+Validation:
+- None (decision only).
+
+Blockers:
+- D1, D3, plan/SQL approval, production diagnostic, Approve console error.
+
+Next action:
+- Implement after those arrive.
+
+### 2026-11-06 — Third bug list fixes
+Changed files:
+- database/migration_restore_attempts_and_review.sql (new, approved, user runs), database/migration_passing_rule_floor_and_screenshot.sql (warning header only)
+- shared/js/quiz-screenshots.js (new)
+- student/dashboard.html, take-quiz.html, module-view.html, quizzes.html, presentations.html
+- teacher/submissions.html, dashboard.html, manage-quizzes.html
+
+Actions:
+- Grading cores patched from the live passing-rule versions: 3 attempts on all tests/quizzes, real attempts left, attempt_id/submission_id/allow_review restored.
+- Pre/post-test review on (allow_review true); students only after passing or using all attempts, enforced in get_assessment_attempt_review. Regular quizzes keep the teacher's Allow Review setting.
+- get_my_locked_presentations(): titles + reason only; Presentations page shows a Locked section.
+- Teacher screenshots use signed URLs (submissions, dashboard, manage-quizzes). Approve/Reject show the real error and detect 0-row updates.
+- Dashboard hides lesson text for modules with no lessons. Retake hidden when no attempts left.
+
+Validation:
+- build:css OK; node --check 9 files, 0 failures. SQL not executed anywhere (staging unreachable, production is user-run). No browser test. QA suite not run.
+
+Blockers:
+- User runs SQL. Approve root cause needs the new toast text or diagnostic.
+
+Next action:
+- Run migration, push, retest, run QA suite.
+
+### 2026-11-06 — Approve root cause from production diagnostic
+Changed files:
+- database/migration_teacher_review_submission_rpc.sql (new, user runs)
+- teacher/submissions.html, teacher/assets/js/teacher.js, student/assets/js/quiz-proof.js (comment)
+
+Actions:
+- Diagnostic: can_update=false on quiz_submissions for authenticated. Added review_quiz_submission RPC (active teacher/admin, pending rows only) instead of a grant, because students_update_own_submission would let students edit their own rows.
+- Presentation "sfds": published, module published, order 0, has pre-test, 3 pre-test takers, so not a data fault; students without a pre-test attempt see it under Locked.
+- Both buckets are public=true in production (code comments said private).
+
+Validation:
+- node --check on changed scripts. SQL not executed by the agent.
+
+Blockers:
+- User runs both new SQL files. public.users UPDATE privilege unknown (Account Status in Edit User depends on it).
+
+Next action:
+- Run SQL, push, retest Approve; check users UPDATE privilege.
+
+### 2026-11-06 — Production SQL confirmed
+Changed files:
+- docs/PROJECT_STATE.md
+
+Actions:
+- User ran migration_restore_attempts_and_review.sql and migration_teacher_review_submission_rpc.sql on production.
+
+Validation:
+- User query: review_fn=1, locked_fn=1, attempts_fixed=true, admin_can_edit_users=true.
+
+Blockers:
+- None known. Browser retest and QA suite still outstanding.
+
+Next action:
+- Push if not done, retest Approve and student flows, run run_full_qa_suite.ps1.
+

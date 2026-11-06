@@ -58,17 +58,12 @@ async function approveQuizSubmission(submissionId, comment = null) {
       return false;
     }
 
-    // Update submission status
-    const { error } = await getSupabase()
-      .from('quiz_submissions')
-      .update({
-        status: 'approved',
-        teacher_comment: comment,
-        reviewed_at: new Date().toISOString(),
-        reviewed_by: user.id,
-        updated_at: new Date().toISOString()
-      })
-      .eq('id', submissionId);
+    // RPC, not a direct update: authenticated has no UPDATE on quiz_submissions.
+    const { error } = await getSupabase().rpc('review_quiz_submission', {
+      p_submission_id: submissionId,
+      p_status: 'approved',
+      p_comment: comment
+    });
 
     if (error) {
       console.error('Error approving quiz submission:', error);
@@ -127,17 +122,11 @@ async function rejectQuizSubmission(submissionId, comment) {
       return false;
     }
 
-    // Update submission status
-    const { error } = await getSupabase()
-      .from('quiz_submissions')
-      .update({
-        status: 'rejected',
-        teacher_comment: comment.trim(),
-        reviewed_at: new Date().toISOString(),
-        reviewed_by: user.id,
-        updated_at: new Date().toISOString()
-      })
-      .eq('id', submissionId);
+    const { error } = await getSupabase().rpc('review_quiz_submission', {
+      p_submission_id: submissionId,
+      p_status: 'rejected',
+      p_comment: comment.trim()
+    });
 
     if (error) {
       console.error('Error rejecting quiz submission:', error);
